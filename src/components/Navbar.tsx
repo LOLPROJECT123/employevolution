@@ -45,9 +45,9 @@ export const Navbar = () => {
             to="/" 
             className="flex items-center space-x-2 text-primary font-semibold text-xl tracking-tight button-hover"
           >
-            <span className="sr-only">EmployEvolution</span>
-            <BriefcaseIcon className="w-6 h-6" />
-            <span>EmployEvolution</span>
+            <span className="sr-only">Streamline</span>
+            <img src="/lovable-uploads/8d78f162-7185-4058-b018-02e6724321d1.png" alt="Streamline Logo" className="w-8 h-8" />
+            <span className="text-[#0EA5E9]">Streamline</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -56,7 +56,7 @@ export const Navbar = () => {
               to="/" 
               className={`text-sm font-medium transition-colors ${
                 location.pathname === '/' 
-                  ? 'text-primary' 
+                  ? 'text-[#0EA5E9]' 
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
@@ -68,7 +68,7 @@ export const Navbar = () => {
                   to="/dashboard" 
                   className={`text-sm font-medium transition-colors ${
                     location.pathname === '/dashboard' 
-                      ? 'text-primary' 
+                      ? 'text-[#0EA5E9]' 
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
@@ -78,7 +78,7 @@ export const Navbar = () => {
                   to="/jobs" 
                   className={`text-sm font-medium transition-colors ${
                     location.pathname === '/jobs' 
-                      ? 'text-primary' 
+                      ? 'text-[#0EA5E9]' 
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
@@ -88,7 +88,7 @@ export const Navbar = () => {
                   to="/profile" 
                   className={`text-sm font-medium transition-colors ${
                     location.pathname === '/profile' 
-                      ? 'text-primary' 
+                      ? 'text-[#0EA5E9]' 
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
@@ -110,7 +110,7 @@ export const Navbar = () => {
                   </Button>
                 </Link>
                 <Link to="/auth?mode=signup">
-                  <Button className="button-hover bg-primary hover:bg-primary/90">
+                  <Button className="button-hover bg-[#F97316] hover:bg-[#F97316]/90 text-white">
                     Sign Up
                   </Button>
                 </Link>
@@ -141,7 +141,7 @@ export const Navbar = () => {
               to="/" 
               className={`flex items-center space-x-2 py-2 px-3 rounded-md ${
                 location.pathname === '/' 
-                  ? 'bg-accent text-accent-foreground' 
+                  ? 'bg-accent text-[#0EA5E9]' 
                   : 'hover:bg-accent/50'
               }`}
             >
@@ -154,7 +154,7 @@ export const Navbar = () => {
                   to="/dashboard" 
                   className={`flex items-center space-x-2 py-2 px-3 rounded-md ${
                     location.pathname === '/dashboard' 
-                      ? 'bg-accent text-accent-foreground' 
+                      ? 'bg-accent text-[#0EA5E9]' 
                       : 'hover:bg-accent/50'
                   }`}
                 >
@@ -165,7 +165,7 @@ export const Navbar = () => {
                   to="/jobs" 
                   className={`flex items-center space-x-2 py-2 px-3 rounded-md ${
                     location.pathname === '/jobs' 
-                      ? 'bg-accent text-accent-foreground' 
+                      ? 'bg-accent text-[#0EA5E9]' 
                       : 'hover:bg-accent/50'
                   }`}
                 >
@@ -176,7 +176,7 @@ export const Navbar = () => {
                   to="/profile" 
                   className={`flex items-center space-x-2 py-2 px-3 rounded-md ${
                     location.pathname === '/profile' 
-                      ? 'bg-accent text-accent-foreground' 
+                      ? 'bg-accent text-[#0EA5E9]' 
                       : 'hover:bg-accent/50'
                   }`}
                 >
@@ -197,7 +197,7 @@ export const Navbar = () => {
                   <Button variant="outline" className="w-full">Login</Button>
                 </Link>
                 <Link to="/auth?mode=signup">
-                  <Button className="w-full">Sign Up</Button>
+                  <Button className="w-full bg-[#F97316] hover:bg-[#F97316]/90 text-white">Sign Up</Button>
                 </Link>
               </div>
             )}

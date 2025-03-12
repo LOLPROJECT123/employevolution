@@ -1,4 +1,6 @@
+
 import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { JobCard } from "@/components/JobCard";
@@ -219,7 +221,7 @@ const Index = () => {
               Ready to Accelerate Your Career?
             </h2>
             <p className={`${animationReady ? 'slide-up' : 'opacity-0'} text-xl text-muted-foreground mb-10 transition-all duration-700 delay-100`}>
-              Join thousands of professionals who are already using EmployEvolution to find their dream jobs.
+              Join thousands of professionals who are already using Streamline to find their dream jobs.
             </p>
             <Button 
               size="lg" 
@@ -237,11 +239,11 @@ const Index = () => {
         <div className="container px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-2 mb-4 md:mb-0">
-              <BriefcaseIcon className="w-5 h-5 text-primary" />
-              <span className="font-medium">EmployEvolution</span>
+              <img src="/lovable-uploads/8d78f162-7185-4058-b018-02e6724321d1.png" alt="Streamline Logo" className="w-6 h-6" />
+              <span className="font-medium">Streamline</span>
             </div>
             <div className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} EmployEvolution. All rights reserved.
+              © {new Date().getFullYear()} Streamline. All rights reserved.
             </div>
           </div>
         </div>
@@ -251,4 +253,3 @@ const Index = () => {
 };
 
 export default Index;
-
