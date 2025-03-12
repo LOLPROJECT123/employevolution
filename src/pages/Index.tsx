@@ -1,16 +1,53 @@
-
-import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
+import { JobCard } from "@/components/JobCard";
 import { 
   BriefcaseIcon, 
   FileTextIcon, 
   SearchIcon, 
   BarChartIcon, 
   RocketIcon,
-  CheckCircleIcon
+  CheckCircleIcon,
+  TrendingUpIcon
 } from 'lucide-react';
+
+const sampleJobs = [
+  {
+    id: '1',
+    title: 'Senior Software Engineer',
+    company: 'TechCorp',
+    location: 'San Francisco, CA',
+    salary: {
+      min: 150000,
+      max: 220000,
+      currency: '$'
+    },
+    type: 'full-time' as const,
+    level: 'senior' as const,
+    description: 'We are looking for a Senior Software Engineer...',
+    requirements: ['5+ years experience', 'React', 'Node.js'],
+    postedAt: new Date().toISOString(),
+    skills: ['React', 'TypeScript', 'Node.js', 'AWS', 'Docker']
+  },
+  {
+    id: '2',
+    title: 'Product Manager',
+    company: 'InnovateCo',
+    location: 'New York, NY',
+    salary: {
+      min: 130000,
+      max: 180000,
+      currency: '$'
+    },
+    type: 'full-time' as const,
+    level: 'mid' as const,
+    description: 'Seeking an experienced Product Manager...',
+    requirements: ['3+ years experience', 'Agile', 'Technical background'],
+    postedAt: new Date(Date.now() - 86400000).toISOString(),
+    skills: ['Product Strategy', 'Agile', 'User Research', 'Data Analysis']
+  }
+];
 
 const features = [
   {
@@ -56,87 +93,96 @@ const Index = () => {
   const [animationReady, setAnimationReady] = useState(false);
 
   useEffect(() => {
-    // Delay animations slightly for better page load experience
     const timer = setTimeout(() => setAnimationReady(true), 100);
     return () => clearTimeout(timer);
   }, []);
+
+  const handleApply = (jobId: string) => {
+    navigate(`/auth?mode=signup&redirect=/jobs/${jobId}`);
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
       {/* Hero Section */}
-      <section className="pt-40 pb-24 md:pt-48 md:pb-32 px-4 relative overflow-hidden">
+      <section className="pt-32 pb-20 px-4 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-accent/80 to-transparent z-0"></div>
-        <div 
-          className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxwYXR0ZXJuIGlkPSJncmlkIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiPjxwYXRoIGQ9Ik0gNDAgMCBMIDAgMCAwIDQwIiBmaWxsPSJub25lIiBzdHJva2U9IiNlZWUiIHN0cm9rZS13aWR0aD0iMC41Ii8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIiAvPjwvc3ZnPg==')]"
-          style={{ opacity: 0.3 }}
-        ></div>
-        
         <div className="container relative z-10">
           <div className="max-w-4xl mx-auto text-center">
-            <div className={`${animationReady ? 'slide-in-left' : 'opacity-0'} transition-all duration-700 delay-100`}>
-              <div className="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
-                <span className="flex-1">Your Career, Reimagined</span>
-              </div>
-            </div>
-            
-            <h1 className={`${animationReady ? 'slide-up' : 'opacity-0'} font-bold leading-tight mb-6 transition-all duration-700 delay-200`}>
-              Supercharge Your Job Search with <span className="text-primary">AI-Powered Tools</span>
+            <h1 className={`${animationReady ? 'slide-up' : 'opacity-0'} text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 transition-all duration-700`}>
+              Land Your Dream Tech Job With <span className="text-primary">AI-Powered Tools</span>
             </h1>
             
-            <p className={`${animationReady ? 'slide-up' : 'opacity-0'} text-xl text-muted-foreground mb-10 transition-all duration-700 delay-300`}>
-              Find better opportunities, track applications, and advance your career with our comprehensive platform.
+            <p className={`${animationReady ? 'slide-up' : 'opacity-0'} text-xl text-muted-foreground mb-8 transition-all duration-700 delay-100`}>
+              Get personalized job recommendations, track applications, and accelerate your tech career with our comprehensive platform.
             </p>
             
-            <div className={`${animationReady ? 'slide-up' : 'opacity-0'} flex flex-col sm:flex-row justify-center gap-4 transition-all duration-700 delay-400`}>
+            <div className={`${animationReady ? 'slide-up' : 'opacity-0'} flex flex-col sm:flex-row justify-center gap-4 mb-12 transition-all duration-700 delay-200`}>
               <Button 
-                size="lg" 
-                className="bg-primary hover:bg-primary/90 button-hover"
+                size="lg"
                 onClick={() => navigate('/auth?mode=signup')}
+                className="bg-primary hover:bg-primary/90"
               >
                 Get Started
               </Button>
               <Button 
                 variant="outline" 
-                size="lg" 
-                className="button-hover"
-                onClick={() => navigate('/auth?mode=login')}
+                size="lg"
+                onClick={() => navigate('/jobs')}
               >
-                Sign In
+                Browse Jobs
               </Button>
             </div>
-          </div>
-          
-          {/* Hero Image */}
-          <div className={`${animationReady ? 'fade-in' : 'opacity-0'} mt-16 max-w-5xl mx-auto transition-all duration-1000 delay-500`}>
-            <div className="relative rounded-xl overflow-hidden shadow-2xl">
-              <div className="aspect-video bg-gradient-to-br from-primary/5 to-primary/20 rounded-xl flex items-center justify-center">
-                <div className="glass-card rounded-lg p-6 w-[80%] max-w-3xl shadow-xl">
-                  <div className="flex items-center space-x-4 mb-4">
-                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                    <div className="flex-1 h-8 bg-slate-100 dark:bg-slate-800 rounded ml-4"></div>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-3/4"></div>
-                    <div className="flex space-x-4">
-                      <div className="h-32 bg-slate-200 dark:bg-slate-700 rounded flex-1"></div>
-                      <div className="h-32 bg-slate-200 dark:bg-slate-700 rounded flex-1"></div>
-                      <div className="h-32 bg-slate-200 dark:bg-slate-700 rounded flex-1"></div>
-                    </div>
-                    <div className="h-12 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
-                  </div>
-                </div>
+
+            <div className={`${animationReady ? 'slide-up' : 'opacity-0'} grid grid-cols-3 gap-6 max-w-3xl mx-auto mb-12 transition-all duration-700 delay-300`}>
+              <div className="text-center">
+                <div className="font-bold text-3xl text-primary mb-2">500K+</div>
+                <div className="text-muted-foreground">Active Jobs</div>
+              </div>
+              <div className="text-center">
+                <div className="font-bold text-3xl text-primary mb-2">50K+</div>
+                <div className="text-muted-foreground">Companies</div>
+              </div>
+              <div className="text-center">
+                <div className="font-bold text-3xl text-primary mb-2">1M+</div>
+                <div className="text-muted-foreground">Job Seekers</div>
               </div>
             </div>
           </div>
         </div>
       </section>
-      
+
+      {/* Featured Jobs Section */}
+      <section className="py-20 bg-secondary/50">
+        <div className="container px-4">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <h2 className="text-3xl font-bold mb-4">Featured Jobs</h2>
+            <p className="text-muted-foreground">
+              Discover opportunities at top tech companies
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+            {sampleJobs.map((job) => (
+              <JobCard key={job.id} job={job} onApply={handleApply} />
+            ))}
+          </div>
+
+          <div className="text-center mt-12">
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => navigate('/jobs')}
+            >
+              View All Jobs
+            </Button>
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
-      <section className="py-24 bg-secondary/50">
+      <section className="py-20">
         <div className="container px-4">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className={`${animationReady ? 'slide-up' : 'opacity-0'} font-bold transition-all duration-700`}>
@@ -164,9 +210,9 @@ const Index = () => {
           </div>
         </div>
       </section>
-      
+
       {/* Call to Action */}
-      <section className="py-24 bg-gradient-to-br from-accent to-background">
+      <section className="py-20 bg-gradient-to-br from-accent to-background">
         <div className="container px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className={`${animationReady ? 'slide-up' : 'opacity-0'} font-bold mb-6 transition-all duration-700`}>
@@ -185,7 +231,7 @@ const Index = () => {
           </div>
         </div>
       </section>
-      
+
       {/* Footer */}
       <footer className="py-8 border-t">
         <div className="container px-4">
@@ -205,3 +251,4 @@ const Index = () => {
 };
 
 export default Index;
+
