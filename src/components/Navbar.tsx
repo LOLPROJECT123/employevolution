@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -46,7 +45,7 @@ export const Navbar = () => {
             className="flex items-center space-x-2 text-primary font-semibold text-xl tracking-tight button-hover"
           >
             <span className="sr-only">Streamline</span>
-            <img src="/lovable-uploads/8d78f162-7185-4058-b018-02e6724321d1.png" alt="Streamline Logo" className="w-8 h-8" />
+            <img src="/lovable-uploads/81cda60f-8675-4248-93bc-1d140295a4f5.png" alt="Streamline Logo" className="w-8 h-8" />
             <span className="text-[#0EA5E9]">Streamline</span>
           </Link>
 
