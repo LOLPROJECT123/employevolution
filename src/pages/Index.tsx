@@ -239,7 +239,7 @@ const Index = () => {
         <div className="container px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-2 mb-4 md:mb-0">
-              <img src="/lovable-uploads/81cda60f-8675-4248-93bc-1d140295a4f5.png" alt="Streamline Logo" className="w-6 h-6" />
+              <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline Logo" className="w-6 h-6" />
               <span className="font-medium">Streamline</span>
             </div>
             <div className="text-sm text-muted-foreground">

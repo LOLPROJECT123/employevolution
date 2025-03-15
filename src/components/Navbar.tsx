@@ -45,7 +45,7 @@ export const Navbar = () => {
             className="flex items-center space-x-2 text-primary font-semibold text-xl tracking-tight button-hover"
           >
             <span className="sr-only">Streamline</span>
-            <img src="/lovable-uploads/81cda60f-8675-4248-93bc-1d140295a4f5.png" alt="Streamline Logo" className="w-8 h-8" />
+            <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline Logo" className="w-8 h-8" />
             <span className="text-[#0EA5E9]">Streamline</span>
           </Link>
 
