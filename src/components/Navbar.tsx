@@ -6,7 +6,8 @@ import {
   UserIcon, 
   HomeIcon, 
   MenuIcon, 
-  XIcon 
+  XIcon,
+  VideoIcon
 } from 'lucide-react';
 
 export const Navbar = () => {
@@ -60,6 +61,16 @@ export const Navbar = () => {
               }`}
             >
               Home
+            </Link>
+            <Link 
+              to="/interview-practice" 
+              className={`text-sm font-medium transition-colors ${
+                location.pathname === '/interview-practice' 
+                  ? 'text-[#0EA5E9]' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Interview Practice
             </Link>
             {isAuthenticated ? (
               <>
@@ -146,6 +157,17 @@ export const Navbar = () => {
             >
               <HomeIcon className="w-5 h-5" />
               <span>Home</span>
+            </Link>
+            <Link 
+              to="/interview-practice" 
+              className={`flex items-center space-x-2 py-2 px-3 rounded-md ${
+                location.pathname === '/interview-practice' 
+                  ? 'bg-accent text-[#0EA5E9]' 
+                  : 'hover:bg-accent/50'
+              }`}
+            >
+              <VideoIcon className="w-5 h-5" />
+              <span>Interview Practice</span>
             </Link>
             {isAuthenticated ? (
               <>
