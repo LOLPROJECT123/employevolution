@@ -1,3 +1,4 @@
+
 import {
   Sheet,
   SheetContent,
@@ -18,13 +19,16 @@ const Navbar = () => {
     { href: "/jobs", label: "Jobs" },
     { href: "/interview-practice", label: "Interview Practice" },
     { href: "/referrals", label: "Referrals" },
+    { href: "/resume-forum", label: "Resume Forum" },
+    { href: "/leetcode-patterns", label: "LeetCode Patterns" },
   ];
 
   return (
     <nav className="bg-background border-b sticky top-0 z-50">
       <div className="container flex items-center justify-between py-4">
-        <Link to="/" className="font-bold text-2xl">
-          AI Job Prep
+        <Link to="/" className="flex items-center space-x-2 font-bold text-2xl">
+          <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline Logo" className="w-6 h-6" />
+          <span>Streamline</span>
         </Link>
 
         <div className="hidden md:flex items-center space-x-6">
@@ -44,7 +48,7 @@ const Navbar = () => {
           </SheetTrigger>
           <SheetContent side="left" className="sm:max-w-sm">
             <SheetHeader>
-              <SheetTitle>AI Job Prep</SheetTitle>
+              <SheetTitle>Streamline</SheetTitle>
               <SheetDescription>
                 Explore the different sections of the app.
               </SheetDescription>

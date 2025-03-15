@@ -12,6 +12,8 @@ import Referrals from "./pages/Referrals";
 import Jobs from "./pages/Jobs";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
+import ResumeForum from "./pages/ResumeForum";
+import LeetcodePatterns from "./pages/LeetcodePatterns";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +31,8 @@ const App = () => (
             <Route path="/jobs" element={<Jobs />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/resume-forum" element={<ResumeForum />} />
+            <Route path="/leetcode-patterns" element={<LeetcodePatterns />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

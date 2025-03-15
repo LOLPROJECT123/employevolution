@@ -1,3 +1,4 @@
+
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import Navbar from "@/components/Navbar";
@@ -10,7 +11,9 @@ import {
   BarChartIcon, 
   RocketIcon,
   CheckCircleIcon,
-  TrendingUpIcon
+  TrendingUpIcon,
+  MessageCircleIcon,
+  BookIcon
 } from 'lucide-react';
 
 const sampleJobs = [
@@ -64,15 +67,15 @@ const features = [
     delay: "200"
   },
   {
-    title: "Generate Resumes",
-    description: "Create professional resumes tailored to specific job applications.",
-    icon: FileTextIcon,
+    title: "Resume Forum",
+    description: "Get feedback on your resume from the community and industry professionals.",
+    icon: MessageCircleIcon,
     delay: "300"
   },
   {
-    title: "AI Assistance",
-    description: "Get AI-powered help with writing cover letters and preparing for interviews.",
-    icon: RocketIcon,
+    title: "LeetCode Patterns",
+    description: "Learn common patterns for solving technical interview problems effectively.",
+    icon: BookIcon,
     delay: "400"
   },
   {
@@ -112,11 +115,11 @@ const Index = () => {
         <div className="container relative z-10">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className={`${animationReady ? 'slide-up' : 'opacity-0'} text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 transition-all duration-700`}>
-              Land Your Dream Tech Job With <span className="text-primary">AI-Powered Tools</span>
+              Land Your Dream Tech Job With <span className="text-primary">Streamline</span>
             </h1>
             
             <p className={`${animationReady ? 'slide-up' : 'opacity-0'} text-xl text-muted-foreground mb-8 transition-all duration-700 delay-100`}>
-              Get personalized job recommendations, track applications, and accelerate your tech career with our comprehensive platform.
+              Get personalized job recommendations, resume feedback, and interview preparation with our comprehensive platform.
             </p>
             
             <div className={`${animationReady ? 'slide-up' : 'opacity-0'} flex flex-col sm:flex-row justify-center gap-4 mb-12 transition-all duration-700 delay-200`}>
@@ -154,34 +157,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Featured Jobs Section */}
-      <section className="py-20 bg-secondary/50">
-        <div className="container px-4">
-          <div className="text-center max-w-3xl mx-auto mb-12">
-            <h2 className="text-3xl font-bold mb-4">Featured Jobs</h2>
-            <p className="text-muted-foreground">
-              Discover opportunities at top tech companies
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-            {sampleJobs.map((job) => (
-              <JobCard key={job.id} job={job} onApply={handleApply} />
-            ))}
-          </div>
-
-          <div className="text-center mt-12">
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={() => navigate('/jobs')}
-            >
-              View All Jobs
-            </Button>
-          </div>
-        </div>
-      </section>
-
       {/* Features Section */}
       <section className="py-20">
         <div className="container px-4">
@@ -208,6 +183,34 @@ const Index = () => {
                 <p className="text-muted-foreground">{feature.description}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Jobs Section */}
+      <section className="py-20 bg-secondary/50">
+        <div className="container px-4">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <h2 className="text-3xl font-bold mb-4">Featured Jobs</h2>
+            <p className="text-muted-foreground">
+              Discover opportunities at top tech companies
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+            {sampleJobs.map((job) => (
+              <JobCard key={job.id} job={job} onApply={handleApply} />
+            ))}
+          </div>
+
+          <div className="text-center mt-12">
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => navigate('/jobs')}
+            >
+              View All Jobs
+            </Button>
           </div>
         </div>
       </section>
