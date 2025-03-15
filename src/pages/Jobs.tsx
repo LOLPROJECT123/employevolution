@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { Navbar } from "@/components/Navbar";
+import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,7 +34,6 @@ import {
 } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 
-// Mock job data
 const mockJobs = [
   {
     id: 1,
@@ -168,10 +166,8 @@ const Jobs = () => {
   });
 
   useEffect(() => {
-    // Delay animations slightly for better page load experience
     const timer = setTimeout(() => setAnimationReady(true), 100);
     
-    // On component mount, set the first job as selected
     if (jobs.length > 0) {
       setSelectedJob(jobs[0]);
     }
@@ -180,10 +176,8 @@ const Jobs = () => {
   }, [jobs]);
 
   useEffect(() => {
-    // Apply filters
     let result = [...jobs];
     
-    // Apply search filter
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
       result = result.filter(
@@ -195,7 +189,6 @@ const Jobs = () => {
       );
     }
     
-    // Apply location filter
     if (filters.location) {
       const locationLower = filters.location.toLowerCase();
       result = result.filter(
@@ -203,22 +196,17 @@ const Jobs = () => {
       );
     }
     
-    // Apply job type filter
     if (filters.jobType.length > 0) {
       result = result.filter(
         job => filters.jobType.includes(job.type as JobType)
       );
     }
     
-    // Apply remote filter
     if (filters.remote) {
       result = result.filter(job => job.remote);
     }
     
-    // Apply experience level filter
     if (filters.experienceLevels.length > 0) {
-      // This is a simplified implementation since our mock data doesn't have exact experience levels
-      // In a real app, you would match based on the actual experience level data
       result = result.filter(job => {
         const years = parseInt(job.experience.split('+')[0]);
         if (filters.experienceLevels.includes('Entry-level') && years <= 2) return true;
@@ -229,13 +217,8 @@ const Jobs = () => {
       });
     }
     
-    // Apply salary range filter
-    // This is also simplified since our mock data has string salary ranges
-    // In a real app, you would parse the actual salary values
-    
     setFilteredJobs(result);
     
-    // If no job is selected or the selected job is filtered out, select the first job from filtered results
     if ((!selectedJob || !result.some(job => job.id === selectedJob.id)) && result.length > 0) {
       setSelectedJob(result[0]);
     }
@@ -294,7 +277,6 @@ const Jobs = () => {
       
       <main className="flex-1 pt-20">
         <div className="container px-4 py-8">
-          {/* Job Search Header */}
           <div className={`${animationReady ? 'slide-up' : 'opacity-0'} mb-8 transition-all duration-500`}>
             <h1 className="text-3xl font-bold">Find Your Perfect Job</h1>
             <p className="text-muted-foreground mt-1">
@@ -302,7 +284,6 @@ const Jobs = () => {
             </p>
           </div>
           
-          {/* Search Bar */}
           <div className={`${animationReady ? 'slide-up' : 'opacity-0'} mb-8 transition-all duration-500 delay-100`}>
             <div className="relative rounded-lg border shadow-sm overflow-hidden bg-background">
               <div className="flex flex-col md:flex-row">
@@ -350,7 +331,6 @@ const Jobs = () => {
                   {showFilters ? "Hide Filters" : "Show Filters"}
                 </Button>
                 
-                {/* Filter summary */}
                 <div className="ml-4 flex flex-wrap gap-2">
                   {filters.remote && (
                     <div className="inline-flex items-center px-2 py-1 rounded-full bg-secondary text-xs">
@@ -394,7 +374,6 @@ const Jobs = () => {
             </div>
           </div>
           
-          {/* Filters */}
           {showFilters && (
             <div className={`${animationReady ? 'fade-in' : 'opacity-0'} mb-8 rounded-lg border bg-background p-6 transition-all duration-300`}>
               <div className="flex items-center justify-between mb-4">
@@ -409,7 +388,6 @@ const Jobs = () => {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* Job Type */}
                 <div>
                   <h4 className="font-medium mb-3">Job Type</h4>
                   <div className="space-y-2">
@@ -431,7 +409,6 @@ const Jobs = () => {
                   </div>
                 </div>
                 
-                {/* Experience Level */}
                 <div>
                   <h4 className="font-medium mb-3">Experience Level</h4>
                   <div className="space-y-2">
@@ -453,7 +430,6 @@ const Jobs = () => {
                   </div>
                 </div>
                 
-                {/* Salary Range */}
                 <div>
                   <h4 className="font-medium mb-3">Salary Range (K)</h4>
                   <div className="px-2">
@@ -471,7 +447,6 @@ const Jobs = () => {
                   </div>
                 </div>
                 
-                {/* Remote */}
                 <div>
                   <h4 className="font-medium mb-3">Work Model</h4>
                   <div className="flex items-center">
@@ -492,9 +467,7 @@ const Jobs = () => {
             </div>
           )}
           
-          {/* Job Results */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Job Listings */}
             <div className={`${animationReady ? 'slide-up' : 'opacity-0'} lg:col-span-1 transition-all duration-500 delay-200`}>
               <Card className="h-full">
                 <CardHeader className="pb-2">
@@ -576,7 +549,6 @@ const Jobs = () => {
               </Card>
             </div>
             
-            {/* Job Details */}
             <div className={`${animationReady ? 'slide-up' : 'opacity-0'} lg:col-span-2 transition-all duration-500 delay-300`}>
               {selectedJob ? (
                 <Card className="h-full">
