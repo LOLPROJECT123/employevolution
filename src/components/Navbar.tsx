@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ModeToggle } from "@/components/ModeToggle";
 import { Link } from "react-router-dom";
-import { Menu } from "lucide-react";
+import { Menu, UserIcon } from "lucide-react";
 
 const Navbar = () => {
   const links = [
@@ -26,10 +26,19 @@ const Navbar = () => {
   return (
     <nav className="bg-background border-b sticky top-0 z-50">
       <div className="container flex items-center justify-between py-4">
-        <Link to="/" className="flex items-center space-x-2 font-bold text-2xl">
-          <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline Logo" className="w-6 h-6" />
-          <span>Streamline</span>
-        </Link>
+        <div className="flex items-center space-x-4">
+          <Link to="/" className="flex items-center space-x-2 font-bold text-2xl">
+            <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline Logo" className="w-6 h-6" />
+            <span>Streamline</span>
+          </Link>
+          
+          <Link to="/auth">
+            <Button variant="outline" size="sm" className="hidden md:flex items-center gap-2">
+              <UserIcon className="h-4 w-4" />
+              Sign in / Create Account
+            </Button>
+          </Link>
+        </div>
 
         <div className="hidden md:flex items-center space-x-6">
           {links.map((link) => (
@@ -55,6 +64,10 @@ const Navbar = () => {
             </SheetHeader>
             <Separator className="my-4" />
             <div className="grid gap-4 py-4">
+              <Link to="/auth" className="flex items-center gap-2 hover:underline">
+                <UserIcon className="h-4 w-4" />
+                Sign in / Create Account
+              </Link>
               {links.map((link) => (
                 <Link key={link.href} to={link.href} className="hover:underline">
                   {link.label}

@@ -17,21 +17,18 @@ const Auth = () => {
   const [mode, setMode] = useState<AuthMode>('login');
   const [isLoading, setIsLoading] = useState(false);
   
-  // Form state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [animationReady, setAnimationReady] = useState(false);
 
   useEffect(() => {
-    // Get mode from URL query param
     const searchParams = new URLSearchParams(location.search);
     const modeParam = searchParams.get('mode');
     if (modeParam === 'login' || modeParam === 'signup') {
       setMode(modeParam);
     }
     
-    // Delay animations slightly for better page load experience
     const timer = setTimeout(() => setAnimationReady(true), 100);
     return () => clearTimeout(timer);
   }, [location.search]);
@@ -41,17 +38,15 @@ const Auth = () => {
     setIsLoading(true);
     
     try {
-      // This would be replaced with actual authentication logic
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       toast({
         title: mode === 'login' ? "Login successful" : "Account created",
         description: mode === 'login' 
-          ? "Welcome back to EmployEvolution" 
-          : "Your account has been created successfully",
+          ? "Welcome back to Streamline" 
+          : "Your account has been created successfully. Your email will be used for job application updates.",
       });
       
-      // Navigate to dashboard after successful auth
       navigate('/dashboard');
     } catch (error) {
       toast({
@@ -90,6 +85,11 @@ const Auth = () => {
                     ? 'Sign in to access your account' 
                     : 'Sign up to start your job search journey'}
                 </p>
+                {mode === 'signup' && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Your email will be used for job tracker status updates
+                  </p>
+                )}
               </div>
               
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -119,6 +119,11 @@ const Auth = () => {
                     required
                     className="h-11"
                   />
+                  {mode === 'signup' && (
+                    <p className="text-xs text-muted-foreground">
+                      We'll use this email to send you job application status updates
+                    </p>
+                  )}
                 </div>
                 
                 <div className="space-y-2">
