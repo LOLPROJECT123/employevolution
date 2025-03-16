@@ -58,37 +58,43 @@ const features = [
     title: "Find Relevant Jobs",
     description: "Discover job opportunities tailored to your skills and preferences.",
     icon: SearchIcon,
-    delay: "100"
+    delay: "100",
+    path: "/jobs"
   },
   {
     title: "Track Applications",
     description: "Keep track of your job applications and never miss a follow-up.",
     icon: CheckCircleIcon,
-    delay: "200"
+    delay: "200",
+    path: "/dashboard"
   },
   {
     title: "Resume Forum",
     description: "Get feedback on your resume from the community and industry professionals.",
     icon: MessageCircleIcon,
-    delay: "300"
+    delay: "300",
+    path: "/resume-forum"
   },
   {
     title: "LeetCode Patterns",
     description: "Learn common patterns for solving technical interview problems effectively.",
     icon: BookIcon,
-    delay: "400"
+    delay: "400",
+    path: "/leetcode-patterns"
   },
   {
     title: "Application Insights",
     description: "Gain valuable insights on your job search progress and performance.",
     icon: BarChartIcon,
-    delay: "500"
+    delay: "500",
+    path: "/dashboard"
   },
   {
     title: "Career Opportunities",
     description: "Explore global opportunities beyond your local area.",
     icon: BriefcaseIcon,
-    delay: "600"
+    delay: "600",
+    path: "/jobs"
   }
 ];
 
@@ -173,8 +179,9 @@ const Index = () => {
             {features.map((feature, index) => (
               <div 
                 key={index}
-                className={`${animationReady ? 'slide-up' : 'opacity-0'} glass-card rounded-xl p-6 transition-all duration-700`}
+                className={`${animationReady ? 'slide-up' : 'opacity-0'} glass-card rounded-xl p-6 transition-all duration-700 cursor-pointer hover:shadow-md`}
                 style={{ transitionDelay: `${parseInt(feature.delay)}ms` }}
+                onClick={() => navigate(feature.path)}
               >
                 <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                   <feature.icon className="w-6 h-6 text-primary" />
@@ -240,7 +247,7 @@ const Index = () => {
       <footer className="py-8 border-t">
         <div className="container px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center space-x-2 mb-4 md:mb-0">
+            <div className="flex items-center space-x-2 mb-4 md:mb-0 cursor-pointer" onClick={() => navigate('/')}>
               <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline Logo" className="w-6 h-6" />
               <span className="font-medium">Streamline</span>
             </div>
