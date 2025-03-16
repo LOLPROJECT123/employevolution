@@ -26,19 +26,10 @@ const Navbar = () => {
   return (
     <nav className="bg-background border-b sticky top-0 z-50">
       <div className="container flex items-center justify-between py-4">
-        <div className="flex items-center space-x-4">
-          <Link to="/" className="flex items-center space-x-2 font-bold text-2xl">
-            <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline Logo" className="w-6 h-6" />
-            <span>Streamline</span>
-          </Link>
-          
-          <Link to="/auth">
-            <Button variant="outline" size="sm" className="hidden md:flex items-center gap-2">
-              <UserIcon className="h-4 w-4" />
-              Sign in / Create Account
-            </Button>
-          </Link>
-        </div>
+        <Link to="/" className="flex items-center space-x-2 font-bold text-2xl">
+          <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline Logo" className="w-6 h-6" />
+          <span>Streamline</span>
+        </Link>
 
         <div className="hidden md:flex items-center space-x-6">
           {links.map((link) => (
@@ -46,7 +37,16 @@ const Navbar = () => {
               {link.label}
             </Link>
           ))}
-          <ModeToggle />
+          
+          <div className="flex items-center space-x-3">
+            <Link to="/auth">
+              <Button variant="outline" size="sm" className="flex items-center gap-2">
+                <UserIcon className="h-4 w-4" />
+                Sign in / Create Account
+              </Button>
+            </Link>
+            <ModeToggle />
+          </div>
         </div>
 
         <Sheet>
