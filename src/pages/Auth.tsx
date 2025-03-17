@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/use-toast";
-import { BriefcaseIcon, Loader2Icon, GithubIcon, LinkedinIcon, MailIcon } from 'lucide-react';
+import { BriefcaseIcon, Loader2Icon, GithubIcon, LinkedinIcon, MailIcon, CheckIcon } from 'lucide-react';
+import { Checkbox } from "@/components/ui/checkbox";
+import { PasswordManager } from "@/components/PasswordManager";
 
 type AuthMode = 'login' | 'signup';
 
@@ -22,6 +24,8 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [animationReady, setAnimationReady] = useState(false);
+  const [savePassword, setSavePassword] = useState(true);
+  const [usePresetPassword, setUsePresetPassword] = useState(false);
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -30,9 +34,17 @@ const Auth = () => {
       setMode(modeParam);
     }
     
+    // Load preset password from localStorage if exists
+    if (mode === 'signup') {
+      const presetPassword = localStorage.getItem('presetPassword');
+      if (presetPassword && usePresetPassword) {
+        setPassword(presetPassword);
+      }
+    }
+    
     const timer = setTimeout(() => setAnimationReady(true), 100);
     return () => clearTimeout(timer);
-  }, [location.search]);
+  }, [location.search, mode, usePresetPassword]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +52,32 @@ const Auth = () => {
     
     try {
       await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Save password for job applications if checkbox is checked
+      if (mode === 'signup' && savePassword) {
+        const website = new URL(window.location.href).hostname;
+        const savedPasswords = JSON.parse(localStorage.getItem('savedJobPasswords') || '[]');
+        
+        // Add the current password to saved passwords
+        const newSavedPassword = {
+          website,
+          username: email,
+          password,
+          length: password.length,
+          createdAt: new Date().toISOString(),
+        };
+        
+        localStorage.setItem('savedJobPasswords', JSON.stringify([...savedPasswords, newSavedPassword]));
+        
+        // If this is a new account, save as preset password if not already set
+        if (!localStorage.getItem('presetPassword')) {
+          localStorage.setItem('presetPassword', password);
+          toast({
+            title: "Password Saved as Preset",
+            description: "This password will be available for future sign-ups",
+          });
+        }
+      }
       
       toast({
         title: mode === 'login' ? "Login successful" : "Account created",
@@ -114,6 +152,25 @@ const Auth = () => {
     toast({
       title: "Password Generated",
       description: `A secure ${length}-character password has been generated.`,
+    });
+  };
+
+  // Function to save current password as preset for future sign-ups
+  const saveAsPresetPassword = () => {
+    if (!password) {
+      toast({
+        title: "No Password",
+        description: "Please enter or generate a password first",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    localStorage.setItem('presetPassword', password);
+    
+    toast({
+      title: "Preset Password Saved",
+      description: "This password will be used for future job application sign-ups",
     });
   };
 
@@ -196,18 +253,31 @@ const Auth = () => {
                         Forgot password?
                       </a>
                     ) : (
-                      <a 
-                        href="#" 
-                        className="text-xs text-primary hover:text-primary/80"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          generatePassword();
-                        }}
-                      >
-                        Generate secure password
-                      </a>
+                      <div className="flex space-x-3">
+                        <a 
+                          href="#" 
+                          className="text-xs text-primary hover:text-primary/80"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            generatePassword();
+                          }}
+                        >
+                          Generate password
+                        </a>
+                        <a 
+                          href="#" 
+                          className="text-xs text-primary hover:text-primary/80"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            saveAsPresetPassword();
+                          }}
+                        >
+                          Save as preset
+                        </a>
+                      </div>
                     )}
                   </div>
+                  
                   <Input 
                     id="password"
                     type="password"
@@ -217,10 +287,45 @@ const Auth = () => {
                     required
                     className="h-11"
                   />
-                  {mode === 'signup' && password && (
-                    <p className="text-xs text-muted-foreground">
-                      This password will be saved and available when applying to jobs that require account creation
-                    </p>
+                  
+                  {mode === 'signup' && (
+                    <div className="space-y-3 mt-3">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="save-password" 
+                          checked={savePassword}
+                          onCheckedChange={(checked) => setSavePassword(checked as boolean)}
+                        />
+                        <label
+                          htmlFor="save-password"
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          Save password for job applications
+                        </label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="use-preset" 
+                          checked={usePresetPassword}
+                          onCheckedChange={(checked) => {
+                            setUsePresetPassword(checked as boolean);
+                            if (checked) {
+                              const presetPassword = localStorage.getItem('presetPassword');
+                              if (presetPassword) {
+                                setPassword(presetPassword);
+                              }
+                            }
+                          }}
+                        />
+                        <label
+                          htmlFor="use-preset"
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          Use preset password
+                        </label>
+                      </div>
+                    </div>
                   )}
                 </div>
                 
@@ -311,6 +416,12 @@ const Auth = () => {
                   {mode === 'login' ? 'Sign up' : 'Sign in'}
                 </button>
               </div>
+              
+              {mode === 'signup' && (
+                <div className="mt-6 flex justify-center">
+                  <PasswordManager />
+                </div>
+              )}
             </div>
           </div>
         </div>
