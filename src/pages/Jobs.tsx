@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { JobScraperConfig } from "@/components/JobScraperConfig";
 import { PasswordManager } from "@/components/PasswordManager";
+import { ApplicationAnswers } from "@/components/ApplicationAnswers";
 import {
   Card,
   CardContent,
@@ -162,7 +163,8 @@ const Jobs = () => {
   const [animationReady, setAnimationReady] = useState(false);
   const [isScrapingJobs, setIsScrapingJobs] = useState(false);
   const [lastScraped, setLastScraped] = useState<Date | null>(null);
-  
+  const [showApplicationAnswers, setShowApplicationAnswers] = useState(false);
+
   const [filters, setFilters] = useState<Filters>({
     search: "",
     location: "",
@@ -421,6 +423,15 @@ const Jobs = () => {
                 </Button>
                 <JobScraperConfig onConfigUpdate={handleConfigUpdate} />
                 <PasswordManager />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                  onClick={() => setShowApplicationAnswers(!showApplicationAnswers)}
+                >
+                  <SaveIcon className="w-4 h-4" />
+                  {showApplicationAnswers ? "Hide Saved Answers" : "Saved Answers"}
+                </Button>
               </div>
               
               {lastScraped && (
@@ -431,6 +442,16 @@ const Jobs = () => {
               )}
             </div>
           </div>
+          
+          {showApplicationAnswers && (
+            <div className={`${animationReady ? 'slide-up' : 'opacity-0'} mb-8 transition-all duration-500 delay-100`}>
+              <Card className="bg-background">
+                <CardContent className="p-6">
+                  <ApplicationAnswers />
+                </CardContent>
+              </Card>
+            </div>
+          )}
           
           <div className={`${animationReady ? 'slide-up' : 'opacity-0'} mb-8 transition-all duration-500 delay-100`}>
             <div className="relative rounded-lg border shadow-sm overflow-hidden bg-background">
@@ -840,4 +861,3 @@ const Jobs = () => {
 };
 
 export default Jobs;
-

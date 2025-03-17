@@ -1,4 +1,3 @@
-
 export interface Job {
   id: string;
   title: string;
@@ -15,6 +14,7 @@ export interface Job {
   requirements: string[];
   postedAt: string;
   skills: string[];
+  matchPercentage?: number;
 }
 
 export type JobStatus = 'applied' | 'interviewing' | 'offered' | 'rejected' | 'accepted';
