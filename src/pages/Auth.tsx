@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Navbar from "@/components/Navbar";
@@ -6,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/use-toast";
-import { BriefcaseIcon, Loader2Icon } from 'lucide-react';
+import { BriefcaseIcon, Loader2Icon, GithubIcon, LinkedinIcon, MailIcon } from 'lucide-react';
 
 type AuthMode = 'login' | 'signup';
 
@@ -59,10 +60,61 @@ const Auth = () => {
     }
   };
 
+  const handleSocialLogin = (provider: string) => {
+    setIsLoading(true);
+    toast({
+      title: `${provider} Authentication`,
+      description: `Authenticating with ${provider}...`,
+    });
+    
+    // Simulate social login
+    setTimeout(() => {
+      setIsLoading(false);
+      toast({
+        title: "Login successful",
+        description: `You've been authenticated with ${provider}`,
+      });
+      navigate('/dashboard');
+    }, 1500);
+  };
+
   const toggleMode = () => {
     const newMode = mode === 'login' ? 'signup' : 'login';
     setMode(newMode);
     navigate(`/auth?mode=${newMode}`);
+  };
+
+  const generatePassword = () => {
+    if (mode !== 'signup') return;
+    
+    const length = Math.random() > 0.5 ? 8 : 12; // Randomly choose 8 or 12 characters
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
+    let generatedPassword = "";
+    
+    // Ensure at least one uppercase, one lowercase, one number, one special char
+    generatedPassword += "A"; // Uppercase
+    generatedPassword += "a"; // Lowercase
+    generatedPassword += "1"; // Number
+    generatedPassword += "!"; // Special
+    
+    // Fill the rest randomly
+    for (let i = 4; i < length; i++) {
+      const randomIndex = Math.floor(Math.random() * charset.length);
+      generatedPassword += charset[randomIndex];
+    }
+    
+    // Shuffle the password
+    generatedPassword = generatedPassword
+      .split('')
+      .sort(() => Math.random() - 0.5)
+      .join('');
+    
+    setPassword(generatedPassword);
+    
+    toast({
+      title: "Password Generated",
+      description: `A secure ${length}-character password has been generated.`,
+    });
   };
 
   return (
@@ -129,7 +181,7 @@ const Auth = () => {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password">Password</Label>
-                    {mode === 'login' && (
+                    {mode === 'login' ? (
                       <a 
                         href="#" 
                         className="text-xs text-primary hover:text-primary/80"
@@ -143,6 +195,17 @@ const Auth = () => {
                       >
                         Forgot password?
                       </a>
+                    ) : (
+                      <a 
+                        href="#" 
+                        className="text-xs text-primary hover:text-primary/80"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          generatePassword();
+                        }}
+                      >
+                        Generate secure password
+                      </a>
                     )}
                   </div>
                   <Input 
@@ -154,6 +217,11 @@ const Auth = () => {
                     required
                     className="h-11"
                   />
+                  {mode === 'signup' && password && (
+                    <p className="text-xs text-muted-foreground">
+                      This password will be saved and available when applying to jobs that require account creation
+                    </p>
+                  )}
                 </div>
                 
                 <Button 
@@ -184,18 +252,14 @@ const Auth = () => {
                   </div>
                 </div>
                 
-                <div className="mt-6">
+                <div className="mt-6 grid grid-cols-3 gap-3">
                   <Button 
                     variant="outline" 
-                    className="w-full h-11 button-hover"
-                    onClick={() => {
-                      toast({
-                        title: "Google Sign In",
-                        description: "This feature is coming soon.",
-                      });
-                    }}
+                    className="h-11 button-hover flex justify-center"
+                    onClick={() => handleSocialLogin('Google')}
+                    disabled={isLoading}
                   >
-                    <svg viewBox="0 0 24 24" className="h-5 w-5 mr-2" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
                       <path
                         d="M12.0003 4.75C13.7703 4.75 15.3553 5.36002 16.6053 6.54998L20.0303 3.125C17.9502 1.19 15.2353 0 12.0003 0C7.31028 0 3.25527 2.69 1.28027 6.60998L5.27028 9.70498C6.21525 6.86002 8.87028 4.75 12.0003 4.75Z"
                         fill="#EA4335"
@@ -213,7 +277,24 @@ const Auth = () => {
                         fill="#34A853"
                       />
                     </svg>
-                    Continue with Google
+                  </Button>
+                  
+                  <Button 
+                    variant="outline" 
+                    className="h-11 button-hover flex justify-center"
+                    onClick={() => handleSocialLogin('GitHub')}
+                    disabled={isLoading}
+                  >
+                    <GithubIcon className="h-5 w-5" />
+                  </Button>
+                  
+                  <Button 
+                    variant="outline" 
+                    className="h-11 button-hover flex justify-center"
+                    onClick={() => handleSocialLogin('LinkedIn')}
+                    disabled={isLoading}
+                  >
+                    <LinkedinIcon className="h-5 w-5" />
                   </Button>
                 </div>
               </div>

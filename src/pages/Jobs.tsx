@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
+import { JobScraperConfig } from "@/components/JobScraperConfig";
+import { PasswordManager } from "@/components/PasswordManager";
 import {
   Card,
   CardContent,
@@ -28,9 +30,10 @@ import {
   BuildingIcon,
   FilterIcon,
   XIcon,
-  ChevronDownIcon,
   BookmarkIcon,
   ExternalLinkIcon,
+  RefreshCwIcon,
+  BadgeCheckIcon,
 } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 
@@ -137,6 +140,8 @@ interface Job {
   postedDate: string;
   description: string;
   skills: string[];
+  source?: string;
+  applyUrl?: string;
 }
 
 interface Filters {
@@ -155,6 +160,8 @@ const Jobs = () => {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [animationReady, setAnimationReady] = useState(false);
+  const [isScrapingJobs, setIsScrapingJobs] = useState(false);
+  const [lastScraped, setLastScraped] = useState<Date | null>(null);
   
   const [filters, setFilters] = useState<Filters>({
     search: "",
@@ -172,8 +179,26 @@ const Jobs = () => {
       setSelectedJob(jobs[0]);
     }
     
+    const storedJobs = localStorage.getItem('scrapedJobs');
+    const lastScrapedTime = localStorage.getItem('lastScrapedTime');
+    
+    if (storedJobs) {
+      try {
+        const parsedJobs = JSON.parse(storedJobs);
+        if (Array.isArray(parsedJobs) && parsedJobs.length > 0) {
+          setJobs([...parsedJobs, ...jobs.slice(0, 2)]);
+        }
+      } catch (e) {
+        console.error("Error parsing stored jobs:", e);
+      }
+    }
+    
+    if (lastScrapedTime) {
+      setLastScraped(new Date(lastScrapedTime));
+    }
+    
     return () => clearTimeout(timer);
-  }, [jobs]);
+  }, []);
 
   useEffect(() => {
     let result = [...jobs];
@@ -258,10 +283,14 @@ const Jobs = () => {
   };
 
   const applyToJob = (job: Job) => {
-    toast({
-      title: "Application Started",
-      description: `You're applying to ${job.title} at ${job.company}.`,
-    });
+    if (job.applyUrl) {
+      window.open(job.applyUrl, '_blank');
+    } else {
+      toast({
+        title: "Application Started",
+        description: `You're applying to ${job.title} at ${job.company}.`,
+      });
+    }
   };
 
   const saveJob = (job: Job) => {
@@ -269,6 +298,95 @@ const Jobs = () => {
       title: "Job Saved",
       description: `${job.title} at ${job.company} has been saved.`,
     });
+    
+    const savedJobs = localStorage.getItem('savedJobs');
+    try {
+      const parsedJobs = savedJobs ? JSON.parse(savedJobs) : [];
+      const updatedJobs = [...parsedJobs, job];
+      localStorage.setItem('savedJobs', JSON.stringify(updatedJobs));
+    } catch (e) {
+      console.error("Error saving job:", e);
+    }
+  };
+
+  const handleConfigUpdate = (sources: {id: string, name: string, isActive: boolean}[]) => {
+    toast({
+      title: "Job Sources Updated",
+      description: `${sources.filter(s => s.isActive).length} job sources are now active.`,
+    });
+  };
+
+  const refreshJobListings = () => {
+    setIsScrapingJobs(true);
+    
+    setTimeout(() => {
+      const newJobs: Job[] = [
+        {
+          id: Math.floor(Math.random() * 10000),
+          title: "Senior Frontend Engineer",
+          company: "TechHQ",
+          location: "Remote",
+          type: "Full-time",
+          salary: "$140K - $180K",
+          experience: "5+ years",
+          logo: "https://via.placeholder.com/50",
+          remote: true,
+          postedDate: new Date().toISOString(),
+          description: "TechHQ is looking for a Senior Frontend Engineer to join our growing team. You'll be responsible for building and maintaining our core products using React and TypeScript.",
+          skills: ["React", "TypeScript", "GraphQL", "CSS"],
+          source: "LinkedIn",
+          applyUrl: "https://linkedin.com/jobs"
+        },
+        {
+          id: Math.floor(Math.random() * 10000),
+          title: "Backend Developer",
+          company: "DataSystems",
+          location: "Boston, MA",
+          type: "Full-time",
+          salary: "$120K - $150K",
+          experience: "3+ years",
+          logo: "https://via.placeholder.com/50",
+          remote: false,
+          postedDate: new Date().toISOString(),
+          description: "Join our backend team to build scalable APIs and services using Node.js and PostgreSQL.",
+          skills: ["Node.js", "PostgreSQL", "Express", "API Design"],
+          source: "Indeed",
+          applyUrl: "https://indeed.com/jobs"
+        },
+        {
+          id: Math.floor(Math.random() * 10000),
+          title: "DevOps Engineer",
+          company: "CloudNinjas",
+          location: "Seattle, WA",
+          type: "Full-time",
+          salary: "$130K - $160K",
+          experience: "4+ years",
+          logo: "https://via.placeholder.com/50",
+          remote: true,
+          postedDate: new Date().toISOString(),
+          description: "Help us build and maintain our cloud infrastructure with AWS, Kubernetes, and Terraform.",
+          skills: ["AWS", "Kubernetes", "Terraform", "CI/CD"],
+          source: "GitHub Jobs",
+          applyUrl: "https://github.com/jobs"
+        }
+      ];
+      
+      const allJobs = [...newJobs, ...jobs];
+      setJobs(allJobs);
+      
+      localStorage.setItem('scrapedJobs', JSON.stringify(allJobs));
+      
+      const now = new Date();
+      setLastScraped(now);
+      localStorage.setItem('lastScrapedTime', now.toISOString());
+      
+      setIsScrapingJobs(false);
+      
+      toast({
+        title: "Jobs Updated",
+        description: `${newJobs.length} new job listings have been added.`,
+      });
+    }, 2500);
   };
 
   return (
@@ -282,6 +400,36 @@ const Jobs = () => {
             <p className="text-muted-foreground mt-1">
               Discover opportunities that match your skills and preferences.
             </p>
+          </div>
+          
+          <div className={`${animationReady ? 'slide-up' : 'opacity-0'} mb-4 transition-all duration-500 delay-100`}>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                  onClick={refreshJobListings}
+                  disabled={isScrapingJobs}
+                >
+                  {isScrapingJobs ? (
+                    <RefreshCwIcon className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <RefreshCwIcon className="w-4 h-4" />
+                  )}
+                  {isScrapingJobs ? "Refreshing..." : "Refresh Jobs"}
+                </Button>
+                <JobScraperConfig onConfigUpdate={handleConfigUpdate} />
+                <PasswordManager />
+              </div>
+              
+              {lastScraped && (
+                <div className="text-xs text-muted-foreground flex items-center gap-1">
+                  <ClockIcon className="w-3 h-3" />
+                  Last updated: {lastScraped.toLocaleString()}
+                </div>
+              )}
+            </div>
           </div>
           
           <div className={`${animationReady ? 'slide-up' : 'opacity-0'} mb-8 transition-all duration-500 delay-100`}>
@@ -508,6 +656,11 @@ const Jobs = () => {
                                     Remote
                                   </span>
                                 )}
+                                {job.source && (
+                                  <span className="px-1.5 py-0.5 rounded-full bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400">
+                                    {job.source}
+                                  </span>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -555,7 +708,14 @@ const Jobs = () => {
                   <CardHeader className="pb-2">
                     <div className="flex justify-between">
                       <div>
-                        <CardTitle>{selectedJob.title}</CardTitle>
+                        <CardTitle className="flex items-center gap-2">
+                          {selectedJob.title}
+                          {selectedJob.source && (
+                            <span className="text-xs px-2 py-1 rounded-full bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400">
+                              via {selectedJob.source}
+                            </span>
+                          )}
+                        </CardTitle>
                         <CardDescription>
                           {selectedJob.company} • {selectedJob.location}
                         </CardDescription>
@@ -569,14 +729,16 @@ const Jobs = () => {
                         >
                           <BookmarkIcon className="w-4 h-4" />
                         </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => window.open('#', '_blank')}
-                          className="button-hover"
-                        >
-                          <ExternalLinkIcon className="w-4 h-4" />
-                        </Button>
+                        {selectedJob.applyUrl && (
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => window.open(selectedJob.applyUrl, '_blank')}
+                            className="button-hover"
+                          >
+                            <ExternalLinkIcon className="w-4 h-4" />
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </CardHeader>
@@ -621,6 +783,21 @@ const Jobs = () => {
                           ))}
                         </div>
                       </div>
+                      
+                      {selectedJob.source && (
+                        <div className="p-4 rounded-lg bg-secondary/20 text-sm">
+                          <div className="flex items-center gap-2 mb-2">
+                            <BadgeCheckIcon className="w-5 h-5 text-primary" />
+                            <span className="font-medium">Application Details</span>
+                          </div>
+                          <p className="text-muted-foreground mb-2">
+                            This job was found on {selectedJob.source}. Click the "Apply Now" button to visit the application page.
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Tip: Use the Password Manager to generate and save a new account password if required during the application.
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                   <CardFooter className="border-t pt-4">
@@ -663,3 +840,4 @@ const Jobs = () => {
 };
 
 export default Jobs;
+
