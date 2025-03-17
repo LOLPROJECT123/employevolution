@@ -13,4 +13,5 @@ export type ForumPost = {
   comments: number;
   timestamp: string;
   isAnonymous: boolean;
+  matchPercentage?: number;
 };

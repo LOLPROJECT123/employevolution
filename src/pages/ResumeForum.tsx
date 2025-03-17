@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ResumePost } from "@/types/resumePost";
-import { ArrowUpIcon, ArrowDownIcon, MessageCircleIcon, Upload } from "lucide-react";
+import { ArrowUpIcon, ArrowDownIcon, MessageCircleIcon, Upload, PercentIcon } from "lucide-react";
 
 // Sample data for resume posts
 const samplePosts: ResumePost[] = [
@@ -82,6 +82,14 @@ const ResumeForum = () => {
   const [newPostTitle, setNewPostTitle] = useState("");
   const [newPostContent, setNewPostContent] = useState("");
 
+  // Function to determine color based on match percentage
+  const getMatchColor = (percentage?: number) => {
+    if (!percentage) return "";
+    if (percentage >= 70) return "text-green-500";
+    if (percentage >= 50) return "text-amber-500";
+    return "text-red-500";
+  };
+
   const handleCreatePost = () => {
     if (!newPostTitle || !newPostContent) return;
     
@@ -141,11 +149,11 @@ const ResumeForum = () => {
                           </div>
                         </div>
                         {post.matchPercentage && (
-                          <div className="flex flex-col items-end">
-                            <span className="text-sm text-muted-foreground">Match</span>
-                            <span className={`font-bold ${post.matchPercentage >= 70 ? 'text-green-500' : post.matchPercentage >= 50 ? 'text-amber-500' : 'text-red-500'}`}>
+                          <div className="flex items-center bg-secondary/30 rounded-md px-2 py-1">
+                            <span className={`text-xl font-bold ${getMatchColor(post.matchPercentage)}`}>
                               {post.matchPercentage}%
                             </span>
+                            <PercentIcon className={`h-4 w-4 ml-1 ${getMatchColor(post.matchPercentage)}`} />
                           </div>
                         )}
                       </div>

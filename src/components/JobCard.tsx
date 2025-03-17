@@ -3,7 +3,7 @@ import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Building2, Clock } from "lucide-react";
+import { MapPin, Building2, Clock, PercentIcon } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface JobCardProps {
@@ -14,6 +14,14 @@ interface JobCardProps {
 export function JobCard({ job, onApply }: JobCardProps) {
   const formattedSalary = `${job.salary.currency}${job.salary.min.toLocaleString()} - ${job.salary.currency}${job.salary.max.toLocaleString()}`;
   const timeAgo = formatDistanceToNow(new Date(job.postedAt), { addSuffix: true });
+
+  // Determine color based on match percentage
+  const getMatchColor = (percentage?: number) => {
+    if (!percentage) return "";
+    if (percentage >= 70) return "text-green-500";
+    if (percentage >= 50) return "text-amber-500";
+    return "text-red-500";
+  };
 
   return (
     <Card className="group hover:shadow-md transition-all duration-200 cursor-pointer">
@@ -30,9 +38,19 @@ export function JobCard({ job, onApply }: JobCardProps) {
               <span>{job.location}</span>
             </div>
           </div>
-          <div className="text-sm text-muted-foreground flex items-center gap-1">
-            <Clock className="w-4 h-4" />
-            {timeAgo}
+          <div className="flex flex-col items-end gap-1">
+            {job.matchPercentage && (
+              <div className="flex items-center">
+                <span className={`text-xl font-bold ${getMatchColor(job.matchPercentage)}`}>
+                  {job.matchPercentage}%
+                </span>
+                <PercentIcon className={`w-4 h-4 ml-1 ${getMatchColor(job.matchPercentage)}`} />
+              </div>
+            )}
+            <div className="text-sm text-muted-foreground flex items-center gap-1">
+              <Clock className="w-4 h-4" />
+              {timeAgo}
+            </div>
           </div>
         </div>
       </CardHeader>
