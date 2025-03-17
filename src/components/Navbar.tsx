@@ -21,6 +21,7 @@ const Navbar = () => {
     { href: "/referrals", label: "Referrals" },
     { href: "/resume-forum", label: "Resume Forum" },
     { href: "/leetcode-patterns", label: "LeetCode Patterns" },
+    { href: "/salary-negotiations", label: "Salary Negotiations" },
   ];
 
   return (
