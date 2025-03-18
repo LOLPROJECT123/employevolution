@@ -31,6 +31,11 @@ export interface Job {
   responsibilities?: string[];
   applyUrl?: string;
   source?: string;
+  workModel?: 'onsite' | 'remote' | 'hybrid';
+  sponsorH1b?: boolean;
+  category?: string;
+  excludedSkills?: string[];
+  jobFunction?: string;
 }
 
 export type JobStatus = 'applied' | 'interviewing' | 'offered' | 'rejected' | 'accepted';
@@ -54,6 +59,7 @@ export interface SavedSearch {
 export interface JobFilters {
   search: string;
   location: string;
+  locationRadius?: number;
   jobType: string[];
   remote: boolean;
   experienceLevels: string[];
@@ -65,4 +71,14 @@ export interface JobFilters {
   benefits: string[];
   datePosted?: string;
   excludedSkills?: string[];
+  jobFunction?: string[];
+  workModel?: string[];
+  experienceYears?: [number, number];
+  sponsorH1b?: boolean;
+  categories?: string[];
+  companies?: string[];
+  excludeStaffingAgency?: boolean;
+  companyStage?: string[];
+  roleType?: string[];
+  title?: string[];
 }
