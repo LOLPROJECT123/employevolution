@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import Navbar from "@/components/Navbar";
 import ATSOptimizer from "@/components/ATSOptimizer";
+import CommonATSSystems from "@/components/CommonATSSystems";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const ResumeForum = () => {
@@ -20,12 +21,24 @@ const ResumeForum = () => {
           <Tabs defaultValue="ats-optimizer" className="space-y-6">
             <TabsList>
               <TabsTrigger value="ats-optimizer">ATS Optimizer</TabsTrigger>
+              <TabsTrigger value="ats-systems">ATS Systems</TabsTrigger>
               <TabsTrigger value="forum">Resume Forum</TabsTrigger>
               <TabsTrigger value="templates">Templates</TabsTrigger>
             </TabsList>
             
             <TabsContent value="ats-optimizer">
               <ATSOptimizer />
+            </TabsContent>
+            
+            <TabsContent value="ats-systems">
+              <div className="space-y-6">
+                <p className="text-muted-foreground">
+                  Different companies use different Applicant Tracking Systems (ATS) to screen resumes. 
+                  Below are some of the most common systems used by employers. Understanding these 
+                  systems can help you tailor your resume accordingly.
+                </p>
+                <CommonATSSystems />
+              </div>
             </TabsContent>
             
             <TabsContent value="forum">
