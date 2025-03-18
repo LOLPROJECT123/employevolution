@@ -35,6 +35,7 @@ import {
   ExternalLinkIcon,
   RefreshCwIcon,
   BadgeCheckIcon,
+  Save,
 } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 
@@ -429,7 +430,7 @@ const Jobs = () => {
                   className="flex items-center gap-2"
                   onClick={() => setShowApplicationAnswers(!showApplicationAnswers)}
                 >
-                  <SaveIcon className="w-4 h-4" />
+                  <Save className="w-4 h-4" />
                   {showApplicationAnswers ? "Hide Saved Answers" : "Saved Answers"}
                 </Button>
               </div>
