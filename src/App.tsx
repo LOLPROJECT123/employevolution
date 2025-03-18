@@ -15,6 +15,7 @@ import Auth from "./pages/Auth";
 import ResumeForum from "./pages/ResumeForum";
 import LeetcodePatterns from "./pages/LeetcodePatterns";
 import SalaryNegotiations from "./pages/SalaryNegotiations";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/resume-forum" element={<ResumeForum />} />
             <Route path="/leetcode-patterns" element={<LeetcodePatterns />} />
             <Route path="/salary-negotiations" element={<SalaryNegotiations />} />
+            <Route path="/profile" element={<Profile />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
