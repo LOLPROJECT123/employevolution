@@ -9,13 +9,28 @@ export interface Job {
     max: number;
     currency: string;
   };
-  type: 'full-time' | 'part-time' | 'contract' | 'internship';
-  level: 'entry' | 'mid' | 'senior' | 'lead' | 'executive';
+  type: 'full-time' | 'part-time' | 'contract' | 'internship' | 'temporary' | 'volunteer' | 'other';
+  level: 'intern' | 'entry' | 'mid' | 'senior' | 'lead' | 'executive' | 'manager' | 'director';
   description: string;
   requirements: string[];
   postedAt: string;
   skills: string[];
   matchPercentage?: number;
+  remote?: boolean;
+  companyType?: 'private' | 'public' | 'nonprofit' | 'education';
+  companySize?: 'seed' | 'early' | 'mid-size' | 'large' | 'enterprise';
+  datePosted?: string;
+  education?: string[];
+  benefits?: string[];
+  matchCriteria?: {
+    degree?: boolean;
+    experience?: boolean;
+    skills?: boolean;
+    location?: boolean;
+  };
+  responsibilities?: string[];
+  applyUrl?: string;
+  source?: string;
 }
 
 export type JobStatus = 'applied' | 'interviewing' | 'offered' | 'rejected' | 'accepted';
@@ -27,4 +42,27 @@ export interface JobApplication {
   status: JobStatus;
   appliedAt: string;
   notes?: string;
+}
+
+export interface SavedSearch {
+  id: string;
+  name: string;
+  filters: JobFilters;
+  createdAt: string;
+}
+
+export interface JobFilters {
+  search: string;
+  location: string;
+  jobType: string[];
+  remote: boolean;
+  experienceLevels: string[];
+  education: string[];
+  salaryRange: [number, number];
+  skills: string[];
+  companyTypes: string[];
+  companySize: string[];
+  benefits: string[];
+  datePosted?: string;
+  excludedSkills?: string[];
 }
