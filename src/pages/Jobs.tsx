@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
   BriefcaseIcon,
   SearchIcon,
   MapPinIcon,
@@ -46,8 +56,19 @@ import {
   RefreshCwIcon,
   BadgeCheckIcon,
   Save,
+  GraduationCapIcon,
+  FolderIcon,
+  TagIcon,
+  DollarSignIcon,
+  ShieldCheckIcon,
+  UsersIcon,
+  HeartIcon,
+  PlusIcon,
+  BellRingIcon,
 } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Textarea } from "@/components/ui/textarea";
 
 const mockJobs = [
   {
@@ -163,7 +184,122 @@ interface Filters {
   remote: boolean;
   experienceLevels: ExperienceLevel[];
   salaryRange: [number, number];
+  categories?: string[];
+  education?: string[];
+  sponsorH1b?: boolean;
+  companyTypes?: string[];
+  companySize?: string[];
+  benefits?: string[];
+  workModel?: string[];
+  excludeStaffingAgency?: boolean;
+  companyStage?: string[];
+  title?: string[];
+  datePosted?: string;
 }
+
+const categoryOptions = [
+  "Software Engineering",
+  "Product Management",
+  "Data Science",
+  "Design",
+  "Marketing",
+  "Sales & Account Management",
+  "Finance & Banking",
+  "Medical, Clinical & Veterinary",
+  "Nursing & Allied Health Professionals",
+  "Retail",
+  "Education",
+  "Engineering",
+  "Operations",
+  "Legal",
+  "Human Resources",
+  "Customer Service",
+];
+
+const educationOptions = [
+  "Bachelor's",
+  "Master's",
+  "Associate's",
+  "PhD",
+  "MD",
+  "MBA",
+  "High School",
+  "Diploma",
+  "Certificate",
+];
+
+const companyTypeOptions = [
+  "Private",
+  "Public",
+  "Nonprofit",
+  "Education",
+  "Government",
+];
+
+const companySizeOptions = [
+  "Seed, 1-10",
+  "Early, 11-100",
+  "Mid-size, 101-1,000",
+  "Large, 1,001-10,000",
+  "Enterprise, 10,001+",
+];
+
+const benefitsOptions = [
+  "Remote Work",
+  "401K",
+  "PTO (Paid/Vacation Days)",
+  "Maternity Leave",
+  "Free Lunch",
+  "Tuition Reimbursement",
+  "Pet Friendly Workplace",
+  "Gym Discount",
+  "Health Insurance",
+  "Transport Allowance",
+];
+
+const workModelOptions = [
+  "On-site",
+  "Fully Remote",
+  "Hybrid",
+];
+
+const companyStageOptions = [
+  "Early Stage",
+  "Growth Stage",
+  "Late Stage",
+  "Public Company",
+];
+
+const datePostedOptions = [
+  "Any time",
+  "Past 24 hours",
+  "Past 3 days",
+  "Past 7 days",
+  "Past 14 days",
+  "Past 30 days",
+];
+
+const popularCompanies = [
+  "Amazon",
+  "Microsoft",
+  "Google",
+  "Facebook",
+  "Apple",
+  "Netflix",
+  "Tesla",
+  "IBM",
+  "Adobe",
+];
+
+const popularTitles = [
+  "Software Engineer",
+  "Product Manager",
+  "Data Scientist",
+  "Software Engineering Manager",
+  "Product Designer",
+  "Hardware Engineer",
+  "Business Analyst",
+];
 
 const Jobs = () => {
   const { toast } = useToast();
@@ -179,6 +315,7 @@ const Jobs = () => {
   const [totalJobCount, setTotalJobCount] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [sortCriteria, setSortCriteria] = useState<string>("relevance");
+  const [showPostJobDialog, setShowPostJobDialog] = useState(false);
   const jobsPerPage = 10;
 
   const [filters, setFilters] = useState<Filters>({
@@ -188,6 +325,30 @@ const Jobs = () => {
     remote: false,
     experienceLevels: [],
     salaryRange: [50, 200],
+    categories: [],
+    education: [],
+    sponsorH1b: false,
+    companyTypes: [],
+    companySize: [],
+    benefits: [],
+    workModel: [],
+    excludeStaffingAgency: false,
+    companyStage: [],
+    title: [],
+    datePosted: "",
+  });
+
+  const [newJob, setNewJob] = useState({
+    title: "",
+    company: "",
+    location: "",
+    description: "",
+    type: "full-time",
+    salaryMin: "",
+    salaryMax: "",
+    remote: false,
+    skills: "",
+    category: ""
   });
 
   useEffect(() => {
@@ -260,6 +421,89 @@ const Jobs = () => {
       });
     }
     
+    if (filters.categories && filters.categories.length > 0) {
+      result = result.filter(job => 
+        job.category && filters.categories?.includes(job.category)
+      );
+    }
+    
+    if (filters.education && filters.education.length > 0) {
+      result = result.filter(job => 
+        job.education && job.education.some(edu => 
+          filters.education?.includes(edu))
+      );
+    }
+    
+    if (filters.sponsorH1b) {
+      result = result.filter(job => job.sponsorH1b);
+    }
+    
+    if (filters.companyTypes && filters.companyTypes.length > 0) {
+      result = result.filter(job => 
+        job.companyType && filters.companyTypes?.includes(job.companyType)
+      );
+    }
+    
+    if (filters.companySize && filters.companySize.length > 0) {
+      result = result.filter(job => 
+        job.companySize && filters.companySize?.includes(job.companySize)
+      );
+    }
+    
+    if (filters.benefits && filters.benefits.length > 0) {
+      result = result.filter(job => 
+        job.benefits && job.benefits.some(benefit => 
+          filters.benefits?.includes(benefit))
+      );
+    }
+    
+    if (filters.workModel && filters.workModel.length > 0) {
+      result = result.filter(job => 
+        job.workModel && filters.workModel?.includes(job.workModel)
+      );
+    }
+    
+    if (filters.excludeStaffingAgency) {
+      result = result.filter(job => 
+        job.source !== "Staffing Agency"
+      );
+    }
+
+    if (filters.datePosted) {
+      const now = new Date();
+      let daysAgo = 0;
+      
+      switch (filters.datePosted) {
+        case "Past 24 hours":
+          daysAgo = 1;
+          break;
+        case "Past 3 days":
+          daysAgo = 3;
+          break;
+        case "Past 7 days":
+          daysAgo = 7;
+          break;
+        case "Past 14 days":
+          daysAgo = 14;
+          break;
+        case "Past 30 days":
+          daysAgo = 30;
+          break;
+        default:
+          daysAgo = 0;
+      }
+      
+      if (daysAgo > 0) {
+        const cutoffDate = new Date();
+        cutoffDate.setDate(now.getDate() - daysAgo);
+        
+        result = result.filter(job => {
+          const postedDate = new Date(job.postedDate);
+          return postedDate >= cutoffDate;
+        });
+      }
+    }
+    
     if (showMostRecent) {
       result = [...result].sort((a, b) => 
         new Date(b.postedDate).getTime() - new Date(a.postedDate).getTime()
@@ -286,6 +530,17 @@ const Jobs = () => {
       remote: false,
       experienceLevels: [],
       salaryRange: [50, 200],
+      categories: [],
+      education: [],
+      sponsorH1b: false,
+      companyTypes: [],
+      companySize: [],
+      benefits: [],
+      workModel: [],
+      excludeStaffingAgency: false,
+      companyStage: [],
+      title: [],
+      datePosted: "",
     });
     toast({
       title: "Filters Reset",
@@ -308,6 +563,78 @@ const Jobs = () => {
         ? prev.experienceLevels.filter(l => l !== level)
         : [...prev.experienceLevels, level];
       return { ...prev, experienceLevels };
+    });
+  };
+
+  const toggleCategory = (category: string) => {
+    setFilters(prev => {
+      const categories = prev.categories?.includes(category)
+        ? prev.categories.filter(c => c !== category)
+        : [...(prev.categories || []), category];
+      return { ...prev, categories };
+    });
+  };
+
+  const toggleEducation = (education: string) => {
+    setFilters(prev => {
+      const educationList = prev.education?.includes(education)
+        ? prev.education.filter(e => e !== education)
+        : [...(prev.education || []), education];
+      return { ...prev, education: educationList };
+    });
+  };
+
+  const toggleCompanyType = (type: string) => {
+    setFilters(prev => {
+      const companyTypes = prev.companyTypes?.includes(type)
+        ? prev.companyTypes.filter(t => t !== type)
+        : [...(prev.companyTypes || []), type];
+      return { ...prev, companyTypes };
+    });
+  };
+
+  const toggleCompanySize = (size: string) => {
+    setFilters(prev => {
+      const companySize = prev.companySize?.includes(size)
+        ? prev.companySize.filter(s => s !== size)
+        : [...(prev.companySize || []), size];
+      return { ...prev, companySize };
+    });
+  };
+
+  const toggleBenefit = (benefit: string) => {
+    setFilters(prev => {
+      const benefits = prev.benefits?.includes(benefit)
+        ? prev.benefits.filter(b => b !== benefit)
+        : [...(prev.benefits || []), benefit];
+      return { ...prev, benefits };
+    });
+  };
+
+  const toggleWorkModel = (model: string) => {
+    setFilters(prev => {
+      const workModel = prev.workModel?.includes(model)
+        ? prev.workModel.filter(m => m !== model)
+        : [...(prev.workModel || []), model];
+      return { ...prev, workModel };
+    });
+  };
+
+  const toggleCompanyStage = (stage: string) => {
+    setFilters(prev => {
+      const companyStage = prev.companyStage?.includes(stage)
+        ? prev.companyStage.filter(s => s !== stage)
+        : [...(prev.companyStage || []), stage];
+      return { ...prev, companyStage };
+    });
+  };
+
+  const toggleTitle = (title: string) => {
+    setFilters(prev => {
+      const titles = prev.title?.includes(title)
+        ? prev.title.filter(t => t !== title)
+        : [...(prev.title || []), title];
+      return { ...prev, title: titles };
     });
   };
 
@@ -418,6 +745,53 @@ const Jobs = () => {
     }, 2500);
   };
 
+  const handlePostJob = () => {
+    const jobId = Math.floor(Math.random() * 10000).toString();
+    const currentDate = new Date().toISOString();
+    
+    const postedJob = {
+      id: jobId,
+      title: newJob.title,
+      company: newJob.company,
+      location: newJob.location || (newJob.remote ? "Remote" : ""),
+      type: newJob.type as JobType,
+      salary: `$${newJob.salaryMin}K - $${newJob.salaryMax}K`,
+      experience: "1+ years",
+      logo: "https://via.placeholder.com/50",
+      remote: newJob.remote,
+      postedDate: currentDate,
+      description: newJob.description,
+      skills: newJob.skills.split(',').map(skill => skill.trim()),
+      source: "Posted by You",
+      category: newJob.category,
+    };
+    
+    const updatedJobs = [postedJob, ...jobs];
+    setJobs(updatedJobs);
+    
+    localStorage.setItem('scrapedJobs', JSON.stringify(updatedJobs));
+    setShowPostJobDialog(false);
+    
+    toast({
+      title: "Job Posted Successfully",
+      description: `Your job listing for ${newJob.title} has been published.`,
+    });
+    
+    // Reset the form
+    setNewJob({
+      title: "",
+      company: "",
+      location: "",
+      description: "",
+      type: "full-time",
+      salaryMin: "",
+      salaryMax: "",
+      remote: false,
+      skills: "",
+      category: ""
+    });
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-secondary/30">
       <Navbar />
@@ -459,6 +833,141 @@ const Jobs = () => {
                   <Save className="w-4 h-4" />
                   {showApplicationAnswers ? "Hide Saved Answers" : "Saved Answers"}
                 </Button>
+                
+                <Dialog open={showPostJobDialog} onOpenChange={setShowPostJobDialog}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="flex items-center gap-2 ml-2 bg-blue-600 hover:bg-blue-700"
+                    >
+                      <BriefcaseIcon className="w-4 h-4" />
+                      Post or Promote a Job
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[600px]">
+                    <DialogHeader>
+                      <DialogTitle>Post a New Job</DialogTitle>
+                      <DialogDescription>
+                        Fill in the details below to create a new job listing that will be visible to all users.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="col-span-2">
+                          <Label htmlFor="job-title">Job Title</Label>
+                          <Input 
+                            id="job-title"
+                            value={newJob.title}
+                            onChange={(e) => setNewJob({...newJob, title: e.target.value})}
+                            placeholder="e.g. Senior Software Engineer"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="company">Company</Label>
+                          <Input 
+                            id="company"
+                            value={newJob.company} 
+                            onChange={(e) => setNewJob({...newJob, company: e.target.value})}
+                            placeholder="e.g. Acme Inc."
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="location">Location</Label>
+                          <Input 
+                            id="location"
+                            value={newJob.location} 
+                            onChange={(e) => setNewJob({...newJob, location: e.target.value})}
+                            placeholder="e.g. San Francisco, CA"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="category">Category</Label>
+                          <Select onValueChange={(value) => setNewJob({...newJob, category: value})}>
+                            <SelectTrigger id="category">
+                              <SelectValue placeholder="Select a category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {categoryOptions.map((category) => (
+                                <SelectItem key={category} value={category}>
+                                  {category}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="job-type">Job Type</Label>
+                          <Select 
+                            defaultValue="full-time"
+                            onValueChange={(value) => setNewJob({...newJob, type: value})}
+                          >
+                            <SelectTrigger id="job-type">
+                              <SelectValue placeholder="Select job type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="full-time">Full-time</SelectItem>
+                              <SelectItem value="part-time">Part-time</SelectItem>
+                              <SelectItem value="contract">Contract</SelectItem>
+                              <SelectItem value="internship">Internship</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="salary-min">Salary Range (K)</Label>
+                          <div className="flex items-center gap-2">
+                            <Input 
+                              id="salary-min"
+                              type="number" 
+                              value={newJob.salaryMin}
+                              onChange={(e) => setNewJob({...newJob, salaryMin: e.target.value})}
+                              placeholder="Min"
+                            />
+                            <span>-</span>
+                            <Input 
+                              id="salary-max"
+                              type="number" 
+                              value={newJob.salaryMax}
+                              onChange={(e) => setNewJob({...newJob, salaryMax: e.target.value})}
+                              placeholder="Max"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="remote" 
+                            checked={newJob.remote}
+                            onCheckedChange={(checked) => setNewJob({...newJob, remote: checked as boolean})}
+                          />
+                          <Label htmlFor="remote">Remote position</Label>
+                        </div>
+                        <div className="col-span-2">
+                          <Label htmlFor="skills">Required Skills (comma separated)</Label>
+                          <Input 
+                            id="skills"
+                            value={newJob.skills}
+                            onChange={(e) => setNewJob({...newJob, skills: e.target.value})}
+                            placeholder="e.g. React, TypeScript, Node.js"
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <Label htmlFor="description">Job Description</Label>
+                          <Textarea 
+                            id="description"
+                            value={newJob.description}
+                            onChange={(e) => setNewJob({...newJob, description: e.target.value})}
+                            placeholder="Enter a detailed description of the role..."
+                            className="h-28"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setShowPostJobDialog(false)}>Cancel</Button>
+                      <Button onClick={handlePostJob}>Post Job</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
               
               {lastScraped && (
@@ -561,6 +1070,17 @@ const Jobs = () => {
                       </button>
                     </div>
                   ))}
+                  {filters.sponsorH1b && (
+                    <div className="inline-flex items-center px-2 py-1 rounded-full bg-secondary text-xs">
+                      H1B Sponsorship
+                      <button 
+                        className="ml-1 text-muted-foreground hover:text-foreground"
+                        onClick={() => setFilters({ ...filters, sponsorH1b: false })}
+                      >
+                        <XIcon className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
               
@@ -594,16 +1114,132 @@ const Jobs = () => {
                 </Button>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                  <h4 className="font-medium mb-3">Job Type</h4>
+                  <h4 className="font-medium mb-3 flex items-center">
+                    <FolderIcon className="w-4 h-4 mr-1.5" />
+                    Category
+                  </h4>
+                  <Select>
+                    <SelectTrigger className="mb-2">
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categoryOptions.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <div className="space-y-2 mt-2">
+                    <p className="text-xs font-medium text-muted-foreground">POPULAR</p>
+                    {categoryOptions.slice(0, 6).map((category) => (
+                      <div key={category} className="flex items-center">
+                        <Checkbox 
+                          id={`category-${category}`}
+                          checked={filters.categories?.includes(category)}
+                          onCheckedChange={() => toggleCategory(category)}
+                        />
+                        <Label 
+                          htmlFor={`category-${category}`}
+                          className="ml-2 text-sm cursor-pointer"
+                        >
+                          {category}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="font-medium mb-3 flex items-center">
+                    <DollarSignIcon className="w-4 h-4 mr-1.5" />
+                    Salary
+                  </h4>
+                  <p className="text-sm mb-3">Filter by minimum salary</p>
+                  <RadioGroup className="space-y-2">
+                    {['$40,000+', '$80,000+', '$100,000+', '$200,000+', '$300,000+', '$400,000+'].map((salary) => (
+                      <div key={salary} className="flex items-center space-x-2">
+                        <RadioGroupItem value={salary} id={`salary-${salary}`} />
+                        <Label htmlFor={`salary-${salary}`}>{salary}</Label>
+                      </div>
+                    ))}
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="custom" id="salary-custom" />
+                      <Label htmlFor="salary-custom">Custom</Label>
+                      <Input 
+                        placeholder="Enter amount" 
+                        className="h-8 w-36"
+                      />
+                    </div>
+                  </RadioGroup>
+                  
+                  <div className="mt-5 pt-4 border-t">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <ShieldCheckIcon className="w-4 h-4" />
+                        <Label>Sponsors H1B</Label>
+                      </div>
+                      <Switch 
+                        checked={filters.sponsorH1b}
+                        onCheckedChange={(checked) => setFilters({...filters, sponsorH1b: checked})}
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="font-medium mb-3 flex items-center">
+                    <GraduationCapIcon className="w-4 h-4 mr-1.5" />
+                    Education
+                  </h4>
+                  <p className="text-sm mb-3">Filter by education level</p>
+                  <Select>
+                    <SelectTrigger className="mb-2">
+                      <SelectValue placeholder="Education Level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {educationOptions.map((edu) => (
+                        <SelectItem key={edu} value={edu}>
+                          {edu}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <div className="space-y-2 mt-2">
+                    <p className="text-xs font-medium text-muted-foreground">POPULAR</p>
+                    {educationOptions.slice(0, 6).map((edu) => (
+                      <div key={edu} className="flex items-center">
+                        <Checkbox 
+                          id={`edu-${edu}`}
+                          checked={filters.education?.includes(edu)}
+                          onCheckedChange={() => toggleEducation(edu)}
+                        />
+                        <Label 
+                          htmlFor={`edu-${edu}`}
+                          className="ml-2 text-sm cursor-pointer"
+                        >
+                          {edu}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="font-medium mb-3 flex items-center">
+                    <BriefcaseIcon className="w-4 h-4 mr-1.5" />
+                    Job Type
+                  </h4>
+                  <p className="text-sm mb-3">Filter jobs by employment type</p>
                   <div className="space-y-2">
-                    {(["Full-time", "Part-time", "Contract", "Internship"] as JobType[]).map((type) => (
+                    {(["Full-time", "Part-time", "Contract", "Internship", "Temporary", "Volunteer", "Other"] as string[]).map((type) => (
                       <div key={type} className="flex items-center">
                         <Checkbox 
                           id={`job-type-${type}`}
-                          checked={filters.jobType.includes(type)}
-                          onCheckedChange={() => toggleJobType(type)}
+                          checked={filters.jobType.includes(type as JobType)}
+                          onCheckedChange={() => toggleJobType(type as JobType)}
                         />
                         <Label 
                           htmlFor={`job-type-${type}`}
@@ -617,58 +1253,149 @@ const Jobs = () => {
                 </div>
                 
                 <div>
-                  <h4 className="font-medium mb-3">Experience Level</h4>
+                  <h4 className="font-medium mb-3 flex items-center">
+                    <BuildingIcon className="w-4 h-4 mr-1.5" />
+                    Company Type
+                  </h4>
+                  <p className="text-sm mb-3">Filter by type of company</p>
                   <div className="space-y-2">
-                    {(["Entry-level", "Mid-level", "Senior", "Executive"] as ExperienceLevel[]).map((level) => (
-                      <div key={level} className="flex items-center">
+                    {companyTypeOptions.map((type) => (
+                      <div key={type} className="flex items-center">
                         <Checkbox 
-                          id={`exp-level-${level}`}
-                          checked={filters.experienceLevels.includes(level)}
-                          onCheckedChange={() => toggleExperienceLevel(level)}
+                          id={`company-type-${type}`}
+                          checked={filters.companyTypes?.includes(type)}
+                          onCheckedChange={() => toggleCompanyType(type)}
                         />
                         <Label 
-                          htmlFor={`exp-level-${level}`}
+                          htmlFor={`company-type-${type}`}
                           className="ml-2 text-sm cursor-pointer"
                         >
-                          {level}
+                          {type}
                         </Label>
                       </div>
                     ))}
                   </div>
                 </div>
-                
+
                 <div>
-                  <h4 className="font-medium mb-3">Salary Range (K)</h4>
-                  <div className="px-2">
-                    <Slider
-                      value={filters.salaryRange}
-                      min={50}
-                      max={200}
-                      step={5}
-                      onValueChange={(value) => setFilters({ ...filters, salaryRange: value as [number, number] })}
-                    />
-                    <div className="flex justify-between mt-2 text-sm text-muted-foreground">
-                      <span>${filters.salaryRange[0]}K</span>
-                      <span>${filters.salaryRange[1]}K</span>
-                    </div>
+                  <h4 className="font-medium mb-3 flex items-center">
+                    <UsersIcon className="w-4 h-4 mr-1.5" />
+                    Company Size
+                  </h4>
+                  <p className="text-sm mb-3">Filter by category of company</p>
+                  <div className="space-y-2">
+                    {companySizeOptions.map((size) => (
+                      <div key={size} className="flex items-center">
+                        <Checkbox 
+                          id={`company-size-${size}`}
+                          checked={filters.companySize?.includes(size)}
+                          onCheckedChange={() => toggleCompanySize(size)}
+                        />
+                        <Label 
+                          htmlFor={`company-size-${size}`}
+                          className="ml-2 text-sm cursor-pointer"
+                        >
+                          {size}
+                        </Label>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                
+
                 <div>
-                  <h4 className="font-medium mb-3">Work Model</h4>
-                  <div className="flex items-center">
-                    <Checkbox 
-                      id="remote-only"
-                      checked={filters.remote}
-                      onCheckedChange={() => setFilters({ ...filters, remote: !filters.remote })}
-                    />
-                    <Label 
-                      htmlFor="remote-only"
-                      className="ml-2 text-sm cursor-pointer"
-                    >
-                      Remote Only
-                    </Label>
+                  <h4 className="font-medium mb-3 flex items-center">
+                    <HeartIcon className="w-4 h-4 mr-1.5" />
+                    Benefits
+                  </h4>
+                  <p className="text-sm mb-3">Filter jobs by benefits a company offers</p>
+                  <Input placeholder="Search all benefits" className="mb-3" />
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground">POPULAR</p>
+                    {benefitsOptions.slice(0, 5).map((benefit) => (
+                      <div key={benefit} className="flex items-center">
+                        <Checkbox 
+                          id={`benefit-${benefit}`}
+                          checked={filters.benefits?.includes(benefit)}
+                          onCheckedChange={() => toggleBenefit(benefit)}
+                        />
+                        <Label 
+                          htmlFor={`benefit-${benefit}`}
+                          className="ml-2 text-sm cursor-pointer"
+                        >
+                          {benefit}
+                        </Label>
+                      </div>
+                    ))}
                   </div>
+                </div>
+
+                <div>
+                  <h4 className="font-medium mb-3 flex items-center">
+                    <MapPinIcon className="w-4 h-4 mr-1.5" />
+                    Work Arrangement
+                  </h4>
+                  <p className="text-sm mb-3">Filter jobs by work arrangement</p>
+                  <div className="space-y-2">
+                    {workModelOptions.map((model) => (
+                      <div key={model} className="flex items-center">
+                        <Checkbox 
+                          id={`work-model-${model}`}
+                          checked={filters.workModel?.includes(model)}
+                          onCheckedChange={() => toggleWorkModel(model)}
+                        />
+                        <Label 
+                          htmlFor={`work-model-${model}`}
+                          className="ml-2 text-sm cursor-pointer"
+                        >
+                          {model}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-medium mb-3 flex items-center">
+                    <TagIcon className="w-4 h-4 mr-1.5" />
+                    Date Posted
+                  </h4>
+                  <p className="text-sm mb-3">Filter jobs by posting date</p>
+                  <RadioGroup className="space-y-2">
+                    {datePostedOptions.map((option) => (
+                      <div key={option} className="flex items-center space-x-2">
+                        <RadioGroupItem 
+                          value={option} 
+                          id={`date-${option}`} 
+                          checked={filters.datePosted === option}
+                          onClick={() => setFilters({...filters, datePosted: option})}
+                        />
+                        <Label htmlFor={`date-${option}`}>{option}</Label>
+                      </div>
+                    ))}
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="custom-days" id="custom-days" />
+                      <Input placeholder="30" className="w-16 h-8" />
+                      <span className="text-sm">days</span>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                <div className="md:col-span-3 flex justify-between pt-4 border-t mt-4">
+                  <Button variant="outline" className="flex items-center gap-2" onClick={resetFilters}>
+                    Clear All Filters
+                  </Button>
+                  <Button 
+                    className="flex items-center gap-2"
+                    onClick={() => {
+                      toast({
+                        title: "Filters Applied",
+                        description: "Job listings have been updated based on your filters.",
+                      });
+                      setShowFilters(false);
+                    }}
+                  >
+                    Apply Filters
+                  </Button>
                 </div>
               </div>
             </div>
