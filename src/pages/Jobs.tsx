@@ -178,6 +178,7 @@ const Jobs = () => {
   const [showMostRecent, setShowMostRecent] = useState(false);
   const [totalJobCount, setTotalJobCount] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [sortCriteria, setSortCriteria] = useState<string>("relevance");
   const jobsPerPage = 10;
 
   const [filters, setFilters] = useState<Filters>({
@@ -677,8 +678,24 @@ const Jobs = () => {
             <div className={`${animationReady ? 'slide-up' : 'opacity-0'} lg:col-span-1 transition-all duration-500 delay-200`}>
               <Card className="h-full">
                 <CardHeader className="pb-2">
-                  <CardTitle>Available Positions</CardTitle>
-                  <CardDescription>{totalJobCount} jobs match your criteria</CardDescription>
+                  <div className="flex flex-col space-y-3">
+                    <CardTitle>Available Positions</CardTitle>
+                    <CardDescription>{totalJobCount} jobs match your criteria</CardDescription>
+                    <Select 
+                      defaultValue={sortCriteria} 
+                      onValueChange={(value) => setSortCriteria(value)}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Sort by" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="relevance">Relevance</SelectItem>
+                        <SelectItem value="recent">Most Recent</SelectItem>
+                        <SelectItem value="salary-high">Salary: High to Low</SelectItem>
+                        <SelectItem value="salary-low">Salary: Low to High</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </CardHeader>
                 <CardContent className="max-h-[calc(100vh-300px)] overflow-y-auto pb-0">
                   <div className="space-y-2">
@@ -792,17 +809,6 @@ const Jobs = () => {
                       </PaginationContent>
                     </Pagination>
                   )}
-                  <Select defaultValue="relevance">
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Sort by" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="relevance">Relevance</SelectItem>
-                      <SelectItem value="recent">Most Recent</SelectItem>
-                      <SelectItem value="salary-high">Salary: High to Low</SelectItem>
-                      <SelectItem value="salary-low">Salary: Low to High</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </CardFooter>
               </Card>
             </div>
