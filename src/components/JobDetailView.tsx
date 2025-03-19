@@ -9,7 +9,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Building2, Clock, BookmarkIcon, ExternalLinkIcon, BadgeCheck } from "lucide-react";
+import { MapPin, Building2, Clock, BookmarkIcon, ExternalLinkIcon, BadgeCheck, CheckCircle2 } from "lucide-react";
 import { CandidateMatchPreferences } from "@/components/CandidateMatchPreferences";
 
 interface JobDetailViewProps {
@@ -77,19 +77,188 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
         </div>
       </CardHeader>
       
-      <CardContent className="max-h-[calc(100vh-300px)] overflow-y-auto pb-2">
+      <CardContent className="max-h-[calc(100vh-300px)] overflow-y-auto pb-0">
         <Tabs defaultValue="summary" className="mb-6">
-          <TabsList>
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="summary">Summary</TabsTrigger>
             <TabsTrigger value="full-posting">Full Job Posting</TabsTrigger>
           </TabsList>
           
           <TabsContent value="summary" className="mt-4 space-y-6">
             {job.matchCriteria && (
-              <CandidateMatchPreferences preferences={job.matchCriteria} />
+              <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg">
+                <div className="mb-2">
+                  <p className="font-medium">You match the following {job.company}'s candidate preferences</p>
+                  <p className="text-sm text-yellow-600 dark:text-yellow-400 flex items-center gap-1 mt-1">
+                    <span className="text-lg">✨</span> Employers are more likely to interview you if you match these preferences:
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-4 mt-3">
+                  {job.matchCriteria.degree && (
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3 flex items-center">
+                      <CheckCircle2 className="w-5 h-5 text-green-500 mr-2" />
+                      <span>Degree</span>
+                    </div>
+                  )}
+                  {job.matchCriteria.experience && (
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3 flex items-center">
+                      <CheckCircle2 className="w-5 h-5 text-green-500 mr-2" />
+                      <span>Experience</span>
+                    </div>
+                  )}
+                  {job.matchCriteria.skills && (
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3 flex items-center">
+                      <CheckCircle2 className="w-5 h-5 text-green-500 mr-2" />
+                      <span>Skills</span>
+                    </div>
+                  )}
+                  {job.matchCriteria.location && (
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3 flex items-center">
+                      <CheckCircle2 className="w-5 h-5 text-green-500 mr-2" />
+                      <span>Location</span>
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
             
-            <div className="flex flex-wrap gap-3 mb-4">
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Requirements</h3>
+              <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                {job.requirements.map((req, idx) => (
+                  <li key={idx}>{req}</li>
+                ))}
+              </ul>
+            </div>
+            
+            {job.responsibilities && job.responsibilities.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Responsibilities</h3>
+                <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                  {job.responsibilities.map((responsibility, idx) => (
+                    <li key={idx}>{responsibility}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            <div>
+              <h3 className="text-lg font-medium mb-3">Skills</h3>
+              <div className="flex flex-wrap gap-2">
+                {job.skills.map((skill, index) => (
+                  <div key={index} className="px-3 py-1 rounded-full bg-secondary/70 text-sm">
+                    {skill}
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="flex flex-wrap gap-3">
+              <div className="px-3 py-1 rounded-full bg-secondary text-sm">
+                {job.type}
+              </div>
+              <div className="px-3 py-1 rounded-full bg-secondary text-sm">
+                {job.level}
+              </div>
+              <div className="px-3 py-1 rounded-full bg-secondary text-sm">
+                {formattedSalary}
+              </div>
+            </div>
+            
+            <div className="flex items-center text-sm text-muted-foreground">
+              <Clock className="w-4 h-4 mr-2" />
+              Posted on {new Date(job.postedAt).toLocaleDateString()}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="full-posting" className="mt-4 space-y-6">
+            {job.matchCriteria && (
+              <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg">
+                <div className="mb-2">
+                  <p className="font-medium">You match the following {job.company}'s candidate preferences</p>
+                  <p className="text-sm text-yellow-600 dark:text-yellow-400 flex items-center gap-1 mt-1">
+                    <span className="text-lg">✨</span> Employers are more likely to interview you if you match these preferences:
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-4 mt-3">
+                  {job.matchCriteria.degree && (
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3 flex items-center">
+                      <CheckCircle2 className="w-5 h-5 text-green-500 mr-2" />
+                      <span>Degree</span>
+                    </div>
+                  )}
+                  {job.matchCriteria.experience && (
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3 flex items-center">
+                      <CheckCircle2 className="w-5 h-5 text-green-500 mr-2" />
+                      <span>Experience</span>
+                    </div>
+                  )}
+                  {job.matchCriteria.skills && (
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3 flex items-center">
+                      <CheckCircle2 className="w-5 h-5 text-green-500 mr-2" />
+                      <span>Skills</span>
+                    </div>
+                  )}
+                  {job.matchCriteria.location && (
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3 flex items-center">
+                      <CheckCircle2 className="w-5 h-5 text-green-500 mr-2" />
+                      <span>Location</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            <div>
+              <h3 className="text-lg font-medium mb-3">Job Description</h3>
+              <p className="text-muted-foreground whitespace-pre-line">
+                {job.description}
+              </p>
+            </div>
+            
+            {job.responsibilities && job.responsibilities.length > 0 && (
+              <div>
+                <h3 className="text-lg font-medium mb-3">Responsibilities</h3>
+                <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                  {job.responsibilities.map((responsibility, idx) => (
+                    <li key={idx}>{responsibility}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            <div>
+              <h3 className="text-lg font-medium mb-3">Requirements</h3>
+              <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                {job.requirements.map((req, idx) => (
+                  <li key={idx}>{req}</li>
+                ))}
+              </ul>
+            </div>
+            
+            {job.education && job.education.length > 0 && (
+              <div>
+                <h3 className="text-lg font-medium mb-3">Education</h3>
+                <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                  {job.education.map((edu, idx) => (
+                    <li key={idx}>{edu}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {job.benefits && job.benefits.length > 0 && (
+              <div>
+                <h3 className="text-lg font-medium mb-3">Benefits</h3>
+                <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                  {job.benefits.map((benefit, idx) => (
+                    <li key={idx}>{benefit}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            <div className="flex flex-wrap gap-3">
               <div className="px-3 py-1 rounded-full bg-secondary text-sm">
                 {job.type}
               </div>
@@ -105,77 +274,6 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
               <Clock className="w-4 h-4 mr-2" />
               Posted on {new Date(job.postedAt).toLocaleDateString()}
             </div>
-            
-            <div>
-              <h3 className="text-lg font-medium mb-3">Requirements</h3>
-              <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                {job.requirements.map((req, idx) => (
-                  <li key={idx}>{req}</li>
-                ))}
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-medium mb-3">Skills</h3>
-              <div className="flex flex-wrap gap-2">
-                {job.skills.map((skill, index) => (
-                  <div key={index} className="px-3 py-1 rounded-full bg-secondary/70 text-sm">
-                    {skill}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="full-posting" className="mt-4 space-y-6">
-            <div>
-              <h3 className="text-lg font-medium mb-3">Job Description</h3>
-              <p className="text-muted-foreground whitespace-pre-line">
-                {job.description}
-              </p>
-            </div>
-            
-            {job.responsibilities && job.responsibilities.length > 0 && (
-              <div>
-                <h3 className="text-lg font-medium mb-3">Responsibilities</h3>
-                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                  {job.responsibilities.map((responsibility, idx) => (
-                    <li key={idx}>{responsibility}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            
-            <div>
-              <h3 className="text-lg font-medium mb-3">Requirements</h3>
-              <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                {job.requirements.map((req, idx) => (
-                  <li key={idx}>{req}</li>
-                ))}
-              </ul>
-            </div>
-            
-            {job.education && job.education.length > 0 && (
-              <div>
-                <h3 className="text-lg font-medium mb-3">Education</h3>
-                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                  {job.education.map((edu, idx) => (
-                    <li key={idx}>{edu}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            
-            {job.benefits && job.benefits.length > 0 && (
-              <div>
-                <h3 className="text-lg font-medium mb-3">Benefits</h3>
-                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                  {job.benefits.map((benefit, idx) => (
-                    <li key={idx}>{benefit}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
             
             {job.applyUrl && (
               <div className="p-4 rounded-lg bg-secondary/20 text-sm">
