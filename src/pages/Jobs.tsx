@@ -5,9 +5,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { JobScraperConfig } from "@/components/JobScraperConfig";
 import { PasswordManager } from "@/components/PasswordManager";
 import { ApplicationAnswers } from "@/components/ApplicationAnswers";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import {
   Card,
   CardContent,
@@ -165,6 +175,10 @@ const Jobs = () => {
   const [isScrapingJobs, setIsScrapingJobs] = useState(false);
   const [lastScraped, setLastScraped] = useState<Date | null>(null);
   const [showApplicationAnswers, setShowApplicationAnswers] = useState(false);
+  const [showMostRecent, setShowMostRecent] = useState(false);
+  const [totalJobCount, setTotalJobCount] = useState<number>(0);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const jobsPerPage = 10;
 
   const [filters, setFilters] = useState<Filters>({
     search: "",
@@ -245,12 +259,23 @@ const Jobs = () => {
       });
     }
     
-    setFilteredJobs(result);
+    if (showMostRecent) {
+      result = [...result].sort((a, b) => 
+        new Date(b.postedDate).getTime() - new Date(a.postedDate).getTime()
+      );
+    }
+    
+    setTotalJobCount(result.length);
+    
+    const startIndex = (currentPage - 1) * jobsPerPage;
+    const paginatedResult = result.slice(startIndex, startIndex + jobsPerPage);
+    
+    setFilteredJobs(paginatedResult);
     
     if ((!selectedJob || !result.some(job => job.id === selectedJob.id)) && result.length > 0) {
       setSelectedJob(result[0]);
     }
-  }, [filters, jobs, selectedJob]);
+  }, [filters, jobs, selectedJob, showMostRecent, currentPage]);
 
   const resetFilters = () => {
     setFilters({
@@ -538,8 +563,19 @@ const Jobs = () => {
                 </div>
               </div>
               
-              <div className="text-sm text-muted-foreground">
-                {filteredJobs.length} jobs found
+              <div className="flex items-center gap-4">
+                <div className="flex items-center space-x-2">
+                  <p className="text-sm text-muted-foreground">Most recent</p>
+                  <Switch 
+                    checked={showMostRecent} 
+                    onCheckedChange={setShowMostRecent}
+                    size="lg"
+                    aria-label="Toggle most recent jobs"
+                  />
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Showing {filteredJobs.length} of {totalJobCount} jobs
+                </div>
               </div>
             </div>
           </div>
@@ -642,7 +678,7 @@ const Jobs = () => {
               <Card className="h-full">
                 <CardHeader className="pb-2">
                   <CardTitle>Available Positions</CardTitle>
-                  <CardDescription>{filteredJobs.length} jobs match your criteria</CardDescription>
+                  <CardDescription>{totalJobCount} jobs match your criteria</CardDescription>
                 </CardHeader>
                 <CardContent className="max-h-[calc(100vh-300px)] overflow-y-auto pb-0">
                   <div className="space-y-2">
@@ -708,7 +744,54 @@ const Jobs = () => {
                     )}
                   </div>
                 </CardContent>
-                <CardFooter className="pt-4 pb-4">
+                <CardFooter className="pt-4 pb-4 flex flex-col gap-4">
+                  {totalJobCount > jobsPerPage && (
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious 
+                            href="#" 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (currentPage > 1) setCurrentPage(currentPage - 1);
+                            }}
+                            className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                          />
+                        </PaginationItem>
+                        {Array.from({ length: Math.min(3, Math.ceil(totalJobCount / jobsPerPage)) }).map((_, i) => (
+                          <PaginationItem key={i}>
+                            <PaginationLink 
+                              href="#" 
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setCurrentPage(i + 1);
+                              }}
+                              isActive={currentPage === i + 1}
+                            >
+                              {i + 1}
+                            </PaginationLink>
+                          </PaginationItem>
+                        ))}
+                        {Math.ceil(totalJobCount / jobsPerPage) > 3 && (
+                          <PaginationItem>
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        )}
+                        <PaginationItem>
+                          <PaginationNext 
+                            href="#" 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (currentPage < Math.ceil(totalJobCount / jobsPerPage)) {
+                                setCurrentPage(currentPage + 1);
+                              }
+                            }}
+                            className={currentPage >= Math.ceil(totalJobCount / jobsPerPage) ? "pointer-events-none opacity-50" : ""}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  )}
                   <Select defaultValue="relevance">
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Sort by" />
