@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
@@ -48,7 +47,7 @@ import {
   SearchIcon,
   MapPinIcon,
   ClockIcon,
-  BuildingIcon,
+  Building2,
   FilterIcon,
   XIcon,
   BookmarkIcon,
@@ -69,6 +68,7 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
+import { Job, JobFilters } from "@/types/job";
 
 const mockJobs = [
   {
@@ -1254,7 +1254,7 @@ const Jobs = () => {
                 
                 <div>
                   <h4 className="font-medium mb-3 flex items-center">
-                    <BuildingIcon className="w-4 h-4 mr-1.5" />
+                    <Building2 className="w-4 h-4 mr-1.5" />
                     Company Type
                   </h4>
                   <p className="text-sm mb-3">Filter by type of company</p>
@@ -1437,34 +1437,50 @@ const Jobs = () => {
                           }`}
                           onClick={() => setSelectedJob(job)}
                         >
-                          <div className="flex items-start">
-                            <div className="w-10 h-10 bg-secondary rounded-md flex items-center justify-center mr-3 flex-shrink-0">
-                              <BuildingIcon className="w-6 h-6 text-primary" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h3 className="text-base font-medium truncate">{job.title}</h3>
-                              <p className="text-sm text-muted-foreground truncate">{job.company}</p>
-                              <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-muted-foreground">
-                                <span className="flex items-center">
-                                  <MapPinIcon className="w-3 h-3 mr-1" />
-                                  {job.location}
-                                </span>
-                                <span className="flex items-center">
-                                  <BriefcaseIcon className="w-3 h-3 mr-1" />
-                                  {job.type}
-                                </span>
-                                {job.remote && (
-                                  <span className="px-1.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
-                                    Remote
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-start">
+                              <div className="w-10 h-10 bg-secondary rounded-md flex items-center justify-center mr-3 flex-shrink-0">
+                                <Building2 className="w-6 h-6 text-primary" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h3 className="text-base font-medium truncate">{job.title}</h3>
+                                <p className="text-sm text-muted-foreground truncate">{job.company}</p>
+                                <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-muted-foreground">
+                                  <span className="flex items-center">
+                                    <MapPinIcon className="w-3 h-3 mr-1" />
+                                    {job.location}
                                   </span>
-                                )}
-                                {job.source && (
-                                  <span className="px-1.5 py-0.5 rounded-full bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400">
-                                    {job.source}
+                                  <span className="flex items-center">
+                                    <BriefcaseIcon className="w-3 h-3 mr-1" />
+                                    {job.type}
                                   </span>
-                                )}
+                                  {job.remote && (
+                                    <span className="px-1.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                                      Remote
+                                    </span>
+                                  )}
+                                  {job.source && (
+                                    <span className="px-1.5 py-0.5 rounded-full bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400">
+                                      {job.source}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </div>
+                            
+                            {job.matchPercentage && (
+                              <div className="ml-2 flex-shrink-0">
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
+                                  job.matchPercentage >= 70 
+                                    ? 'border-green-500 text-green-500' 
+                                    : job.matchPercentage >= 50 
+                                      ? 'border-amber-500 text-amber-500' 
+                                      : 'border-red-500 text-red-500'
+                                }`}>
+                                  <span className="text-xs font-bold">{job.matchPercentage}%</span>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))
