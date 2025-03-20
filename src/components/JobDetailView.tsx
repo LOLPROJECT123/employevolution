@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Building2, Clock, BookmarkIcon, ExternalLinkIcon, BadgeCheck, CheckCircle2 } from "lucide-react";
-import { CandidateMatchPreferences } from "@/components/CandidateMatchPreferences";
 
 interface JobDetailViewProps {
   job: Job | null;
@@ -36,20 +35,47 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
   }
 
   const formattedSalary = `${job.salary.currency}${job.salary.min.toLocaleString()} - ${job.salary.currency}${job.salary.max.toLocaleString()}`;
+  
+  // Determine color based on match percentage
+  const getMatchColor = (percentage?: number) => {
+    if (!percentage) return "";
+    if (percentage >= 70) return "text-green-500";
+    if (percentage >= 50) return "text-amber-500";
+    return "text-red-500";
+  };
+
+  const getMatchBgColor = (percentage?: number) => {
+    if (!percentage) return "bg-gray-100 dark:bg-gray-800";
+    if (percentage >= 70) return "bg-green-50 dark:bg-green-900/30";
+    if (percentage >= 50) return "bg-amber-50 dark:bg-amber-900/30";
+    return "bg-red-50 dark:bg-red-900/30";
+  };
+
+  const getMatchLabel = (percentage?: number) => {
+    if (!percentage) return "";
+    if (percentage >= 70) return "GOOD MATCH";
+    if (percentage >= 50) return "FAIR MATCH";
+    return "WEAK MATCH";
+  };
 
   return (
     <Card className="h-full">
       <CardHeader className="pb-2">
         <div className="flex justify-between">
           <div>
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              {job.title}
+            <div className="flex items-center gap-3 mb-2">
+              <h2 className="text-xl font-bold">{job.title}</h2>
+              {job.matchPercentage && (
+                <div className={`px-3 py-1 rounded-full ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)} text-sm font-semibold`}>
+                  {job.matchPercentage}% Match
+                </div>
+              )}
               {job.remote && (
-                <Badge variant="secondary" className="ml-2 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+                <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
                   Remote
                 </Badge>
               )}
-            </h2>
+            </div>
             <p className="text-muted-foreground">
               {job.company} • {job.location}
             </p>
@@ -123,6 +149,13 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
             )}
             
             <div className="space-y-4">
+              <h3 className="text-lg font-medium">About This Role</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                {job.description.substring(0, 300)}...
+              </p>
+            </div>
+            
+            <div className="space-y-4">
               <h3 className="text-lg font-medium">Requirements</h3>
               <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
                 {job.requirements.map((req, idx) => (
@@ -172,6 +205,18 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
           </TabsContent>
           
           <TabsContent value="full-posting" className="mt-4 space-y-6">
+            {job.matchPercentage && (
+              <div className={`p-4 rounded-lg ${getMatchBgColor(job.matchPercentage)} mb-4`}>
+                <div className="flex items-center gap-2">
+                  <div className={`text-xl font-bold ${getMatchColor(job.matchPercentage)}`}>{job.matchPercentage}%</div>
+                  <div className={`font-semibold ${getMatchColor(job.matchPercentage)}`}>
+                    {getMatchLabel(job.matchPercentage)}
+                  </div>
+                </div>
+                <p className="text-sm mt-1">Based on your profile, skills, and experience</p>
+              </div>
+            )}
+            
             {job.matchCriteria && (
               <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg">
                 <div className="mb-2">
@@ -211,7 +256,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
             
             <div>
               <h3 className="text-lg font-medium mb-3">Job Description</h3>
-              <p className="text-muted-foreground whitespace-pre-line">
+              <p className="text-muted-foreground whitespace-pre-line leading-relaxed">
                 {job.description}
               </p>
             </div>

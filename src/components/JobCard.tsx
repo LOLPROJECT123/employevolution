@@ -3,7 +3,7 @@ import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Building2, Clock, PercentIcon, CheckCircle } from "lucide-react";
+import { MapPin, Building2, Clock, CheckCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface JobCardProps {
@@ -30,8 +30,25 @@ export function JobCard({ job, onApply }: JobCardProps) {
     return "WEAK MATCH";
   };
 
+  const getMatchBorderColor = (percentage?: number) => {
+    if (!percentage) return "border-gray-200";
+    if (percentage >= 70) return "border-green-500";
+    if (percentage >= 50) return "border-amber-500";
+    return "border-red-500";
+  };
+
   return (
-    <Card className="group hover:shadow-md transition-all duration-200 cursor-pointer">
+    <Card className="group hover:shadow-md transition-all duration-200 cursor-pointer relative">
+      {job.matchPercentage && (
+        <div className="absolute top-3 right-3 z-10">
+          <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 ${getMatchBorderColor(job.matchPercentage)} bg-white dark:bg-gray-950`}>
+            <span className={`text-sm font-bold ${getMatchColor(job.matchPercentage)}`}>
+              {job.matchPercentage}%
+            </span>
+          </div>
+        </div>
+      )}
+      
       <CardHeader className="space-y-2">
         <div className="flex items-start justify-between">
           <div className="space-y-1">
@@ -45,29 +62,6 @@ export function JobCard({ job, onApply }: JobCardProps) {
               <span>{job.location}</span>
             </div>
           </div>
-          <div className="flex flex-col items-end gap-1">
-            {job.matchPercentage && (
-              <div className="flex flex-col items-end">
-                <div className="relative w-16 h-16">
-                  <div 
-                    className={`w-16 h-16 rounded-full flex items-center justify-center border-4 ${getMatchColor(job.matchPercentage)}`}
-                    style={{ borderColor: job.matchPercentage >= 70 ? '#22c55e' : job.matchPercentage >= 50 ? '#f59e0b' : '#ef4444' }}
-                  >
-                    <span className={`text-xl font-bold ${getMatchColor(job.matchPercentage)}`}>
-                      {job.matchPercentage}%
-                    </span>
-                  </div>
-                </div>
-                <span className={`text-xs font-semibold mt-1 ${getMatchColor(job.matchPercentage)}`}>
-                  {getMatchLabel(job.matchPercentage)}
-                </span>
-              </div>
-            )}
-            <div className="text-sm text-muted-foreground flex items-center gap-1 mt-2">
-              <Clock className="w-4 h-4" />
-              {timeAgo}
-            </div>
-          </div>
         </div>
 
         {job.matchCriteria && (
@@ -75,7 +69,7 @@ export function JobCard({ job, onApply }: JobCardProps) {
             <div className="text-sm">
               <div className="flex items-center gap-1 mb-1">
                 <span className="text-xs text-yellow-500">⭐</span>
-                <span className="text-muted-foreground">Employers are more likely to interview you if you match these preferences:</span>
+                <span className="text-muted-foreground">Employers are looking for:</span>
               </div>
               <div className="flex flex-wrap gap-2 mt-2">
                 {job.matchCriteria.degree && (
@@ -112,6 +106,11 @@ export function JobCard({ job, onApply }: JobCardProps) {
           <Badge variant="secondary">{job.type}</Badge>
           <Badge variant="secondary">{job.level}</Badge>
           <Badge variant="outline">{formattedSalary}</Badge>
+          {job.remote && (
+            <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+              Remote
+            </Badge>
+          )}
         </div>
         <div className="flex flex-wrap gap-1.5">
           {job.skills.slice(0, 5).map((skill) => (
