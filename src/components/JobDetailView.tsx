@@ -1,4 +1,3 @@
-
 import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -36,7 +35,6 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
 
   const formattedSalary = `${job.salary.currency}${job.salary.min.toLocaleString()} - ${job.salary.currency}${job.salary.max.toLocaleString()}`;
   
-  // Determine color based on match percentage
   const getMatchColor = (percentage?: number) => {
     if (!percentage) return "";
     if (percentage >= 70) return "text-green-500";
@@ -56,6 +54,14 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
     if (percentage >= 70) return "GOOD MATCH";
     if (percentage >= 50) return "FAIR MATCH";
     return "WEAK MATCH";
+  };
+
+  const handleApplyClick = () => {
+    if (job.applyUrl) {
+      window.open(job.applyUrl, '_blank');
+    } else {
+      onApply(job);
+    }
   };
 
   return (
@@ -339,7 +345,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
         <div className="flex flex-col sm:flex-row gap-3 w-full">
           <Button
             className="w-full button-hover"
-            onClick={() => onApply(job)}
+            onClick={handleApplyClick}
           >
             Apply Now
           </Button>

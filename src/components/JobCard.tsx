@@ -37,6 +37,15 @@ export function JobCard({ job, onApply }: JobCardProps) {
     return "border-red-500";
   };
 
+  // Handle apply button click
+  const handleApplyClick = () => {
+    if (job.applyUrl) {
+      window.open(job.applyUrl, '_blank');
+    } else if (onApply) {
+      onApply(job.id);
+    }
+  };
+
   return (
     <Card className="group hover:shadow-md transition-all duration-200 cursor-pointer relative">
       {job.matchPercentage && (
@@ -123,7 +132,7 @@ export function JobCard({ job, onApply }: JobCardProps) {
       <CardFooter>
         <Button 
           className="w-full"
-          onClick={() => onApply?.(job.id)}
+          onClick={handleApplyClick}
         >
           Apply Now
         </Button>
