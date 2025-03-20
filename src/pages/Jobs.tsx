@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,8 @@ import { Switch } from "@/components/ui/switch";
 import { JobScraperConfig } from "@/components/JobScraperConfig";
 import { PasswordManager } from "@/components/PasswordManager";
 import { ApplicationAnswers } from "@/components/ApplicationAnswers";
+import { Badge } from "@/components/ui/badge";
+import { formatRelativeTime } from "@/utils/dateUtils";
 import {
   Pagination,
   PaginationContent,
@@ -1351,7 +1354,7 @@ const Jobs = () => {
                         <div className="flex items-center gap-1">
                           <ClockIcon className="w-4 h-4" />
                           <span>
-                            Posted {formatDistanceToNow(new Date(selectedJob.postedAt), { addSuffix: true })}
+                            Posted {formatRelativeTime(selectedJob.postedAt)}
                           </span>
                         </div>
                       </div>

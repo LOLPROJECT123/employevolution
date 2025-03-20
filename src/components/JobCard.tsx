@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Building2, Clock, CheckCircle } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { formatRelativeTime } from "@/utils/dateUtils";
 
 interface JobCardProps {
   job: Job;
@@ -13,7 +13,7 @@ interface JobCardProps {
 
 export function JobCard({ job, onApply }: JobCardProps) {
   const formattedSalary = `${job.salary.currency}${job.salary.min.toLocaleString()} - ${job.salary.currency}${job.salary.max.toLocaleString()}`;
-  const timeAgo = formatDistanceToNow(new Date(job.postedAt), { addSuffix: true });
+  const timeAgo = formatRelativeTime(job.postedAt);
 
   // Determine color based on match percentage
   const getMatchColor = (percentage?: number) => {
