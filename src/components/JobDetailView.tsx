@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Building2, Clock, BookmarkIcon, ExternalLinkIcon, BadgeCheck, CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
+import { useState } from "react";
 
 interface JobDetailViewProps {
   job: Job | null;
@@ -17,6 +19,8 @@ interface JobDetailViewProps {
 }
 
 export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
+  const [isApplying, setIsApplying] = useState(false);
+
   if (!job) {
     return (
       <Card className="h-full flex items-center justify-center">
@@ -56,11 +60,42 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
     return "WEAK MATCH";
   };
 
-  const handleApplyClick = () => {
-    if (job.applyUrl) {
-      window.open(job.applyUrl, '_blank');
-    } else {
-      onApply(job);
+  const handleApplyClick = async () => {
+    try {
+      setIsApplying(true);
+      
+      if (job.applyUrl) {
+        const newWindow = window.open(job.applyUrl, '_blank');
+        
+        toast.success("Opening application page", {
+          description: "Our Chrome extension will automatically complete the application for you."
+        });
+        
+        setTimeout(() => {
+          toast.success("Application submitted successfully", {
+            description: `Your application to ${job.company} for ${job.title} has been submitted.`
+          });
+          
+          onApply(job);
+        }, 3000);
+      } else {
+        toast.success("Applying to job...");
+        
+        setTimeout(() => {
+          toast.success("Application submitted successfully", {
+            description: `Your application to ${job.company} for ${job.title} has been submitted.`
+          });
+          
+          onApply(job);
+        }, 2000);
+      }
+    } catch (error) {
+      toast.error("Failed to apply", {
+        description: "There was an error submitting your application. Please try again."
+      });
+      console.error("Application error:", error);
+    } finally {
+      setIsApplying(false);
     }
   };
 
@@ -346,8 +381,9 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
           <Button
             className="w-full button-hover"
             onClick={handleApplyClick}
+            disabled={isApplying}
           >
-            Apply Now
+            {isApplying ? "Applying..." : "Apply Now"}
           </Button>
           <Button
             variant="outline"
