@@ -4,23 +4,27 @@ import Navbar from "@/components/Navbar";
 import ATSOptimizer from "@/components/ATSOptimizer";
 import CommonATSSystems from "@/components/CommonATSSystems";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import AIResumeCreator from "@/components/resume/AIResumeCreator";
+import AICVCreator from "@/components/resume/AICVCreator";
 
-const ResumeForum = () => {
+const ResumeTools = () => {
   return (
     <div className="min-h-screen flex flex-col bg-secondary/30">
       <Navbar />
       <main className="flex-1 pt-20">
         <div className="container px-4 py-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold">Resume & Cover Letter Optimization</h1>
+            <h1 className="text-3xl font-bold">Resume & CV Tools</h1>
             <p className="text-muted-foreground mt-1">
-              Get your documents ATS-ready and increase your chances of landing interviews
+              Create, optimize, and get feedback on your professional documents to increase your chances of landing interviews
             </p>
           </div>
           
           <Tabs defaultValue="ats-optimizer" className="space-y-6">
-            <TabsList>
+            <TabsList className="flex flex-wrap">
               <TabsTrigger value="ats-optimizer">ATS Optimizer</TabsTrigger>
+              <TabsTrigger value="ai-resume-creator">AI Resume Creator</TabsTrigger>
+              <TabsTrigger value="ai-cv-creator">AI CV Creator</TabsTrigger>
               <TabsTrigger value="ats-systems">ATS Systems</TabsTrigger>
               <TabsTrigger value="forum">Resume Forum</TabsTrigger>
               <TabsTrigger value="templates">Templates</TabsTrigger>
@@ -28,6 +32,14 @@ const ResumeForum = () => {
             
             <TabsContent value="ats-optimizer">
               <ATSOptimizer />
+            </TabsContent>
+            
+            <TabsContent value="ai-resume-creator">
+              <AIResumeCreator />
+            </TabsContent>
+            
+            <TabsContent value="ai-cv-creator">
+              <AICVCreator />
             </TabsContent>
             
             <TabsContent value="ats-systems">
@@ -59,4 +71,4 @@ const ResumeForum = () => {
   );
 };
 
-export default ResumeForum;
+export default ResumeTools;

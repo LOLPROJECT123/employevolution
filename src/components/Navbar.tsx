@@ -29,7 +29,7 @@ const Navbar = () => {
     { href: "/jobs", label: "Jobs" },
     { href: "/interview-practice", label: "Interview Practice" },
     { href: "/referrals", label: "Referrals" },
-    { href: "/resume-forum", label: "Resume Forum" },
+    { href: "/resume-tools", label: "Resume/CV Tools" },
     { href: "/leetcode-patterns", label: "LeetCode Patterns" },
     { href: "/salary-negotiations", label: "Salary Negotiations" },
   ];

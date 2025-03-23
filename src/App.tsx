@@ -12,7 +12,7 @@ import Referrals from "./pages/Referrals";
 import Jobs from "./pages/Jobs";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
-import ResumeForum from "./pages/ResumeForum";
+import ResumeTools from "./pages/ResumeTools";
 import LeetcodePatterns from "./pages/LeetcodePatterns";
 import SalaryNegotiations from "./pages/SalaryNegotiations";
 import Profile from "./pages/Profile";
@@ -33,7 +33,7 @@ const App = () => (
             <Route path="/jobs" element={<Jobs />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/resume-forum" element={<ResumeForum />} />
+            <Route path="/resume-tools" element={<ResumeTools />} />
             <Route path="/leetcode-patterns" element={<LeetcodePatterns />} />
             <Route path="/salary-negotiations" element={<SalaryNegotiations />} />
             <Route path="/profile" element={<Profile />} />
