@@ -47,7 +47,7 @@ export interface AutomationProfile {
 
 // Additional fields for platform-specific settings
 export interface IndeedSettings {
-  experienceYears: {
+  experienceYears?: {
     java?: string;
     aws?: string;
     python?: string;
@@ -67,7 +67,7 @@ export interface IndeedSettings {
     teaching?: string;
     default?: string;
   };
-  applicationSettings: {
+  applicationSettings?: {
     loadDelay?: number;
     hasDBS?: boolean;
     hasValidCertificate?: boolean;
@@ -162,7 +162,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from dotenv import load_dotenv
 
 # Configuration from your settings
-load_delay = ${indeedSettings.applicationSettings.loadDelay || 1.5}
+load_delay = ${indeedSettings.applicationSettings?.loadDelay || 1.5}
 
 # Personal info from your profile
 add_address = '${config.profile.address || ''}'
@@ -171,9 +171,9 @@ add_city = '${config.profile.city || ''}'
 add_postal = '${config.profile.postalCode || ''}'
 add_state = '${config.profile.state || ''}'
 add_github = '${config.profile.githubUrl || ''}'
-add_DBS = '${indeedSettings.applicationSettings.hasDBS ? 'Yes' : 'No'}'
+add_DBS = '${indeedSettings.applicationSettings?.hasDBS ? 'Yes' : 'No'}'
 add_criminal = '${config.profile.hasCriminalRecord ? 'Yes' : 'No'}'
-add_valid_cert = '${indeedSettings.applicationSettings.hasValidCertificate ? 'Yes' : 'No'}'
+add_valid_cert = '${indeedSettings.applicationSettings?.hasValidCertificate ? 'Yes' : 'No'}'
 add_university = '${config.profile.university || ''}'
 add_linkedin = '${config.profile.linkedinUrl || ''}'
 add_sponsorship = '${config.profile.needsSponsorship ? 'Yes' : 'No'}'
@@ -193,24 +193,24 @@ default_unknown_multi = ''
 add_interview_dates = '${config.profile.availableForInterview || 'Immediately'}'
 
 # experience years
-add_java = '${indeedSettings.experienceYears.java || indeedSettings.experienceYears.default || '0'}'
-add_aws = '${indeedSettings.experienceYears.aws || indeedSettings.experienceYears.default || '0'}'
-add_python = '${indeedSettings.experienceYears.python || indeedSettings.experienceYears.default || '0'}'
-add_analysis = '${indeedSettings.experienceYears.analysis || indeedSettings.experienceYears.default || '0'}'
-add_django = '${indeedSettings.experienceYears.django || indeedSettings.experienceYears.default || '0'}'
-add_php = '${indeedSettings.experienceYears.php || indeedSettings.experienceYears.default || '0'}'
-add_react = '${indeedSettings.experienceYears.react || indeedSettings.experienceYears.default || '0'}'
-add_node = '${indeedSettings.experienceYears.node || indeedSettings.experienceYears.default || '0'}'
-add_angular = '${indeedSettings.experienceYears.angular || indeedSettings.experienceYears.default || '0'}'
-add_javascript = '${indeedSettings.experienceYears.javascript || indeedSettings.experienceYears.default || '0'}'
-add_orm = '${indeedSettings.experienceYears.orm || indeedSettings.experienceYears.default || '0'}'
-add_sdet = '${indeedSettings.experienceYears.sdet || indeedSettings.experienceYears.default || '0'}'
-add_selenium = '${indeedSettings.experienceYears.selenium || indeedSettings.experienceYears.default || '0'}'
-add_testautomation = '${indeedSettings.experienceYears.testautomation || indeedSettings.experienceYears.default || '0'}'
-add_webdevyears = '${indeedSettings.experienceYears.webdev || indeedSettings.experienceYears.default || '0'}'
-add_programming = '${indeedSettings.experienceYears.programming || indeedSettings.experienceYears.default || '0'}'
-add_teaching = '${indeedSettings.experienceYears.teaching || indeedSettings.experienceYears.default || '0'}'
-add_default_experience = '${indeedSettings.experienceYears.default || '0'}'
+add_java = '${indeedSettings.experienceYears?.java || indeedSettings.experienceYears?.default || '0'}'
+add_aws = '${indeedSettings.experienceYears?.aws || indeedSettings.experienceYears?.default || '0'}'
+add_python = '${indeedSettings.experienceYears?.python || indeedSettings.experienceYears?.default || '0'}'
+add_analysis = '${indeedSettings.experienceYears?.analysis || indeedSettings.experienceYears?.default || '0'}'
+add_django = '${indeedSettings.experienceYears?.django || indeedSettings.experienceYears?.default || '0'}'
+add_php = '${indeedSettings.experienceYears?.php || indeedSettings.experienceYears?.default || '0'}'
+add_react = '${indeedSettings.experienceYears?.react || indeedSettings.experienceYears?.default || '0'}'
+add_node = '${indeedSettings.experienceYears?.node || indeedSettings.experienceYears?.default || '0'}'
+add_angular = '${indeedSettings.experienceYears?.angular || indeedSettings.experienceYears?.default || '0'}'
+add_javascript = '${indeedSettings.experienceYears?.javascript || indeedSettings.experienceYears?.default || '0'}'
+add_orm = '${indeedSettings.experienceYears?.orm || indeedSettings.experienceYears?.default || '0'}'
+add_sdet = '${indeedSettings.experienceYears?.sdet || indeedSettings.experienceYears?.default || '0'}'
+add_selenium = '${indeedSettings.experienceYears?.selenium || indeedSettings.experienceYears?.default || '0'}'
+add_testautomation = '${indeedSettings.experienceYears?.testautomation || indeedSettings.experienceYears?.default || '0'}'
+add_webdevyears = '${indeedSettings.experienceYears?.webdev || indeedSettings.experienceYears?.default || '0'}'
+add_programming = '${indeedSettings.experienceYears?.programming || indeedSettings.experienceYears?.default || '0'}'
+add_teaching = '${indeedSettings.experienceYears?.teaching || indeedSettings.experienceYears?.default || '0'}'
+add_default_experience = '${indeedSettings.experienceYears?.default || '0'}'
 
 service = Service(ChromeDriverManager().install())
 driver = webdriver.Chrome(service=service)
@@ -266,4 +266,3 @@ export function startAutomation(jobUrl: string, config: AutomationConfig): void 
   
   window.dispatchEvent(event);
 }
-
