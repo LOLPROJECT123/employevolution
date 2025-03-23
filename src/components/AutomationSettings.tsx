@@ -34,8 +34,17 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Download, SettingsIcon } from "lucide-react";
-import { AutomationConfig, AutomationCredentials, AutomationPlatform, AutomationProfile } from '@/utils/automationUtils';
+import { 
+  AutomationConfig, 
+  AutomationCredentials, 
+  AutomationPlatform, 
+  AutomationProfile, 
+  getHandshakeAutomationScript, 
+  getIndeedAutomationScript 
+} from '@/utils/automationUtils';
 import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import IndeedAutomationSettings from './IndeedAutomationSettings';
 
 // Define form schema
 const formSchema = z.object({
@@ -56,6 +65,57 @@ const formSchema = z.object({
   experience: z.string(),
   languagesKnown: z.string(),
   codingLanguagesKnown: z.string(),
+  
+  // Extended profile for Indeed
+  address: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  postalCode: z.string().optional(),
+  githubUrl: z.string().optional(),
+  linkedinUrl: z.string().optional(),
+  university: z.string().optional(),
+  hasCriminalRecord: z.boolean().optional(),
+  needsSponsorship: z.boolean().optional(),
+  willingToRelocate: z.boolean().optional(),
+  workAuthorized: z.boolean().optional(),
+  isCitizen: z.boolean().optional(),
+  educationLevel: z.string().optional(),
+  salaryExpectation: z.string().optional(),
+  gender: z.enum(['Male', 'Female', 'Decline']).optional(),
+  veteranStatus: z.enum(['Yes', 'No', 'Decline']).optional(),
+  disabilityStatus: z.enum(['Yes', 'No', 'Decline']).optional(),
+  canCommute: z.boolean().optional(),
+  preferredShift: z.enum(['Day shift', 'Night shift', 'Overnight shift']).optional(),
+  availableForInterview: z.string().optional(),
+  
+  // Indeed specific settings
+  indeed: z.object({
+    experienceYears: z.object({
+      java: z.string().optional(),
+      aws: z.string().optional(),
+      python: z.string().optional(),
+      analysis: z.string().optional(),
+      django: z.string().optional(),
+      php: z.string().optional(),
+      react: z.string().optional(),
+      node: z.string().optional(),
+      angular: z.string().optional(),
+      javascript: z.string().optional(),
+      orm: z.string().optional(),
+      sdet: z.string().optional(),
+      selenium: z.string().optional(),
+      testautomation: z.string().optional(),
+      webdev: z.string().optional(),
+      programming: z.string().optional(),
+      teaching: z.string().optional(),
+      default: z.string().optional(),
+    }).optional(),
+    applicationSettings: z.object({
+      loadDelay: z.number().optional(),
+      hasDBS: z.boolean().optional(),
+      hasValidCertificate: z.boolean().optional(),
+    }).optional(),
+  }).optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -80,6 +140,7 @@ const saveConfig = (config: AutomationConfig): void => {
 
 export default function AutomationSettings() {
   const [open, setOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("general");
   
   // Initialize form with saved values if available
   const savedConfig = loadSavedConfig();
@@ -101,6 +162,31 @@ export default function AutomationSettings() {
       experience: savedConfig.profile.experience,
       languagesKnown: savedConfig.profile.languagesKnown.join(', '),
       codingLanguagesKnown: savedConfig.profile.codingLanguagesKnown.join(', '),
+      
+      // Extended profile fields
+      address: savedConfig.profile.address,
+      city: savedConfig.profile.city,
+      state: savedConfig.profile.state,
+      postalCode: savedConfig.profile.postalCode,
+      githubUrl: savedConfig.profile.githubUrl,
+      linkedinUrl: savedConfig.profile.linkedinUrl,
+      university: savedConfig.profile.university,
+      hasCriminalRecord: savedConfig.profile.hasCriminalRecord,
+      needsSponsorship: savedConfig.profile.needsSponsorship,
+      willingToRelocate: savedConfig.profile.willingToRelocate,
+      workAuthorized: savedConfig.profile.workAuthorized,
+      isCitizen: savedConfig.profile.isCitizen,
+      educationLevel: savedConfig.profile.educationLevel,
+      salaryExpectation: savedConfig.profile.salaryExpectation,
+      gender: savedConfig.profile.gender,
+      veteranStatus: savedConfig.profile.veteranStatus,
+      disabilityStatus: savedConfig.profile.disabilityStatus,
+      canCommute: savedConfig.profile.canCommute,
+      preferredShift: savedConfig.profile.preferredShift,
+      availableForInterview: savedConfig.profile.availableForInterview,
+      
+      // Indeed specific settings
+      indeed: savedConfig.platformSpecificSettings?.indeed,
     } : {
       platform: 'handshake' as AutomationPlatform,
       email: '',
@@ -116,6 +202,18 @@ export default function AutomationSettings() {
       experience: '',
       languagesKnown: '',
       codingLanguagesKnown: '',
+      
+      // Initialize Indeed-specific settings with defaults
+      indeed: {
+        experienceYears: {
+          default: '0'
+        },
+        applicationSettings: {
+          loadDelay: 1.5,
+          hasDBS: false,
+          hasValidCertificate: false
+        }
+      }
     }
   });
   
@@ -139,6 +237,31 @@ export default function AutomationSettings() {
         experience: values.experience,
         languagesKnown: values.languagesKnown.split(',').map(lang => lang.trim()),
         codingLanguagesKnown: values.codingLanguagesKnown.split(',').map(lang => lang.trim()),
+        
+        // Extended profile fields
+        address: values.address,
+        city: values.city,
+        state: values.state,
+        postalCode: values.postalCode,
+        githubUrl: values.githubUrl,
+        linkedinUrl: values.linkedinUrl,
+        university: values.university,
+        hasCriminalRecord: values.hasCriminalRecord,
+        needsSponsorship: values.needsSponsorship,
+        willingToRelocate: values.willingToRelocate,
+        workAuthorized: values.workAuthorized,
+        isCitizen: values.isCitizen,
+        educationLevel: values.educationLevel,
+        salaryExpectation: values.salaryExpectation,
+        gender: values.gender,
+        veteranStatus: values.veteranStatus,
+        disabilityStatus: values.disabilityStatus,
+        canCommute: values.canCommute,
+        preferredShift: values.preferredShift,
+        availableForInterview: values.availableForInterview,
+      },
+      platformSpecificSettings: {
+        indeed: values.indeed
       }
     };
     
@@ -152,6 +275,7 @@ export default function AutomationSettings() {
   
   const downloadAutomationScript = () => {
     const values = form.getValues();
+    const platform = values.platform;
     
     // Convert form values to AutomationConfig
     const config: AutomationConfig = {
@@ -172,12 +296,62 @@ export default function AutomationSettings() {
         experience: values.experience,
         languagesKnown: values.languagesKnown.split(',').map(lang => lang.trim()),
         codingLanguagesKnown: values.codingLanguagesKnown.split(',').map(lang => lang.trim()),
+        
+        // Extended profile fields
+        address: values.address,
+        city: values.city,
+        state: values.state,
+        postalCode: values.postalCode,
+        githubUrl: values.githubUrl,
+        linkedinUrl: values.linkedinUrl,
+        university: values.university,
+        hasCriminalRecord: values.hasCriminalRecord,
+        needsSponsorship: values.needsSponsorship,
+        willingToRelocate: values.willingToRelocate,
+        workAuthorized: values.workAuthorized,
+        isCitizen: values.isCitizen,
+        educationLevel: values.educationLevel,
+        salaryExpectation: values.salaryExpectation,
+        gender: values.gender,
+        veteranStatus: values.veteranStatus,
+        disabilityStatus: values.disabilityStatus,
+        canCommute: values.canCommute,
+        preferredShift: values.preferredShift,
+        availableForInterview: values.availableForInterview,
+      },
+      platformSpecificSettings: {
+        indeed: values.indeed
       }
     };
     
-    // For this demo, we'll just display a message - in a real app, this would download the script
-    toast.info("Download initiated", {
-      description: "In a complete implementation, this would download a Python script configured with your settings."
+    // Get script based on platform
+    let scriptContent = '';
+    let fileName = '';
+    
+    if (platform === 'handshake') {
+      scriptContent = getHandshakeAutomationScript(config);
+      fileName = 'handshake_automation.py';
+    } else if (platform === 'indeed') {
+      scriptContent = getIndeedAutomationScript(config);
+      fileName = 'indeed_automation.py';
+    } else {
+      toast.info("Script generation not implemented", {
+        description: `Automation script for ${platform} is not yet implemented.`
+      });
+      return;
+    }
+    
+    // Create and download file
+    const element = document.createElement('a');
+    const file = new Blob([scriptContent], {type: 'text/plain'});
+    element.href = URL.createObjectURL(file);
+    element.download = fileName;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    
+    toast.success(`Downloaded ${fileName}`, {
+      description: "Run this script with Python to automate your job applications."
     });
   };
   
@@ -193,265 +367,288 @@ export default function AutomationSettings() {
         <DialogHeader>
           <DialogTitle>Application Automation Settings</DialogTitle>
           <DialogDescription>
-            Configure automation for applying to jobs on platforms like Handshake, LinkedIn, and more.
+            Configure automation for applying to jobs on platforms like Handshake, LinkedIn, Indeed, and more.
             Your credentials are saved locally and never sent to our servers.
           </DialogDescription>
         </DialogHeader>
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Platform Credentials</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="platform"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Platform</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select platform" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="handshake">Handshake</SelectItem>
-                          <SelectItem value="linkedin">LinkedIn</SelectItem>
-                          <SelectItem value="indeed">Indeed</SelectItem>
-                          <SelectItem value="glassdoor">Glassdoor</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="enabled"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                      <div className="space-y-0.5">
-                        <FormLabel>Enable Automation</FormLabel>
-                        <FormDescription>
-                          Turn on job application automation
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Platform Email</FormLabel>
-                      <FormControl>
-                        <Input placeholder="email@example.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Platform Password</FormLabel>
-                      <FormControl>
-                        <Input type="password" placeholder="••••••••" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        Stored locally only
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Profile Information</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Full Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="John Doe" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="profileEmail"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Contact Email</FormLabel>
-                      <FormControl>
-                        <Input placeholder="contact@example.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Phone Number</FormLabel>
-                      <FormControl>
-                        <Input placeholder="(123) 456-7890" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="location"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Location</FormLabel>
-                      <FormControl>
-                        <Input placeholder="City, State" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="yearsOfCoding"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Years of Coding Experience</FormLabel>
-                      <FormControl>
-                        <Input type="number" min="0" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="flex gap-4">
-                  <FormField
-                    control={form.control}
-                    name="currentlyEmployed"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center space-x-2">
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <FormLabel>Currently Employed</FormLabel>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="needVisa"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center space-x-2">
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <FormLabel>Need Visa Sponsorship</FormLabel>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-              
-              <FormField
-                control={form.control}
-                name="experience"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Experience Summary</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Brief description of your work experience" 
-                        className="min-h-[100px]" 
-                        {...field} 
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="w-full">
+                <TabsTrigger value="general" className="flex-1">General</TabsTrigger>
+                <TabsTrigger value="indeed" className="flex-1">Indeed Settings</TabsTrigger>
+              </TabsList>
+              <TabsContent value="general" className="pt-4">
+                <div className="space-y-6">
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">Platform Credentials</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="platform"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Platform</FormLabel>
+                            <Select 
+                              onValueChange={(value) => {
+                                field.onChange(value);
+                                // Switch to the appropriate tab when platform changes
+                                if (value === 'indeed') {
+                                  setActiveTab('indeed');
+                                }
+                              }} 
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select platform" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="handshake">Handshake</SelectItem>
+                                <SelectItem value="linkedin">LinkedIn</SelectItem>
+                                <SelectItem value="indeed">Indeed</SelectItem>
+                                <SelectItem value="glassdoor">Glassdoor</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      
+                      <FormField
+                        control={form.control}
+                        name="enabled"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                            <div className="space-y-0.5">
+                              <FormLabel>Enable Automation</FormLabel>
+                              <FormDescription>
+                                Turn on job application automation
+                              </FormDescription>
+                            </div>
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Platform Email</FormLabel>
+                            <FormControl>
+                              <Input placeholder="email@example.com" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Platform Password</FormLabel>
+                            <FormControl>
+                              <Input type="password" placeholder="••••••••" {...field} />
+                            </FormControl>
+                            <FormDescription>
+                              Stored locally only
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">Profile Information</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Full Name</FormLabel>
+                            <FormControl>
+                              <Input placeholder="John Doe" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="profileEmail"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Contact Email</FormLabel>
+                            <FormControl>
+                              <Input placeholder="contact@example.com" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Phone Number</FormLabel>
+                            <FormControl>
+                              <Input placeholder="(123) 456-7890" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="location"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Location</FormLabel>
+                            <FormControl>
+                              <Input placeholder="City, State" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="yearsOfCoding"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Years of Coding Experience</FormLabel>
+                            <FormControl>
+                              <Input type="number" min="0" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <div className="flex gap-4">
+                        <FormField
+                          control={form.control}
+                          name="currentlyEmployed"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-center space-x-2">
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                              <FormLabel>Currently Employed</FormLabel>
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="needVisa"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-center space-x-2">
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                              <FormLabel>Need Visa Sponsorship</FormLabel>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+                    
+                    <FormField
+                      control={form.control}
+                      name="experience"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Experience Summary</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Brief description of your work experience" 
+                              className="min-h-[100px]" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="languagesKnown"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Languages Known</FormLabel>
+                            <FormControl>
+                              <Input placeholder="English, Spanish, etc." {...field} />
+                            </FormControl>
+                            <FormDescription>
+                              Comma-separated list
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="codingLanguagesKnown"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Coding Languages</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Python, JavaScript, etc." {...field} />
+                            </FormControl>
+                            <FormDescription>
+                              Comma-separated list
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="languagesKnown"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Languages Known</FormLabel>
-                      <FormControl>
-                        <Input placeholder="English, Spanish, etc." {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        Comma-separated list
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+              <TabsContent value="indeed" className="pt-4">
+                <IndeedAutomationSettings 
+                  form={form} 
+                  control={form.control} 
                 />
-                
-                <FormField
-                  control={form.control}
-                  name="codingLanguagesKnown"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Coding Languages</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Python, JavaScript, etc." {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        Comma-separated list
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
+              </TabsContent>
+            </Tabs>
             
             <DialogFooter className="flex justify-between">
               <Button 
