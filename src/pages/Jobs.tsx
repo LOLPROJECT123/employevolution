@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import Navbar from "@/components/Navbar";
 import { Job } from "@/types/job";
@@ -77,6 +78,19 @@ const Jobs = () => {
     if (!appliedJobs.includes(job.id)) {
       setAppliedJobs([...appliedJobs, job.id]);
       
+      // For desktop: if the job has an application URL, open it in a new tab
+      if (!isMobile && job.applyUrl) {
+        window.open(job.applyUrl, '_blank');
+        toast.success("Opening application page", {
+          description: "Our Chrome extension will automatically complete the application for you."
+        });
+      } else {
+        // If we're on mobile or no URL exists, show successful application message
+        toast.success("Application submitted successfully", {
+          description: `Your application to ${job.company} for ${job.title} has been submitted.`
+        });
+      }
+      
       // If we're in swipe mode, automatically move to the next job
       if (viewMode === 'swipe') {
         const currentIndex = filteredJobs.findIndex(j => j.id === job.id);
@@ -88,7 +102,7 @@ const Jobs = () => {
   };
 
   const handleSkipJob = (job: Job) => {
-    // You could implement additional logic here if needed
+    // Implement additional logic if needed in the future
     // For example, marking jobs as "not interested"
   };
 

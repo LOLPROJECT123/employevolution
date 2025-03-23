@@ -64,31 +64,8 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
     try {
       setIsApplying(true);
       
-      if (job.applyUrl) {
-        const newWindow = window.open(job.applyUrl, '_blank');
-        
-        toast.success("Opening application page", {
-          description: "Our Chrome extension will automatically complete the application for you."
-        });
-        
-        setTimeout(() => {
-          toast.success("Application submitted successfully", {
-            description: `Your application to ${job.company} for ${job.title} has been submitted.`
-          });
-          
-          onApply(job);
-        }, 3000);
-      } else {
-        toast.success("Applying to job...");
-        
-        setTimeout(() => {
-          toast.success("Application submitted successfully", {
-            description: `Your application to ${job.company} for ${job.title} has been submitted.`
-          });
-          
-          onApply(job);
-        }, 2000);
-      }
+      onApply(job);
+      
     } catch (error) {
       toast.error("Failed to apply", {
         description: "There was an error submitting your application. Please try again."

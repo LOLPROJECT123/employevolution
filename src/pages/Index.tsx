@@ -107,7 +107,7 @@ const Index = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Update the handleApply function to accept a Job object instead of a string
+  // Now accepting a Job object instead of a string
   const handleApply = (job: any) => {
     navigate(`/auth?mode=signup&redirect=/jobs/${job.id}`);
   };

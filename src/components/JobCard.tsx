@@ -1,4 +1,3 @@
-
 import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -28,7 +27,6 @@ export function JobCard({
   const formattedSalary = `${job.salary.currency}${job.salary.min.toLocaleString()} - ${job.salary.currency}${job.salary.max.toLocaleString()}`;
   const timeAgo = formatRelativeTime(job.postedAt);
 
-  // Determine color based on match percentage
   const getMatchColor = (percentage?: number) => {
     if (!percentage) return "";
     if (percentage >= 70) return "text-green-500";
@@ -50,16 +48,11 @@ export function JobCard({
     return "border-red-500";
   };
 
-  // Handle apply button click
-  const handleApplyClick = () => {
-    if (job.applyUrl) {
-      window.open(job.applyUrl, '_blank');
-    } else {
-      onApply(job);
-    }
+  const handleApplyClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onApply(job);
   };
 
-  // Handle card click
   const handleCardClick = () => {
     if (onClick) {
       onClick();
@@ -155,10 +148,7 @@ export function JobCard({
       <CardFooter className="flex justify-between">
         <Button 
           className={`w-full ${isApplied ? 'bg-green-600 hover:bg-green-700' : ''}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            handleApplyClick();
-          }}
+          onClick={handleApplyClick}
           disabled={isApplied}
         >
           {isApplied ? 'Applied' : 'Apply Now'}

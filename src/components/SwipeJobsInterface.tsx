@@ -45,8 +45,10 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
     setDirection(dir);
     
     if (dir === "right") {
+      // Apply to the job when swiped right
       handleApply();
     } else {
+      // Skip the job when swiped left
       handleSkip();
     }
     
@@ -64,6 +66,7 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
   };
 
   const handleApply = () => {
+    // Display success message and call the onApply callback
     toast.success("Applied Successfully!", {
       description: `Your application to ${currentJob.company} for ${currentJob.title} has been submitted.`
     });
@@ -71,6 +74,7 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
   };
 
   const handleSkip = () => {
+    // Display info message and call the onSkip callback
     toast.info("Job Skipped", {
       description: `You skipped ${currentJob.title} at ${currentJob.company}`
     });
