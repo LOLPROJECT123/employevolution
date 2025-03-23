@@ -1,10 +1,11 @@
+
 import { useState, useEffect } from 'react';
 import Navbar from "@/components/Navbar";
 import { Job } from "@/types/job";
 import { JobDetailView } from "@/components/JobDetailView";
-import JobFilters from "@/components/JobFilters";
+import { JobFilters } from "@/components/JobFilters";
 import { JobCard } from "@/components/JobCard";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import SwipeJobsInterface from "@/components/SwipeJobsInterface";
 import { toast } from "sonner";
 
@@ -52,7 +53,7 @@ const Jobs = () => {
   const [filteredJobs, setFilteredJobs] = useState<Job[]>(sampleJobs);
   const [savedJobs, setSavedJobs] = useState<string[]>([]);
   const [appliedJobs, setAppliedJobs] = useState<string[]>([]);
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const [viewMode, setViewMode] = useState<'list' | 'swipe'>(isMobile ? 'swipe' : 'list');
 
   useEffect(() => {
@@ -122,11 +123,6 @@ const Jobs = () => {
                     <JobCard 
                       key={job.id}
                       job={job}
-                      isSelected={selectedJob?.id === job.id}
-                      isSaved={savedJobs.includes(job.id)}
-                      isApplied={appliedJobs.includes(job.id)}
-                      onClick={() => handleJobSelect(job)}
-                      onSave={() => handleSaveJob(job)}
                       onApply={() => handleApplyJob(job)}
                     />
                   ))}

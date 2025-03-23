@@ -8,10 +8,23 @@ import { formatRelativeTime } from "@/utils/dateUtils";
 
 interface JobCardProps {
   job: Job;
-  onApply?: (jobId: string) => void;
+  onApply: (job: Job) => void;
+  isSelected?: boolean;
+  isSaved?: boolean;
+  isApplied?: boolean;
+  onClick?: () => void;
+  onSave?: () => void;
 }
 
-export function JobCard({ job, onApply }: JobCardProps) {
+export function JobCard({ 
+  job, 
+  onApply, 
+  isSelected, 
+  isSaved, 
+  isApplied, 
+  onClick, 
+  onSave 
+}: JobCardProps) {
   const formattedSalary = `${job.salary.currency}${job.salary.min.toLocaleString()} - ${job.salary.currency}${job.salary.max.toLocaleString()}`;
   const timeAgo = formatRelativeTime(job.postedAt);
 
@@ -41,13 +54,23 @@ export function JobCard({ job, onApply }: JobCardProps) {
   const handleApplyClick = () => {
     if (job.applyUrl) {
       window.open(job.applyUrl, '_blank');
-    } else if (onApply) {
-      onApply(job.id);
+    } else {
+      onApply(job);
+    }
+  };
+
+  // Handle card click
+  const handleCardClick = () => {
+    if (onClick) {
+      onClick();
     }
   };
 
   return (
-    <Card className="group hover:shadow-md transition-all duration-200 cursor-pointer relative">
+    <Card 
+      className={`group hover:shadow-md transition-all duration-200 cursor-pointer relative ${isSelected ? 'border-primary' : ''}`}
+      onClick={handleCardClick}
+    >
       {job.matchPercentage && (
         <div className="absolute top-3 right-3 z-10">
           <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 ${getMatchBorderColor(job.matchPercentage)} bg-white dark:bg-gray-950`}>
@@ -129,13 +152,30 @@ export function JobCard({ job, onApply }: JobCardProps) {
           ))}
         </div>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="flex justify-between">
         <Button 
-          className="w-full"
-          onClick={handleApplyClick}
+          className={`w-full ${isApplied ? 'bg-green-600 hover:bg-green-700' : ''}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleApplyClick();
+          }}
+          disabled={isApplied}
         >
-          Apply Now
+          {isApplied ? 'Applied' : 'Apply Now'}
         </Button>
+        
+        {onSave && (
+          <Button 
+            variant="outline"
+            className="ml-2"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSave();
+            }}
+          >
+            {isSaved ? 'Saved' : 'Save'}
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );
