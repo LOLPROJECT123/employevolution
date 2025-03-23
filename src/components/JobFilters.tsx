@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,17 +45,29 @@ import {
 } from "@/components/ui/select";
 
 interface JobFiltersSectionProps {
-  filters: JobFilters;
-  onFiltersChange: (filters: JobFilters) => void;
-  onSaveSearch: (name: string) => void;
-  onResetFilters: () => void;
+  filters?: JobFilters;
+  onFiltersChange?: (filters: JobFilters) => void;
+  onSaveSearch?: (name: string) => void;
+  onResetFilters?: () => void;
 }
 
 export function JobFiltersSection({ 
-  filters, 
-  onFiltersChange, 
-  onSaveSearch,
-  onResetFilters 
+  filters = {
+    search: '',
+    location: '',
+    jobType: [],
+    remote: false,
+    experienceLevels: [],
+    education: [],
+    salaryRange: [0, 400],
+    skills: [],
+    companyTypes: [],
+    companySize: [],
+    benefits: []
+  }, 
+  onFiltersChange = () => {}, 
+  onSaveSearch = () => {},
+  onResetFilters = () => {} 
 }: JobFiltersSectionProps) {
   const { toast } = useToast();
   const [showAllFilters, setShowAllFilters] = useState(false);
@@ -1028,3 +1039,5 @@ export function JobFiltersSection({
     </div>
   );
 }
+
+export default JobFiltersSection;

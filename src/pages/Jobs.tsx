@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import Navbar from "@/components/Navbar";
 import { Job } from "@/types/job";
 import { JobDetailView } from "@/components/JobDetailView";
-import { JobFilters } from "@/components/JobFilters";
+import { JobFiltersSection as JobFilters } from "@/components/JobFilters";
 import { JobCard } from "@/components/JobCard";
 import { useIsMobile } from "@/hooks/use-mobile";
 import SwipeJobsInterface from "@/components/SwipeJobsInterface";
@@ -123,7 +122,12 @@ const Jobs = () => {
                     <JobCard 
                       key={job.id}
                       job={job}
-                      onApply={() => handleApplyJob(job)}
+                      onApply={handleApplyJob}
+                      isSelected={selectedJob?.id === job.id}
+                      isSaved={savedJobs.includes(job.id)}
+                      isApplied={appliedJobs.includes(job.id)}
+                      onClick={() => handleJobSelect(job)}
+                      onSave={() => handleSaveJob(job)}
                     />
                   ))}
                 </div>
