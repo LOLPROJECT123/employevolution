@@ -27,6 +27,22 @@ const CODING_PROBLEMS = [
         description: "Given a string s containing just the characters '(', ')', '{', '}', '[' and ']', determine if the input string is valid. An input string is valid if: Open brackets must be closed by the same type of brackets. Open brackets must be closed in the correct order. Every close bracket has a corresponding open bracket of the same type.",
         example: "Input: s = '()[]{}'\nOutput: true\n\nInput: s = '([)]'\nOutput: false",
         solution: "function isValid(s) {\n  const stack = [];\n  const map = {\n    '(': ')',\n    '[': ']',\n    '{': '}'\n  };\n  \n  for (let i = 0; i < s.length; i++) {\n    if (s[i] === '(' || s[i] === '[' || s[i] === '{') {\n      stack.push(s[i]);\n    } else {\n      const last = stack.pop();\n      \n      if (s[i] !== map[last]) {\n        return false;\n      }\n    }\n  }\n  \n  return stack.length === 0;\n}"
+      },
+      {
+        id: "google-3",
+        title: "Longest Substring Without Repeating Characters",
+        difficulty: "Medium",
+        description: "Given a string s, find the length of the longest substring without repeating characters.",
+        example: "Input: s = 'abcabcbb'\nOutput: 3\nExplanation: The answer is 'abc', with the length of 3.",
+        solution: "function lengthOfLongestSubstring(s) {\n  const charMap = new Map();\n  let maxLength = 0;\n  let start = 0;\n  \n  for (let end = 0; end < s.length; end++) {\n    const currentChar = s[end];\n    \n    if (charMap.has(currentChar)) {\n      start = Math.max(charMap.get(currentChar) + 1, start);\n    }\n    \n    charMap.set(currentChar, end);\n    maxLength = Math.max(maxLength, end - start + 1);\n  }\n  \n  return maxLength;\n}"
+      },
+      {
+        id: "google-4",
+        title: "Merge Intervals",
+        difficulty: "Medium",
+        description: "Given an array of intervals where intervals[i] = [starti, endi], merge all overlapping intervals, and return an array of the non-overlapping intervals that cover all the intervals in the input.",
+        example: "Input: intervals = [[1,3],[2,6],[8,10],[15,18]]\nOutput: [[1,6],[8,10],[15,18]]\nExplanation: Since intervals [1,3] and [2,6] overlap, merge them into [1,6].",
+        solution: "function merge(intervals) {\n  if (intervals.length <= 1) return intervals;\n  \n  // Sort intervals by starting time\n  intervals.sort((a, b) => a[0] - b[0]);\n  \n  const result = [intervals[0]];\n  \n  for (let i = 1; i < intervals.length; i++) {\n    const current = intervals[i];\n    const last = result[result.length - 1];\n    \n    // If current interval overlaps with the last result interval\n    if (current[0] <= last[1]) {\n      // Merge them by updating the end of the last interval\n      last[1] = Math.max(last[1], current[1]);\n    } else {\n      // Not overlapping, add the interval to result\n      result.push(current);\n    }\n  }\n  \n  return result;\n}"
       }
     ]
   },
@@ -48,6 +64,22 @@ const CODING_PROBLEMS = [
         description: "Design a data structure that follows the constraints of a Least Recently Used (LRU) cache. Implement the LRUCache class: LRUCache(int capacity) Initialize the LRU cache with positive size capacity. int get(int key) Return the value of the key if the key exists, otherwise return -1. void put(int key, int value) Update the value of the key if the key exists. Otherwise, add the key-value pair to the cache. If the number of keys exceeds the capacity from this operation, evict the least recently used key.",
         example: "Input:\n['LRUCache', 'put', 'put', 'get', 'put', 'get', 'put', 'get', 'get', 'get']\n[[2], [1, 1], [2, 2], [1], [3, 3], [2], [4, 4], [1], [3], [4]]\nOutput:\n[null, null, null, 1, null, -1, null, -1, 3, 4]",
         solution: "class LRUCache {\n  constructor(capacity) {\n    this.capacity = capacity;\n    this.cache = new Map();\n  }\n  \n  get(key) {\n    if (!this.cache.has(key)) return -1;\n    \n    const value = this.cache.get(key);\n    this.cache.delete(key);\n    this.cache.set(key, value);\n    return value;\n  }\n  \n  put(key, value) {\n    this.cache.delete(key);\n    \n    if (this.cache.size === this.capacity) {\n      const firstKey = this.cache.keys().next().value;\n      this.cache.delete(firstKey);\n    }\n    \n    this.cache.set(key, value);\n  }\n}"
+      },
+      {
+        id: "amazon-3",
+        title: "Trapping Rain Water",
+        difficulty: "Hard",
+        description: "Given n non-negative integers representing an elevation map where the width of each bar is 1, compute how much water it can trap after raining.",
+        example: "Input: height = [0,1,0,2,1,0,1,3,2,1,2,1]\nOutput: 6\nExplanation: The elevation map is represented by array [0,1,0,2,1,0,1,3,2,1,2,1]. In this case, 6 units of rain water are being trapped.",
+        solution: "function trap(height) {\n  if (height.length === 0) return 0;\n  \n  let left = 0;\n  let right = height.length - 1;\n  let leftMax = height[left];\n  let rightMax = height[right];\n  let water = 0;\n  \n  while (left < right) {\n    if (leftMax < rightMax) {\n      left++;\n      leftMax = Math.max(leftMax, height[left]);\n      water += leftMax - height[left];\n    } else {\n      right--;\n      rightMax = Math.max(rightMax, height[right]);\n      water += rightMax - height[right];\n    }\n  }\n  \n  return water;\n}"
+      },
+      {
+        id: "amazon-4",
+        title: "Merge K Sorted Lists",
+        difficulty: "Hard",
+        description: "You are given an array of k linked-lists lists, each linked-list is sorted in ascending order. Merge all the linked-lists into one sorted linked-list and return it.",
+        example: "Input: lists = [[1,4,5],[1,3,4],[2,6]]\nOutput: [1,1,2,3,4,4,5,6]\nExplanation: The linked-lists are:\n[\n  1->4->5,\n  1->3->4,\n  2->6\n]\nmerging them into one sorted list:\n1->1->2->3->4->4->5->6",
+        solution: "/**\n * Definition for singly-linked list.\n * function ListNode(val, next) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.next = (next===undefined ? null : next)\n * }\n */\nfunction mergeKLists(lists) {\n  if (lists.length === 0) return null;\n  \n  const mergeTwoLists = (l1, l2) => {\n    const dummy = new ListNode(0);\n    let current = dummy;\n    \n    while (l1 && l2) {\n      if (l1.val < l2.val) {\n        current.next = l1;\n        l1 = l1.next;\n      } else {\n        current.next = l2;\n        l2 = l2.next;\n      }\n      current = current.next;\n    }\n    \n    current.next = l1 || l2;\n    return dummy.next;\n  };\n  \n  // Divide and conquer approach\n  while (lists.length > 1) {\n    const mergedLists = [];\n    \n    for (let i = 0; i < lists.length; i += 2) {\n      const l1 = lists[i];\n      const l2 = i + 1 < lists.length ? lists[i + 1] : null;\n      mergedLists.push(mergeTwoLists(l1, l2));\n    }\n    \n    lists = mergedLists;\n  }\n  \n  return lists[0] || null;\n}"
       }
     ]
   },
@@ -69,6 +101,59 @@ const CODING_PROBLEMS = [
         description: "Given the root of a binary tree, return the level order traversal of its nodes' values. (i.e., from left to right, level by level).",
         example: "Input: root = [3,9,20,null,null,15,7]\nOutput: [[3],[9,20],[15,7]]",
         solution: "function levelOrder(root) {\n  if (!root) return [];\n  \n  const result = [];\n  const queue = [root];\n  \n  while (queue.length > 0) {\n    const level = [];\n    const levelSize = queue.length;\n    \n    for (let i = 0; i < levelSize; i++) {\n      const node = queue.shift();\n      level.push(node.val);\n      \n      if (node.left) queue.push(node.left);\n      if (node.right) queue.push(node.right);\n    }\n    \n    result.push(level);\n  }\n  \n  return result;\n}"
+      },
+      {
+        id: "facebook-3",
+        title: "Add Two Numbers",
+        difficulty: "Medium",
+        description: "You are given two non-empty linked lists representing two non-negative integers. The digits are stored in reverse order, and each of their nodes contains a single digit. Add the two numbers and return the sum as a linked list.",
+        example: "Input: l1 = [2,4,3], l2 = [5,6,4]\nOutput: [7,0,8]\nExplanation: 342 + 465 = 807.",
+        solution: "/**\n * Definition for singly-linked list.\n * function ListNode(val, next) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.next = (next===undefined ? null : next)\n * }\n */\nfunction addTwoNumbers(l1, l2) {\n  const dummy = new ListNode(0);\n  let current = dummy;\n  let carry = 0;\n  \n  while (l1 || l2 || carry) {\n    const val1 = l1 ? l1.val : 0;\n    const val2 = l2 ? l2.val : 0;\n    \n    // Calculate sum and carry\n    const sum = val1 + val2 + carry;\n    carry = Math.floor(sum / 10);\n    \n    // Create new node with ones digit of sum\n    current.next = new ListNode(sum % 10);\n    current = current.next;\n    \n    // Move to next nodes if they exist\n    if (l1) l1 = l1.next;\n    if (l2) l2 = l2.next;\n  }\n  \n  return dummy.next;\n}"
+      },
+      {
+        id: "facebook-4",
+        title: "Minimum Remove to Make Valid Parentheses",
+        difficulty: "Medium",
+        description: "Given a string s of '(' , ')' and lowercase English characters. Your task is to remove the minimum number of parentheses ( '(' or ')', in any positions ) so that the resulting parentheses string is valid and return any valid string.",
+        example: "Input: s = 'lee(t(c)o)de)'\nOutput: 'lee(t(c)o)de'\nExplanation: 'lee(t(co)de)' , 'lee(t(c)ode)' would also be accepted.",
+        solution: "function minRemoveToMakeValid(s) {\n  const result = s.split('');\n  const stack = [];\n  \n  // Mark invalid closing parentheses\n  for (let i = 0; i < result.length; i++) {\n    if (result[i] === '(') {\n      stack.push(i);\n    } else if (result[i] === ')') {\n      if (stack.length) {\n        stack.pop();\n      } else {\n        result[i] = '';\n      }\n    }\n  }\n  \n  // Mark any remaining opening parentheses\n  for (let i of stack) {\n    result[i] = '';\n  }\n  \n  return result.join('');\n}"
+      }
+    ]
+  },
+  {
+    company: "Microsoft",
+    problems: [
+      {
+        id: "microsoft-1",
+        title: "Reverse String",
+        difficulty: "Easy",
+        description: "Write a function that reverses a string. The input string is given as an array of characters s. You must do this by modifying the input array in-place with O(1) extra memory.",
+        example: "Input: s = ['h','e','l','l','o']\nOutput: ['o','l','l','e','h']",
+        solution: "function reverseString(s) {\n  let left = 0;\n  let right = s.length - 1;\n  \n  while (left < right) {\n    // Swap characters\n    [s[left], s[right]] = [s[right], s[left]];\n    left++;\n    right--;\n  }\n  \n  return s;\n}"
+      },
+      {
+        id: "microsoft-2",
+        title: "Longest Palindromic Substring",
+        difficulty: "Medium",
+        description: "Given a string s, return the longest palindromic substring in s.",
+        example: "Input: s = 'babad'\nOutput: 'bab'\nNote: 'aba' is also a valid answer.",
+        solution: "function longestPalindrome(s) {\n  if (!s || s.length < 1) return '';\n  \n  let start = 0;\n  let end = 0;\n  \n  for (let i = 0; i < s.length; i++) {\n    // Expand around center for odd length palindromes\n    const len1 = expandAroundCenter(s, i, i);\n    // Expand around center for even length palindromes\n    const len2 = expandAroundCenter(s, i, i + 1);\n    const len = Math.max(len1, len2);\n    \n    if (len > end - start) {\n      start = i - Math.floor((len - 1) / 2);\n      end = i + Math.floor(len / 2);\n    }\n  }\n  \n  return s.substring(start, end + 1);\n}\n\nfunction expandAroundCenter(s, left, right) {\n  while (left >= 0 && right < s.length && s[left] === s[right]) {\n    left--;\n    right++;\n  }\n  \n  return right - left - 1;\n}"
+      },
+      {
+        id: "microsoft-3",
+        title: "Merge Sorted Array",
+        difficulty: "Easy",
+        description: "You are given two integer arrays nums1 and nums2, sorted in non-decreasing order, and two integers m and n, representing the number of elements in nums1 and nums2 respectively. Merge nums1 and nums2 into a single array sorted in non-decreasing order. The final sorted array should be stored inside nums1. To accommodate this, nums1 has a length of m + n, where the first m elements denote the elements that should be merged, and the last n elements are set to 0 and should be ignored. nums2 has a length of n.",
+        example: "Input: nums1 = [1,2,3,0,0,0], m = 3, nums2 = [2,5,6], n = 3\nOutput: [1,2,2,3,5,6]\nExplanation: The arrays we are merging are [1,2,3] and [2,5,6]. The result of the merge is [1,2,2,3,5,6].",
+        solution: "function merge(nums1, m, nums2, n) {\n  let i = m - 1;\n  let j = n - 1;\n  let k = m + n - 1;\n  \n  // Start from the end and work backwards\n  while (j >= 0) {\n    if (i >= 0 && nums1[i] > nums2[j]) {\n      nums1[k--] = nums1[i--];\n    } else {\n      nums1[k--] = nums2[j--];\n    }\n  }\n  \n  return nums1;\n}"
+      },
+      {
+        id: "microsoft-4",
+        title: "Construct Binary Tree from Preorder and Inorder Traversal",
+        difficulty: "Medium",
+        description: "Given two integer arrays preorder and inorder where preorder is the preorder traversal of a binary tree and inorder is the inorder traversal of the same tree, construct and return the binary tree.",
+        example: "Input: preorder = [3,9,20,15,7], inorder = [9,3,15,20,7]\nOutput: [3,9,20,null,null,15,7]",
+        solution: "/**\n * Definition for a binary tree node.\n * function TreeNode(val, left, right) {\n *     this.val = (val===undefined ? 0 : val)\n *     this.left = (left===undefined ? null : left)\n *     this.right = (right===undefined ? null : right)\n * }\n */\nfunction buildTree(preorder, inorder) {\n  if (preorder.length === 0 || inorder.length === 0) return null;\n  \n  // First element in preorder is the root\n  const rootVal = preorder[0];\n  const root = new TreeNode(rootVal);\n  \n  // Find the position of root value in inorder array\n  const mid = inorder.indexOf(rootVal);\n  \n  // Recursively construct left and right subtrees\n  // Left subtree: elements before root in inorder\n  // Right subtree: elements after root in inorder\n  root.left = buildTree(\n    preorder.slice(1, mid + 1),\n    inorder.slice(0, mid)\n  );\n  \n  root.right = buildTree(\n    preorder.slice(mid + 1),\n    inorder.slice(mid + 1)\n  );\n  \n  return root;\n}"
       }
     ]
   }
