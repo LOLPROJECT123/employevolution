@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import Navbar from "@/components/Navbar";
 import { Job } from "@/types/job";
@@ -9,6 +8,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import SwipeJobsInterface from "@/components/SwipeJobsInterface";
 import { SavedAndAppliedJobs } from "@/components/SavedAndAppliedJobs";
 import { toast } from "sonner";
+import AutomationSettings from "@/components/AutomationSettings";
 
 // Create some sample jobs for testing
 const sampleJobs: Job[] = [
@@ -27,7 +27,8 @@ const sampleJobs: Job[] = [
     description: 'We are looking for a Senior Software Engineer...',
     requirements: ['5+ years experience', 'React', 'Node.js'],
     postedAt: new Date().toISOString(),
-    skills: ['React', 'TypeScript', 'Node.js', 'AWS', 'Docker']
+    skills: ['React', 'TypeScript', 'Node.js', 'AWS', 'Docker'],
+    applyUrl: 'https://joinhandshake.com/jobs/example1'
   },
   {
     id: '2',
@@ -44,7 +45,8 @@ const sampleJobs: Job[] = [
     description: 'Seeking an experienced Product Manager...',
     requirements: ['3+ years experience', 'Agile', 'Technical background'],
     postedAt: new Date(Date.now() - 86400000).toISOString(),
-    skills: ['Product Strategy', 'Agile', 'User Research', 'Data Analysis']
+    skills: ['Product Strategy', 'Agile', 'User Research', 'Data Analysis'],
+    applyUrl: 'https://linkedin.com/jobs/example2'
   }
 ];
 
@@ -62,7 +64,6 @@ const Jobs = () => {
     setViewMode(isMobile ? 'swipe' : 'list');
   }, [isMobile]);
 
-  // Get saved and applied jobs as Job objects (not just IDs)
   const savedJobs = jobs.filter(job => savedJobIds.includes(job.id));
   const appliedJobs = jobs.filter(job => appliedJobIds.includes(job.id));
 
@@ -84,20 +85,17 @@ const Jobs = () => {
     if (!appliedJobIds.includes(job.id)) {
       setAppliedJobIds([...appliedJobIds, job.id]);
       
-      // For desktop: if the job has an application URL, open it in a new tab
       if (!isMobile && job.applyUrl) {
         window.open(job.applyUrl, '_blank');
         toast.success("Opening application page", {
           description: "Our Chrome extension will automatically complete the application for you."
         });
       } else {
-        // If we're on mobile or no URL exists, show successful application message
         toast.success("Application submitted successfully", {
           description: `Your application to ${job.company} for ${job.title} has been submitted.`
         });
       }
       
-      // If we're in swipe mode, automatically move to the next job
       if (viewMode === 'swipe') {
         const currentIndex = filteredJobs.findIndex(j => j.id === job.id);
         if (currentIndex < filteredJobs.length - 1) {
@@ -108,8 +106,6 @@ const Jobs = () => {
   };
 
   const handleSkipJob = (job: Job) => {
-    // Implement additional logic if needed in the future
-    // For example, marking jobs as "not interested"
   };
 
   const toggleViewMode = () => {
@@ -125,6 +121,13 @@ const Jobs = () => {
       <Navbar />
       <main className="flex-1 pt-20">
         <div className="container px-4 py-8">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold">Find Jobs</h1>
+            <div className="hidden md:block">
+              <AutomationSettings />
+            </div>
+          </div>
+          
           <div className="flex flex-col md:flex-row gap-4 items-start">
             <div className="w-full md:w-1/3 lg:w-1/4 flex-shrink-0">
               <JobFiltersSection />
@@ -144,6 +147,10 @@ const Jobs = () => {
                   >
                     {showMyJobs ? 'Browse Jobs' : 'My Saved & Applied Jobs'}
                   </button>
+                  
+                  <div className="mt-2">
+                    <AutomationSettings />
+                  </div>
                 </div>
               )}
               

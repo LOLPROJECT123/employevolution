@@ -1,3 +1,4 @@
+
 import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -8,9 +9,11 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Building2, Clock, BookmarkIcon, ExternalLinkIcon, BadgeCheck, CheckCircle2 } from "lucide-react";
+import { MapPin, Building2, Clock, BookmarkIcon, ExternalLinkIcon, BadgeCheck, CheckCircle2, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
+import { detectPlatform, startAutomation } from "@/utils/automationUtils";
+import AutomationSettings from "@/components/AutomationSettings";
 
 interface JobDetailViewProps {
   job: Job | null;
@@ -20,6 +23,19 @@ interface JobDetailViewProps {
 
 export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
   const [isApplying, setIsApplying] = useState(false);
+  
+  // Check if automation is possible for this job
+  const canAutomate = job?.applyUrl ? detectPlatform(job.applyUrl) !== null : false;
+  
+  // Check if automation is enabled in local storage
+  const automationEnabled = (() => {
+    try {
+      const config = JSON.parse(localStorage.getItem('automationConfig') || '{}');
+      return config?.credentials?.enabled || false;
+    } catch (e) {
+      return false;
+    }
+  })();
 
   if (!job) {
     return (
@@ -63,9 +79,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
   const handleApplyClick = async () => {
     try {
       setIsApplying(true);
-      
       onApply(job);
-      
     } catch (error) {
       toast.error("Failed to apply", {
         description: "There was an error submitting your application. Please try again."
@@ -73,6 +87,42 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
       console.error("Application error:", error);
     } finally {
       setIsApplying(false);
+    }
+  };
+  
+  const handleAutomatedApply = () => {
+    try {
+      if (!job.applyUrl) {
+        toast.error("Cannot automate application", {
+          description: "This job doesn't have an application URL."
+        });
+        return;
+      }
+      
+      const automationConfig = localStorage.getItem('automationConfig');
+      if (!automationConfig) {
+        toast.error("Automation not configured", {
+          description: "Please configure your automation settings first."
+        });
+        return;
+      }
+      
+      const config = JSON.parse(automationConfig);
+      
+      // Start the automation process
+      startAutomation(job.applyUrl, config);
+      
+      toast.success("Automation initiated", {
+        description: "The automation script will now apply to this job automatically. Please check the browser extension for details."
+      });
+      
+      // Also mark as applied in our system
+      onApply(job);
+    } catch (error) {
+      toast.error("Automation failed", {
+        description: "There was an error starting the automation process."
+      });
+      console.error("Automation error:", error);
     }
   };
 
@@ -354,21 +404,46 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
       </CardContent>
       
       <CardFooter className="border-t pt-4">
-        <div className="flex flex-col sm:flex-row gap-3 w-full">
-          <Button
-            className="w-full button-hover"
-            onClick={handleApplyClick}
-            disabled={isApplying}
-          >
-            {isApplying ? "Applying..." : "Apply Now"}
-          </Button>
-          <Button
-            variant="outline"
-            className="w-full button-hover"
-            onClick={() => onSave(job)}
-          >
-            Save Job
-          </Button>
+        <div className="space-y-3 w-full">
+          <div className="flex flex-col sm:flex-row gap-3 w-full">
+            <Button
+              className="w-full button-hover"
+              onClick={handleApplyClick}
+              disabled={isApplying}
+            >
+              {isApplying ? "Applying..." : "Apply Now"}
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full button-hover"
+              onClick={() => onSave(job)}
+            >
+              Save Job
+            </Button>
+          </div>
+          
+          {canAutomate && automationEnabled && (
+            <div className="flex flex-col gap-3">
+              <Button
+                variant="outline"
+                className="w-full bg-primary/10 hover:bg-primary/20 button-hover"
+                onClick={handleAutomatedApply}
+              >
+                <Zap className="w-4 h-4 mr-2" />
+                AutoApply with Script
+              </Button>
+              
+              <div className="flex justify-end w-full">
+                <AutomationSettings />
+              </div>
+            </div>
+          )}
+          
+          {canAutomate && !automationEnabled && (
+            <div className="flex justify-end w-full">
+              <AutomationSettings />
+            </div>
+          )}
         </div>
       </CardFooter>
     </Card>
