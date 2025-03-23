@@ -3,10 +3,11 @@ import { useState, useEffect } from 'react';
 import Navbar from "@/components/Navbar";
 import { Job } from "@/types/job";
 import { JobDetailView } from "@/components/JobDetailView";
-import { JobFiltersSection as JobFilters } from "@/components/JobFilters";
+import { JobFiltersSection } from "@/components/JobFilters";
 import { JobCard } from "@/components/JobCard";
 import { useIsMobile } from "@/hooks/use-mobile";
 import SwipeJobsInterface from "@/components/SwipeJobsInterface";
+import { SavedAndAppliedJobs } from "@/components/SavedAndAppliedJobs";
 import { toast } from "sonner";
 
 // Create some sample jobs for testing
@@ -51,32 +52,37 @@ const Jobs = () => {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [jobs, setJobs] = useState<Job[]>(sampleJobs);
   const [filteredJobs, setFilteredJobs] = useState<Job[]>(sampleJobs);
-  const [savedJobs, setSavedJobs] = useState<string[]>([]);
-  const [appliedJobs, setAppliedJobs] = useState<string[]>([]);
+  const [savedJobIds, setSavedJobIds] = useState<string[]>([]);
+  const [appliedJobIds, setAppliedJobIds] = useState<string[]>([]);
   const isMobile = useIsMobile();
   const [viewMode, setViewMode] = useState<'list' | 'swipe'>(isMobile ? 'swipe' : 'list');
+  const [showMyJobs, setShowMyJobs] = useState(false);
 
   useEffect(() => {
     setViewMode(isMobile ? 'swipe' : 'list');
   }, [isMobile]);
+
+  // Get saved and applied jobs as Job objects (not just IDs)
+  const savedJobs = jobs.filter(job => savedJobIds.includes(job.id));
+  const appliedJobs = jobs.filter(job => appliedJobIds.includes(job.id));
 
   const handleJobSelect = (job: Job) => {
     setSelectedJob(job);
   };
 
   const handleSaveJob = (job: Job) => {
-    if (savedJobs.includes(job.id)) {
-      setSavedJobs(savedJobs.filter(id => id !== job.id));
+    if (savedJobIds.includes(job.id)) {
+      setSavedJobIds(savedJobIds.filter(id => id !== job.id));
       toast.info("Job removed from saved jobs");
     } else {
-      setSavedJobs([...savedJobs, job.id]);
+      setSavedJobIds([...savedJobIds, job.id]);
       toast.success("Job saved successfully");
     }
   };
 
   const handleApplyJob = (job: Job) => {
-    if (!appliedJobs.includes(job.id)) {
-      setAppliedJobs([...appliedJobs, job.id]);
+    if (!appliedJobIds.includes(job.id)) {
+      setAppliedJobIds([...appliedJobIds, job.id]);
       
       // For desktop: if the job has an application URL, open it in a new tab
       if (!isMobile && job.applyUrl) {
@@ -109,6 +115,10 @@ const Jobs = () => {
   const toggleViewMode = () => {
     setViewMode(viewMode === 'list' ? 'swipe' : 'list');
   };
+
+  const toggleMyJobs = () => {
+    setShowMyJobs(!showMyJobs);
+  };
   
   return (
     <div className="min-h-screen flex flex-col bg-secondary/30">
@@ -117,33 +127,69 @@ const Jobs = () => {
         <div className="container px-4 py-8">
           <div className="flex flex-col md:flex-row gap-4 items-start">
             <div className="w-full md:w-1/3 lg:w-1/4 flex-shrink-0">
-              <JobFilters />
+              <JobFiltersSection />
               
               {isMobile && (
-                <div className="mt-4">
+                <div className="mt-4 space-y-3">
                   <button 
                     onClick={toggleViewMode}
                     className="w-full py-2 px-4 rounded-md bg-primary text-white font-medium"
                   >
                     Switch to {viewMode === 'list' ? 'Swipe' : 'List'} View
                   </button>
+                  
+                  <button 
+                    onClick={toggleMyJobs}
+                    className="w-full py-2 px-4 rounded-md bg-secondary text-foreground font-medium border"
+                  >
+                    {showMyJobs ? 'Browse Jobs' : 'My Saved & Applied Jobs'}
+                  </button>
                 </div>
               )}
               
-              {(viewMode === 'list' || !isMobile) && (
+              {isMobile && showMyJobs ? (
+                <div className="mt-6">
+                  <SavedAndAppliedJobs
+                    savedJobs={savedJobs}
+                    appliedJobs={appliedJobs}
+                    onApply={handleApplyJob}
+                    onSave={handleSaveJob}
+                    onSelect={handleJobSelect}
+                    selectedJobId={selectedJob?.id || null}
+                  />
+                </div>
+              ) : (
                 <div className="mt-6 space-y-4">
-                  {filteredJobs.map(job => (
-                    <JobCard 
-                      key={job.id}
-                      job={job}
+                  {!isMobile && (
+                    <SavedAndAppliedJobs
+                      savedJobs={savedJobs}
+                      appliedJobs={appliedJobs}
                       onApply={handleApplyJob}
-                      isSelected={selectedJob?.id === job.id}
-                      isSaved={savedJobs.includes(job.id)}
-                      isApplied={appliedJobs.includes(job.id)}
-                      onClick={() => handleJobSelect(job)}
-                      onSave={() => handleSaveJob(job)}
+                      onSave={handleSaveJob}
+                      onSelect={handleJobSelect}
+                      selectedJobId={selectedJob?.id || null}
                     />
-                  ))}
+                  )}
+                  
+                  {(viewMode === 'list' || !isMobile) && (
+                    <>
+                      <h2 className="text-lg font-medium">Browse Jobs</h2>
+                      <div className="space-y-4">
+                        {filteredJobs.map(job => (
+                          <JobCard 
+                            key={job.id}
+                            job={job}
+                            onApply={handleApplyJob}
+                            isSelected={selectedJob?.id === job.id}
+                            isSaved={savedJobIds.includes(job.id)}
+                            isApplied={appliedJobIds.includes(job.id)}
+                            onClick={() => handleJobSelect(job)}
+                            onSave={() => handleSaveJob(job)}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </div>
