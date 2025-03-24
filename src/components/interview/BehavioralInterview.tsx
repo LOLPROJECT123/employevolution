@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -44,6 +43,21 @@ const INTERVIEW_QUESTIONS = [
       "How have you handled a situation where you were under pressure with tight deadlines?",
       "Tell me about a time when you had to be flexible in your approach to solve a problem.",
     ]
+  },
+  {
+    category: "Amazon Leadership Principles",
+    questions: [
+      "Customer Obsession: Tell me about a time when you went above and beyond for a customer.",
+      "Ownership: Describe a project that you led from start to finish.",
+      "Invent and Simplify: Tell me about a time when you simplified a complex process.",
+      "Learn and Be Curious: How do you stay current in your field?",
+      "Dive Deep: Tell me about a situation where your attention to detail made a difference.",
+      "Have Backbone; Disagree and Commit: Tell me about a time when you had to stand up for what you believed was right.",
+      "Deliver Results: Describe a situation where you had to overcome obstacles to achieve a goal.",
+      "Bias for Action: Tell me about a time when you took initiative without being asked.",
+      "Earn Trust: How have you built credibility with a team or stakeholder?",
+      "Think Big: Describe a time when you proposed a novel approach to a problem.",
+    ]
   }
 ];
 
@@ -70,10 +84,8 @@ const BehavioralInterview = () => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   
-  // Get permission status for media devices
   const checkPermissions = async () => {
     try {
-      // Check camera and microphone
       const mediaPermission = await navigator.permissions.query({
         name: "camera" as PermissionName,
       });
@@ -133,7 +145,6 @@ const BehavioralInterview = () => {
         video: true,
       });
       
-      // Combine screen and camera streams
       if (streamRef.current) {
         const tracks = [...streamRef.current.getTracks(), ...screenStream.getTracks()];
         streamRef.current = new MediaStream(tracks);
@@ -183,7 +194,6 @@ const BehavioralInterview = () => {
       const blob = new Blob(chunks, { type: "video/webm" });
       const url = URL.createObjectURL(blob);
       
-      // Create download link
       const a = document.createElement("a");
       a.style.display = "none";
       a.href = url;
@@ -191,7 +201,6 @@ const BehavioralInterview = () => {
       document.body.appendChild(a);
       a.click();
       
-      // Clean up
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     };
@@ -200,7 +209,6 @@ const BehavioralInterview = () => {
     mediaRecorder.start();
     setIsRecording(true);
     
-    // Start the first question
     speakQuestion();
   };
   
@@ -208,7 +216,6 @@ const BehavioralInterview = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       
-      // Stop all tracks
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
         streamRef.current = null;
@@ -238,18 +245,16 @@ const BehavioralInterview = () => {
     
     if (!question) return;
     
-    // Use SpeechSynthesis to ask the question
     const speech = new SpeechSynthesisUtterance(question);
     
-    // Set a professional voice if available
     const voices = window.speechSynthesis.getVoices();
     const preferredVoice = voices.find(voice => voice.lang === 'en-US' && voice.name.includes('Google'));
     if (preferredVoice) {
       speech.voice = preferredVoice;
     }
     
-    speech.rate = 0.9; // Slightly slower rate for clarity
-    speech.pitch = 1; // Normal pitch
+    speech.rate = 0.9;
+    speech.pitch = 1;
     
     window.speechSynthesis.speak(speech);
   };
@@ -278,7 +283,6 @@ const BehavioralInterview = () => {
     startRecording();
   };
   
-  // Get current question
   const currentQuestion = INTERVIEW_QUESTIONS.find(
     cat => cat.category === selectedCategory
   )?.questions[currentQuestionIndex] || "No question available";
@@ -397,7 +401,6 @@ const BehavioralInterview = () => {
         </CardFooter>
       </Card>
       
-      {/* Preparation Dialog */}
       <Dialog open={isPreparing} onOpenChange={setIsPreparing}>
         <DialogContent>
           <DialogHeader>
