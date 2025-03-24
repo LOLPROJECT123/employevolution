@@ -5,6 +5,7 @@ import ATSOptimizer from "@/components/ATSOptimizer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AIResumeCreator from "@/components/resume/AIResumeCreator";
 import AICVCreator from "@/components/resume/AICVCreator";
+import JobApplicationAutomation from "@/components/resume/JobApplicationAutomation";
 
 const ResumeTools = () => {
   return (
@@ -24,6 +25,7 @@ const ResumeTools = () => {
               <TabsTrigger value="ats-optimizer">ATS Optimizer</TabsTrigger>
               <TabsTrigger value="ai-resume-creator">AI Resume Creator</TabsTrigger>
               <TabsTrigger value="ai-cv-creator">AI CV Creator</TabsTrigger>
+              <TabsTrigger value="job-automation">Job Automation</TabsTrigger>
               <TabsTrigger value="forum">Resume Forum</TabsTrigger>
               <TabsTrigger value="templates">Templates</TabsTrigger>
             </TabsList>
@@ -38,6 +40,10 @@ const ResumeTools = () => {
             
             <TabsContent value="ai-cv-creator">
               <AICVCreator />
+            </TabsContent>
+            
+            <TabsContent value="job-automation">
+              <JobApplicationAutomation />
             </TabsContent>
             
             <TabsContent value="forum">

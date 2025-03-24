@@ -215,7 +215,9 @@ add_default_experience = '${indeedSettings.experienceYears?.default || '0'}'
 service = Service(ChromeDriverManager().install())
 driver = webdriver.Chrome(service=service)
 
-driver.get("https://www.indeed.com/account/login")
+# Navigate to the job URL (this would be passed in)
+current_url = "${config.credentials.platform === 'indeed' ? 'https://www.indeed.com/account/login' : ''}"
+driver.get(current_url)
 username = "${config.credentials.email}"
 password = "${config.credentials.password}"
 
@@ -236,14 +238,37 @@ try:
     )
     sign_in_button.click()
     
-    # Rest of the Indeed automation code would go here
-    # This would follow the logic from the Python script you provided
+    print("Successfully logged in")
+    
+    # Code to navigate to the job listing and apply
+    # This is where we'd implement the application logic based on Jobs_Applier_AI_Agent_AIHawk
+    
+    # Wait for login to complete
+    time.sleep(2)
+    
+    # Accept cookies if prompted
+    try:
+        cookie_button = WebDriverWait(driver, 5).until(
+            EC.element_to_be_clickable((By.ID, "onetrust-accept-btn-handler"))
+        )
+        cookie_button.click()
+        print("Accepted cookies")
+    except:
+        print("No cookie prompt or already accepted")
+    
+    # Automated application process would continue here...
+    # This would include:
+    # 1. Finding the apply button
+    # 2. Clicking it
+    # 3. Filling out form fields
+    # 4. Uploading resume if needed
+    # 5. Submitting the application
 
 except Exception as e:
     print(f"Error during login: {e}")
 
-# Keep the browser open for 10 seconds before closing
-time.sleep(10)
+# Keep the browser open for 30 seconds before closing
+time.sleep(30)
 driver.quit()
 `;
 }
@@ -256,6 +281,9 @@ export function startAutomation(jobUrl: string, config: AutomationConfig): void 
   // For now, we'll just show a message about how this would work
   console.log(`Automation for ${jobUrl} would be triggered with:`, config);
   
+  // Add helper line to help users understand how to use without extension
+  console.log("Without the extension installed, you'll need to download and run the script manually");
+  
   // This would typically dispatch a custom event that the extension listens for
   const event = new CustomEvent('job-automation-requested', { 
     detail: {
@@ -265,4 +293,74 @@ export function startAutomation(jobUrl: string, config: AutomationConfig): void 
   });
   
   window.dispatchEvent(event);
+}
+
+// New function to support opening a job URL with custom parameters
+export function openJobWithParameters(jobUrl: string, params: Record<string, string>): void {
+  try {
+    const url = new URL(jobUrl);
+    
+    // Add parameters to URL
+    Object.entries(params).forEach(([key, value]) => {
+      url.searchParams.append(key, value);
+    });
+    
+    // Open the URL in a new tab
+    window.open(url.toString(), '_blank');
+  } catch (error) {
+    console.error("Failed to open job URL with parameters:", error);
+  }
+}
+
+// Function to extract job details from a URL
+export function extractJobDetailsFromUrl(url: string): { 
+  platform: AutomationPlatform | null;
+  jobId?: string;
+  company?: string;
+} {
+  const platform = detectPlatform(url);
+  
+  if (!platform) {
+    return { platform: null };
+  }
+  
+  try {
+    const parsedUrl = new URL(url);
+    let jobId, company;
+    
+    if (platform === 'linkedin') {
+      // Extract LinkedIn job ID from URL
+      const matches = url.match(/view\/(\d+)/);
+      jobId = matches ? matches[1] : undefined;
+      
+      // Try to extract company name from path segments
+      const pathSegments = parsedUrl.pathname.split('/');
+      company = pathSegments.length > 2 ? pathSegments[2] : undefined;
+    } else if (platform === 'indeed') {
+      // Extract Indeed job ID (usually in the form vp=xxx or jk=xxx)
+      const vpMatch = parsedUrl.searchParams.get('vp');
+      const jkMatch = parsedUrl.searchParams.get('jk');
+      jobId = vpMatch || jkMatch || undefined;
+      
+      // Company might be in the URL path
+      const pathSegments = parsedUrl.pathname.split('/');
+      company = pathSegments.find(segment => segment.includes('at-')) || undefined;
+      if (company) {
+        company = company.replace('at-', '').replace(/-/g, ' ');
+      }
+    } else if (platform === 'handshake') {
+      // Extract Handshake job ID
+      const matches = url.match(/jobs\/(\d+)/);
+      jobId = matches ? matches[1] : undefined;
+    } else if (platform === 'glassdoor') {
+      // Extract Glassdoor job ID
+      const matches = url.match(/jobListingId=(\d+)/);
+      jobId = matches ? matches[1] : undefined;
+    }
+    
+    return { platform, jobId, company };
+  } catch (error) {
+    console.error("Failed to parse job URL:", error);
+    return { platform };
+  }
 }
