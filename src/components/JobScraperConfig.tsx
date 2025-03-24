@@ -64,7 +64,8 @@ export interface JobScraperConfigProps {
 
 export const JobScraperConfig = ({ onConfigUpdate }: JobScraperConfigProps) => {
   const [sources, setSources] = useState(jobSources);
-  const [refreshInterval, setRefreshInterval] = useState(24);
+  // Ensure refreshInterval is initialized as a number, not a string
+  const [refreshInterval, setRefreshInterval] = useState<number>(24);
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
   const [customCompanyUrl, setCustomCompanyUrl] = useState('');
