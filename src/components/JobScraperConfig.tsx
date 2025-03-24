@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import {
@@ -136,6 +135,10 @@ export const JobScraperConfig = ({ onConfigUpdate }: JobScraperConfigProps) => {
     });
   };
 
+  const handleSliderChange = (values: number[]) => {
+    setRefreshInterval(values[0]);
+  };
+
   const filteredSources = activeTab === 'all' 
     ? sources 
     : sources.filter(source => source.category === activeTab);
@@ -233,7 +236,7 @@ export const JobScraperConfig = ({ onConfigUpdate }: JobScraperConfigProps) => {
             <Slider
               id="refresh-interval"
               value={[refreshInterval]}
-              onValueChange={(values) => setRefreshInterval(Number(values[0]))}
+              onValueChange={handleSliderChange}
               min={1}
               max={72}
               step={1}
