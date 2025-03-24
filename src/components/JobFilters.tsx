@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -827,4 +828,188 @@ export function JobFiltersSection({
 
                       {/* Role Type */}
                       <div>
-                        <div
+                        <div className="flex justify-between">
+                          <span className="font-medium">Role Type</span>
+                          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">Clear All</Button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 mt-2">
+                          {[
+                            { id: "individual-contributor", label: "Individual Contributor" },
+                            { id: "people-manager", label: "People Manager" }
+                          ].map((type) => (
+                            <div key={type.id} className="flex items-center space-x-2">
+                              <Checkbox 
+                                id={`role-type-${type.id}`}
+                                checked={filters.roleType?.includes(type.id)}
+                                onCheckedChange={() => toggleRoleType(type.id)}
+                              />
+                              <Label htmlFor={`role-type-${type.id}`} className="text-sm cursor-pointer">
+                                {type.label}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="company-insights" className="border rounded-lg p-2 mt-3">
+                    <AccordionTrigger className="hover:no-underline px-2">
+                      <div className="flex justify-between w-full">
+                        <span className="font-medium">Company Insights</span>
+                        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-4 px-2 pb-2 space-y-6">
+                      {/* Company Name */}
+                      <div>
+                        <div className="flex justify-between">
+                          <span className="font-medium">Company Name</span>
+                          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">Clear All</Button>
+                        </div>
+                        <div className="flex items-center gap-2 mt-2">
+                          <Input 
+                            placeholder="E.g., Google, Microsoft" 
+                            className="flex-1"
+                            value={companyInput}
+                            onChange={(e) => setCompanyInput(e.target.value)}
+                            icon={<Building className="h-4 w-4" />}
+                          />
+                          <Button size="sm" onClick={handleAddCompany}>
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        {filters.companies && filters.companies.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {filters.companies.map((company) => (
+                              <div key={company} className="flex items-center bg-secondary/30 rounded-md px-3 py-1.5">
+                                <span className="text-sm">{company}</span>
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost" 
+                                  className="h-5 w-5 p-0 ml-1"
+                                  onClick={() => {
+                                    const companies = filters.companies?.filter(c => c !== company);
+                                    onFiltersChange({ ...filters, companies });
+                                  }}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Excluded Companies */}
+                      <div>
+                        <div className="flex justify-between">
+                          <span className="font-medium">Excluded Companies</span>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            className="h-6 p-0"
+                          >
+                            <ChevronDown className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      {/* Company Size */}
+                      <div>
+                        <div className="flex justify-between">
+                          <span className="font-medium">Company Size</span>
+                          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">Clear All</Button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 mt-2">
+                          {[
+                            { id: "1-50", label: "1-50 employees" },
+                            { id: "51-200", label: "51-200 employees" },
+                            { id: "201-500", label: "201-500 employees" },
+                            { id: "501-1000", label: "501-1,000 employees" },
+                            { id: "1001-5000", label: "1,001-5,000 employees" },
+                            { id: "5001-10000", label: "5,001-10,000 employees" },
+                            { id: "10001+", label: "10,001+ employees" }
+                          ].map((size) => (
+                            <div key={size.id} className="flex items-center space-x-2">
+                              <Checkbox 
+                                id={`company-size-${size.id}`}
+                                checked={filters.companySize.includes(size.id)}
+                                onCheckedChange={() => toggleCompanySize(size.id)}
+                              />
+                              <Label htmlFor={`company-size-${size.id}`} className="text-sm cursor-pointer">
+                                {size.label}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Company Type */}
+                      <div>
+                        <div className="flex justify-between">
+                          <span className="font-medium">Company Type</span>
+                          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">Clear All</Button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 mt-2">
+                          {[
+                            { id: "public", label: "Public Company" },
+                            { id: "private", label: "Private Company" },
+                            { id: "non-profit", label: "Non-profit" },
+                            { id: "government", label: "Government" },
+                            { id: "startup", label: "Startup" },
+                            { id: "agency", label: "Agency" }
+                          ].map((type) => (
+                            <div key={type.id} className="flex items-center space-x-2">
+                              <Checkbox 
+                                id={`company-type-${type.id}`}
+                                checked={filters.companyTypes.includes(type.id)}
+                                onCheckedChange={() => toggleCompanyType(type.id)}
+                              />
+                              <Label htmlFor={`company-type-${type.id}`} className="text-sm cursor-pointer">
+                                {type.label}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Company Stage */}
+                      <div>
+                        <div className="flex justify-between">
+                          <span className="font-medium">Company Stage</span>
+                          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">Clear All</Button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 mt-2">
+                          {[
+                            { id: "seed", label: "Seed" },
+                            { id: "seriesa", label: "Series A" },
+                            { id: "seriesb", label: "Series B" },
+                            { id: "seriesc", label: "Series C" },
+                            { id: "seriesd", label: "Series D+" },
+                            { id: "ipo", label: "IPO" }
+                          ].map((stage) => (
+                            <div key={stage.id} className="flex items-center space-x-2">
+                              <Checkbox 
+                                id={`company-stage-${stage.id}`}
+                                checked={filters.companyStage?.includes(stage.id)}
+                                onCheckedChange={() => toggleCompanyStage(stage.id)}
+                              />
+                              <Label htmlFor={`company-stage-${stage.id}`} className="text-sm cursor-pointer">
+                                {stage.label}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
