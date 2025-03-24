@@ -15,6 +15,7 @@ import {
   detectPlatform, 
   startAutomation 
 } from '@/utils/automationUtils';
+import JobSourcesDisplay from "@/components/JobSourcesDisplay";
 
 const sampleJobs: Job[] = [
   {
@@ -183,6 +184,10 @@ const Jobs = () => {
             <div className="hidden md:block">
               <AutomationSettings />
             </div>
+          </div>
+          
+          <div className="w-full mb-6">
+            <JobSourcesDisplay />
           </div>
           
           <div className="flex flex-col md:flex-row gap-4 items-start">

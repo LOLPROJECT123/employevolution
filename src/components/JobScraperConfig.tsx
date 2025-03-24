@@ -12,20 +12,50 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Settings2Icon } from 'lucide-react';
+import { Settings2Icon, Globe, Building, RefreshCwIcon } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
 
 const jobSources = [
-  { id: 'linkedin', name: 'LinkedIn', isActive: true },
-  { id: 'github', name: 'GitHub Jobs', isActive: true },
-  { id: 'simplify', name: 'Simplify.jobs', isActive: true },
-  { id: 'indeed', name: 'Indeed', isActive: true },
-  { id: 'zipRecruiter', name: 'ZipRecruiter', isActive: true },
-  { id: 'levelsFyi', name: 'Levels.fyi', isActive: true },
-  { id: 'offerPilot', name: 'OfferPilot.ai', isActive: true },
-  { id: 'jobRight', name: 'JobRight.ai', isActive: true },
-  { id: 'wellfound', name: 'Wellfound', isActive: false },
-  { id: 'remoteco', name: 'Remote.co', isActive: false },
-  { id: 'weworkremotely', name: 'We Work Remotely', isActive: false },
+  // Job boards
+  { id: 'linkedin', name: 'LinkedIn', isActive: true, category: 'job-board' },
+  { id: 'github', name: 'GitHub Jobs', isActive: true, category: 'job-board' },
+  { id: 'simplify', name: 'Simplify.jobs', isActive: true, category: 'job-board' },
+  { id: 'indeed', name: 'Indeed', isActive: true, category: 'job-board' },
+  { id: 'zipRecruiter', name: 'ZipRecruiter', isActive: true, category: 'job-board' },
+  { id: 'levelsFyi', name: 'Levels.fyi', isActive: true, category: 'job-board' },
+  { id: 'offerPilot', name: 'OfferPilot.ai', isActive: true, category: 'job-board' },
+  { id: 'jobRight', name: 'JobRight.ai', isActive: true, category: 'job-board' },
+  { id: 'wellfound', name: 'Wellfound', isActive: false, category: 'job-board' },
+  { id: 'remoteco', name: 'Remote.co', isActive: false, category: 'job-board' },
+  { id: 'weworkremotely', name: 'We Work Remotely', isActive: false, category: 'job-board' },
+  { id: 'monster', name: 'Monster', isActive: false, category: 'job-board' },
+  { id: 'glassdoor', name: 'Glassdoor', isActive: false, category: 'job-board' },
+  { id: 'dice', name: 'Dice', isActive: false, category: 'job-board' },
+  { id: 'hired', name: 'Hired', isActive: false, category: 'job-board' },
+  
+  // Company career pages
+  { id: 'google', name: 'Google Careers', isActive: false, category: 'company' },
+  { id: 'microsoft', name: 'Microsoft Careers', isActive: false, category: 'company' },
+  { id: 'amazon', name: 'Amazon Jobs', isActive: false, category: 'company' },
+  { id: 'apple', name: 'Apple Jobs', isActive: false, category: 'company' },
+  { id: 'meta', name: 'Meta Careers', isActive: false, category: 'company' },
+  { id: 'netflix', name: 'Netflix Jobs', isActive: false, category: 'company' },
+  { id: 'salesforce', name: 'Salesforce Careers', isActive: false, category: 'company' },
+  { id: 'adobe', name: 'Adobe Careers', isActive: false, category: 'company' },
+  { id: 'ibm', name: 'IBM Jobs', isActive: false, category: 'company' },
+  { id: 'oracle', name: 'Oracle Careers', isActive: false, category: 'company' },
+  
+  // Tech-specific job boards
+  { id: 'stackOverflow', name: 'Stack Overflow Jobs', isActive: false, category: 'tech' },
+  { id: 'yCombinator', name: 'Y Combinator Jobs', isActive: false, category: 'tech' },
+  { id: 'hackernews', name: 'Hacker News Jobs', isActive: false, category: 'tech' },
+  { id: 'remoteok', name: 'RemoteOK', isActive: false, category: 'tech' },
+  { id: 'triplebyte', name: 'Triplebyte', isActive: false, category: 'tech' },
+  { id: 'underdog', name: 'Underdog.io', isActive: false, category: 'tech' },
 ];
 
 export interface JobScraperConfigProps {
@@ -36,6 +66,10 @@ export const JobScraperConfig = ({ onConfigUpdate }: JobScraperConfigProps) => {
   const [sources, setSources] = useState(jobSources);
   const [refreshInterval, setRefreshInterval] = useState(24);
   const [open, setOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('all');
+  const [customCompanyUrl, setCustomCompanyUrl] = useState('');
+  const [customCompanyName, setCustomCompanyName] = useState('');
+  const [autoApplyEnabled, setAutoApplyEnabled] = useState(false);
 
   const handleSourceToggle = (sourceId: string) => {
     const updatedSources = sources.map(source => 
@@ -48,8 +82,66 @@ export const JobScraperConfig = ({ onConfigUpdate }: JobScraperConfigProps) => {
 
   const handleSave = () => {
     onConfigUpdate(sources);
+    toast.success("Job sources updated", {
+      description: `${sources.filter(s => s.isActive).length} sources enabled for job search`
+    });
     setOpen(false);
   };
+  
+  const handleRefreshNow = () => {
+    toast.success("Refreshing job listings", {
+      description: "Fetching new jobs from all enabled sources"
+    });
+    // This would trigger a real job scraping process in production
+  };
+  
+  const handleAddCustomCompany = () => {
+    if (!customCompanyUrl || !customCompanyName) {
+      toast.error("Missing information", {
+        description: "Please enter both company name and careers page URL"
+      });
+      return;
+    }
+    
+    // Validate URL
+    try {
+      new URL(customCompanyUrl);
+    } catch (error) {
+      toast.error("Invalid URL format", {
+        description: "Please enter a valid URL including http:// or https://"
+      });
+      return;
+    }
+    
+    const customCompanyId = customCompanyName.toLowerCase().replace(/\s+/g, '-');
+    
+    // Check if company already exists
+    if (sources.some(source => source.id === customCompanyId)) {
+      toast.error("Company already exists", {
+        description: "This company is already in your sources list"
+      });
+      return;
+    }
+    
+    const newCompany = {
+      id: customCompanyId,
+      name: customCompanyName,
+      isActive: true,
+      category: 'custom-company'
+    };
+    
+    setSources([...sources, newCompany]);
+    setCustomCompanyName('');
+    setCustomCompanyUrl('');
+    
+    toast.success("Company added", {
+      description: `${customCompanyName} has been added to your job sources`
+    });
+  };
+
+  const filteredSources = activeTab === 'all' 
+    ? sources 
+    : sources.filter(source => source.category === activeTab);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -59,58 +151,141 @@ export const JobScraperConfig = ({ onConfigUpdate }: JobScraperConfigProps) => {
           Configure Job Sources
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-xl">
         <DialogHeader>
           <DialogTitle>Job Search Sources</DialogTitle>
           <DialogDescription>
-            Select which job platforms to search for opportunities.
+            Configure which platforms to search for opportunities and how often to refresh listings.
           </DialogDescription>
         </DialogHeader>
         
-        <div className="mt-4 max-h-[60vh] overflow-y-auto">
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              {sources.map((source) => (
-                <div key={source.id} className="flex items-center space-x-2">
-                  <Checkbox 
-                    id={source.id}
-                    checked={source.isActive}
-                    onCheckedChange={() => handleSourceToggle(source.id)}
-                  />
-                  <Label 
-                    htmlFor={source.id} 
-                    className="text-sm cursor-pointer"
-                  >
-                    {source.name}
-                  </Label>
-                </div>
-              ))}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
+          <TabsList className="w-full">
+            <TabsTrigger value="all" className="flex-1">All Sources</TabsTrigger>
+            <TabsTrigger value="job-board" className="flex-1">Job Boards</TabsTrigger>
+            <TabsTrigger value="company" className="flex-1">Companies</TabsTrigger>
+            <TabsTrigger value="tech" className="flex-1">Tech</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value={activeTab} className="mt-4">
+            <div className="max-h-[40vh] overflow-y-auto rounded-md border p-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {filteredSources.map((source) => (
+                  <div key={source.id} className="flex items-center space-x-2 hover:bg-secondary/50 p-1.5 rounded-md">
+                    <Checkbox 
+                      id={source.id}
+                      checked={source.isActive}
+                      onCheckedChange={() => handleSourceToggle(source.id)}
+                    />
+                    <Label 
+                      htmlFor={source.id} 
+                      className="text-sm cursor-pointer overflow-hidden text-ellipsis"
+                    >
+                      {source.name}
+                    </Label>
+                  </div>
+                ))}
+              </div>
             </div>
-            
-            <div className="space-y-2 pt-4 border-t">
-              <Label htmlFor="refresh-interval">Refresh Interval (hours)</Label>
-              <Input
-                id="refresh-interval"
-                type="number"
-                value={refreshInterval}
-                onChange={(e) => setRefreshInterval(parseInt(e.target.value) || 24)}
-                min="1"
-                max="72"
+          </TabsContent>
+        </Tabs>
+        
+        <div className="space-y-4 mt-4">
+          <div className="bg-secondary/20 p-4 rounded-md">
+            <h3 className="text-sm font-medium mb-2 flex items-center">
+              <Building className="w-4 h-4 mr-2" />
+              Add Custom Company Career Page
+            </h3>
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <div>
+                <Label htmlFor="company-name" className="text-xs">Company Name</Label>
+                <Input 
+                  id="company-name" 
+                  value={customCompanyName}
+                  onChange={(e) => setCustomCompanyName(e.target.value)}
+                  placeholder="Company Name"
+                  size="sm"
+                />
+              </div>
+              <div>
+                <Label htmlFor="company-url" className="text-xs">Careers Page URL</Label>
+                <Input 
+                  id="company-url" 
+                  value={customCompanyUrl}
+                  onChange={(e) => setCustomCompanyUrl(e.target.value)}
+                  placeholder="https://company.com/careers"
+                  size="sm"
+                />
+              </div>
+            </div>
+            <Button 
+              size="sm" 
+              variant="secondary" 
+              onClick={handleAddCustomCompany}
+              className="w-full text-xs"
+            >
+              Add Company
+            </Button>
+          </div>
+          
+          <div className="space-y-2 pt-4 border-t">
+            <div className="flex justify-between items-center">
+              <Label htmlFor="refresh-interval">Refresh Interval</Label>
+              <Badge variant="outline">{refreshInterval} hours</Badge>
+            </div>
+            <Slider
+              id="refresh-interval"
+              value={[refreshInterval]}
+              onValueChange={(value) => setRefreshInterval(value[0])}
+              min={1}
+              max={72}
+              step={1}
+              className="my-4"
+            />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>1 hour</span>
+              <span>24 hours</span>
+              <span>72 hours</span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Job listings will be refreshed automatically every {refreshInterval} hours.
+            </p>
+          </div>
+          
+          <div className="border-t pt-4">
+            <div className="flex items-center justify-between space-x-2">
+              <div className="space-y-0.5">
+                <Label className="text-base">Auto-Apply</Label>
+                <p className="text-xs text-muted-foreground">
+                  Automatically apply to jobs matching your preferences and qualifications
+                </p>
+              </div>
+              <Switch
+                checked={autoApplyEnabled}
+                onCheckedChange={setAutoApplyEnabled}
               />
-              <p className="text-xs text-muted-foreground">
-                Job listings will be refreshed automatically every {refreshInterval} hours.
-              </p>
             </div>
           </div>
-        </div>
-        
-        <div className="flex justify-end gap-3 mt-4">
-          <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave}>
-            Save Configuration
-          </Button>
+          
+          <div className="flex justify-between gap-3 pt-4 border-t">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleRefreshNow}
+              className="flex items-center gap-2"
+            >
+              <RefreshCwIcon className="w-4 h-4" />
+              Refresh Now
+            </Button>
+            <div>
+              <Button variant="outline" onClick={() => setOpen(false)} size="sm" className="mr-2">
+                Cancel
+              </Button>
+              <Button onClick={handleSave} size="sm">
+                Save Configuration
+              </Button>
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
