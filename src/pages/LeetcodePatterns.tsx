@@ -170,6 +170,36 @@ const sampleProblems: LeetcodeProblem[] = [
     pattern: "Arrays & Hashing",
     completed: false
   },
+  {
+    id: 347,
+    title: "Top K Frequent Elements",
+    difficulty: "Medium",
+    tags: ["Array", "Hash Table", "Sorting", "Heap"],
+    url: "https://leetcode.com/problems/top-k-frequent-elements/",
+    companies: ["Facebook", "Amazon", "Google", "Microsoft"],
+    pattern: "Arrays & Hashing",
+    completed: false
+  },
+  {
+    id: 41,
+    title: "First Missing Positive",
+    difficulty: "Hard",
+    tags: ["Array", "Hash Table"],
+    url: "https://leetcode.com/problems/first-missing-positive/",
+    companies: ["Amazon", "Microsoft", "Apple"],
+    pattern: "Arrays & Hashing",
+    completed: false
+  },
+  {
+    id: 76,
+    title: "Minimum Window Substring",
+    difficulty: "Hard",
+    tags: ["Hash Table", "String", "Sliding Window"],
+    url: "https://leetcode.com/problems/minimum-window-substring/",
+    companies: ["Facebook", "Amazon", "Google"],
+    pattern: "Arrays & Hashing",
+    completed: false
+  },
   
   // Two Pointers
   {
@@ -183,12 +213,52 @@ const sampleProblems: LeetcodeProblem[] = [
     completed: true
   },
   {
+    id: 283,
+    title: "Move Zeroes",
+    difficulty: "Easy",
+    tags: ["Array", "Two Pointers"],
+    url: "https://leetcode.com/problems/move-zeroes/",
+    companies: ["Facebook", "Amazon", "Microsoft"],
+    pattern: "Two Pointers",
+    completed: false
+  },
+  {
     id: 15,
     title: "3Sum",
     difficulty: "Medium",
     tags: ["Array", "Two Pointers", "Sorting"],
     url: "https://leetcode.com/problems/3sum/",
     companies: ["Facebook", "Amazon", "Google"],
+    pattern: "Two Pointers",
+    completed: false
+  },
+  {
+    id: 11,
+    title: "Container With Most Water",
+    difficulty: "Medium",
+    tags: ["Array", "Two Pointers", "Greedy"],
+    url: "https://leetcode.com/problems/container-with-most-water/",
+    companies: ["Amazon", "Google", "Microsoft"],
+    pattern: "Two Pointers",
+    completed: false
+  },
+  {
+    id: 42,
+    title: "Trapping Rain Water",
+    difficulty: "Hard",
+    tags: ["Array", "Two Pointers", "Dynamic Programming", "Stack"],
+    url: "https://leetcode.com/problems/trapping-rain-water/",
+    companies: ["Amazon", "Google", "Microsoft"],
+    pattern: "Two Pointers",
+    completed: false
+  },
+  {
+    id: 23,
+    title: "Merge k Sorted Lists",
+    difficulty: "Hard",
+    tags: ["Linked List", "Divide and Conquer", "Heap"],
+    url: "https://leetcode.com/problems/merge-k-sorted-lists/",
+    companies: ["Amazon", "Facebook", "Google"],
     pattern: "Two Pointers",
     completed: false
   },
@@ -205,6 +275,16 @@ const sampleProblems: LeetcodeProblem[] = [
     completed: true
   },
   {
+    id: 643,
+    title: "Maximum Average Subarray I",
+    difficulty: "Easy",
+    tags: ["Array", "Sliding Window"],
+    url: "https://leetcode.com/problems/maximum-average-subarray-i/",
+    companies: ["Google", "Microsoft", "Amazon"],
+    pattern: "Sliding Window",
+    completed: false
+  },
+  {
     id: 3,
     title: "Longest Substring Without Repeating Characters",
     difficulty: "Medium",
@@ -213,6 +293,36 @@ const sampleProblems: LeetcodeProblem[] = [
     companies: ["Amazon", "Facebook", "Microsoft"],
     pattern: "Sliding Window",
     completed: true
+  },
+  {
+    id: 424,
+    title: "Longest Repeating Character Replacement",
+    difficulty: "Medium",
+    tags: ["String", "Sliding Window"],
+    url: "https://leetcode.com/problems/longest-repeating-character-replacement/",
+    companies: ["Google", "Amazon", "Microsoft"],
+    pattern: "Sliding Window",
+    completed: false
+  },
+  {
+    id: 76,
+    title: "Minimum Window Substring",
+    difficulty: "Hard",
+    tags: ["Hash Table", "String", "Sliding Window"],
+    url: "https://leetcode.com/problems/minimum-window-substring/",
+    companies: ["Facebook", "Amazon", "Google"],
+    pattern: "Sliding Window",
+    completed: false
+  },
+  {
+    id: 239,
+    title: "Sliding Window Maximum",
+    difficulty: "Hard",
+    tags: ["Array", "Queue", "Sliding Window", "Heap", "Monotonic Queue"],
+    url: "https://leetcode.com/problems/sliding-window-maximum/",
+    companies: ["Amazon", "Google", "Microsoft"],
+    pattern: "Sliding Window",
+    completed: false
   },
   
   // Stack
@@ -227,12 +337,52 @@ const sampleProblems: LeetcodeProblem[] = [
     completed: false
   },
   {
+    id: 155,
+    title: "Min Stack",
+    difficulty: "Easy",
+    tags: ["Stack", "Design"],
+    url: "https://leetcode.com/problems/min-stack/",
+    companies: ["Amazon", "Microsoft", "Google"],
+    pattern: "Stack",
+    completed: false
+  },
+  {
+    id: 150,
+    title: "Evaluate Reverse Polish Notation",
+    difficulty: "Medium",
+    tags: ["Array", "Math", "Stack"],
+    url: "https://leetcode.com/problems/evaluate-reverse-polish-notation/",
+    companies: ["Amazon", "Microsoft", "LinkedIn"],
+    pattern: "Stack",
+    completed: false
+  },
+  {
+    id: 22,
+    title: "Generate Parentheses",
+    difficulty: "Medium",
+    tags: ["String", "Backtracking", "Dynamic Programming"],
+    url: "https://leetcode.com/problems/generate-parentheses/",
+    companies: ["Google", "Amazon", "Microsoft"],
+    pattern: "Stack",
+    completed: false
+  },
+  {
     id: 84,
     title: "Largest Rectangle in Histogram",
     difficulty: "Hard",
     tags: ["Array", "Stack", "Monotonic Stack"],
     url: "https://leetcode.com/problems/largest-rectangle-in-histogram/",
     companies: ["Amazon", "Google", "Microsoft"],
+    pattern: "Stack",
+    completed: false
+  },
+  {
+    id: 32,
+    title: "Longest Valid Parentheses",
+    difficulty: "Hard",
+    tags: ["String", "Dynamic Programming", "Stack"],
+    url: "https://leetcode.com/problems/longest-valid-parentheses/",
+    companies: ["Amazon", "Microsoft", "Google"],
     pattern: "Stack",
     completed: false
   },
@@ -249,12 +399,52 @@ const sampleProblems: LeetcodeProblem[] = [
     completed: true
   },
   {
+    id: 744,
+    title: "Find Smallest Letter Greater Than Target",
+    difficulty: "Easy",
+    tags: ["Array", "Binary Search"],
+    url: "https://leetcode.com/problems/find-smallest-letter-greater-than-target/",
+    companies: ["LinkedIn", "Google", "Amazon"],
+    pattern: "Binary Search",
+    completed: false
+  },
+  {
     id: 33,
     title: "Search in Rotated Sorted Array",
     difficulty: "Medium",
     tags: ["Array", "Binary Search"],
     url: "https://leetcode.com/problems/search-in-rotated-sorted-array/",
     companies: ["Facebook", "Amazon", "Microsoft", "Google"],
+    pattern: "Binary Search",
+    completed: false
+  },
+  {
+    id: 153,
+    title: "Find Minimum in Rotated Sorted Array",
+    difficulty: "Medium",
+    tags: ["Array", "Binary Search"],
+    url: "https://leetcode.com/problems/find-minimum-in-rotated-sorted-array/",
+    companies: ["Microsoft", "Amazon", "Facebook"],
+    pattern: "Binary Search",
+    completed: false
+  },
+  {
+    id: 4,
+    title: "Median of Two Sorted Arrays",
+    difficulty: "Hard",
+    tags: ["Array", "Binary Search", "Divide and Conquer"],
+    url: "https://leetcode.com/problems/median-of-two-sorted-arrays/",
+    companies: ["Google", "Amazon", "Microsoft"],
+    pattern: "Binary Search",
+    completed: false
+  },
+  {
+    id: 410,
+    title: "Split Array Largest Sum",
+    difficulty: "Hard",
+    tags: ["Array", "Binary Search", "Dynamic Programming", "Greedy"],
+    url: "https://leetcode.com/problems/split-array-largest-sum/",
+    companies: ["Google", "Facebook", "Amazon"],
     pattern: "Binary Search",
     completed: false
   },
@@ -281,12 +471,42 @@ const sampleProblems: LeetcodeProblem[] = [
     completed: false
   },
   {
+    id: 19,
+    title: "Remove Nth Node From End of List",
+    difficulty: "Medium",
+    tags: ["Linked List", "Two Pointers"],
+    url: "https://leetcode.com/problems/remove-nth-node-from-end-of-list/",
+    companies: ["Facebook", "Microsoft", "Amazon"],
+    pattern: "Linked List",
+    completed: false
+  },
+  {
+    id: 143,
+    title: "Reorder List",
+    difficulty: "Medium",
+    tags: ["Linked List", "Two Pointers", "Stack", "Recursion"],
+    url: "https://leetcode.com/problems/reorder-list/",
+    companies: ["Amazon", "Microsoft", "Facebook"],
+    pattern: "Linked List",
+    completed: false
+  },
+  {
     id: 23,
     title: "Merge k Sorted Lists",
     difficulty: "Hard",
     tags: ["Linked List", "Divide and Conquer", "Heap"],
     url: "https://leetcode.com/problems/merge-k-sorted-lists/",
     companies: ["Amazon", "Facebook", "Google"],
+    pattern: "Linked List",
+    completed: false
+  },
+  {
+    id: 25,
+    title: "Reverse Nodes in k-Group",
+    difficulty: "Hard",
+    tags: ["Linked List", "Recursion"],
+    url: "https://leetcode.com/problems/reverse-nodes-in-k-group/",
+    companies: ["Amazon", "Facebook", "Microsoft"],
     pattern: "Linked List",
     completed: false
   },
@@ -303,6 +523,16 @@ const sampleProblems: LeetcodeProblem[] = [
     completed: true
   },
   {
+    id: 100,
+    title: "Same Tree",
+    difficulty: "Easy",
+    tags: ["Tree", "DFS", "BFS", "Binary Tree"],
+    url: "https://leetcode.com/problems/same-tree/",
+    companies: ["Amazon", "Facebook", "Google"],
+    pattern: "Trees",
+    completed: false
+  },
+  {
     id: 98,
     title: "Validate Binary Search Tree",
     difficulty: "Medium",
@@ -312,8 +542,58 @@ const sampleProblems: LeetcodeProblem[] = [
     pattern: "Trees",
     completed: false
   },
+  {
+    id: 102,
+    title: "Binary Tree Level Order Traversal",
+    difficulty: "Medium",
+    tags: ["Tree", "BFS", "Binary Tree"],
+    url: "https://leetcode.com/problems/binary-tree-level-order-traversal/",
+    companies: ["Amazon", "Microsoft", "Facebook"],
+    pattern: "Trees",
+    completed: false
+  },
+  {
+    id: 124,
+    title: "Binary Tree Maximum Path Sum",
+    difficulty: "Hard",
+    tags: ["Tree", "DFS", "Dynamic Programming", "Binary Tree"],
+    url: "https://leetcode.com/problems/binary-tree-maximum-path-sum/",
+    companies: ["Facebook", "Amazon", "Google"],
+    pattern: "Trees",
+    completed: false
+  },
+  {
+    id: 297,
+    title: "Serialize and Deserialize Binary Tree",
+    difficulty: "Hard",
+    tags: ["String", "Tree", "DFS", "BFS", "Design", "Binary Tree"],
+    url: "https://leetcode.com/problems/serialize-and-deserialize-binary-tree/",
+    companies: ["Amazon", "Microsoft", "Facebook"],
+    pattern: "Trees",
+    completed: false
+  },
   
   // Tries
+  {
+    id: 14,
+    title: "Longest Common Prefix",
+    difficulty: "Easy",
+    tags: ["String", "Trie"],
+    url: "https://leetcode.com/problems/longest-common-prefix/",
+    companies: ["Google", "Amazon", "Microsoft"],
+    pattern: "Tries",
+    completed: false
+  },
+  {
+    id: 720,
+    title: "Longest Word in Dictionary",
+    difficulty: "Easy",
+    tags: ["Array", "Hash Table", "String", "Trie", "Sorting"],
+    url: "https://leetcode.com/problems/longest-word-in-dictionary/",
+    companies: ["Google", "Microsoft", "Amazon"],
+    pattern: "Tries",
+    completed: false
+  },
   {
     id: 208,
     title: "Implement Trie (Prefix Tree)",
@@ -324,8 +604,58 @@ const sampleProblems: LeetcodeProblem[] = [
     pattern: "Tries",
     completed: false
   },
+  {
+    id: 211,
+    title: "Design Add and Search Words Data Structure",
+    difficulty: "Medium",
+    tags: ["String", "Depth-First Search", "Design", "Trie"],
+    url: "https://leetcode.com/problems/design-add-and-search-words-data-structure/",
+    companies: ["Facebook", "Amazon", "Microsoft"],
+    pattern: "Tries",
+    completed: false
+  },
+  {
+    id: 212,
+    title: "Word Search II",
+    difficulty: "Hard",
+    tags: ["Array", "String", "Backtracking", "Trie", "Matrix"],
+    url: "https://leetcode.com/problems/word-search-ii/",
+    companies: ["Amazon", "Microsoft", "Google"],
+    pattern: "Tries",
+    completed: false
+  },
+  {
+    id: 336,
+    title: "Palindrome Pairs",
+    difficulty: "Hard",
+    tags: ["Array", "Hash Table", "String", "Trie"],
+    url: "https://leetcode.com/problems/palindrome-pairs/",
+    companies: ["Airbnb", "Google", "Facebook"],
+    pattern: "Tries",
+    completed: false
+  },
   
   // Heap / Priority Queue
+  {
+    id: 703,
+    title: "Kth Largest Element in a Stream",
+    difficulty: "Easy",
+    tags: ["Tree", "Design", "Binary Search Tree", "Heap", "Binary Tree", "Data Stream"],
+    url: "https://leetcode.com/problems/kth-largest-element-in-a-stream/",
+    companies: ["Amazon", "Google", "Facebook"],
+    pattern: "Heap / Priority Queue",
+    completed: false
+  },
+  {
+    id: 1046,
+    title: "Last Stone Weight",
+    difficulty: "Easy",
+    tags: ["Array", "Heap", "Greedy"],
+    url: "https://leetcode.com/problems/last-stone-weight/",
+    companies: ["Amazon", "Google", "Bloomberg"],
+    pattern: "Heap / Priority Queue",
+    completed: false
+  },
   {
     id: 347,
     title: "Top K Frequent Elements",
@@ -336,8 +666,58 @@ const sampleProblems: LeetcodeProblem[] = [
     pattern: "Heap / Priority Queue",
     completed: false
   },
+  {
+    id: 215,
+    title: "Kth Largest Element in an Array",
+    difficulty: "Medium",
+    tags: ["Array", "Divide and Conquer", "Sorting", "Heap", "Quickselect"],
+    url: "https://leetcode.com/problems/kth-largest-element-in-an-array/",
+    companies: ["Facebook", "Amazon", "Google", "Microsoft"],
+    pattern: "Heap / Priority Queue",
+    completed: false
+  },
+  {
+    id: 295,
+    title: "Find Median from Data Stream",
+    difficulty: "Hard",
+    tags: ["Two Pointers", "Design", "Sorting", "Heap", "Data Stream"],
+    url: "https://leetcode.com/problems/find-median-from-data-stream/",
+    companies: ["Amazon", "Google", "Microsoft"],
+    pattern: "Heap / Priority Queue",
+    completed: false
+  },
+  {
+    id: 480,
+    title: "Sliding Window Median",
+    difficulty: "Hard",
+    tags: ["Array", "Hash Table", "Sliding Window", "Heap"],
+    url: "https://leetcode.com/problems/sliding-window-median/",
+    companies: ["Google", "Amazon", "Microsoft"],
+    pattern: "Heap / Priority Queue",
+    completed: false
+  },
   
   // Graphs
+  {
+    id: 733,
+    title: "Flood Fill",
+    difficulty: "Easy",
+    tags: ["Array", "DFS", "BFS", "Matrix"],
+    url: "https://leetcode.com/problems/flood-fill/",
+    companies: ["Amazon", "Microsoft", "Google"],
+    pattern: "Graphs",
+    completed: false
+  },
+  {
+    id: 997,
+    title: "Find the Town Judge",
+    difficulty: "Easy",
+    tags: ["Array", "Hash Table", "Graph"],
+    url: "https://leetcode.com/problems/find-the-town-judge/",
+    companies: ["Google", "Amazon", "Microsoft"],
+    pattern: "Graphs",
+    completed: false
+  },
   {
     id: 200,
     title: "Number of Islands",
@@ -358,6 +738,26 @@ const sampleProblems: LeetcodeProblem[] = [
     pattern: "Graphs",
     completed: false
   },
+  {
+    id: 269,
+    title: "Alien Dictionary",
+    difficulty: "Hard",
+    tags: ["Array", "String", "Graph", "Topological Sort"],
+    url: "https://leetcode.com/problems/alien-dictionary/",
+    companies: ["Facebook", "Amazon", "Google"],
+    pattern: "Graphs",
+    completed: false
+  },
+  {
+    id: 127,
+    title: "Word Ladder",
+    difficulty: "Hard",
+    tags: ["Hash Table", "String", "BFS"],
+    url: "https://leetcode.com/problems/word-ladder/",
+    companies: ["Amazon", "Google", "Facebook"],
+    pattern: "Graphs",
+    completed: false
+  },
   
   // Dynamic Programming
   {
@@ -371,6 +771,16 @@ const sampleProblems: LeetcodeProblem[] = [
     completed: true
   },
   {
+    id: 746,
+    title: "Min Cost Climbing Stairs",
+    difficulty: "Easy",
+    tags: ["Array", "Dynamic Programming"],
+    url: "https://leetcode.com/problems/min-cost-climbing-stairs/",
+    companies: ["Amazon", "Google", "Microsoft"],
+    pattern: "Dynamic Programming",
+    completed: false
+  },
+  {
     id: 322,
     title: "Coin Change",
     difficulty: "Medium",
@@ -381,12 +791,32 @@ const sampleProblems: LeetcodeProblem[] = [
     completed: false
   },
   {
+    id: 300,
+    title: "Longest Increasing Subsequence",
+    difficulty: "Medium",
+    tags: ["Array", "Binary Search", "Dynamic Programming"],
+    url: "https://leetcode.com/problems/longest-increasing-subsequence/",
+    companies: ["Microsoft", "Amazon", "Google"],
+    pattern: "Dynamic Programming",
+    completed: false
+  },
+  {
     id: 42,
     title: "Trapping Rain Water",
     difficulty: "Hard",
     tags: ["Array", "Two Pointers", "Dynamic Programming", "Stack"],
     url: "https://leetcode.com/problems/trapping-rain-water/",
     companies: ["Amazon", "Google", "Microsoft"],
+    pattern: "Dynamic Programming",
+    completed: false
+  },
+  {
+    id: 10,
+    title: "Regular Expression Matching",
+    difficulty: "Hard",
+    tags: ["String", "Dynamic Programming", "Recursion"],
+    url: "https://leetcode.com/problems/regular-expression-matching/",
+    companies: ["Google", "Facebook", "Amazon"],
     pattern: "Dynamic Programming",
     completed: false
   },
@@ -403,6 +833,16 @@ const sampleProblems: LeetcodeProblem[] = [
     completed: true
   },
   {
+    id: 455,
+    title: "Assign Cookies",
+    difficulty: "Easy",
+    tags: ["Array", "Greedy", "Sorting"],
+    url: "https://leetcode.com/problems/assign-cookies/",
+    companies: ["Amazon", "Microsoft", "Google"],
+    pattern: "Greedy",
+    completed: false
+  },
+  {
     id: 55,
     title: "Jump Game",
     difficulty: "Medium",
@@ -412,8 +852,58 @@ const sampleProblems: LeetcodeProblem[] = [
     pattern: "Greedy",
     completed: false
   },
+  {
+    id: 134,
+    title: "Gas Station",
+    difficulty: "Medium",
+    tags: ["Array", "Greedy"],
+    url: "https://leetcode.com/problems/gas-station/",
+    companies: ["Amazon", "Microsoft", "Bloomberg"],
+    pattern: "Greedy",
+    completed: false
+  },
+  {
+    id: 135,
+    title: "Candy",
+    difficulty: "Hard",
+    tags: ["Array", "Greedy"],
+    url: "https://leetcode.com/problems/candy/",
+    companies: ["Google", "Amazon", "Microsoft"],
+    pattern: "Greedy",
+    completed: false
+  },
+  {
+    id: 45,
+    title: "Jump Game II",
+    difficulty: "Hard",
+    tags: ["Array", "Greedy", "Dynamic Programming"],
+    url: "https://leetcode.com/problems/jump-game-ii/",
+    companies: ["Amazon", "Google", "Microsoft"],
+    pattern: "Greedy",
+    completed: false
+  },
   
   // Backtracking
+  {
+    id: 401,
+    title: "Binary Watch",
+    difficulty: "Easy",
+    tags: ["Backtracking", "Bit Manipulation"],
+    url: "https://leetcode.com/problems/binary-watch/",
+    companies: ["Amazon", "Google", "Microsoft"],
+    pattern: "Backtracking",
+    completed: false
+  },
+  {
+    id: 784,
+    title: "Letter Case Permutation",
+    difficulty: "Easy",
+    tags: ["String", "Backtracking", "Bit Manipulation"],
+    url: "https://leetcode.com/problems/letter-case-permutation/",
+    companies: ["Facebook", "Amazon", "Microsoft"],
+    pattern: "Backtracking",
+    completed: false
+  },
   {
     id: 78,
     title: "Subsets",
@@ -431,6 +921,26 @@ const sampleProblems: LeetcodeProblem[] = [
     tags: ["Array", "Backtracking"],
     url: "https://leetcode.com/problems/permutations/",
     companies: ["Microsoft", "Amazon", "Facebook"],
+    pattern: "Backtracking",
+    completed: false
+  },
+  {
+    id: 51,
+    title: "N-Queens",
+    difficulty: "Hard",
+    tags: ["Array", "Backtracking"],
+    url: "https://leetcode.com/problems/n-queens/",
+    companies: ["Amazon", "Google", "Microsoft"],
+    pattern: "Backtracking",
+    completed: false
+  },
+  {
+    id: 37,
+    title: "Sudoku Solver",
+    difficulty: "Hard",
+    tags: ["Array", "Backtracking", "Matrix"],
+    url: "https://leetcode.com/problems/sudoku-solver/",
+    companies: ["Amazon", "Microsoft", "Google"],
     pattern: "Backtracking",
     completed: false
   },
@@ -456,8 +966,68 @@ const sampleProblems: LeetcodeProblem[] = [
     pattern: "Bit Manipulation",
     completed: false
   },
+  {
+    id: 137,
+    title: "Single Number II",
+    difficulty: "Medium",
+    tags: ["Array", "Bit Manipulation"],
+    url: "https://leetcode.com/problems/single-number-ii/",
+    companies: ["Google", "Amazon", "Microsoft"],
+    pattern: "Bit Manipulation",
+    completed: false
+  },
+  {
+    id: 201,
+    title: "Bitwise AND of Numbers Range",
+    difficulty: "Medium",
+    tags: ["Bit Manipulation"],
+    url: "https://leetcode.com/problems/bitwise-and-of-numbers-range/",
+    companies: ["Microsoft", "Amazon", "Google"],
+    pattern: "Bit Manipulation",
+    completed: false
+  },
+  {
+    id: 1255,
+    title: "Maximum Score Words Formed by Letters",
+    difficulty: "Hard",
+    tags: ["Array", "String", "Dynamic Programming", "Backtracking", "Bit Manipulation"],
+    url: "https://leetcode.com/problems/maximum-score-words-formed-by-letters/",
+    companies: ["Google", "Amazon", "Facebook"],
+    pattern: "Bit Manipulation",
+    completed: false
+  },
+  {
+    id: 964,
+    title: "Least Operators to Express Number",
+    difficulty: "Hard",
+    tags: ["Math", "Dynamic Programming", "Bit Manipulation"],
+    url: "https://leetcode.com/problems/least-operators-to-express-number/",
+    companies: ["Google", "Amazon", "Microsoft"],
+    pattern: "Bit Manipulation",
+    completed: false
+  },
   
   // Math & Geometry
+  {
+    id: 9,
+    title: "Palindrome Number",
+    difficulty: "Easy",
+    tags: ["Math"],
+    url: "https://leetcode.com/problems/palindrome-number/",
+    companies: ["Amazon", "Microsoft", "Facebook"],
+    pattern: "Math & Geometry",
+    completed: false
+  },
+  {
+    id: 13,
+    title: "Roman to Integer",
+    difficulty: "Easy",
+    tags: ["Hash Table", "Math", "String"],
+    url: "https://leetcode.com/problems/roman-to-integer/",
+    companies: ["Amazon", "Microsoft", "Facebook"],
+    pattern: "Math & Geometry",
+    completed: false
+  },
   {
     id: 48,
     title: "Rotate Image",
@@ -475,6 +1045,26 @@ const sampleProblems: LeetcodeProblem[] = [
     tags: ["Array", "Matrix", "Simulation"],
     url: "https://leetcode.com/problems/spiral-matrix/",
     companies: ["Microsoft", "Amazon", "Google"],
+    pattern: "Math & Geometry",
+    completed: false
+  },
+  {
+    id: 149,
+    title: "Max Points on a Line",
+    difficulty: "Hard",
+    tags: ["Array", "Hash Table", "Math", "Geometry"],
+    url: "https://leetcode.com/problems/max-points-on-a-line/",
+    companies: ["LinkedIn", "Amazon", "Google"],
+    pattern: "Math & Geometry",
+    completed: false
+  },
+  {
+    id: 224,
+    title: "Basic Calculator",
+    difficulty: "Hard",
+    tags: ["String", "Stack", "Math", "Recursion"],
+    url: "https://leetcode.com/problems/basic-calculator/",
+    companies: ["Amazon", "Google", "Microsoft"],
     pattern: "Math & Geometry",
     completed: false
   }
