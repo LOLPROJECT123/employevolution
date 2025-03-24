@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import {
@@ -232,7 +233,7 @@ export const JobScraperConfig = ({ onConfigUpdate }: JobScraperConfigProps) => {
             <Slider
               id="refresh-interval"
               value={[refreshInterval]}
-              onValueChange={(values) => setRefreshInterval(values[0])}
+              onValueChange={(values) => setRefreshInterval(Number(values[0]))}
               min={1}
               max={72}
               step={1}
