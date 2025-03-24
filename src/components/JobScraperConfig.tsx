@@ -123,7 +123,7 @@ export const JobScraperConfig = ({ onConfigUpdate }: JobScraperConfigProps) => {
       id: customCompanyId,
       name: customCompanyName,
       isActive: true,
-      category: 'custom-company'
+      category: 'custom-company' as const
     };
     
     setSources([...sources, newCompany]);
