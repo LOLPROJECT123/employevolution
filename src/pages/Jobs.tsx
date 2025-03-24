@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import Navbar from "@/components/Navbar";
 import { Job } from "@/types/job";
@@ -17,44 +18,93 @@ import {
 } from '@/utils/automationUtils';
 import JobSourcesDisplay from "@/components/JobSourcesDisplay";
 
-const sampleJobs: Job[] = [
-  {
-    id: '1',
-    title: 'Senior Software Engineer',
-    company: 'TechCorp',
-    location: 'San Francisco, CA',
-    salary: {
-      min: 150000,
-      max: 220000,
-      currency: '$'
-    },
-    type: 'full-time',
-    level: 'senior',
-    description: 'We are looking for a Senior Software Engineer...',
-    requirements: ['5+ years experience', 'React', 'Node.js'],
-    postedAt: new Date().toISOString(),
-    skills: ['React', 'TypeScript', 'Node.js', 'AWS', 'Docker'],
-    applyUrl: 'https://joinhandshake.com/jobs/example1'
-  },
-  {
-    id: '2',
-    title: 'Product Manager',
-    company: 'InnovateCo',
-    location: 'New York, NY',
-    salary: {
-      min: 130000,
-      max: 180000,
-      currency: '$'
-    },
-    type: 'full-time',
-    level: 'mid',
-    description: 'Seeking an experienced Product Manager...',
-    requirements: ['3+ years experience', 'Agile', 'Technical background'],
-    postedAt: new Date(Date.now() - 86400000).toISOString(),
-    skills: ['Product Strategy', 'Agile', 'User Research', 'Data Analysis'],
-    applyUrl: 'https://linkedin.com/jobs/example2'
-  }
-];
+const generateSampleJobs = (count: number): Job[] => {
+  const jobTypes: Array<'full-time' | 'part-time' | 'contract' | 'internship' | 'temporary' | 'volunteer' | 'other'> = 
+    ['full-time', 'part-time', 'contract', 'internship', 'temporary', 'volunteer', 'other'];
+  
+  const levels: Array<'intern' | 'entry' | 'mid' | 'senior' | 'lead' | 'executive' | 'manager' | 'director'> = 
+    ['intern', 'entry', 'mid', 'senior', 'lead', 'executive', 'manager', 'director'];
+  
+  const companies = [
+    'TechCorp', 'InnovateCo', 'Google', 'Amazon', 'Microsoft', 'Facebook', 'Apple', 
+    'Netflix', 'Tesla', 'Twitter', 'LinkedIn', 'Uber', 'Airbnb', 'Stripe', 'Square',
+    'Salesforce', 'Adobe', 'IBM', 'Oracle', 'Intel', 'Cisco', 'Dell', 'HP', 'Lenovo'
+  ];
+  
+  const locations = [
+    'San Francisco, CA', 'New York, NY', 'Seattle, WA', 'Boston, MA', 'Austin, TX',
+    'Chicago, IL', 'Los Angeles, CA', 'Denver, CO', 'Atlanta, GA', 'Portland, OR',
+    'Miami, FL', 'Washington, DC', 'Philadelphia, PA', 'San Diego, CA', 'Dallas, TX'
+  ];
+  
+  const titles = [
+    'Software Engineer', 'Product Manager', 'Data Scientist', 'UX Designer', 'DevOps Engineer',
+    'Machine Learning Engineer', 'Frontend Developer', 'Backend Developer', 'Full Stack Developer',
+    'Engineering Manager', 'QA Engineer', 'Systems Architect', 'Technical Writer', 'Database Administrator',
+    'Cloud Engineer', 'Mobile Developer', 'Security Engineer', 'Network Engineer', 'UI Designer'
+  ];
+  
+  const skills = [
+    'React', 'TypeScript', 'Node.js', 'Python', 'Java', 'C++', 'C#', 'Ruby', 'PHP', 'Go',
+    'AWS', 'Azure', 'GCP', 'Docker', 'Kubernetes', 'Git', 'Redux', 'GraphQL', 'REST API',
+    'SQL', 'MongoDB', 'PostgreSQL', 'MySQL', 'TensorFlow', 'PyTorch', 'Swift', 'Kotlin',
+    'Angular', 'Vue.js', 'Svelte', 'Express', 'Django', 'Rails', 'Spring', 'Hadoop', 'Spark'
+  ];
+  
+  const requirements = [
+    'Experience with modern frontend frameworks', 'Strong problem-solving skills',
+    'Excellent communication skills', 'Ability to work in a team environment',
+    'Passion for creating quality software', 'Understanding of CI/CD workflows',
+    'Experience with agile methodologies', 'Knowledge of design patterns',
+    'Familiarity with version control systems', 'Experience with databases'
+  ];
+  
+  const platforms = ['linkedin.com', 'indeed.com', 'glassdoor.com', 'monster.com', 'joinhandshake.com'];
+
+  return Array.from({ length: count }, (_, i) => {
+    const randomSalaryMin = Math.floor(Math.random() * 15) * 10000 + 50000;
+    const randomSalaryMax = randomSalaryMin + Math.floor(Math.random() * 10) * 10000;
+    const randomSkills = Array.from(
+      { length: Math.floor(Math.random() * 5) + 3 },
+      () => skills[Math.floor(Math.random() * skills.length)]
+    ).filter((item, pos, arr) => arr.indexOf(item) === pos); // Remove duplicates
+    
+    const randomRequirements = Array.from(
+      { length: Math.floor(Math.random() * 4) + 2 },
+      () => requirements[Math.floor(Math.random() * requirements.length)]
+    ).filter((item, pos, arr) => arr.indexOf(item) === pos); // Remove duplicates
+    
+    const randomTitle = titles[Math.floor(Math.random() * titles.length)];
+    const randomLevel = levels[Math.floor(Math.random() * levels.length)];
+    const randomPrefix = randomLevel === 'senior' ? 'Senior ' : 
+                         randomLevel === 'lead' ? 'Lead ' : 
+                         randomLevel === 'manager' ? 'Manager, ' : '';
+    
+    return {
+      id: (i + 1).toString(),
+      title: `${randomPrefix}${randomTitle}`,
+      company: companies[Math.floor(Math.random() * companies.length)],
+      location: locations[Math.floor(Math.random() * locations.length)],
+      salary: {
+        min: randomSalaryMin,
+        max: randomSalaryMax,
+        currency: '$'
+      },
+      type: jobTypes[Math.floor(Math.random() * jobTypes.length)],
+      level: randomLevel,
+      description: `We are looking for a talented ${randomTitle} to join our growing team. The ideal candidate will have experience with ${randomSkills.slice(0, 3).join(', ')} and a passion for building high-quality software.`,
+      requirements: randomRequirements,
+      postedAt: new Date(Date.now() - Math.floor(Math.random() * 30) * 86400000).toISOString(),
+      skills: randomSkills,
+      applyUrl: `https://${platforms[Math.floor(Math.random() * platforms.length)]}/jobs/example${i + 1}`,
+      remote: Math.random() > 0.5,
+      workModel: Math.random() > 0.7 ? 'remote' : Math.random() > 0.5 ? 'hybrid' : 'onsite'
+    };
+  });
+};
+
+// Create 30 sample jobs
+const sampleJobs: Job[] = generateSampleJobs(30);
 
 const Jobs = () => {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
@@ -70,6 +120,13 @@ const Jobs = () => {
   useEffect(() => {
     setViewMode(isMobile ? 'swipe' : 'list');
   }, [isMobile]);
+
+  useEffect(() => {
+    // Select the first job by default when jobs are loaded
+    if (filteredJobs.length > 0 && !selectedJob) {
+      setSelectedJob(filteredJobs[0]);
+    }
+  }, [filteredJobs, selectedJob]);
 
   const savedJobs = jobs.filter(job => savedJobIds.includes(job.id));
   const appliedJobs = jobs.filter(job => appliedJobIds.includes(job.id));
@@ -164,6 +221,7 @@ const Jobs = () => {
   };
 
   const handleSkipJob = (job: Job) => {
+    // Implementation for skipping a job - currently just placeholder
   };
 
   const toggleViewMode = () => {
@@ -242,7 +300,7 @@ const Jobs = () => {
                   
                   {(viewMode === 'list' || !isMobile) && (
                     <>
-                      <h2 className="text-lg font-medium">Browse Jobs</h2>
+                      <h2 className="text-lg font-medium">Browse Jobs <span className="text-sm text-muted-foreground">({filteredJobs.length} results)</span></h2>
                       <div className="space-y-4">
                         {filteredJobs.map(job => (
                           <JobCard 
