@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +18,16 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 
-const jobSources = [
+type JobSourceCategory = 'job-board' | 'company' | 'tech' | 'custom-company';
+
+interface JobSource {
+  id: string;
+  name: string;
+  isActive: boolean;
+  category: JobSourceCategory;
+}
+
+const jobSources: JobSource[] = [
   // Job boards
   { id: 'linkedin', name: 'LinkedIn', isActive: true, category: 'job-board' },
   { id: 'github', name: 'GitHub Jobs', isActive: true, category: 'job-board' },
@@ -59,17 +67,17 @@ const jobSources = [
 ];
 
 export interface JobScraperConfigProps {
-  onConfigUpdate: (sources: {id: string, name: string, isActive: boolean}[]) => void;
+  onConfigUpdate: (sources: JobSource[]) => void;
 }
 
 export const JobScraperConfig = ({ onConfigUpdate }: JobScraperConfigProps) => {
-  const [sources, setSources] = useState(jobSources);
+  const [sources, setSources] = useState<JobSource[]>(jobSources);
   const [refreshInterval, setRefreshInterval] = useState<number>(24);
-  const [open, setOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('all');
-  const [customCompanyUrl, setCustomCompanyUrl] = useState('');
-  const [customCompanyName, setCustomCompanyName] = useState('');
-  const [autoApplyEnabled, setAutoApplyEnabled] = useState(false);
+  const [open, setOpen] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<string>('all');
+  const [customCompanyUrl, setCustomCompanyUrl] = useState<string>('');
+  const [customCompanyName, setCustomCompanyName] = useState<string>('');
+  const [autoApplyEnabled, setAutoApplyEnabled] = useState<boolean>(false);
 
   const handleSourceToggle = (sourceId: string) => {
     const updatedSources = sources.map(source => 
@@ -120,11 +128,11 @@ export const JobScraperConfig = ({ onConfigUpdate }: JobScraperConfigProps) => {
       return;
     }
     
-    const newCompany = {
+    const newCompany: JobSource = {
       id: customCompanyId,
       name: customCompanyName,
       isActive: true,
-      category: 'custom-company' as const
+      category: 'custom-company'
     };
     
     setSources([...sources, newCompany]);
@@ -136,7 +144,6 @@ export const JobScraperConfig = ({ onConfigUpdate }: JobScraperConfigProps) => {
     });
   };
 
-  // Fix for Type 'string' is not assignable to type 'number'
   const handleSliderChange = (values: number[]) => {
     if (values.length > 0) {
       setRefreshInterval(values[0]);
