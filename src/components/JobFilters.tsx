@@ -22,7 +22,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
-import { X, Plus, Search, Filter, Info } from "lucide-react";
+import { X, Plus, Search, Filter, Info, Check } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -49,6 +49,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { toast } from "@/hooks/use-toast";
 
 type JobFunctionType = string;
 type SkillType = string;
@@ -98,6 +99,21 @@ export const JobFiltersSection = () => {
   const [newSkill, setNewSkill] = useState("");
   const [newCompany, setNewCompany] = useState("");
   const [newJobTitle, setNewJobTitle] = useState("");
+
+  // Flag to track if filters have been applied
+  const [filtersApplied, setFiltersApplied] = useState(false);
+
+  // Handle applying filters
+  const handleApplyFilters = () => {
+    // In a real application, this would dispatch an action or call a callback
+    // to apply the filters to the job listings
+    setFiltersApplied(true);
+    
+    toast({
+      title: "Filters applied",
+      description: "Your job search filters have been applied.",
+    });
+  };
   
   // Handle adding new items
   const handleAddJobFunction = () => {
@@ -190,6 +206,12 @@ export const JobFiltersSection = () => {
       "director": false,
       "executive": false
     });
+    setFiltersApplied(false);
+    
+    toast({
+      title: "Filters reset",
+      description: "All job search filters have been reset.",
+    });
   };
   
   // Format salary display
@@ -201,6 +223,39 @@ export const JobFiltersSection = () => {
     }
     return `$${value}`;
   };
+
+  // Count active filters
+  const getActiveFilterCount = () => {
+    let count = 0;
+    
+    if (location) count++;
+    if (remote) count++;
+    
+    // Count selected job types
+    Object.values(jobTypes).forEach(selected => {
+      if (selected) count++;
+    });
+    
+    // Count selected experience levels
+    Object.values(experienceLevels).forEach(selected => {
+      if (selected) count++;
+    });
+    
+    // Add other filter categories
+    count += jobFunctions.length;
+    count += skills.length;
+    count += companies.length;
+    count += jobTitles.length;
+    
+    // Add salary if it's not the default
+    if (salaryRange[0] !== 50000 || salaryRange[1] !== 150000) {
+      count++;
+    }
+    
+    return count;
+  };
+  
+  const activeFilterCount = getActiveFilterCount();
   
   return (
     <Card className="border border-border bg-background">
@@ -212,6 +267,11 @@ export const JobFiltersSection = () => {
               <h3 className="text-lg font-medium flex items-center gap-2">
                 <Filter className="w-4 h-4" />
                 All Filters
+                {activeFilterCount > 0 && (
+                  <Badge variant="secondary" className="ml-2">
+                    {activeFilterCount}
+                  </Badge>
+                )}
               </h3>
               <Button 
                 variant="ghost" 
@@ -635,6 +695,20 @@ export const JobFiltersSection = () => {
           </div>
         </div>
       </CardContent>
+      <CardFooter className="border-t p-4">
+        <Button 
+          className="w-full flex items-center justify-center gap-2" 
+          onClick={handleApplyFilters}
+        >
+          <Check className="h-4 w-4" />
+          Apply Filters
+          {activeFilterCount > 0 && (
+            <Badge variant="secondary" className="ml-1">
+              {activeFilterCount}
+            </Badge>
+          )}
+        </Button>
+      </CardFooter>
     </Card>
   );
 };
