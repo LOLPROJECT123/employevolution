@@ -233,12 +233,14 @@ const Jobs = () => {
   };
   
   return (
-    <div className="min-h-screen flex flex-col bg-secondary/30">
+    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900/30">
       <Navbar />
       <main className="flex-1 pt-20">
-        <div className="container px-4 py-8">
+        <div className="container px-4 py-8 mx-auto max-w-7xl">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold">Find Jobs</h1>
+            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
+              Find Your Next Opportunity
+            </h1>
             <div className="hidden md:block">
               <AutomationSettings />
             </div>
@@ -248,22 +250,30 @@ const Jobs = () => {
             <JobSourcesDisplay />
           </div>
           
-          <div className="flex flex-col md:flex-row gap-4 items-start">
-            <div className="w-full md:w-1/3 lg:w-1/4 flex-shrink-0">
-              <JobFiltersSection />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-3 space-y-6">
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                  <h2 className="font-semibold text-lg">Filter Jobs</h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Narrow down your search</p>
+                </div>
+                <div className="p-4">
+                  <JobFiltersSection />
+                </div>
+              </div>
               
               {isMobile && (
-                <div className="mt-4 space-y-3">
+                <div className="space-y-3 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
                   <button 
                     onClick={toggleViewMode}
-                    className="w-full py-2 px-4 rounded-md bg-primary text-white font-medium"
+                    className="w-full py-2.5 px-4 rounded-lg bg-primary text-white font-medium"
                   >
                     Switch to {viewMode === 'list' ? 'Swipe' : 'List'} View
                   </button>
                   
                   <button 
                     onClick={toggleMyJobs}
-                    className="w-full py-2 px-4 rounded-md bg-secondary text-foreground font-medium border"
+                    className="w-full py-2.5 px-4 rounded-lg bg-secondary text-foreground font-medium border"
                   >
                     {showMyJobs ? 'Browse Jobs' : 'My Saved & Applied Jobs'}
                   </button>
@@ -275,19 +285,11 @@ const Jobs = () => {
               )}
               
               {isMobile && showMyJobs ? (
-                <div className="mt-6">
-                  <SavedAndAppliedJobs
-                    savedJobs={savedJobs}
-                    appliedJobs={appliedJobs}
-                    onApply={handleApplyJob}
-                    onSave={handleSaveJob}
-                    onSelect={handleJobSelect}
-                    selectedJobId={selectedJob?.id || null}
-                  />
-                </div>
-              ) : (
-                <div className="mt-6 space-y-4">
-                  {!isMobile && (
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                  <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 className="font-semibold text-lg">My Jobs</h2>
+                  </div>
+                  <div className="p-4">
                     <SavedAndAppliedJobs
                       savedJobs={savedJobs}
                       appliedJobs={appliedJobs}
@@ -296,24 +298,24 @@ const Jobs = () => {
                       onSelect={handleJobSelect}
                       selectedJobId={selectedJob?.id || null}
                     />
-                  )}
-                  
-                  {(viewMode === 'list' || !isMobile) && (
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                  {!isMobile && (
                     <>
-                      <h2 className="text-lg font-medium">Browse Jobs <span className="text-sm text-muted-foreground">({filteredJobs.length} results)</span></h2>
-                      <div className="space-y-4">
-                        {filteredJobs.map(job => (
-                          <JobCard 
-                            key={job.id}
-                            job={job}
-                            onApply={handleApplyJob}
-                            isSelected={selectedJob?.id === job.id}
-                            isSaved={savedJobIds.includes(job.id)}
-                            isApplied={appliedJobIds.includes(job.id)}
-                            onClick={() => handleJobSelect(job)}
-                            onSave={() => handleSaveJob(job)}
-                          />
-                        ))}
+                      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                        <h2 className="font-semibold text-lg">My Jobs</h2>
+                      </div>
+                      <div className="p-4">
+                        <SavedAndAppliedJobs
+                          savedJobs={savedJobs}
+                          appliedJobs={appliedJobs}
+                          onApply={handleApplyJob}
+                          onSave={handleSaveJob}
+                          onSelect={handleJobSelect}
+                          selectedJobId={selectedJob?.id || null}
+                        />
                       </div>
                     </>
                   )}
@@ -321,25 +323,67 @@ const Jobs = () => {
               )}
             </div>
             
-            <div className="w-full md:w-2/3 lg:w-3/4 mt-6 md:mt-0">
+            <div className="lg:col-span-9 space-y-6">
+              {(viewMode === 'list' || !isMobile) && (
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                  <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                    <div>
+                      <h2 className="font-semibold text-lg">Browse Jobs</h2>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{filteredJobs.length} opportunities found</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <select className="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-transparent">
+                        <option>Sort by: Relevance</option>
+                        <option>Date: Newest first</option>
+                        <option>Salary: Highest first</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
+                    {filteredJobs.map(job => (
+                      <JobCard 
+                        key={job.id}
+                        job={job}
+                        onApply={handleApplyJob}
+                        isSelected={selectedJob?.id === job.id}
+                        isSaved={savedJobIds.includes(job.id)}
+                        isApplied={appliedJobIds.includes(job.id)}
+                        onClick={() => handleJobSelect(job)}
+                        onSave={() => handleSaveJob(job)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            
               {viewMode === 'swipe' && isMobile ? (
-                <SwipeJobsInterface 
-                  jobs={filteredJobs}
-                  onApply={handleApplyJob}
-                  onSkip={handleSkipJob}
-                />
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden p-4">
+                  <SwipeJobsInterface 
+                    jobs={filteredJobs}
+                    onApply={handleApplyJob}
+                    onSkip={handleSkipJob}
+                  />
+                </div>
               ) : (
-                <JobDetailView 
-                  job={selectedJob} 
-                  onApply={handleApplyJob}
-                  onSave={handleSaveJob}
-                />
+                <div className="sticky top-24 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                  <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 className="font-semibold text-lg">Job Details</h2>
+                  </div>
+                  <div className="p-0">
+                    <JobDetailView 
+                      job={selectedJob} 
+                      onApply={handleApplyJob}
+                      onSave={handleSaveJob}
+                    />
+                  </div>
+                </div>
               )}
               
               {showAutomation && selectedJob && (
-                <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg shadow-md">
-                  <div className="flex justify-between items-center mb-3">
-                    <h3 className="font-medium text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl shadow-sm border border-blue-200 dark:border-blue-800 overflow-hidden">
+                  <div className="flex justify-between items-center p-4 border-b border-blue-200 dark:border-blue-800">
+                    <h3 className="font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-2">
                       <Zap className="h-4 w-4" />
                       Automated Application
                     </h3>
@@ -352,28 +396,30 @@ const Jobs = () => {
                     </Button>
                   </div>
                   
-                  <p className="text-sm mb-3">
-                    Use automation to apply to this job at {selectedJob.company} automatically.
-                  </p>
-                  
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      onClick={() => handleAutomatedApply(selectedJob)}
-                      className="bg-blue-600 hover:bg-blue-700"
-                    >
-                      <Zap className="h-4 w-4 mr-2" />
-                      Run Automation Script
-                    </Button>
+                  <div className="p-4">
+                    <p className="text-sm mb-3 text-blue-600 dark:text-blue-400">
+                      Use automation to apply to this job at {selectedJob.company} automatically.
+                    </p>
                     
-                    <Button
-                      variant="outline"
-                      onClick={() => window.open(selectedJob.applyUrl, '_blank')}
-                    >
-                      Apply Manually
-                    </Button>
-                    
-                    <div className="ml-auto">
-                      <AutomationSettings />
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        onClick={() => handleAutomatedApply(selectedJob)}
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        <Zap className="h-4 w-4 mr-2" />
+                        Run Automation Script
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        onClick={() => window.open(selectedJob.applyUrl, '_blank')}
+                      >
+                        Apply Manually
+                      </Button>
+                      
+                      <div className="ml-auto">
+                        <AutomationSettings />
+                      </div>
                     </div>
                   </div>
                 </div>

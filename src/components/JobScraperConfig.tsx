@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import {
@@ -89,9 +90,17 @@ export const JobScraperConfig = ({ onConfigUpdate }: JobScraperConfigProps) => {
   };
 
   const handleSave = () => {
-    onConfigUpdate(sources);
-    toast.success("Job sources updated", {
-      description: `${sources.filter(s => s.isActive).length} sources enabled for job search`
+    // Ensure all sources are active before saving
+    const allActiveSourcesModified = sources.map(source => ({
+      ...source,
+      isActive: true
+    }));
+    
+    setSources(allActiveSourcesModified);
+    onConfigUpdate(allActiveSourcesModified);
+    
+    toast.success("Job search configuration updated", {
+      description: "All available job sources are now enabled for your search"
     });
     setOpen(false);
   };
@@ -150,95 +159,24 @@ export const JobScraperConfig = ({ onConfigUpdate }: JobScraperConfigProps) => {
     }
   };
 
-  const filteredSources = activeTab === 'all' 
-    ? sources 
-    : sources.filter(source => source.category === activeTab);
-
+  // Hide individual sources from UI by showing only global settings
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="flex items-center">
           <Settings2Icon className="w-4 h-4 mr-2" />
-          Configure Job Sources
+          Advanced Settings
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>Job Search Sources</DialogTitle>
+          <DialogTitle>Job Search Settings</DialogTitle>
           <DialogDescription>
-            Configure which platforms to search for opportunities and how often to refresh listings.
+            Configure how often to refresh job listings and advanced automation options.
           </DialogDescription>
         </DialogHeader>
         
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
-          <TabsList className="w-full">
-            <TabsTrigger value="all" className="flex-1">All Sources</TabsTrigger>
-            <TabsTrigger value="job-board" className="flex-1">Job Boards</TabsTrigger>
-            <TabsTrigger value="company" className="flex-1">Companies</TabsTrigger>
-            <TabsTrigger value="tech" className="flex-1">Tech</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value={activeTab} className="mt-4">
-            <div className="max-h-[40vh] overflow-y-auto rounded-md border p-4">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {filteredSources.map((source) => (
-                  <div key={source.id} className="flex items-center space-x-2 hover:bg-secondary/50 p-1.5 rounded-md">
-                    <Checkbox 
-                      id={source.id}
-                      checked={source.isActive}
-                      onCheckedChange={() => handleSourceToggle(source.id)}
-                    />
-                    <Label 
-                      htmlFor={source.id} 
-                      className="text-sm cursor-pointer overflow-hidden text-ellipsis"
-                    >
-                      {source.name}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-        
-        <div className="space-y-4 mt-4">
-          <div className="bg-secondary/20 p-4 rounded-md">
-            <h3 className="text-sm font-medium mb-2 flex items-center">
-              <Building className="w-4 h-4 mr-2" />
-              Add Custom Company Career Page
-            </h3>
-            <div className="grid grid-cols-2 gap-2 mb-2">
-              <div>
-                <Label htmlFor="company-name" className="text-xs">Company Name</Label>
-                <Input 
-                  id="company-name" 
-                  value={customCompanyName}
-                  onChange={(e) => setCustomCompanyName(e.target.value)}
-                  placeholder="Company Name"
-                  size="sm"
-                />
-              </div>
-              <div>
-                <Label htmlFor="company-url" className="text-xs">Careers Page URL</Label>
-                <Input 
-                  id="company-url" 
-                  value={customCompanyUrl}
-                  onChange={(e) => setCustomCompanyUrl(e.target.value)}
-                  placeholder="https://company.com/careers"
-                  size="sm"
-                />
-              </div>
-            </div>
-            <Button 
-              size="sm" 
-              variant="secondary" 
-              onClick={handleAddCustomCompany}
-              className="w-full text-xs"
-            >
-              Add Company
-            </Button>
-          </div>
-          
+        <div className="space-y-4 mt-4">          
           <div className="space-y-2 pt-4 border-t">
             <div className="flex justify-between items-center">
               <Label htmlFor="refresh-interval">Refresh Interval</Label>
@@ -293,7 +231,7 @@ export const JobScraperConfig = ({ onConfigUpdate }: JobScraperConfigProps) => {
                 Cancel
               </Button>
               <Button onClick={handleSave} size="sm">
-                Save Configuration
+                Save Settings
               </Button>
             </div>
           </div>
