@@ -576,4 +576,3 @@ const InterviewPractice = () => {
 };
 
 export default InterviewPractice;
-
