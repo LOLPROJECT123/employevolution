@@ -9,8 +9,9 @@ import SwipeJobsInterface from "@/components/SwipeJobsInterface";
 import { SavedAndAppliedJobs } from "@/components/SavedAndAppliedJobs";
 import { toast } from "sonner";
 import AutomationSettings from "@/components/AutomationSettings";
+import Zap from "@/components/Zap";
+import Button from "@/components/Button";
 
-// Create some sample jobs for testing
 const sampleJobs: Job[] = [
   {
     id: '1',
@@ -56,6 +57,7 @@ const Jobs = () => {
   const [filteredJobs, setFilteredJobs] = useState<Job[]>(sampleJobs);
   const [savedJobIds, setSavedJobIds] = useState<string[]>([]);
   const [appliedJobIds, setAppliedJobIds] = useState<string[]>([]);
+  const [showAutomation, setShowAutomation] = useState(false);
   const isMobile = useIsMobile();
   const [viewMode, setViewMode] = useState<'list' | 'swipe'>(isMobile ? 'swipe' : 'list');
   const [showMyJobs, setShowMyJobs] = useState(false);
@@ -85,11 +87,28 @@ const Jobs = () => {
     if (!appliedJobIds.includes(job.id)) {
       setAppliedJobIds([...appliedJobIds, job.id]);
       
+      const canAutomate = job.applyUrl ? detectPlatform(job.applyUrl) !== null : false;
+      const automationEnabled = (() => {
+        try {
+          const config = JSON.parse(localStorage.getItem('automationConfig') || '{}');
+          return config?.credentials?.enabled || false;
+        } catch (e) {
+          return false;
+        }
+      })();
+      
       if (!isMobile && job.applyUrl) {
-        window.open(job.applyUrl, '_blank');
-        toast.success("Opening application page", {
-          description: "Our Chrome extension will automatically complete the application for you."
-        });
+        if (canAutomate && automationEnabled) {
+          setShowAutomation(true);
+          toast.success("Automation Available", {
+            description: "You can use the automation tools to apply to this job automatically."
+          });
+        } else {
+          window.open(job.applyUrl, '_blank');
+          toast.success("Opening application page", {
+            description: "The application page has been opened in a new tab."
+          });
+        }
       } else {
         toast.success("Application submitted successfully", {
           description: `Your application to ${job.company} for ${job.title} has been submitted.`
@@ -102,6 +121,40 @@ const Jobs = () => {
           setSelectedJob(filteredJobs[currentIndex + 1]);
         }
       }
+    }
+  };
+
+  const handleAutomatedApply = (job: Job) => {
+    try {
+      if (!job.applyUrl) {
+        toast.error("Cannot automate application", {
+          description: "This job doesn't have an application URL."
+        });
+        return;
+      }
+      
+      const automationConfig = localStorage.getItem('automationConfig');
+      if (!automationConfig) {
+        toast.error("Automation not configured", {
+          description: "Please configure your automation settings first."
+        });
+        return;
+      }
+      
+      const config = JSON.parse(automationConfig);
+      
+      startAutomation(job.applyUrl, config);
+      
+      const platform = detectPlatform(job.applyUrl);
+      
+      toast.success("Automation initiated", {
+        description: `The automation script will now apply to this job on ${platform || 'the job platform'}. Please check the browser extension for details.`
+      });
+    } catch (error) {
+      toast.error("Automation failed", {
+        description: "There was an error starting the automation process."
+      });
+      console.error("Automation error:", error);
     }
   };
 
@@ -214,6 +267,49 @@ const Jobs = () => {
                   onApply={handleApplyJob}
                   onSave={handleSaveJob}
                 />
+              )}
+              
+              {showAutomation && selectedJob && (
+                <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg shadow-md">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-medium text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                      <Zap className="h-4 w-4" />
+                      Automated Application
+                    </h3>
+                    <Button 
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowAutomation(false)}
+                    >
+                      Close
+                    </Button>
+                  </div>
+                  
+                  <p className="text-sm mb-3">
+                    Use automation to apply to this job at {selectedJob.company} automatically.
+                  </p>
+                  
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      onClick={() => handleAutomatedApply(selectedJob)}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <Zap className="h-4 w-4 mr-2" />
+                      Run Automation Script
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      onClick={() => window.open(selectedJob.applyUrl, '_blank')}
+                    >
+                      Apply Manually
+                    </Button>
+                    
+                    <div className="ml-auto">
+                      <AutomationSettings />
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           </div>

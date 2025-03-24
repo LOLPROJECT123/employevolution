@@ -1,4 +1,3 @@
-
 // This file contains interfaces and types related to job application automation
 // The actual automation runs via a browser extension or desktop app to avoid security limitations
 
@@ -140,6 +139,245 @@ password = "${config.credentials.password}"
 
 # Rest of the handshake automation code...
 `;
+}
+
+// New function for LinkedIn automation script
+export function getLinkedInAutomationScript(config: AutomationConfig): string {
+  return `
+import os
+import time
+import random
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import NoSuchElementException, TimeoutException, ElementClickInterceptedException
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.options import Options
+
+# Configuration from your settings
+username = "${config.credentials.email}"
+password = "${config.credentials.password}"
+resume_path = "" # Path to resume file, optional
+
+# Initialize Chrome driver
+chrome_options = Options()
+chrome_options.add_argument("--start-maximized")
+# Uncomment the following line to run in headless mode
+# chrome_options.add_argument("--headless")
+
+service = Service(ChromeDriverManager().install())
+driver = webdriver.Chrome(service=service, options=chrome_options)
+
+def login_to_linkedin():
+    """Login to LinkedIn with provided credentials"""
+    driver.get("https://www.linkedin.com/login")
+    
+    # Wait for the login page to load
+    try:
+        username_field = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, "username"))
+        )
+        username_field.send_keys(username)
+        
+        password_field = driver.find_element(By.ID, "password")
+        password_field.send_keys(password)
+        
+        login_button = driver.find_element(By.XPATH, "//button[@type='submit']")
+        login_button.click()
+        
+        # Wait for the home page to load
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "global-nav__content"))
+        )
+        print("Successfully logged in to LinkedIn")
+        return True
+    except Exception as e:
+        print(f"Error during login: {e}")
+        return False
+
+def navigate_to_job(job_url):
+    """Navigate to the specific job posting"""
+    driver.get(job_url)
+    try:
+        # Wait for the job details to load
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "jobs-unified-top-card"))
+        )
+        print(f"Successfully navigated to job posting: {job_url}")
+        return True
+    except Exception as e:
+        print(f"Error navigating to job: {e}")
+        return False
+
+def apply_to_job():
+    """Apply to the current job posting"""
+    try:
+        # Find and click the apply button
+        apply_button = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, ".jobs-apply-button"))
+        )
+        apply_button.click()
+        print("Clicked Apply button")
+        
+        # Wait for the application form to load
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "jobs-easy-apply-content"))
+        )
+        
+        # Process the application steps
+        process_application_steps()
+        
+        return True
+    except NoSuchElementException:
+        print("Apply button not found, may have already applied or using 'Easy Apply' not available")
+        return False
+    except ElementClickInterceptedException:
+        print("Cannot click Apply button, might be obstructed")
+        return False
+    except Exception as e:
+        print(f"Error during application: {e}")
+        return False
+
+def process_application_steps():
+    """Process the multi-step application form"""
+    current_step = 1
+    max_steps = 20  # Safety mechanism to avoid infinite loops
+    
+    while current_step <= max_steps:
+        try:
+            # Wait for form elements to load
+            time.sleep(2)
+            
+            # Look for input fields in the current step
+            try:
+                input_fields = driver.find_elements(By.CSS_SELECTOR, "input:not([type='hidden']), textarea, select")
+                for field in input_fields:
+                    field_id = field.get_attribute("id") or ""
+                    field_name = field.get_attribute("name") or ""
+                    field_type = field.get_attribute("type") or ""
+                    field_aria_label = field.get_attribute("aria-label") or ""
+                    
+                    # Skip if field is already filled
+                    if field.get_attribute("value"):
+                        continue
+                    
+                    # Handle different types of fields
+                    if "phone" in field_id.lower() or "phone" in field_name.lower() or "phone" in field_aria_label.lower():
+                        field.send_keys("${config.profile.phone}")
+                    elif "resume" in field_id.lower() and field_type == "file" and resume_path:
+                        field.send_keys(resume_path)
+                    elif field_type == "radio" or field_type == "checkbox":
+                        # Handle screening questions
+                        question_text = ""
+                        try:
+                            # Try to find the question associated with this radio/checkbox
+                            question_element = driver.find_element(By.XPATH, f"//label[@for='{field_id}']/../..")
+                            question_text = question_element.text.lower()
+                        except:
+                            pass
+                        
+                        # Auto select favorable answers
+                        if any(term in question_text for term in ["years of experience", "how many years"]):
+                            if "${config.profile.yearsOfCoding}" in question_text:
+                                field.click()
+                        elif any(term in question_text for term in ["eligible", "authorized", "legally", "work authorization"]):
+                            if not field.is_selected() and "yes" in field_aria_label.lower():
+                                field.click()
+                        elif "sponsorship" in question_text:
+                            need_sponsorship = ${config.profile.needVisa}
+                            if (need_sponsorship and "yes" in field_aria_label.lower()) or (not need_sponsorship and "no" in field_aria_label.lower()):
+                                field.click()
+                    elif field_type == "select-one":
+                        # Handle dropdown selections
+                        try:
+                            field.click()
+                            time.sleep(0.5)
+                            # Try to select a favorable option
+                            options = field.find_elements(By.TAG_NAME, "option")
+                            # Prefer higher experience levels, "yes" for positive questions
+                            for option in options:
+                                option_text = option.text.lower()
+                                if option_text and option_text != "select an option":
+                                    option.click()
+                                    break
+                        except:
+                            pass
+            except Exception as e:
+                print(f"Error processing fields: {e}")
+            
+            # Look for the Next or Submit button
+            try:
+                # Check for "Review" or "Submit" button first (final step)
+                final_buttons = driver.find_elements(By.XPATH, "//button[contains(text(), 'Review') or contains(text(), 'Submit') or contains(text(), 'Apply')]")
+                if final_buttons:
+                    final_buttons[0].click()
+                    print("Clicked final submit button")
+                    time.sleep(2)
+                    # Look for confirmation buttons in follow-up dialogs
+                    try:
+                        confirm_buttons = driver.find_elements(By.XPATH, "//button[contains(text(), 'Submit') or contains(text(), 'Confirm') or contains(text(), 'Done')]")
+                        if confirm_buttons:
+                            confirm_buttons[0].click()
+                            print("Clicked confirmation button")
+                    except:
+                        pass
+                    break
+                else:
+                    # Look for "Next" or "Continue" button
+                    next_buttons = driver.find_elements(By.XPATH, "//button[contains(text(), 'Next') or contains(text(), 'Continue')]")
+                    if next_buttons:
+                        next_buttons[0].click()
+                        print(f"Moved to step {current_step + 1}")
+                        current_step += 1
+                    else:
+                        # If no obvious buttons, look for any footer button that might advance
+                        footer_buttons = driver.find_elements(By.CSS_SELECTOR, "footer button, .artdeco-modal__actionbar button")
+                        if footer_buttons:
+                            for button in footer_buttons:
+                                if button.is_enabled() and button.is_displayed():
+                                    button.click()
+                                    print(f"Clicked a footer button to advance")
+                                    current_step += 1
+                                    break
+                        else:
+                            print("Could not find next button, application process may be complete")
+                            break
+            except Exception as e:
+                print(f"Error finding navigation buttons: {e}")
+                break
+                
+            time.sleep(1.5)
+        except Exception as e:
+            print(f"Unexpected error in step {current_step}: {e}")
+            break
+    
+    print("Application process completed")
+
+# Main execution flow
+try:
+    if login_to_linkedin():
+        # Use the URL that was provided when the script was created
+        job_url = "JOB_URL_PLACEHOLDER"
+        
+        if navigate_to_job(job_url):
+            if apply_to_job():
+                print("Successfully applied to job!")
+            else:
+                print("Could not complete application process")
+        else:
+            print("Could not navigate to job posting")
+    else:
+        print("Login failed, could not proceed")
+except Exception as e:
+    print(f"An error occurred: {e}")
+finally:
+    # Wait a moment before closing
+    time.sleep(5)
+    driver.quit()
+  `;
 }
 
 // New function for Indeed automation script

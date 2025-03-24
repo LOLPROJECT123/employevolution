@@ -7,14 +7,15 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Zap, FileCode, Settings, PlusCircle, Download, Play } from "lucide-react";
+import { Zap, FileCode, Settings, PlusCircle, Download, Play, Linkedin } from "lucide-react";
 import { toast } from "sonner";
 import AutomationSettings from "@/components/AutomationSettings";
 import { 
   detectPlatform,
   startAutomation,
   getHandshakeAutomationScript,
-  getIndeedAutomationScript
+  getIndeedAutomationScript,
+  getLinkedInAutomationScript
 } from '@/utils/automationUtils';
 
 const JobApplicationAutomation = () => {
@@ -93,6 +94,11 @@ const JobApplicationAutomation = () => {
       } else if (platform === 'indeed') {
         scriptContent = getIndeedAutomationScript(config);
         fileName = 'indeed_automation.py';
+      } else if (platform === 'linkedin') {
+        scriptContent = getLinkedInAutomationScript(config);
+        fileName = 'linkedin_automation.py';
+        // Replace placeholder with actual job URL
+        scriptContent = scriptContent.replace('JOB_URL_PLACEHOLDER', jobUrl);
       } else {
         toast.info("Script generation not implemented", {
           description: `Automation script for ${platform} is not yet implemented.`
@@ -128,7 +134,7 @@ const JobApplicationAutomation = () => {
           Job Application Automation
         </CardTitle>
         <CardDescription>
-          Automate your job application process across multiple platforms
+          Automate your job application process across multiple platforms including LinkedIn
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -145,7 +151,7 @@ const JobApplicationAutomation = () => {
                 <div className="flex gap-2 mt-1.5">
                   <Input 
                     id="job-url" 
-                    placeholder="https://indeed.com/job/..." 
+                    placeholder="https://www.linkedin.com/jobs/view/..." 
                     value={jobUrl}
                     onChange={(e) => setJobUrl(e.target.value)}
                     className="flex-grow"
@@ -156,7 +162,7 @@ const JobApplicationAutomation = () => {
                   </Button>
                 </div>
                 <p className="text-sm text-muted-foreground mt-1.5">
-                  Paste a job URL from Handshake, LinkedIn, Indeed, or Glassdoor
+                  Paste a job URL from LinkedIn, Handshake, Indeed, or Glassdoor
                 </p>
               </div>
               
@@ -177,6 +183,23 @@ const JobApplicationAutomation = () => {
                   <Download className="h-4 w-4" />
                   Download Script for This Job
                 </Button>
+              </div>
+              
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg space-y-3">
+                <h3 className="font-medium text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                  <Linkedin className="h-4 w-4" />
+                  LinkedIn Automation Features
+                </h3>
+                <p className="text-sm text-blue-600 dark:text-blue-300">
+                  The LinkedIn automation script includes:
+                </p>
+                <ul className="text-sm list-disc list-inside text-blue-600 dark:text-blue-300 pl-2 space-y-1">
+                  <li>Automated login to LinkedIn</li>
+                  <li>Navigation to the job posting</li>
+                  <li>Multi-step form completion</li>
+                  <li>Smart answering of screening questions</li>
+                  <li>Resume upload (if path is configured)</li>
+                </ul>
               </div>
               
               {!isInstalled && (

@@ -1,4 +1,3 @@
-
 import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -36,6 +35,9 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
       return false;
     }
   })();
+
+  // Get the platform type for job-specific automation options
+  const platform = job?.applyUrl ? detectPlatform(job.applyUrl) : null;
 
   if (!job) {
     return (
@@ -113,7 +115,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
       startAutomation(job.applyUrl, config);
       
       toast.success("Automation initiated", {
-        description: "The automation script will now apply to this job automatically. Please check the browser extension for details."
+        description: `The automation script will now apply to this job on ${platform || 'the job platform'}. Please check the browser extension for details.`
       });
       
       // Also mark as applied in our system
@@ -123,6 +125,19 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
         description: "There was an error starting the automation process."
       });
       console.error("Automation error:", error);
+    }
+  };
+
+  const getAutomationButtonText = () => {
+    switch(platform) {
+      case 'linkedin':
+        return "AutoApply with LinkedIn Script";
+      case 'indeed':
+        return "AutoApply with Indeed Script";
+      case 'handshake':
+        return "AutoApply with Handshake Script";
+      default:
+        return "AutoApply with Script";
     }
   };
 
@@ -430,7 +445,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
                 onClick={handleAutomatedApply}
               >
                 <Zap className="w-4 h-4 mr-2" />
-                AutoApply with Script
+                {getAutomationButtonText()}
               </Button>
               
               <div className="flex justify-end w-full">
