@@ -4,9 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { RefreshCwIcon, SearchIcon, DatabaseIcon } from "lucide-react";
+import { RefreshCwIcon, SearchIcon, DatabaseIcon, PlusIcon, XIcon } from "lucide-react";
 import { toast } from "sonner";
 import { JobScraperConfig } from "@/components/JobScraperConfig";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface JobSource {
   id: string;
@@ -23,6 +25,9 @@ export default function JobSourcesDisplay() {
   const [scrapingProgress, setScrapingProgress] = useState(0);
   const [totalJobsFound, setTotalJobsFound] = useState(0);
   const [newJobsFound, setNewJobsFound] = useState(0);
+  const [newSourceUrl, setNewSourceUrl] = useState('');
+  const [newSourceName, setNewSourceName] = useState('');
+  const [openAddDialog, setOpenAddDialog] = useState(false);
 
   useEffect(() => {
     // Load job sources from localStorage
@@ -115,6 +120,49 @@ export default function JobSourcesDisplay() {
     }
   };
   
+  const handleAddCustomSource = () => {
+    if (!newSourceName.trim() || !newSourceUrl.trim()) {
+      toast.error("Please enter both a name and URL for the new source");
+      return;
+    }
+
+    try {
+      // Validate URL
+      new URL(newSourceUrl);
+      
+      // Create unique ID from name
+      const newId = `custom-${newSourceName.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+      
+      // Check if ID already exists
+      if (jobSources.some(source => source.id === newId)) {
+        toast.error("A source with this name already exists");
+        return;
+      }
+      
+      const newSource: JobSource = {
+        id: newId,
+        name: newSourceName,
+        isActive: true,
+        category: 'custom'
+      };
+      
+      const updatedSources = [...jobSources, newSource];
+      setJobSources(updatedSources);
+      localStorage.setItem('jobSources', JSON.stringify(updatedSources));
+      
+      // Reset fields
+      setNewSourceName('');
+      setNewSourceUrl('');
+      setOpenAddDialog(false);
+      
+      toast.success("Custom job source added", {
+        description: `${newSourceName} has been added to your search sources`
+      });
+    } catch (e) {
+      toast.error("Please enter a valid URL");
+    }
+  };
+  
   const activeSourcesCount = jobSources.filter(source => source.isActive).length;
 
   return (
@@ -129,7 +177,57 @@ export default function JobSourcesDisplay() {
               Searching across {activeSourcesCount} platforms, {totalJobsFound} jobs found
             </CardDescription>
           </div>
-          <JobScraperConfig onConfigUpdate={handleSourceUpdate} />
+          <div className="flex gap-2">
+            <Dialog open={openAddDialog} onOpenChange={setOpenAddDialog}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="flex items-center gap-1">
+                  <PlusIcon className="h-3.5 w-3.5" />
+                  Add Source
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Add Custom Job Source</DialogTitle>
+                  <DialogDescription>
+                    Add a custom website to search for job opportunities
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <label htmlFor="sourceName" className="text-sm font-medium">
+                      Source Name
+                    </label>
+                    <Input
+                      id="sourceName"
+                      value={newSourceName}
+                      onChange={(e) => setNewSourceName(e.target.value)}
+                      placeholder="e.g., Company Careers Page"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="sourceUrl" className="text-sm font-medium">
+                      Source URL
+                    </label>
+                    <Input
+                      id="sourceUrl"
+                      value={newSourceUrl}
+                      onChange={(e) => setNewSourceUrl(e.target.value)}
+                      placeholder="https://example.com/careers"
+                    />
+                  </div>
+                  <div className="flex justify-end space-x-2 pt-4">
+                    <Button variant="outline" onClick={() => setOpenAddDialog(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleAddCustomSource}>
+                      Add Source
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <JobScraperConfig onConfigUpdate={handleSourceUpdate} />
+          </div>
         </div>
       </CardHeader>
       <CardContent>
