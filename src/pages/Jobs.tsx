@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import Navbar from "@/components/Navbar";
 import { Job } from "@/types/job";
@@ -10,12 +9,12 @@ import SwipeJobsInterface from "@/components/SwipeJobsInterface";
 import { SavedAndAppliedJobs } from "@/components/SavedAndAppliedJobs";
 import { toast } from "sonner";
 import AutomationSettings from "@/components/AutomationSettings";
-import { Zap } from "lucide-react"; // Changed import to use lucide-react
-import { Button } from "@/components/ui/button"; // Fixed import path
+import { Zap } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { 
   detectPlatform, 
   startAutomation 
-} from '@/utils/automationUtils'; // Added missing imports
+} from '@/utils/automationUtils';
 
 const sampleJobs: Job[] = [
   {
