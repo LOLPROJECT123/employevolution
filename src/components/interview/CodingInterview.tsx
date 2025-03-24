@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -293,7 +292,7 @@ const CODING_PROBLEMS = [
         id: "sd-3",
         title: "Design HashMap",
         difficulty: "Easy",
-        description: "Design a HashMap without using any built-in hash table libraries. Implement the MyHashMap class: MyHashMap() initializes the object with an empty map. void put(int key, int value) inserts a (key, value) pair into the HashMap. If the key already exists in the map, update the corresponding value. int get(int key) returns the value to which the specified key is mapped, or -1 if this map contains no mapping for the key. void remove(key) removes the key and its corresponding value if the map contains the mapping for the key.",
+        description: "Design a HashMap without using any built-in hash table libraries. Implement the MyHashMap class: MyHashMap() initializes the object with an empty map. void put(int key, int value) inserts a (key, value) pair into the HashMap. int get(int key) returns the value to which the specified key is mapped, or -1 if this map contains no mapping for the key. void remove(key) removes the key and its corresponding value if the map contains the mapping for the key.",
         example: "Input:\n['MyHashMap', 'put', 'put', 'get', 'get', 'put', 'get', 'remove', 'get']\n[[], [1, 1], [2, 2], [1], [3], [2, 1], [2], [2], [2]]\nOutput:\n[null, null, null, 1, -1, null, 1, null, -1]",
         solution: "class MyHashMap {\n  constructor() {\n    this.keyRange = 769; // Prime number for better distribution\n    this.buckets = new Array(this.keyRange).fill().map(() => []);\n  }\n  \n  hash(key) {\n    return key % this.keyRange;\n  }\n  \n  put(key, value) {\n    const index = this.hash(key);\n    const bucket = this.buckets[index];\n    \n    // Search for the key\n    for (let i = 0; i < bucket.length; i++) {\n      const [k, v] = bucket[i];\n      if (k === key) {\n        // Update existing key\n        bucket[i][1] = value;\n        return;\n      }\n    }\n    \n    // Key doesn't exist, add new pair\n    bucket.push([key, value]);\n  }\n  \n  get(key) {\n    const index = this.hash(key);\n    const bucket = this.buckets[index];\n    \n    for (const [k, v] of bucket) {\n      if (k === key) {\n        return v;\n      }\n    }\n    \n    return -1; // Key not found\n  }\n  \n  remove(key) {\n    const index = this.hash(key);\n    const bucket = this.buckets[index];\n    \n    for (let i = 0; i < bucket.length; i++) {\n      const [k, v] = bucket[i];\n      if (k === key) {\n        bucket.splice(i, 1);\n        return;\n      }\n    }\n  }\n}"
       }
@@ -321,12 +320,12 @@ const CodingInterview = () => {
     microphone: false,
     screen: false,
   });
+  const [selectedCompany, setSelectedCompany] = useState<string>("Generic Interview");
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   
-  // Reset problem selection when category changes
   useEffect(() => {
     const categoryProblems = CODING_PROBLEMS.find(c => c.category === selectedCategory)?.problems || [];
     if (categoryProblems.length > 0) {
@@ -336,7 +335,6 @@ const CodingInterview = () => {
     }
   }, [selectedCategory]);
   
-  // Get current problem details
   const getCurrentProblem = () => {
     for (const category of CODING_PROBLEMS) {
       const problem = category.problems.find(p => p.id === selectedProblem);
@@ -347,10 +345,8 @@ const CodingInterview = () => {
   
   const currentProblem = getCurrentProblem();
   
-  // Get permission status for media devices
   const checkPermissions = async () => {
     try {
-      // Check camera and microphone
       const mediaPermission = await navigator.permissions.query({
         name: "camera" as PermissionName,
       });
@@ -410,7 +406,6 @@ const CodingInterview = () => {
         video: true,
       });
       
-      // Combine screen and camera streams
       if (streamRef.current) {
         const tracks = [...streamRef.current.getTracks(), ...screenStream.getTracks()];
         streamRef.current = new MediaStream(tracks);
@@ -460,7 +455,6 @@ const CodingInterview = () => {
       const blob = new Blob(chunks, { type: "video/webm" });
       const url = URL.createObjectURL(blob);
       
-      // Create download link
       const a = document.createElement("a");
       a.style.display = "none";
       a.href = url;
@@ -468,7 +462,6 @@ const CodingInterview = () => {
       document.body.appendChild(a);
       a.click();
       
-      // Clean up
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     };
@@ -482,7 +475,6 @@ const CodingInterview = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       
-      // Stop all tracks
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
         streamRef.current = null;
@@ -738,7 +730,6 @@ const CodingInterview = () => {
         </CardFooter>
       </Card>
       
-      {/* Preparation Dialog */}
       <Dialog open={isPreparing} onOpenChange={setIsPreparing}>
         <DialogContent>
           <DialogHeader>
