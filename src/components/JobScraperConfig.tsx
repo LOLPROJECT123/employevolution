@@ -146,7 +146,7 @@ export const JobScraperConfig = ({ onConfigUpdate }: JobScraperConfigProps) => {
 
   const handleSliderChange = (values: number[]) => {
     if (values.length > 0) {
-      setRefreshInterval(Number(values[0]));
+      setRefreshInterval(values[0]);
     }
   };
 

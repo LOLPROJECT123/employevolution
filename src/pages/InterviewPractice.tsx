@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import BehavioralInterview from "@/components/interview/BehavioralInterview";
@@ -181,187 +180,187 @@ const leetcodeProblems = [
   {
     category: "Arrays & Hashing",
     problems: [
-      // Easy (at least 2)
+      // Easy (exactly 2)
       "Two Sum", "Contains Duplicate", 
-      // Medium (at least 2)
+      // Medium (exactly 2)
       "Group Anagrams", "Top K Frequent Elements", 
-      // Hard (at least 2)
+      // Hard (exactly 2)
       "First Missing Positive", "Longest Duplicate Substring"
     ]
   },
   {
     category: "Two Pointers",
     problems: [
-      // Easy (at least 2)
+      // Easy (exactly 2)
       "Valid Palindrome", "Merge Sorted Array", 
-      // Medium (at least 2)
+      // Medium (exactly 2)
       "3Sum", "Container With Most Water", 
-      // Hard (at least 2)
+      // Hard (exactly 2)
       "Trapping Rain Water", "Minimum Window Substring"
     ]
   },
   {
     category: "Sliding Window",
     problems: [
-      // Easy (at least 2)
+      // Easy (exactly 2)
       "Best Time to Buy and Sell Stock", "Maximum Average Subarray I", 
-      // Medium (at least 2)
+      // Medium (exactly 2)
       "Longest Substring Without Repeating Characters", "Permutation in String", 
-      // Hard (at least 2)
+      // Hard (exactly 2)
       "Minimum Window Substring", "Sliding Window Maximum"
     ]
   },
   {
     category: "Stack",
     problems: [
-      // Easy (at least 2)
+      // Easy (exactly 2)
       "Valid Parentheses", "Min Stack", 
-      // Medium (at least 2)
+      // Medium (exactly 2)
       "Evaluate Reverse Polish Notation", "Daily Temperatures", 
-      // Hard (at least 2)
+      // Hard (exactly 2)
       "Largest Rectangle in Histogram", "Basic Calculator"
     ]
   },
   {
     category: "Binary Search",
     problems: [
-      // Easy (at least 2)
+      // Easy (exactly 2)
       "Binary Search", "Sqrt(x)", 
-      // Medium (at least 2)
+      // Medium (exactly 2)
       "Search in Rotated Sorted Array", "Find First and Last Position of Element in Sorted Array", 
-      // Hard (at least 2)
+      // Hard (exactly 2)
       "Median of Two Sorted Arrays", "Split Array Largest Sum"
     ]
   },
   {
     category: "Linked Lists",
     problems: [
-      // Easy (at least 2)
+      // Easy (exactly 2)
       "Reverse Linked List", "Merge Two Sorted Lists", 
-      // Medium (at least 2)
+      // Medium (exactly 2)
       "Remove Nth Node From End of List", "Reorder List", 
-      // Hard (at least 2)
+      // Hard (exactly 2)
       "Merge k Sorted Lists", "Reverse Nodes in k-Group"
     ]
   },
   {
     category: "Trees",
     problems: [
-      // Easy (at least 2)
+      // Easy (exactly 2)
       "Invert Binary Tree", "Maximum Depth of Binary Tree", 
-      // Medium (at least 2)
+      // Medium (exactly 2)
       "Binary Tree Level Order Traversal", "Validate Binary Search Tree", 
-      // Hard (at least 2)
+      // Hard (exactly 2)
       "Binary Tree Maximum Path Sum", "Serialize and Deserialize Binary Tree"
     ]
   },
   {
     category: "Tries",
     problems: [
-      // Easy (at least 2)
-      "Implement Trie (Prefix Tree)", "Longest Common Prefix", 
-      // Medium (at least 2)
-      "Design Add and Search Words Data Structure", "Map Sum Pairs", 
-      // Hard (at least 2)
+      // Easy (exactly 2)
+      "Implement Trie (Prefix Tree)", "Design Add and Search Words Data Structure", 
+      // Medium (exactly 2)
+      "Replace Words", "Map Sum Pairs", 
+      // Hard (exactly 2)
       "Word Search II", "Stream of Characters"
     ]
   },
   {
     category: "Heap / Priority Queue",
     problems: [
-      // Easy (at least 2)
+      // Easy (exactly 2)
       "Kth Largest Element in a Stream", "Last Stone Weight", 
-      // Medium (at least 2)
+      // Medium (exactly 2)
       "K Closest Points to Origin", "Top K Frequent Elements", 
-      // Hard (at least 2)
+      // Hard (exactly 2)
       "Find Median from Data Stream", "Merge K Sorted Lists"
     ]
   },
   {
     category: "Backtracking",
     problems: [
-      // Easy (at least 2)
+      // Easy (exactly 2)
       "Letter Case Permutation", "Binary Watch", 
-      // Medium (at least 2)
+      // Medium (exactly 2)
       "Subsets", "Permutations", 
-      // Hard (at least 2)
+      // Hard (exactly 2)
       "N-Queens", "Sudoku Solver"
     ]
   },
   {
     category: "Graphs",
     problems: [
-      // Easy (at least 2)
+      // Easy (exactly 2)
       "Flood Fill", "Find the Town Judge", 
-      // Medium (at least 2)
+      // Medium (exactly 2)
       "Number of Islands", "Course Schedule", 
-      // Hard (at least 2)
+      // Hard (exactly 2)
       "Alien Dictionary", "Word Ladder"
     ]
   },
   {
     category: "Dynamic Programming",
     problems: [
-      // Easy (at least 2)
+      // Easy (exactly 2)
       "Climbing Stairs", "Min Cost Climbing Stairs", 
-      // Medium (at least 2)
+      // Medium (exactly 2)
       "Unique Paths", "Coin Change", 
-      // Hard (at least 2)
+      // Hard (exactly 2)
       "Regular Expression Matching", "Burst Balloons"
     ]
   },
   {
     category: "Greedy",
     problems: [
-      // Easy (at least 2)
+      // Easy (exactly 2)
       "Maximum Subarray", "Assign Cookies", 
-      // Medium (at least 2)
+      // Medium (exactly 2)
       "Jump Game", "Gas Station", 
-      // Hard (at least 2)
+      // Hard (exactly 2)
       "Candy", "Jump Game II"
     ]
   },
   {
     category: "Intervals",
     problems: [
-      // Easy (at least 2)
+      // Easy (exactly 2)
       "Meeting Rooms", "Teemo Attacking", 
-      // Medium (at least 2)
+      // Medium (exactly 2)
       "Merge Intervals", "Non-overlapping Intervals", 
-      // Hard (at least 2)
+      // Hard (exactly 2)
       "Minimum Interval to Include Each Query", "Employee Free Time"
     ]
   },
   {
     category: "Math & Geometry",
     problems: [
-      // Easy (at least 2)
+      // Easy (exactly 2)
       "Palindrome Number", "Roman to Integer", 
-      // Medium (at least 2)
+      // Medium (exactly 2)
       "Rotate Image", "Spiral Matrix", 
-      // Hard (at least 2)
+      // Hard (exactly 2)
       "Max Points on a Line", "Basic Calculator"
     ]
   },
   {
     category: "Bit Manipulation",
     problems: [
-      // Easy (at least 2)
+      // Easy (exactly 2)
       "Number of 1 Bits", "Counting Bits", 
-      // Medium (at least 2)
+      // Medium (exactly 2)
       "Single Number II", "Bitwise AND of Numbers Range", 
-      // Hard (at least 2)
+      // Hard (exactly 2)
       "Maximum XOR of Two Numbers in an Array", "Minimum Number of Flips to Convert Binary Matrix to Zero Matrix"
     ]
   },
   {
     category: "System Design",
     problems: [
-      // Easy (at least 2)
+      // Easy (exactly 2)
       "Design HashMap", "Design Linked List", 
-      // Medium (at least 2)
+      // Medium (exactly 2)
       "Design Twitter", "LRU Cache", 
-      // Hard (at least 2)
+      // Hard (exactly 2)
       "LFU Cache", "Design Search Autocomplete System"
     ]
   }
@@ -577,3 +576,4 @@ const InterviewPractice = () => {
 };
 
 export default InterviewPractice;
+
