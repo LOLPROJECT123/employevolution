@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import {
@@ -64,7 +63,6 @@ export interface JobScraperConfigProps {
 
 export const JobScraperConfig = ({ onConfigUpdate }: JobScraperConfigProps) => {
   const [sources, setSources] = useState(jobSources);
-  // Ensure refreshInterval is initialized as a number, not a string
   const [refreshInterval, setRefreshInterval] = useState<number>(24);
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
@@ -93,7 +91,6 @@ export const JobScraperConfig = ({ onConfigUpdate }: JobScraperConfigProps) => {
     toast.success("Refreshing job listings", {
       description: "Fetching new jobs from all enabled sources"
     });
-    // This would trigger a real job scraping process in production
   };
   
   const handleAddCustomCompany = () => {
@@ -104,7 +101,6 @@ export const JobScraperConfig = ({ onConfigUpdate }: JobScraperConfigProps) => {
       return;
     }
     
-    // Validate URL
     try {
       new URL(customCompanyUrl);
     } catch (error) {
@@ -116,7 +112,6 @@ export const JobScraperConfig = ({ onConfigUpdate }: JobScraperConfigProps) => {
     
     const customCompanyId = customCompanyName.toLowerCase().replace(/\s+/g, '-');
     
-    // Check if company already exists
     if (sources.some(source => source.id === customCompanyId)) {
       toast.error("Company already exists", {
         description: "This company is already in your sources list"
@@ -237,7 +232,7 @@ export const JobScraperConfig = ({ onConfigUpdate }: JobScraperConfigProps) => {
             <Slider
               id="refresh-interval"
               value={[refreshInterval]}
-              onValueChange={(value) => setRefreshInterval(value[0])}
+              onValueChange={(values) => setRefreshInterval(values[0])}
               min={1}
               max={72}
               step={1}
