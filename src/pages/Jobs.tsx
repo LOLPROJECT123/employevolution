@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import Navbar from "@/components/Navbar";
 import { Job } from "@/types/job";
@@ -246,22 +245,24 @@ const Jobs = () => {
             </div>
           </div>
           
-          <div className="w-full mb-6">
-            <JobSourcesDisplay />
+          <div className="space-y-6">
+            <div className="w-full">
+              <JobSourcesDisplay />
+            </div>
+            
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                <h2 className="font-semibold text-lg">Filter Jobs</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Narrow down your search</p>
+              </div>
+              <div className="p-4">
+                <JobFiltersSection />
+              </div>
+            </div>
           </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
             <div className="lg:col-span-3 space-y-6">
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                  <h2 className="font-semibold text-lg">Filter Jobs</h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Narrow down your search</p>
-                </div>
-                <div className="p-4">
-                  <JobFiltersSection />
-                </div>
-              </div>
-              
               {isMobile && (
                 <div className="space-y-3 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
                   <button 
