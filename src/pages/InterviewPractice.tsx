@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import BehavioralInterview from "@/components/interview/BehavioralInterview";
@@ -180,186 +181,188 @@ const leetcodeProblems = [
   {
     category: "Arrays & Hashing",
     problems: [
-      "Two Sum", "Contains Duplicate", "Valid Anagram", "Group Anagrams", 
-      "Top K Frequent Elements", "Product of Array Except Self", "Valid Sudoku",
-      "Encode and Decode Strings", "Longest Consecutive Sequence", "Sort Colors",
-      "Majority Element", "Find All Numbers Disappeared in an Array", "Single Number",
-      "Find All Duplicates in an Array", "Subarray Sum Equals K"
+      // Easy (at least 2)
+      "Two Sum", "Contains Duplicate", 
+      // Medium (at least 2)
+      "Group Anagrams", "Top K Frequent Elements", 
+      // Hard (at least 2)
+      "First Missing Positive", "Longest Duplicate Substring"
     ]
   },
   {
     category: "Two Pointers",
     problems: [
-      "Valid Palindrome", "Two Sum II", "3Sum", "Container With Most Water", 
-      "Trapping Rain Water", "3Sum Closest", "4Sum", "Remove Duplicates from Sorted Array",
-      "Move Zeroes", "Reverse String", "Sort Colors", "Squares of a Sorted Array",
-      "Backspace String Compare"
+      // Easy (at least 2)
+      "Valid Palindrome", "Merge Sorted Array", 
+      // Medium (at least 2)
+      "3Sum", "Container With Most Water", 
+      // Hard (at least 2)
+      "Trapping Rain Water", "Minimum Window Substring"
     ]
   },
   {
     category: "Sliding Window",
     problems: [
-      "Best Time to Buy and Sell Stock", "Longest Substring Without Repeating Characters", 
-      "Longest Repeating Character Replacement", "Permutation in String", 
-      "Minimum Window Substring", "Sliding Window Maximum", "Find All Anagrams in a String",
-      "Maximum Sum Subarray of Size K", "Fruit Into Baskets", "Subarrays with K Different Integers",
-      "Max Consecutive Ones III"
+      // Easy (at least 2)
+      "Best Time to Buy and Sell Stock", "Maximum Average Subarray I", 
+      // Medium (at least 2)
+      "Longest Substring Without Repeating Characters", "Permutation in String", 
+      // Hard (at least 2)
+      "Minimum Window Substring", "Sliding Window Maximum"
     ]
   },
   {
     category: "Stack",
     problems: [
-      "Valid Parentheses", "Min Stack", "Evaluate Reverse Polish Notation", 
-      "Generate Parentheses", "Daily Temperatures", "Car Fleet", 
-      "Largest Rectangle in Histogram", "Implement Queue using Stacks", "Asteroid Collision",
-      "Next Greater Element I", "Decode String", "Remove All Adjacent Duplicates in String II",
-      "Basic Calculator II"
+      // Easy (at least 2)
+      "Valid Parentheses", "Min Stack", 
+      // Medium (at least 2)
+      "Evaluate Reverse Polish Notation", "Daily Temperatures", 
+      // Hard (at least 2)
+      "Largest Rectangle in Histogram", "Basic Calculator"
     ]
   },
   {
     category: "Binary Search",
     problems: [
-      "Binary Search", "Search a 2D Matrix", "Koko Eating Bananas", 
-      "Find Minimum in Rotated Sorted Array", "Search in Rotated Sorted Array", 
-      "Time Based Key-Value Store", "Median of Two Sorted Arrays", "Capacity To Ship Packages",
-      "Split Array Largest Sum", "Find First and Last Position of Element in Sorted Array",
-      "Peak Index in a Mountain Array", "Search in a Sorted Array of Unknown Size",
-      "Find Peak Element", "Count Complete Tree Nodes"
+      // Easy (at least 2)
+      "Binary Search", "Sqrt(x)", 
+      // Medium (at least 2)
+      "Search in Rotated Sorted Array", "Find First and Last Position of Element in Sorted Array", 
+      // Hard (at least 2)
+      "Median of Two Sorted Arrays", "Split Array Largest Sum"
     ]
   },
   {
     category: "Linked Lists",
     problems: [
-      "Reverse Linked List", "Merge Two Sorted Lists", "Reorder List", 
-      "Remove Nth Node From End of List", "Copy List with Random Pointer", 
-      "Add Two Numbers", "Linked List Cycle", "Find the Duplicate Number", 
-      "LRU Cache", "Merge k Sorted Lists", "Palindrome Linked List", "Remove Linked List Elements",
-      "Swap Nodes in Pairs", "Odd Even Linked List", "Sort List",
-      "Intersection of Two Linked Lists", "Remove Duplicates from Sorted List"
+      // Easy (at least 2)
+      "Reverse Linked List", "Merge Two Sorted Lists", 
+      // Medium (at least 2)
+      "Remove Nth Node From End of List", "Reorder List", 
+      // Hard (at least 2)
+      "Merge k Sorted Lists", "Reverse Nodes in k-Group"
     ]
   },
   {
     category: "Trees",
     problems: [
-      "Invert Binary Tree", "Maximum Depth of Binary Tree", "Same Tree", 
-      "Subtree of Another Tree", "Lowest Common Ancestor of a BST", 
+      // Easy (at least 2)
+      "Invert Binary Tree", "Maximum Depth of Binary Tree", 
+      // Medium (at least 2)
       "Binary Tree Level Order Traversal", "Validate Binary Search Tree", 
-      "Kth Smallest Element in a BST", "Construct Binary Tree from Preorder and Inorder Traversal", 
-      "Binary Tree Maximum Path Sum", "Serialize and Deserialize Binary Tree",
-      "Binary Tree Right Side View", "Path Sum", "Path Sum II", "Diameter of Binary Tree",
-      "Symmetric Tree", "Balanced Binary Tree", "Binary Tree Zigzag Level Order Traversal",
-      "Count Good Nodes in Binary Tree", "All Nodes Distance K in Binary Tree"
+      // Hard (at least 2)
+      "Binary Tree Maximum Path Sum", "Serialize and Deserialize Binary Tree"
     ]
   },
   {
     category: "Tries",
     problems: [
-      "Implement Trie (Prefix Tree)", "Design Add and Search Words Data Structure", 
-      "Word Search II", "Maximum XOR of Two Numbers in an Array", "Replace Words",
-      "Map Sum Pairs", "Design Search Autocomplete System", "Palindrome Pairs",
-      "Word Squares", "Stream of Characters"
+      // Easy (at least 2)
+      "Implement Trie (Prefix Tree)", "Longest Common Prefix", 
+      // Medium (at least 2)
+      "Design Add and Search Words Data Structure", "Map Sum Pairs", 
+      // Hard (at least 2)
+      "Word Search II", "Stream of Characters"
     ]
   },
   {
     category: "Heap / Priority Queue",
     problems: [
-      "Kth Largest Element in an Array", "Last Stone Weight", "K Closest Points to Origin", 
-      "Task Scheduler", "Design Twitter", "Find Median from Data Stream", "Merge K Sorted Lists",
-      "Top K Frequent Elements", "Sort Characters By Frequency", "Reorganize String",
-      "Furthest Building You Can Reach", "Maximum Frequency Stack", "Single-Threaded CPU",
-      "Seat Reservation Manager"
+      // Easy (at least 2)
+      "Kth Largest Element in a Stream", "Last Stone Weight", 
+      // Medium (at least 2)
+      "K Closest Points to Origin", "Top K Frequent Elements", 
+      // Hard (at least 2)
+      "Find Median from Data Stream", "Merge K Sorted Lists"
     ]
   },
   {
     category: "Backtracking",
     problems: [
-      "Subsets", "Combination Sum", "Permutations", "Subsets II", 
-      "Combination Sum II", "Word Search", "Palindrome Partitioning", 
-      "Letter Combinations of a Phone Number", "N-Queens", "Generate Parentheses",
-      "Sudoku Solver", "Restore IP Addresses", "Word Break", "Combinations",
-      "Permutations II", "Partition to K Equal Sum Subsets", "Matchsticks to Square",
-      "Combination Sum III"
+      // Easy (at least 2)
+      "Letter Case Permutation", "Binary Watch", 
+      // Medium (at least 2)
+      "Subsets", "Permutations", 
+      // Hard (at least 2)
+      "N-Queens", "Sudoku Solver"
     ]
   },
   {
     category: "Graphs",
     problems: [
-      "Number of Islands", "Clone Graph", "Pacific Atlantic Water Flow", 
-      "Course Schedule", "Number of Connected Components in an Undirected Graph", 
-      "Graph Valid Tree", "Word Ladder", "Reconstruct Itinerary", "Min Cost to Connect All Points", 
-      "Network Delay Time", "Swim in Rising Water", "Alien Dictionary", 
-      "Cheapest Flights Within K Stops", "Course Schedule II", "Redundant Connection",
-      "Accounts Merge", "Find the Town Judge", "Evaluate Division", "Path with Maximum Probability",
-      "Find Eventual Safe States", "Is Graph Bipartite", "Shortest Path in Binary Matrix",
-      "Surrounded Regions", "Minimum Height Trees"
+      // Easy (at least 2)
+      "Flood Fill", "Find the Town Judge", 
+      // Medium (at least 2)
+      "Number of Islands", "Course Schedule", 
+      // Hard (at least 2)
+      "Alien Dictionary", "Word Ladder"
     ]
   },
   {
     category: "Dynamic Programming",
     problems: [
-      "Climbing Stairs", "Min Cost Climbing Stairs", "House Robber", "House Robber II", 
-      "Longest Palindromic Substring", "Palindromic Substrings", "Decode Ways", 
-      "Coin Change", "Maximum Product Subarray", "Word Break", "Longest Increasing Subsequence", 
-      "Partition Equal Subset Sum", "Unique Paths", "Longest Common Subsequence", 
-      "Best Time to Buy and Sell Stock with Cooldown", "Coin Change 2", 
-      "Target Sum", "Interleaving String", "Longest Increasing Path in a Matrix", 
-      "Distinct Subsequences", "Edit Distance", "Burst Balloons", "Regular Expression Matching",
-      "Maximal Square", "Minimum Path Sum", "Triangle", "Arithmetic Slices",
-      "Minimum Cost For Tickets", "Maximum Subarray", "Count Different Palindromic Subsequences",
-      "Best Time to Buy and Sell Stock III", "Best Time to Buy and Sell Stock IV",
-      "Minimum Falling Path Sum", "Delete and Earn", "Jump Game VI"
+      // Easy (at least 2)
+      "Climbing Stairs", "Min Cost Climbing Stairs", 
+      // Medium (at least 2)
+      "Unique Paths", "Coin Change", 
+      // Hard (at least 2)
+      "Regular Expression Matching", "Burst Balloons"
     ]
   },
   {
     category: "Greedy",
     problems: [
-      "Maximum Subarray", "Jump Game", "Jump Game II", "Gas Station", 
-      "Hand of Straights", "Merge Triplets to Form Target Triplet", "Partition Labels", 
-      "Valid Parenthesis String", "Task Scheduler", "Minimum Number of Arrows to Burst Balloons",
-      "Non-overlapping Intervals", "Minimum Increment to Make Array Unique",
-      "Bag of Tokens", "Maximum Units on a Truck", "Broken Calculator",
-      "Maximize Sum Of Array After K Negations", "Minimum Deletions to Make Character Frequencies Unique"
+      // Easy (at least 2)
+      "Maximum Subarray", "Assign Cookies", 
+      // Medium (at least 2)
+      "Jump Game", "Gas Station", 
+      // Hard (at least 2)
+      "Candy", "Jump Game II"
     ]
   },
   {
     category: "Intervals",
     problems: [
-      "Insert Interval", "Merge Intervals", "Non-overlapping Intervals", 
-      "Meeting Rooms", "Meeting Rooms II", "Minimum Interval to Include Each Query",
-      "Employee Free Time", "Car Pooling", "Remove Covered Intervals",
-      "Data Stream as Disjoint Intervals", "Minimum Number of Arrows to Burst Balloons",
-      "Teemo Attacking", "Range Module", "Divide Intervals Into Minimum Number of Groups"
+      // Easy (at least 2)
+      "Meeting Rooms", "Teemo Attacking", 
+      // Medium (at least 2)
+      "Merge Intervals", "Non-overlapping Intervals", 
+      // Hard (at least 2)
+      "Minimum Interval to Include Each Query", "Employee Free Time"
     ]
   },
   {
     category: "Math & Geometry",
     problems: [
-      "Rotate Image", "Spiral Matrix", "Set Matrix Zeroes", "Happy Number", 
-      "Plus One", "Pow(x, n)", "Multiply Strings", "Detect Squares",
-      "Excel Sheet Column Number", "Factorial Trailing Zeroes", "Roman to Integer",
-      "Integer to Roman", "Max Points on a Line", "Valid Square", "Random Pick with Weight",
-      "Basic Calculator", "Robot Bounded in Circle", "Valid Triangle Number"
+      // Easy (at least 2)
+      "Palindrome Number", "Roman to Integer", 
+      // Medium (at least 2)
+      "Rotate Image", "Spiral Matrix", 
+      // Hard (at least 2)
+      "Max Points on a Line", "Basic Calculator"
     ]
   },
   {
     category: "Bit Manipulation",
     problems: [
-      "Single Number", "Number of 1 Bits", "Counting Bits", "Reverse Bits", 
-      "Missing Number", "Sum of Two Integers", "Reverse Integer", "Power of Two",
-      "Bitwise AND of Numbers Range", "Single Number II", "Power of Four",
-      "Convert a Number to Hexadecimal", "UTF-8 Validation", "Hamming Distance",
-      "Total Hamming Distance", "Binary Number with Alternating Bits", "Maximum XOR of Two Numbers in an Array"
+      // Easy (at least 2)
+      "Number of 1 Bits", "Counting Bits", 
+      // Medium (at least 2)
+      "Single Number II", "Bitwise AND of Numbers Range", 
+      // Hard (at least 2)
+      "Maximum XOR of Two Numbers in an Array", "Minimum Number of Flips to Convert Binary Matrix to Zero Matrix"
     ]
   },
   {
     category: "System Design",
     problems: [
-      "Design Twitter", "Design TinyURL", "Design Search Autocomplete System", 
-      "LRU Cache", "Time-Based Key-Value Store", "Design In-Memory File System",
-      "Design Browser History", "Design HashMap", "Design Underground System",
-      "Design a Leaderboard", "Design Add and Search Words Data Structure",
-      "Serialize and Deserialize Binary Tree", "Design Snake Game", "Design Bounded Blocking Queue", 
-      "LFU Cache", "Find Median from Data Stream", "Design a Food Rating System"
+      // Easy (at least 2)
+      "Design HashMap", "Design Linked List", 
+      // Medium (at least 2)
+      "Design Twitter", "LRU Cache", 
+      // Hard (at least 2)
+      "LFU Cache", "Design Search Autocomplete System"
     ]
   }
 ];
