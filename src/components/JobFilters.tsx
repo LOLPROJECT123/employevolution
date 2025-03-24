@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -50,13 +49,18 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { toast } from "@/hooks/use-toast";
+import { JobFilters } from "@/types/job";
 
 type JobFunctionType = string;
 type SkillType = string;
 type CompanyType = string;
 type JobTitleType = string;
 
-export const JobFiltersSection = () => {
+interface JobFiltersSectionProps {
+  onApplyFilters?: (filters: JobFilters) => void;
+}
+
+export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) => {
   // State for all filters
   const [jobFunctions, setJobFunctions] = useState<JobFunctionType[]>([]);
   const [skills, setSkills] = useState<SkillType[]>([]);
@@ -105,8 +109,37 @@ export const JobFiltersSection = () => {
 
   // Handle applying filters
   const handleApplyFilters = () => {
-    // In a real application, this would dispatch an action or call a callback
-    // to apply the filters to the job listings
+    // Create a filters object based on current state
+    const selectedJobTypes = Object.entries(jobTypes)
+      .filter(([_, selected]) => selected)
+      .map(([type]) => type);
+      
+    const selectedExperienceLevels = Object.entries(experienceLevels)
+      .filter(([_, selected]) => selected)
+      .map(([level]) => level);
+    
+    const filters: JobFilters = {
+      search: "",
+      location: location,
+      jobType: selectedJobTypes,
+      remote: remote,
+      experienceLevels: selectedExperienceLevels,
+      education: [],
+      salaryRange: salaryRange,
+      skills: skills,
+      companyTypes: [],
+      companySize: [],
+      benefits: [],
+      jobFunction: jobFunctions,
+      companies: companies,
+      title: jobTitles,
+    };
+    
+    // Call the callback function with the filters
+    if (onApplyFilters) {
+      onApplyFilters(filters);
+    }
+    
     setFiltersApplied(true);
     
     toast({
@@ -207,6 +240,23 @@ export const JobFiltersSection = () => {
       "executive": false
     });
     setFiltersApplied(false);
+    
+    // Apply reset filters if callback exists
+    if (onApplyFilters) {
+      onApplyFilters({
+        search: "",
+        location: "",
+        jobType: [],
+        remote: false,
+        experienceLevels: [],
+        education: [],
+        salaryRange: [0, 300000],
+        skills: [],
+        companyTypes: [],
+        companySize: [],
+        benefits: []
+      });
+    }
     
     toast({
       title: "Filters reset",

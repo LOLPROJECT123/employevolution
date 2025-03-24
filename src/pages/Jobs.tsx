@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import Navbar from "@/components/Navbar";
-import { Job } from "@/types/job";
+import { Job, JobFilters } from "@/types/job";
 import { JobDetailView } from "@/components/JobDetailView";
 import { JobFiltersSection } from "@/components/JobFilters";
 import { JobCard } from "@/components/JobCard";
@@ -115,6 +116,19 @@ const Jobs = () => {
   const isMobile = useIsMobile();
   const [viewMode, setViewMode] = useState<'list' | 'swipe'>(isMobile ? 'swipe' : 'list');
   const [showMyJobs, setShowMyJobs] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<JobFilters>({
+    search: "",
+    location: "",
+    jobType: [],
+    remote: false,
+    experienceLevels: [],
+    education: [],
+    salaryRange: [0, 300000],
+    skills: [],
+    companyTypes: [],
+    companySize: [],
+    benefits: []
+  });
 
   useEffect(() => {
     setViewMode(isMobile ? 'swipe' : 'list');
@@ -230,6 +244,75 @@ const Jobs = () => {
   const toggleMyJobs = () => {
     setShowMyJobs(!showMyJobs);
   };
+
+  // New function to apply filters
+  const applyFilters = (filters: JobFilters) => {
+    setActiveFilters(filters);
+    
+    // Filter jobs based on the provided filters
+    let newFilteredJobs = [...jobs];
+    
+    // Filter by location
+    if (filters.location) {
+      newFilteredJobs = newFilteredJobs.filter(job => 
+        job.location.toLowerCase().includes(filters.location.toLowerCase())
+      );
+    }
+    
+    // Filter by remote
+    if (filters.remote) {
+      newFilteredJobs = newFilteredJobs.filter(job => job.remote === true);
+    }
+    
+    // Filter by job type
+    if (filters.jobType && filters.jobType.length > 0) {
+      newFilteredJobs = newFilteredJobs.filter(job => 
+        filters.jobType.includes(job.type)
+      );
+    }
+    
+    // Filter by experience level
+    if (filters.experienceLevels && filters.experienceLevels.length > 0) {
+      newFilteredJobs = newFilteredJobs.filter(job => 
+        filters.experienceLevels.includes(job.level)
+      );
+    }
+    
+    // Filter by salary range
+    if (filters.salaryRange) {
+      newFilteredJobs = newFilteredJobs.filter(job => 
+        job.salary.min >= filters.salaryRange[0] && job.salary.max <= filters.salaryRange[1]
+      );
+    }
+    
+    // Filter by skills
+    if (filters.skills && filters.skills.length > 0) {
+      newFilteredJobs = newFilteredJobs.filter(job => 
+        filters.skills.some(skill => job.skills.includes(skill))
+      );
+    }
+    
+    // Filter by work model
+    if (filters.workModel && filters.workModel.length > 0) {
+      newFilteredJobs = newFilteredJobs.filter(job => 
+        job.workModel && filters.workModel.includes(job.workModel)
+      );
+    }
+    
+    // Update filtered jobs
+    setFilteredJobs(newFilteredJobs);
+    
+    // If no jobs match the filters, show a toast
+    if (newFilteredJobs.length === 0) {
+      toast.info("No jobs match your filters", {
+        description: "Try adjusting your search criteria to find more opportunities."
+      });
+    } else {
+      toast.success(`Found ${newFilteredJobs.length} matching jobs`, {
+        description: "Displaying jobs that match your search criteria."
+      });
+    }
+  };
   
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900/30">
@@ -256,7 +339,7 @@ const Jobs = () => {
                 <p className="text-sm text-gray-500 dark:text-gray-400">Narrow down your search</p>
               </div>
               <div className="p-4">
-                <JobFiltersSection />
+                <JobFiltersSection onApplyFilters={applyFilters} />
               </div>
             </div>
           </div>
