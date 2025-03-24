@@ -27,7 +27,12 @@ import {
   Search, 
   Plus, 
   XCircle,
-  Filter
+  Filter,
+  ChevronRight,
+  MapPin,
+  Building,
+  Briefcase,
+  Clock
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { JobFilters } from "@/types/job";
@@ -76,6 +81,11 @@ export function JobFiltersSection({
   const [selectedExperienceYears, setSelectedExperienceYears] = useState<[number, number]>([0, 11]);
   const [customSalary, setCustomSalary] = useState("");
   const [activeAccordion, setActiveAccordion] = useState<string[]>(["basic-job-criteria"]);
+  const [jobFunctionInput, setJobFunctionInput] = useState("");
+  const [locationInput, setLocationInput] = useState("Within US");
+  const [skillInput, setSkillInput] = useState("");
+  const [companyInput, setCompanyInput] = useState("");
+  const [titleInput, setTitleInput] = useState("");
 
   const handleSaveSearch = () => {
     if (!searchName.trim()) {
@@ -95,6 +105,58 @@ export function JobFiltersSection({
       title: "Search Saved",
       description: `Your search "${searchName}" has been saved.`
     });
+  };
+
+  const handleAddSkill = () => {
+    if (skillInput.trim()) {
+      const skills = [...filters.skills, skillInput.trim()];
+      onFiltersChange({ ...filters, skills });
+      setSkillInput("");
+      
+      toast({
+        title: "Skill Added",
+        description: `"${skillInput.trim()}" has been added to your skills filter.`
+      });
+    }
+  };
+
+  const handleAddCompany = () => {
+    if (companyInput.trim()) {
+      const companies = [...(filters.companies || []), companyInput.trim()];
+      onFiltersChange({ ...filters, companies });
+      setCompanyInput("");
+      
+      toast({
+        title: "Company Added",
+        description: `"${companyInput.trim()}" has been added to your company filter.`
+      });
+    }
+  };
+
+  const handleAddTitle = () => {
+    if (titleInput.trim()) {
+      const titles = [...(filters.title || []), titleInput.trim()];
+      onFiltersChange({ ...filters, title: titles });
+      setTitleInput("");
+      
+      toast({
+        title: "Title Added",
+        description: `"${titleInput.trim()}" has been added to your title filter.`
+      });
+    }
+  };
+
+  const handleAddJobFunction = () => {
+    if (jobFunctionInput.trim()) {
+      const jobFunction = [...(filters.jobFunction || []), jobFunctionInput.trim()];
+      onFiltersChange({ ...filters, jobFunction });
+      setJobFunctionInput("");
+      
+      toast({
+        title: "Job Function Added",
+        description: `"${jobFunctionInput.trim()}" has been added to your job function filter.`
+      });
+    }
   };
 
   const toggleJobType = (type: string) => {
@@ -329,20 +391,55 @@ export function JobFiltersSection({
                         <div className="flex items-center">
                           <span className="text-red-500 mr-1">*</span>
                           <span className="font-medium">Job Function</span>
-                          <span className="text-xs text-muted-foreground ml-2">(select from drop-down for best results)</span>
+                          <span className="text-xs text-muted-foreground ml-2">(select/enter your expected job function)</span>
                         </div>
-                        <Input 
-                          placeholder="Please select/enter your expected job function" 
-                          className="mt-2"
-                        />
-                        <p className="text-red-500 text-sm mt-1">Please select at least one job function</p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <Input 
+                            placeholder="E.g., Software Engineer, Data Scientist" 
+                            className="flex-1"
+                            value={jobFunctionInput}
+                            onChange={(e) => setJobFunctionInput(e.target.value)}
+                            icon={<Briefcase className="h-4 w-4" />}
+                          />
+                          <Button size="sm" onClick={handleAddJobFunction}>
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        {filters.jobFunction && filters.jobFunction.length > 0 ? (
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {filters.jobFunction.map((func) => (
+                              <div key={func} className="flex items-center bg-secondary/30 rounded-md px-3 py-1.5">
+                                <span className="text-sm">{func}</span>
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost" 
+                                  className="h-5 w-5 p-0 ml-1"
+                                  onClick={() => {
+                                    const jobFunction = filters.jobFunction?.filter(f => f !== func);
+                                    onFiltersChange({ ...filters, jobFunction });
+                                  }}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-red-500 text-sm mt-1">Please select at least one job function</p>
+                        )}
                       </div>
                       
                       {/* Excluded Title */}
                       <div>
                         <div className="flex justify-between">
                           <span className="font-medium">Excluded Title</span>
-                          <ChevronDown className="h-4 w-4" />
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            className="h-6 p-0"
+                          >
+                            <ChevronDown className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
 
@@ -366,7 +463,9 @@ export function JobFiltersSection({
                             </div>
                           ))}
                         </div>
-                        <p className="text-red-500 text-sm mt-1">Please select at least one job type.</p>
+                        {filters.jobType.length === 0 && (
+                          <p className="text-red-500 text-sm mt-1">Please select at least one job type.</p>
+                        )}
                       </div>
 
                       {/* Work Model */}
@@ -393,14 +492,21 @@ export function JobFiltersSection({
                             </div>
                           ))}
                         </div>
-                        <p className="text-red-500 text-sm mt-1">Please select at least one work model.</p>
+                        {!filters.workModel?.length && (
+                          <p className="text-red-500 text-sm mt-1">Please select at least one work model.</p>
+                        )}
                       </div>
 
                       {/* Location */}
                       <div>
                         <div className="font-medium mb-2">Location</div>
                         <div className="flex items-center gap-2">
-                          <Input defaultValue="Within US" className="flex-grow" />
+                          <Input 
+                            value={locationInput}
+                            onChange={(e) => setLocationInput(e.target.value)}
+                            className="flex-grow" 
+                            icon={<MapPin className="h-4 w-4" />}
+                          />
                           <Select defaultValue="50">
                             <SelectTrigger className="w-24">
                               <SelectValue placeholder="Miles" />
@@ -444,11 +550,31 @@ export function JobFiltersSection({
                               <Label htmlFor={`exp-level-${level.id}`} className="text-sm cursor-pointer">
                                 {level.label}
                               </Label>
-                              {level.info && <Info className="h-4 w-4 text-muted-foreground" />}
+                              {level.info && (
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
+                                      <Info className="h-4 w-4 text-muted-foreground" />
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-64 p-3">
+                                    <p className="text-xs">
+                                      {level.id === "intern" && "Roles suitable for students or recent graduates with little to no professional experience."}
+                                      {level.id === "entry" && "Roles requiring 0-2 years of experience, suitable for those starting their career."}
+                                      {level.id === "mid" && "Roles requiring 2-5 years of experience, with established skills in the field."}
+                                      {level.id === "senior" && "Roles requiring 5+ years of experience, with deep expertise and ability to lead projects."}
+                                      {level.id === "lead" && "Senior technical or leadership roles requiring 8+ years of experience."}
+                                      {level.id === "director" && "Executive or director-level positions with significant leadership responsibilities."}
+                                    </p>
+                                  </PopoverContent>
+                                </Popover>
+                              )}
                             </div>
                           ))}
                         </div>
-                        <p className="text-red-500 text-sm mt-1">Please select at least one experience level.</p>
+                        {filters.experienceLevels.length === 0 && (
+                          <p className="text-red-500 text-sm mt-1">Please select at least one experience level.</p>
+                        )}
                       </div>
 
                       {/* Required Experience Years */}
@@ -465,6 +591,10 @@ export function JobFiltersSection({
                             step={1}
                             onValueChange={handleExperienceYearsChange}
                           />
+                          <div className="flex justify-between mt-1">
+                            <span className="text-xs">{selectedExperienceYears[0]} years</span>
+                            <span className="text-xs">{selectedExperienceYears[1]} years</span>
+                          </div>
                         </div>
                       </div>
 
@@ -488,6 +618,7 @@ export function JobFiltersSection({
                               className="justify-start h-9"
                               onClick={() => handleDatePostedChange(option.id)}
                             >
+                              <Clock className="h-4 w-4 mr-1" />
                               {option.label}
                             </Button>
                           ))}
@@ -507,7 +638,7 @@ export function JobFiltersSection({
                       {/* Minimum Annual Salary */}
                       <div>
                         <div className="flex justify-between">
-                          <span className="font-medium">Minimum Annual Salary $0k/yr</span>
+                          <span className="font-medium">Minimum Annual Salary ${filters.salaryRange[0]}k/yr</span>
                           <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">Clear All</Button>
                         </div>
                         <div className="py-4 px-2">
@@ -521,6 +652,10 @@ export function JobFiltersSection({
                               salaryRange: [values[0], filters.salaryRange[1]]
                             })}
                           />
+                          <div className="flex justify-between mt-1">
+                            <span className="text-xs">$0k</span>
+                            <span className="text-xs">$400k</span>
+                          </div>
                         </div>
                         
                         <div className="mt-4">
@@ -555,7 +690,20 @@ export function JobFiltersSection({
                       <div>
                         <div className="flex items-center gap-1">
                           <span className="font-medium">Work Authorization</span>
-                          <Info className="h-4 w-4 text-muted-foreground" />
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
+                                <Info className="h-4 w-4 text-muted-foreground" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-80 p-4">
+                              <h4 className="font-medium text-sm mb-2">H1B Sponsorship Information</h4>
+                              <p className="text-xs text-muted-foreground">
+                                When enabled, we'll prioritize jobs from companies with a history of providing
+                                H1B visa sponsorship, based on public records and our database.
+                              </p>
+                            </PopoverContent>
+                          </Popover>
                         </div>
                         <div className="flex items-center space-x-2 mt-2">
                           <Checkbox 
@@ -612,7 +760,15 @@ export function JobFiltersSection({
                           ))}
                         </div>
                         <div className="flex justify-end mt-2">
-                          <Button size="sm" variant="outline" className="flex items-center gap-1">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="flex items-center gap-1"
+                            onClick={() => {
+                              const dialogElement = document.getElementById('industry-dialog');
+                              if (dialogElement) dialogElement.showModal();
+                            }}
+                          >
                             <Plus className="h-3 w-3" /> Add
                           </Button>
                         </div>
@@ -624,24 +780,27 @@ export function JobFiltersSection({
                           <span className="font-medium">Skills</span>
                           <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">Clear All</Button>
                         </div>
+                        <div className="flex items-center gap-2 mt-2">
+                          <Input 
+                            placeholder="Add a skill (e.g. Python, Java)" 
+                            value={skillInput}
+                            onChange={(e) => setSkillInput(e.target.value)}
+                            className="flex-1"
+                          />
+                          <Button size="sm" onClick={handleAddSkill}>
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
                         <div className="mt-2 space-y-2">
-                          {[
-                            { id: "python", label: "Python", selected: true },
-                            { id: "matlab", label: "Matlab", selected: true },
-                            { id: "java", label: "Java", selected: true },
-                            { id: "cpp", label: "C++", selected: true },
-                            { id: "linux", label: "Linux", selected: true }
-                          ].map((skill) => (
-                            <div key={skill.id} className="flex items-center justify-between bg-secondary/30 rounded-md px-3 py-1.5">
-                              <span className="text-sm">{skill.label}</span>
+                          {filters.skills.map((skill) => (
+                            <div key={skill} className="flex items-center justify-between bg-secondary/30 rounded-md px-3 py-1.5">
+                              <span className="text-sm">{skill}</span>
                               <Button 
                                 size="sm" 
                                 variant="ghost" 
                                 className="h-6 w-6 p-0"
                                 onClick={() => {
-                                  const skills = filters.skills.includes(skill.id)
-                                    ? filters.skills.filter(s => s !== skill.id)
-                                    : [...filters.skills, skill.id];
+                                  const skills = filters.skills.filter(s => s !== skill);
                                   onFiltersChange({ ...filters, skills });
                                 }}
                               >
@@ -650,401 +809,22 @@ export function JobFiltersSection({
                             </div>
                           ))}
                         </div>
-                        <div className="flex justify-end mt-2">
-                          <Button size="sm" variant="outline" className="flex items-center gap-1">
-                            <Plus className="h-3 w-3" /> Add
-                          </Button>
-                        </div>
                       </div>
 
                       {/* Excluded Skill */}
                       <div>
                         <div className="flex justify-between">
                           <span className="font-medium">Excluded Skill</span>
-                          <ChevronDown className="h-4 w-4" />
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            className="h-6 p-0"
+                          >
+                            <ChevronDown className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
 
                       {/* Role Type */}
                       <div>
-                        <div className="font-medium mb-2">Role Type</div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <Button 
-                            variant={filters.roleType?.includes("IC") ? "default" : "outline"} 
-                            size="sm" 
-                            className="justify-center"
-                            onClick={() => toggleRoleType("IC")}
-                          >
-                            IC
-                          </Button>
-                          <Button 
-                            variant={filters.roleType?.includes("Manager") ? "default" : "outline"} 
-                            size="sm" 
-                            className="justify-center"
-                            onClick={() => toggleRoleType("Manager")}
-                          >
-                            Manager
-                          </Button>
-                        </div>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                  
-                  <AccordionItem value="company-insights" className="border rounded-lg p-2 mt-3">
-                    <AccordionTrigger className="hover:no-underline px-2">
-                      <div className="flex justify-between w-full">
-                        <span className="font-medium">Company Insights</span>
-                        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-4 px-2 pb-2 space-y-6">
-                      {/* Company */}
-                      <div>
-                        <div className="flex items-center gap-1">
-                          <span className="font-medium">Company</span>
-                          <Info className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                        <div className="flex justify-between">
-                          <div></div>
-                          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">Clear All</Button>
-                        </div>
-                        <div className="mt-2">
-                          <div className="flex justify-end">
-                            <Button size="sm" variant="outline" className="flex items-center gap-1">
-                              <Plus className="h-3 w-3" /> Add
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Company Stage */}
-                      <div>
-                        <div className="flex items-center gap-1">
-                          <span className="font-medium">Company Stage</span>
-                          <Info className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                        <div className="flex justify-between">
-                          <div></div>
-                          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">Clear All</Button>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3 mt-2">
-                          {[
-                            { id: "early", label: "Early Stage" },
-                            { id: "growth", label: "Growth Stage" },
-                            { id: "late", label: "Late Stage" },
-                            { id: "public", label: "Public Company" }
-                          ].map((stage) => (
-                            <div key={stage.id} className="flex items-center space-x-2">
-                              <Checkbox 
-                                id={`stage-${stage.id}`}
-                                checked={filters.companyStage?.includes(stage.id)}
-                                onCheckedChange={() => toggleCompanyStage(stage.id)}
-                              />
-                              <Label htmlFor={`stage-${stage.id}`} className="text-sm cursor-pointer">
-                                {stage.label}
-                              </Label>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Job Source */}
-                      <div>
-                        <div className="flex items-center gap-1">
-                          <span className="font-medium">Job Source</span>
-                          <Info className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                        <div className="flex items-center space-x-2 mt-2">
-                          <Checkbox 
-                            id="exclude-staffing"
-                            checked={filters.excludeStaffingAgency}
-                            onCheckedChange={() => onFiltersChange({ 
-                              ...filters, 
-                              excludeStaffingAgency: !filters.excludeStaffingAgency
-                            })}
-                          />
-                          <Label htmlFor="exclude-staffing" className="text-sm cursor-pointer">
-                            Exclude Staffing Agency
-                          </Label>
-                        </div>
-                      </div>
-
-                      {/* Company Type */}
-                      <div>
-                        <h4 className="font-medium mb-3">Company Type</h4>
-                        <div className="space-y-2">
-                          {["Private", "Public", "Nonprofit", "Education"].map((type) => (
-                            <div key={type} className="flex items-center space-x-2">
-                              <Checkbox 
-                                id={`company-type-${type}`} 
-                                checked={filters.companyTypes.includes(type)}
-                                onCheckedChange={() => toggleCompanyType(type)}
-                              />
-                              <Label htmlFor={`company-type-${type}`} className="text-sm cursor-pointer">
-                                {type}
-                              </Label>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Company Size */}
-                      <div>
-                        <h4 className="font-medium mb-3">Company Size</h4>
-                        <div className="space-y-2">
-                          {[
-                            { id: "seed", label: "Seed, 1-10" },
-                            { id: "early", label: "Early, 11-100" },
-                            { id: "mid-size", label: "Mid-size, 101-1,000" },
-                            { id: "large", label: "Large, 1,001-10,000" },
-                            { id: "enterprise", label: "Enterprise, 10,001+" }
-                          ].map((size) => (
-                            <div key={size.id} className="flex items-center space-x-2">
-                              <Checkbox 
-                                id={`company-size-${size.id}`} 
-                                checked={filters.companySize.includes(size.id)}
-                                onCheckedChange={() => toggleCompanySize(size.id)}
-                              />
-                              <Label htmlFor={`company-size-${size.id}`} className="text-sm cursor-pointer">
-                                {size.label}
-                              </Label>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                  
-                  <AccordionItem value="education" className="border rounded-lg p-2 mt-3">
-                    <AccordionTrigger className="hover:no-underline px-2">
-                      <div className="flex justify-between w-full">
-                        <span className="font-medium">Education</span>
-                        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-4 px-2 pb-2">
-                      <p className="text-sm text-muted-foreground mb-3">Filter by education level</p>
-                      <div className="grid grid-cols-2 gap-3">
-                        {["Bachelor's", "Master's", "Associate's", "PhD", "MD", "MBA"].map((education) => (
-                          <div key={education} className="flex items-center space-x-2">
-                            <Checkbox 
-                              id={`education-${education}`} 
-                              checked={filters.education.includes(education)}
-                              onCheckedChange={() => toggleEducation(education)}
-                            />
-                            <Label htmlFor={`education-${education}`} className="text-sm cursor-pointer">
-                              {education}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                  
-                  <AccordionItem value="benefits" className="border rounded-lg p-2 mt-3">
-                    <AccordionTrigger className="hover:no-underline px-2">
-                      <div className="flex justify-between w-full">
-                        <span className="font-medium">Benefits</span>
-                        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-4 px-2 pb-2">
-                      <p className="text-sm text-muted-foreground mb-3">Filter jobs by benefits a company offers</p>
-                      <div className="mb-4">
-                        <div className="relative">
-                          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                          <Input placeholder="Search all benefits" className="pl-9" />
-                        </div>
-                      </div>
-                      <p className="text-xs font-medium uppercase text-muted-foreground mb-2">Popular</p>
-                      <div className="grid grid-cols-2 gap-2">
-                        {[
-                          "Remote Work", "401K", "PTO", "Maternity Leave", "Free Lunch", 
-                          "Tuition Reimbursement", "Pet Friendly", "Gym Discount", 
-                          "Health Insurance", "Transport Allowance"
-                        ].map((benefit) => (
-                          <div key={benefit} className="flex items-center space-x-2">
-                            <Checkbox 
-                              id={`benefit-${benefit}`} 
-                              checked={filters.benefits.includes(benefit)}
-                              onCheckedChange={() => toggleBenefit(benefit)}
-                            />
-                            <Label htmlFor={`benefit-${benefit}`} className="text-sm cursor-pointer">
-                              {benefit}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                  
-                  <AccordionItem value="category" className="border rounded-lg p-2 mt-3">
-                    <AccordionTrigger className="hover:no-underline px-2">
-                      <div className="flex justify-between w-full">
-                        <span className="font-medium">Category</span>
-                        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-4 px-2 pb-2">
-                      <p className="text-sm text-muted-foreground mb-3">Filter by category</p>
-                      <div className="mb-4">
-                        <select className="w-full border border-gray-300 rounded-md p-2 mb-4">
-                          <option>Category</option>
-                        </select>
-                      </div>
-                      <p className="text-xs font-medium uppercase text-muted-foreground mb-2">Popular</p>
-                      <div className="space-y-2">
-                        {[
-                          "Medical, Clinical & Veterinary",
-                          "Software Engineering",
-                          "Sales & Account Management",
-                          "Finance & Banking",
-                          "Nursing & Allied Health Professionals",
-                          "Retail"
-                        ].map((category) => (
-                          <div key={category} className="flex items-center space-x-2">
-                            <Checkbox 
-                              id={`category-${category}`}
-                              checked={filters.categories?.includes(category)}
-                              onCheckedChange={() => toggleCategory(category)}
-                            />
-                            <Label htmlFor={`category-${category}`} className="text-sm cursor-pointer">
-                              {category}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                  
-                  <AccordionItem value="title" className="border rounded-lg p-2 mt-3">
-                    <AccordionTrigger className="hover:no-underline px-2">
-                      <div className="flex justify-between w-full">
-                        <span className="font-medium">Title</span>
-                        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-4 px-2 pb-2">
-                      <p className="text-sm text-muted-foreground mb-3">Filter by jobs by specific title(s)</p>
-                      <div className="mb-4">
-                        <Input placeholder="Search by title" className="mb-4" />
-                      </div>
-                      <p className="text-xs font-medium uppercase text-muted-foreground mb-2">Popular</p>
-                      <div className="space-y-2">
-                        {[
-                          { id: "software-engineer", icon: "🖥", label: "Software Engineer" },
-                          { id: "product-manager", icon: "📊", label: "Product Manager" },
-                          { id: "data-scientist", icon: "📈", label: "Data Scientist" },
-                          { id: "engineering-manager", icon: "🛠", label: "Software Engineering Manager" },
-                          { id: "product-designer", icon: "✏️", label: "Product Designer" },
-                          { id: "hardware-engineer", icon: "🔌", label: "Hardware Engineer" },
-                          { id: "business-analyst", icon: "📋", label: "Business Analyst" }
-                        ].map((title) => (
-                          <div key={title.id} className="flex items-center space-x-2">
-                            <Checkbox 
-                              id={`title-${title.id}`}
-                              checked={filters.title?.includes(title.id)}
-                              onCheckedChange={() => toggleTitle(title.id)}
-                            />
-                            <Label htmlFor={`title-${title.id}`} className="text-sm cursor-pointer flex items-center">
-                              <span className="mr-2">{title.icon}</span> {title.label}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                  
-                  <AccordionItem value="companies" className="border rounded-lg p-2 mt-3">
-                    <AccordionTrigger className="hover:no-underline px-2">
-                      <div className="flex justify-between w-full">
-                        <span className="font-medium">Companies</span>
-                        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-4 px-2 pb-2">
-                      <p className="text-sm text-muted-foreground mb-3">Filter by companies</p>
-                      <div className="mb-4">
-                        <Input placeholder="Search by company" className="mb-4" />
-                      </div>
-                      <p className="text-xs font-medium uppercase text-muted-foreground mb-2">Popular</p>
-                      <div className="space-y-2">
-                        {["Amazon", "Microsoft", "Google", "Facebook", "Apple"].map((company) => (
-                          <div key={company} className="flex items-center space-x-2">
-                            <Checkbox 
-                              id={`company-${company}`}
-                              checked={filters.companies?.includes(company)}
-                              onCheckedChange={() => toggleCompany(company)}
-                            />
-                            <Label htmlFor={`company-${company}`} className="text-sm cursor-pointer">
-                              {company}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-                
-                <div className="flex justify-between pt-4 border-t">
-                  <Button 
-                    variant="outline" 
-                    onClick={onResetFilters}
-                  >
-                    Clear All
-                  </Button>
-                  <Button className="bg-green-500 hover:bg-green-600 text-white">
-                    UPDATE
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-      
-      {showSaveDialog && (
-        <Card className="border shadow-sm">
-          <CardContent className="pt-6">
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="font-medium">Save This Search</h3>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="text-muted-foreground"
-                  onClick={() => setShowSaveDialog(false)}
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-              <Input 
-                placeholder="Enter a name for this search"
-                value={searchName}
-                onChange={(e) => setSearchName(e.target.value)}
-              />
-              <div className="flex justify-end space-x-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setShowSaveDialog(false)}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  size="sm"
-                  onClick={handleSaveSearch}
-                >
-                  Save Search
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  );
-}
-
-export default JobFiltersSection;
-
+                        <div
