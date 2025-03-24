@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import {
@@ -135,8 +136,11 @@ export const JobScraperConfig = ({ onConfigUpdate }: JobScraperConfigProps) => {
     });
   };
 
+  // Fix for Type 'string' is not assignable to type 'number'
   const handleSliderChange = (values: number[]) => {
-    setRefreshInterval(values[0]);
+    if (values.length > 0) {
+      setRefreshInterval(values[0]);
+    }
   };
 
   const filteredSources = activeTab === 'all' 
