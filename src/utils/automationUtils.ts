@@ -870,7 +870,7 @@ finally:
     # Wait a moment before closing
     time.sleep(5)
     driver.quit()
-`;
+  `;
 }
 
 // New function for Indeed automation script
