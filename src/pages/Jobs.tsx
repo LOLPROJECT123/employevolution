@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import Navbar from "@/components/Navbar";
 import { Job, JobFilters } from "@/types/job";
@@ -187,10 +188,16 @@ const Jobs = () => {
   const handleSaveJob = (job: Job) => {
     if (savedJobIds.includes(job.id)) {
       setSavedJobIds(savedJobIds.filter(id => id !== job.id));
-      toast.info("Job removed from saved jobs");
+      toast({
+        title: "Job removed from saved jobs",
+        variant: "default",
+      });
     } else {
       setSavedJobIds([...savedJobIds, job.id]);
-      toast.success("Job saved successfully");
+      toast({
+        title: "Job saved successfully",
+        variant: "default",
+      });
     }
   };
 
@@ -211,18 +218,24 @@ const Jobs = () => {
       if (!isMobile && job.applyUrl) {
         if (canAutomate && automationEnabled) {
           setShowAutomation(true);
-          toast.success("Automation Available", {
-            description: "You can use the automation tools to apply to this job automatically."
+          toast({
+            title: "Automation Available",
+            description: "You can use the automation tools to apply to this job automatically.",
+            variant: "default",
           });
         } else {
           window.open(job.applyUrl, '_blank');
-          toast.success("Opening application page", {
-            description: "The application page has been opened in a new tab."
+          toast({
+            title: "Opening application page",
+            description: "The application page has been opened in a new tab.",
+            variant: "default",
           });
         }
       } else {
-        toast.success("Application submitted successfully", {
-          description: `Your application to ${job.company} for ${job.title} has been submitted.`
+        toast({
+          title: "Application submitted successfully",
+          description: `Your application to ${job.company} for ${job.title} has been submitted.`,
+          variant: "default",
         });
       }
       
@@ -238,16 +251,20 @@ const Jobs = () => {
   const handleAutomatedApply = (job: Job) => {
     try {
       if (!job.applyUrl) {
-        toast.error("Cannot automate application", {
-          description: "This job doesn't have an application URL."
+        toast({
+          title: "Cannot automate application",
+          description: "This job doesn't have an application URL.",
+          variant: "destructive",
         });
         return;
       }
       
       const automationConfig = localStorage.getItem('automationConfig');
       if (!automationConfig) {
-        toast.error("Automation not configured", {
-          description: "Please configure your automation settings first."
+        toast({
+          title: "Automation not configured",
+          description: "Please configure your automation settings first.",
+          variant: "destructive",
         });
         return;
       }
@@ -258,18 +275,23 @@ const Jobs = () => {
       
       const platform = detectPlatform(job.applyUrl);
       
-      toast.success("Automation initiated", {
-        description: `The automation script will now apply to this job on ${platform || 'the job platform'}. Please check the browser extension for details.`
+      toast({
+        title: "Automation initiated",
+        description: `The automation script will now apply to this job on ${platform || 'the job platform'}. Please check the browser extension for details.`,
+        variant: "default",
       });
     } catch (error) {
-      toast.error("Automation failed", {
-        description: "There was an error starting the automation process."
+      toast({
+        title: "Automation failed",
+        description: "There was an error starting the automation process.",
+        variant: "destructive",
       });
       console.error("Automation error:", error);
     }
   };
 
   const handleSkipJob = (job: Job) => {
+    // No action needed for now
   };
 
   const toggleViewMode = () => {
