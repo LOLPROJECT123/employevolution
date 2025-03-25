@@ -54,17 +54,17 @@ export function MobileJobCard({
         </div>
         
         <div className="flex-1 min-w-0">
-          <h3 className="text-base font-medium leading-tight mb-1">{job.title}</h3>
+          <h3 className="text-base font-medium leading-tight mb-1 line-clamp-1">{job.title}</h3>
           
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-1.5 text-sm text-gray-500">
-              <DollarSign className="h-3.5 w-3.5" />
-              <span>{formattedSalary}</span>
+              <DollarSign className="h-3.5 w-3.5 flex-shrink-0" />
+              <span className="truncate">{formattedSalary}</span>
             </div>
             
             <div className="flex items-center gap-1.5 text-sm text-gray-500">
-              <MapPin className="h-3.5 w-3.5" />
-              <span>{job.location}</span>
+              <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+              <span className="truncate">{job.location}</span>
             </div>
           </div>
         </div>
