@@ -1,7 +1,6 @@
-
 import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
-import { BookmarkIcon, Building2, MapPin, Clock, CheckCircle, ArrowRight, ArrowRightCircle, Zap } from "lucide-react";
+import { BookmarkIcon, Building2, MapPin, Clock, CheckCircle, ArrowRight, Zap } from "lucide-react";
 import { formatRelativeTime } from "@/utils/dateUtils";
 import { Badge } from "./ui/badge";
 
@@ -28,7 +27,6 @@ export function JobCard({
 }: JobCardProps) {
   const timeAgo = formatRelativeTime(job.postedAt);
   
-  // Get match color based on percentage
   const getMatchColor = (percentage?: number) => {
     if (!percentage) return "";
     if (percentage >= 70) return "text-green-500";
@@ -45,12 +43,10 @@ export function JobCard({
   
   const formattedSalary = `${job.salary.currency}${job.salary.min.toLocaleString()} - ${job.salary.max.toLocaleString()}`;
   
-  // Generate a company letter avatar based on company name
   const getCompanyInitial = () => {
     return job.company.charAt(0).toUpperCase();
   };
   
-  // Generate a color based on company name for the avatar
   const getCompanyColor = () => {
     const colors = [
       'bg-blue-100 text-blue-600',
@@ -63,7 +59,6 @@ export function JobCard({
       'bg-orange-100 text-orange-600',
     ];
     
-    // Use the charCode of each letter in company name to pick a color
     const charSum = job.company
       .split('')
       .reduce((sum, char) => sum + char.charCodeAt(0), 0);
@@ -78,24 +73,20 @@ export function JobCard({
         className={`px-4 py-3 cursor-pointer transition-colors relative ${isSelected ? 'bg-primary/5 dark:bg-primary/10' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'}`}
       >
         <div className="flex items-center space-x-3">
-          {/* Company avatar with initial */}
           <div className={`w-10 h-10 flex-shrink-0 rounded-md flex items-center justify-center ${getCompanyColor()}`}>
             {getCompanyInitial()}
           </div>
           
           <div className="flex-1 min-w-0">
-            <div className="flex justify-between items-start">
-              <h3 className="text-sm font-medium truncate">{job.title}</h3>
-              
-              {/* Match Percentage Badge - Made more prominent */}
-              {job.matchPercentage && (
-                <Badge variant="outline" className={`ml-2 px-2 py-0.5 text-xs font-bold ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)}`}>
-                  {job.matchPercentage}% Match
-                </Badge>
-              )}
-            </div>
+            <h3 className="text-sm font-medium truncate">{job.title}</h3>
             
-            <div className="flex flex-col gap-1 mt-1">
+            {job.matchPercentage && (
+              <Badge variant="outline" className={`mt-1 px-2 py-0.5 text-xs font-bold ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)}`}>
+                {job.matchPercentage}% Match
+              </Badge>
+            )}
+            
+            <div className="flex flex-col gap-1 mt-1.5">
               <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                 <Building2 className="w-3 h-3" /> {job.company}
               </p>
@@ -145,7 +136,6 @@ export function JobCard({
           </div>
         </div>
         
-        {/* Apply button - Made more prominent */}
         <div className="mt-2">
           <Button 
             size="sm" 
@@ -162,31 +152,28 @@ export function JobCard({
     );
   }
   
-  // Grid variant for display in cards
   return (
     <div
       onClick={onClick}
-      className={`p-4 cursor-pointer transition-all border rounded-lg ${
+      className={`p-4 cursor-pointer transition-all border rounded-lg relative ${
         isSelected ? 'ring-2 ring-primary border-primary' : 'hover:shadow-md hover:border-primary/30'
       }`}
     >
-      {/* Match percentage badge at the top right - Made larger and more prominent */}
-      <div className="absolute top-3 right-3">
-        {job.matchPercentage && (
-          <Badge variant="outline" className={`px-2.5 py-1 text-xs font-bold ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)}`}>
-            {job.matchPercentage}% Match
-          </Badge>
-        )}
-      </div>
-      
-      <div className="flex justify-between items-start mb-3">
+      <div className="flex justify-between items-start mb-2">
         <div className={`w-12 h-12 flex-shrink-0 rounded-lg flex items-center justify-center ${getCompanyColor()}`}>
           {getCompanyInitial()}
         </div>
       </div>
       
-      <h3 className="font-medium">{job.title}</h3>
-      <p className="text-sm text-muted-foreground mt-1">{job.company}</p>
+      <h3 className="font-medium mt-1">{job.title}</h3>
+      
+      {job.matchPercentage && (
+        <Badge variant="outline" className={`mt-1 px-2.5 py-0.5 text-xs font-bold ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)}`}>
+          {job.matchPercentage}% Match
+        </Badge>
+      )}
+      
+      <p className="text-sm text-muted-foreground mt-2">{job.company}</p>
       
       <div className="flex flex-col gap-1.5 mt-3">
         <p className="text-xs text-muted-foreground flex items-center gap-1.5">
