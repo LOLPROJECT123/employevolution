@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import Navbar from "@/components/Navbar";
 import { Job, JobFilters } from "@/types/job";
@@ -17,6 +16,13 @@ import {
   startAutomation 
 } from '@/utils/automationUtils';
 import JobSourcesDisplay from "@/components/JobSourcesDisplay";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 
 const generateSampleJobs = (count: number): Job[] => {
   const jobTypes: Array<'full-time' | 'part-time' | 'contract' | 'internship' | 'temporary' | 'volunteer' | 'other'> = 
@@ -142,6 +148,8 @@ const generateSampleJobs = (count: number): Job[] => {
 
 const sampleJobs: Job[] = generateSampleJobs(100);
 
+type SortOption = 'relevance' | 'date-newest' | 'date-oldest' | 'salary-highest' | 'salary-lowest';
+
 const Jobs = () => {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [jobs, setJobs] = useState<Job[]>(sampleJobs);
@@ -149,6 +157,7 @@ const Jobs = () => {
   const [savedJobIds, setSavedJobIds] = useState<string[]>([]);
   const [appliedJobIds, setAppliedJobIds] = useState<string[]>([]);
   const [showAutomation, setShowAutomation] = useState(false);
+  const [sortOption, setSortOption] = useState<SortOption>('relevance');
   const isMobile = useIsMobile();
   const [viewMode, setViewMode] = useState<'list' | 'swipe'>(isMobile ? 'swipe' : 'list');
   const [showMyJobs, setShowMyJobs] = useState(false);
@@ -178,6 +187,10 @@ const Jobs = () => {
     }
   }, [filteredJobs, selectedJob]);
 
+  useEffect(() => {
+    sortJobs(sortOption);
+  }, [sortOption]);
+
   const savedJobs = jobs.filter(job => savedJobIds.includes(job.id));
   const appliedJobs = jobs.filter(job => appliedJobIds.includes(job.id));
 
@@ -189,13 +202,13 @@ const Jobs = () => {
     if (savedJobIds.includes(job.id)) {
       setSavedJobIds(savedJobIds.filter(id => id !== job.id));
       toast({
-        title: "Job removed from saved jobs",
+        title: "Job Removed From Saved Jobs",
         variant: "default",
       });
     } else {
       setSavedJobIds([...savedJobIds, job.id]);
       toast({
-        title: "Job saved successfully",
+        title: "Job Saved Successfully",
         variant: "default",
       });
     }
@@ -300,6 +313,71 @@ const Jobs = () => {
 
   const toggleMyJobs = () => {
     setShowMyJobs(!showMyJobs);
+  };
+
+  const sortJobs = (option: SortOption) => {
+    let sortedJobs = [...filteredJobs];
+    
+    switch (option) {
+      case 'relevance':
+        sortedJobs.sort((a, b) => {
+          const matchA = a.matchPercentage || 0;
+          const matchB = b.matchPercentage || 0;
+          return matchB - matchA;
+        });
+        break;
+        
+      case 'date-newest':
+        sortedJobs.sort((a, b) => {
+          return new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime();
+        });
+        break;
+        
+      case 'date-oldest':
+        sortedJobs.sort((a, b) => {
+          return new Date(a.postedAt).getTime() - new Date(b.postedAt).getTime();
+        });
+        break;
+        
+      case 'salary-highest':
+        sortedJobs.sort((a, b) => {
+          return b.salary.max - a.salary.max;
+        });
+        break;
+        
+      case 'salary-lowest':
+        sortedJobs.sort((a, b) => {
+          return a.salary.min - b.salary.min;
+        });
+        break;
+    }
+    
+    setFilteredJobs(sortedJobs);
+    
+    if (sortedJobs.length > 0) {
+      setSelectedJob(sortedJobs[0]);
+    }
+  };
+
+  const handleSortChange = (value: string) => {
+    setSortOption(value as SortOption);
+    
+    toast({
+      title: "Jobs Sorted",
+      description: `Jobs Are Now Sorted By ${getSortDescription(value as SortOption)}`,
+      variant: "default",
+    });
+  };
+  
+  const getSortDescription = (option: SortOption): string => {
+    switch (option) {
+      case 'relevance': return 'Relevance';
+      case 'date-newest': return 'Date (Newest First)';
+      case 'date-oldest': return 'Date (Oldest First)';
+      case 'salary-highest': return 'Salary (Highest First)';
+      case 'salary-lowest': return 'Salary (Lowest First)';
+      default: return 'Relevance';
+    }
   };
 
   const applyFilters = (filters: JobFilters) => {
@@ -409,7 +487,7 @@ const Jobs = () => {
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
               <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                 <h2 className="font-semibold text-lg">Filter Jobs</h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Narrow down your search</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Narrow Down Your Search</p>
               </div>
               <div className="p-4">
                 <JobFiltersSection onApplyFilters={applyFilters} />
@@ -425,7 +503,7 @@ const Jobs = () => {
                     onClick={toggleViewMode}
                     className="w-full py-2.5 px-4 rounded-lg bg-primary text-white font-medium"
                   >
-                    Switch to {viewMode === 'list' ? 'Swipe' : 'List'} View
+                    Switch To {viewMode === 'list' ? 'Swipe' : 'List'} View
                   </button>
                   
                   <button 
@@ -486,14 +564,21 @@ const Jobs = () => {
                   <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
                     <div>
                       <h2 className="font-semibold text-lg">Browse Jobs</h2>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{filteredJobs.length} opportunities found</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{filteredJobs.length} Opportunities Found</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <select className="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-transparent">
-                        <option>Sort by: Relevance</option>
-                        <option>Date: Newest first</option>
-                        <option>Salary: Highest first</option>
-                      </select>
+                      <Select defaultValue={sortOption} onValueChange={handleSortChange}>
+                        <SelectTrigger className="w-[180px] bg-white dark:bg-gray-800">
+                          <SelectValue placeholder="Sort By: Relevance" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="relevance">Sort By: Relevance</SelectItem>
+                          <SelectItem value="date-newest">Date: Newest First</SelectItem>
+                          <SelectItem value="date-oldest">Date: Oldest First</SelectItem>
+                          <SelectItem value="salary-highest">Salary: Highest First</SelectItem>
+                          <SelectItem value="salary-lowest">Salary: Lowest First</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                   

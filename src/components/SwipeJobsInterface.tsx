@@ -3,9 +3,10 @@ import { useState, useEffect } from 'react';
 import { Job } from "@/types/job";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { X, Check, Building2, MapPin, Briefcase, DollarSign } from "lucide-react";
+import { X, Check, Building2, MapPin, Briefcase, DollarSign, Clock } from "lucide-react";
 import { motion, PanInfo } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
+import { formatRelativeTime } from "@/utils/dateUtils";
 
 interface SwipeJobsInterfaceProps {
   jobs: Job[];
@@ -99,6 +100,7 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
   }
 
   const formattedSalary = `${currentJob.salary.currency}${currentJob.salary.min.toLocaleString()} - ${currentJob.salary.currency}${currentJob.salary.max.toLocaleString()}`;
+  const timeAgo = formatRelativeTime(currentJob.postedAt);
 
   // Swipe direction animation values
   const xPosition = direction === "left" ? -1000 : direction === "right" ? 1000 : 0;
@@ -142,6 +144,10 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
               <div className="flex items-center text-muted-foreground mt-1">
                 <DollarSign className="w-4 h-4 mr-2" />
                 <span>{formattedSalary}</span>
+              </div>
+              <div className="flex items-center text-muted-foreground mt-1">
+                <Clock className="w-4 h-4 mr-2" />
+                <span>Posted {timeAgo}</span>
               </div>
             </div>
             

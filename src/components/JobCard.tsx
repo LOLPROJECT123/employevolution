@@ -87,6 +87,10 @@ export function JobCard({
               <MapPin className="w-4 h-4" />
               <span>{job.location}</span>
             </div>
+            <div className="flex items-center gap-2 text-muted-foreground mt-1">
+              <Clock className="w-4 h-4" />
+              <span>Posted {timeAgo}</span>
+            </div>
           </div>
         </div>
 
