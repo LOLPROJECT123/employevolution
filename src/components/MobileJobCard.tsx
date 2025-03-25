@@ -39,7 +39,9 @@ export function MobileJobCard({
     return colors[charSum % colors.length];
   };
   
-  const formattedSalary = `${job.salary.currency}${job.salary.min.toLocaleString()}${job.salary.max ? ` /hr` : ''}`;
+  const formattedSalary = job.level === 'intern' 
+    ? `${job.salary.currency}${job.salary.min.toLocaleString()} /hr` 
+    : `${job.salary.currency}${job.salary.min.toLocaleString()}`;
   
   return (
     <div 

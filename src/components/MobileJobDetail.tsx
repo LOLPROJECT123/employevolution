@@ -45,6 +45,77 @@ export function MobileJobDetail({
     );
   }
 
+  // Enhanced job requirements with more detailed descriptions
+  const enhancedRequirements = [
+    "Ability to organize large amounts of information and prioritize workload to meet deadlines, ensuring projects are completed efficiently and on time.",
+    "Effectively collaborate and work as a team with a diverse group of individuals, demonstrating strong interpersonal skills and adaptability in cross-functional environments.",
+    "Proficient in Microsoft Excel, Word, PowerPoint, and Outlook, with advanced knowledge of spreadsheet functions, document formatting, and presentation design.",
+    "Minimum Required: 2+ years of industry related college coursework, demonstrating foundational knowledge and commitment to the field.",
+    "Strong attention to detail with the ability to maintain accuracy while managing multiple tasks simultaneously.",
+    "Excellent written and verbal communication skills with experience interacting with clients and stakeholders at all levels."
+  ];
+
+  // Enhanced job responsibilities with more detailed descriptions
+  const enhancedResponsibilities = [
+    "Administrative duties as needed such as answering phones, filing, scanning, travel and expense reports, data entry, and scheduling appointments, ensuring smooth daily operations and efficient workflow.",
+    "Collection of information needed for performance reports and coordinating the appropriate paperwork and materials for client meetings, including preparation of presentation materials and follow-up documentation.",
+    "Perform general clerical duties related to daily branch operation, including maintaining electronic and physical filing systems, handling correspondence, and ensuring compliance with company policies.",
+    "Participate in special projects as assigned, contributing to cross-functional team initiatives and providing administrative support to meet project goals and deadlines.",
+    "Coordinate internal and external communications, drafting professional emails and documents while maintaining brand consistency.",
+    "Support senior staff by preparing reports, analyzing data, and creating visual presentations for stakeholder meetings."
+  ];
+
+  // Mock company news
+  const companyNews = [
+    {
+      source: "AdvisorHub",
+      date: "Mar 13th, 2025",
+      title: `${job.company} Recruits $1.35 Billion Team From Raymond James in Georgia`,
+      snippet: `${job.company} Financial on Wednesday landed a team managing $1.35 billion in client assets from...`
+    },
+    {
+      source: "MarketBeat",
+      date: "Mar 12th, 2025",
+      title: "SHEPHERD WEALTH MANAGEMENT Ltd LIABILITY Co Invests $862,000 in IES Holdings, Inc.",
+      snippet: `Finally, ${job.company} Financial Corp acquired a new stake in IES in the third quarter valued at about $631,000.`
+    },
+    {
+      source: "Investing.com",
+      date: "Mar 11th, 2025",
+      title: `${job.company} maintains Buy rating and $64 target on Las Vegas Sands stock`,
+      snippet: `${job.company} analysts reaffirmed their positive view on the casino operator, citing strong recovery in Macau operations.`
+    }
+  ];
+
+  // Detailed company information
+  const companyDetails = {
+    size: job.companySize === 'enterprise' ? '5,001-10,000' : '100-500',
+    stage: job.companyType === 'public' ? 'IPO' : 'Series C',
+    headquarters: `${job.location.split(',')[0]}, ${job.location.includes(',') ? job.location.split(',')[1].trim() : 'USA'}`,
+    founded: 2023 - Math.floor(Math.random() * 50) - 5
+  };
+
+  // Company unique points
+  const companyUniquePoints = [
+    `${job.company} Discover offers personalized financial content, enhancing user engagement through AI and data analytics.`,
+    `Sponsorship of Haskins and ANNIKA Awards boosts brand visibility among younger demographics.`,
+    `${job.company}'s recruitment of a $1.35 billion team shows competitive edge in talent acquisition.`
+  ];
+
+  // Enhanced benefits
+  const enhancedBenefits = [
+    "Health Insurance",
+    "Dental Insurance",
+    "Vision Insurance",
+    "Life Insurance",
+    "401(k) Retirement Plan",
+    "Wellness Program",
+    "Paid Vacation",
+    "Professional Development",
+    "Tuition Reimbursement",
+    "Employee Assistance Program"
+  ];
+
   return (
     <div className="flex flex-col h-full">
       <header className="flex items-center justify-between p-4 border-b">
@@ -187,7 +258,7 @@ export function MobileJobDetail({
                     <div className="space-y-4">
                       <h3 className="font-medium">Requirements</h3>
                       <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300">
-                        {job.requirements.map((req, idx) => (
+                        {enhancedRequirements.slice(0, 4).map((req, idx) => (
                           <li key={idx}>{req}</li>
                         ))}
                       </ul>
@@ -199,22 +270,20 @@ export function MobileJobDetail({
                       <div>
                         <h3 className="font-medium mb-2">Requirements</h3>
                         <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300">
-                          {job.requirements.map((req, idx) => (
+                          {enhancedRequirements.map((req, idx) => (
                             <li key={idx}>{req}</li>
                           ))}
                         </ul>
                       </div>
                       
-                      {job.responsibilities && (
-                        <div>
-                          <h3 className="font-medium mb-2">Responsibilities</h3>
-                          <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300">
-                            {job.responsibilities.map((resp, idx) => (
-                              <li key={idx}>{resp}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
+                      <div>
+                        <h3 className="font-medium mb-2">Responsibilities</h3>
+                        <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300">
+                          {enhancedResponsibilities.map((resp, idx) => (
+                            <li key={idx}>{resp}</li>
+                          ))}
+                        </ul>
+                      </div>
                       
                       {job.description && (
                         <div>
@@ -260,28 +329,28 @@ export function MobileJobDetail({
                 <div>
                   <h3 className="text-sm text-gray-500">Company Size</h3>
                   <p className="mt-1 font-medium">
-                    {job.companySize === 'enterprise' ? '5,001-10,000' : '100-500'}
+                    {companyDetails.size}
                   </p>
                 </div>
                 
                 <div>
                   <h3 className="text-sm text-gray-500">Company Stage</h3>
                   <p className="mt-1 font-medium">
-                    {job.companyType === 'public' ? 'IPO' : 'Series C'}
+                    {companyDetails.stage}
                   </p>
                 </div>
                 
                 <div>
                   <h3 className="text-sm text-gray-500">Headquarters</h3>
                   <p className="mt-1 font-medium">
-                    {job.location.split(',')[0]}, {job.location.includes(',') ? job.location.split(',')[1].trim() : 'USA'}
+                    {companyDetails.headquarters}
                   </p>
                 </div>
                 
                 <div>
                   <h3 className="text-sm text-gray-500">Founded</h3>
                   <p className="mt-1 font-medium">
-                    {2023 - Math.floor(Math.random() * 50) - 5}
+                    {companyDetails.founded}
                   </p>
                 </div>
                 
@@ -289,31 +358,33 @@ export function MobileJobDetail({
                   <h3 className="text-lg font-medium mb-4">Company News</h3>
                   
                   <div className="space-y-6">
-                    <div className="pb-4 border-b">
-                      <div className="flex justify-between items-start mb-1">
-                        <span className="text-sm text-gray-500">AdvisorHub</span>
-                        <span className="text-sm text-gray-500">Mar 13th, 2025</span>
+                    {companyNews.map((news, index) => (
+                      <div key={index} className="pb-4 border-b">
+                        <div className="flex justify-between items-start mb-1">
+                          <span className="text-sm text-gray-500">{news.source}</span>
+                          <span className="text-sm text-gray-500">{news.date}</span>
+                        </div>
+                        <h4 className="text-primary font-medium">
+                          {news.title}
+                        </h4>
+                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                          {news.snippet}
+                        </p>
                       </div>
-                      <h4 className="text-primary font-medium">
-                        {job.company} Recruits $1.35 Billion Team From Raymond James in Georgia
-                      </h4>
-                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                        {job.company} Financial on Wednesday landed a team managing $1.35 billion in client assets from...
-                      </p>
-                    </div>
-                    
-                    <div className="pb-4 border-b">
-                      <div className="flex justify-between items-start mb-1">
-                        <span className="text-sm text-gray-500">MarketBeat</span>
-                        <span className="text-sm text-gray-500">Mar 12th, 2025</span>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="pt-4 border-t">
+                  <h3 className="text-lg font-medium mb-4">What makes {job.company} unique</h3>
+                  
+                  <div className="space-y-3">
+                    {companyUniquePoints.map((point, index) => (
+                      <div key={index} className="flex items-start gap-2">
+                        <span className="mt-1">•</span>
+                        <p>{point}</p>
                       </div>
-                      <h4 className="text-primary font-medium">
-                        SHEPHERD WEALTH MANAGEMENT Ltd LIABILITY Co Invests $862,000 in IES Holdings, Inc.
-                      </h4>
-                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                        Finally, {job.company} Financial Corp acquired a new stake in IES in the third quarter valued at about $631,000.
-                      </p>
-                    </div>
+                    ))}
                   </div>
                 </div>
                 
@@ -321,31 +392,12 @@ export function MobileJobDetail({
                   <h3 className="text-lg font-medium mb-4">Benefits</h3>
                   
                   <div className="space-y-3">
-                    {job.benefits?.map((benefit, idx) => (
+                    {enhancedBenefits.map((benefit, idx) => (
                       <div key={idx} className="flex items-center gap-2">
                         <CheckCircle className="h-5 w-5 text-teal-500" />
                         <span>{benefit}</span>
                       </div>
-                    )) || (
-                      <>
-                        <div className="flex items-center gap-2">
-                          <CheckCircle className="h-5 w-5 text-teal-500" />
-                          <span>Health Insurance</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <CheckCircle className="h-5 w-5 text-teal-500" />
-                          <span>Dental Insurance</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <CheckCircle className="h-5 w-5 text-teal-500" />
-                          <span>Vision Insurance</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <CheckCircle className="h-5 w-5 text-teal-500" />
-                          <span>401(k) Retirement Plan</span>
-                        </div>
-                      </>
-                    )}
+                    ))}
                   </div>
                 </div>
               </div>
