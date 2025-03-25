@@ -23,6 +23,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const generateSampleJobs = (count: number): Job[] => {
   const jobTypes: Array<'full-time' | 'part-time' | 'contract' | 'internship' | 'temporary' | 'volunteer' | 'other'> = 
@@ -533,41 +534,58 @@ const Jobs = () => {
             
             <div className="lg:col-span-9 space-y-6">
               {(viewMode === 'list' || !isMobile) && (!showMyJobs || !isMobile) && (
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                  <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                    <div>
-                      <h2 className="font-semibold text-lg">Browse Jobs</h2>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{filteredJobs.length} Opportunities Found</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Select defaultValue={sortOption} onValueChange={handleSortChange}>
-                        <SelectTrigger className="w-[180px] bg-white dark:bg-gray-800">
-                          <SelectValue placeholder="Sort By: Relevance" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="relevance">Sort By: Relevance</SelectItem>
-                          <SelectItem value="date-newest">Date: Newest First</SelectItem>
-                          <SelectItem value="date-oldest">Date: Oldest First</SelectItem>
-                          <SelectItem value="salary-highest">Salary: Highest First</SelectItem>
-                          <SelectItem value="salary-lowest">Salary: Lowest First</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                  <div className="lg:col-span-6">
+                    <Card className="overflow-hidden h-full max-h-[calc(100vh-250px)]">
+                      <CardHeader className="py-3 px-4 border-b flex flex-row justify-between items-center">
+                        <div>
+                          <CardTitle className="text-base font-medium">Browse Jobs</CardTitle>
+                          <p className="text-xs text-muted-foreground">Showing {filteredJobs.length} of {jobs.length} Jobs</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Select defaultValue={sortOption} onValueChange={handleSortChange}>
+                            <SelectTrigger className="w-[180px] bg-white dark:bg-gray-800 h-8 text-sm">
+                              <SelectValue placeholder="Sort By: Relevance" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="relevance">Sort By: Relevance</SelectItem>
+                              <SelectItem value="date-newest">Date: Newest First</SelectItem>
+                              <SelectItem value="date-oldest">Date: Oldest First</SelectItem>
+                              <SelectItem value="salary-highest">Salary: Highest First</SelectItem>
+                              <SelectItem value="salary-lowest">Salary: Lowest First</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </CardHeader>
+                      
+                      <CardContent className="p-0 divide-y overflow-y-auto max-h-[calc(100vh-300px)]">
+                        {filteredJobs.map(job => (
+                          <JobCard 
+                            key={job.id}
+                            job={job}
+                            onApply={handleApplyJob}
+                            isSelected={selectedJob?.id === job.id}
+                            isSaved={savedJobIds.includes(job.id)}
+                            isApplied={appliedJobIds.includes(job.id)}
+                            onClick={() => handleJobSelect(job)}
+                            onSave={() => handleSaveJob(job)}
+                            variant="list"
+                          />
+                        ))}
+                      </CardContent>
+                    </Card>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
-                    {filteredJobs.map(job => (
-                      <JobCard 
-                        key={job.id}
-                        job={job}
-                        onApply={handleApplyJob}
-                        isSelected={selectedJob?.id === job.id}
-                        isSaved={savedJobIds.includes(job.id)}
-                        isApplied={appliedJobIds.includes(job.id)}
-                        onClick={() => handleJobSelect(job)}
-                        onSave={() => handleSaveJob(job)}
-                      />
-                    ))}
+                  <div className="lg:col-span-6">
+                    <Card className="h-full max-h-[calc(100vh-250px)] overflow-hidden">
+                      <CardContent className="p-0">
+                        <JobDetailView 
+                          job={selectedJob} 
+                          onApply={handleApplyJob}
+                          onSave={handleSaveJob}
+                        />
+                      </CardContent>
+                    </Card>
                   </div>
                 </div>
               )}
@@ -580,20 +598,7 @@ const Jobs = () => {
                     onSkip={handleSkipJob}
                   />
                 </div>
-              ) : (
-                <div className="sticky top-24 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                  <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                    <h2 className="font-semibold text-lg">Job Details</h2>
-                  </div>
-                  <div className="p-0">
-                    <JobDetailView 
-                      job={selectedJob} 
-                      onApply={handleApplyJob}
-                      onSave={handleSaveJob}
-                    />
-                  </div>
-                </div>
-              )}
+              ) : null}
               
               {showAutomation && selectedJob && (
                 <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl shadow-sm border border-blue-200 dark:border-blue-800 overflow-hidden">
@@ -613,7 +618,7 @@ const Jobs = () => {
                   
                   <div className="p-4">
                     <p className="text-sm mb-3 text-blue-600 dark:text-blue-400">
-                      Use automation to apply to this job at {selectedJob.company} automatically.
+                      Use Automation To Apply To This Job At {selectedJob.company} Automatically.
                     </p>
                     
                     <div className="flex flex-wrap gap-2">
@@ -648,3 +653,4 @@ const Jobs = () => {
 };
 
 export default Jobs;
+

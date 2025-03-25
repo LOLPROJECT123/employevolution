@@ -3,7 +3,7 @@ import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Building2, Clock, CheckCircle } from "lucide-react";
+import { MapPin, Building2, Clock, CheckCircle, Bookmark } from "lucide-react";
 import { formatRelativeTime } from "@/utils/dateUtils";
 
 interface JobCardProps {
@@ -14,6 +14,7 @@ interface JobCardProps {
   isApplied?: boolean;
   onClick?: () => void;
   onSave?: () => void;
+  variant?: 'card' | 'list';
 }
 
 export function JobCard({ 
@@ -23,7 +24,8 @@ export function JobCard({
   isSaved, 
   isApplied, 
   onClick, 
-  onSave 
+  onSave,
+  variant = 'card'
 }: JobCardProps) {
   const formattedSalary = `${job.salary.currency}${job.salary.min.toLocaleString()} - ${job.salary.currency}${job.salary.max.toLocaleString()}`;
   const timeAgo = formatRelativeTime(job.postedAt);
@@ -60,6 +62,53 @@ export function JobCard({
     }
   };
 
+  if (variant === 'list') {
+    return (
+      <div 
+        className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors ${isSelected ? 'bg-gray-50 dark:bg-gray-800/50 border-l-4 border-l-primary' : ''}`}
+        onClick={handleCardClick}
+      >
+        <div className="flex items-start justify-between">
+          <div className="flex gap-3">
+            {job.company.charAt(0) && (
+              <div className="w-12 h-12 rounded bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
+                {job.company.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div className="space-y-1">
+              <div className="text-sm text-muted-foreground">
+                {job.company} • {job.type === 'internship' ? 'Internship' : job.type}
+              </div>
+              <h3 className="font-semibold text-base">{job.title}</h3>
+              <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                <div className="flex items-center gap-1">
+                  <span className="text-primary">{job.salary.currency}</span>
+                  <span>{job.salary.min.toLocaleString()}{job.salary.min !== job.salary.max ? `-${job.salary.max.toLocaleString()}` : ''}/hr</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                <MapPin className="w-3 h-3" />
+                <span>{job.location}</span>
+              </div>
+            </div>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onSave) onSave();
+            }}
+          >
+            <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-primary text-primary' : ''}`} />
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Default card variant
   return (
     <Card 
       className={`group hover:shadow-md transition-all duration-200 cursor-pointer relative ${isSelected ? 'border-primary' : ''}`}
