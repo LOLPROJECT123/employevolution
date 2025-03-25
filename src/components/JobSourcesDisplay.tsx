@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { RefreshCwIcon, SearchIcon, DatabaseIcon, PlusIcon } from "lucide-react";
+import { RefreshCwIcon, PlusIcon } from "lucide-react";
 import { toast } from "sonner";
 import { JobScraperConfig } from "@/components/JobScraperConfig";
 import { Input } from "@/components/ui/input";
@@ -237,22 +237,6 @@ export default function JobSourcesDisplay() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="flex items-center gap-4 px-4 py-3 bg-blue-100/50 dark:bg-blue-900/20 rounded-lg">
-            <div className="bg-blue-500 dark:bg-blue-600 text-white p-3 rounded-full">
-              <SearchIcon className="w-5 h-5" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-medium text-blue-700 dark:text-blue-300">Multi-Platform Search</h3>
-              <p className="text-sm text-blue-600/70 dark:text-blue-400/70">
-                Searching across all major job platforms
-              </p>
-            </div>
-            <Badge variant="outline" className="bg-blue-200/50 text-blue-700 dark:bg-blue-800/50 dark:text-blue-300 border-blue-300 dark:border-blue-700">
-              <DatabaseIcon className="h-3.5 w-3.5 mr-1.5" />
-              All Sources
-            </Badge>
-          </div>
-          
           {isScrapingNow ? (
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
