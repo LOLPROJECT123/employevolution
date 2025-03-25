@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -157,13 +156,69 @@ export default function JobSourcesDisplay() {
       toast.error("Please enter a valid URL");
     }
   };
-  
+
   const activeSourcesCount = jobSources.filter(source => source.isActive).length;
+
+  const AddSourceButton = () => (
+    <Dialog open={openAddDialog} onOpenChange={setOpenAddDialog}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm" className="flex items-center gap-1">
+          <PlusIcon className="h-3.5 w-3.5" />
+          Add Source
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Add Custom Job Source</DialogTitle>
+          <DialogDescription>
+            Add a custom website to search for job opportunities
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <label htmlFor="sourceName" className="text-sm font-medium">
+              Source Name
+            </label>
+            <Input
+              id="sourceName"
+              value={newSourceName}
+              onChange={(e) => setNewSourceName(e.target.value)}
+              placeholder="e.g., Company Careers Page"
+            />
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="sourceUrl" className="text-sm font-medium">
+              Source URL
+            </label>
+            <Input
+              id="sourceUrl"
+              value={newSourceUrl}
+              onChange={(e) => setNewSourceUrl(e.target.value)}
+              placeholder="https://example.com/careers"
+            />
+          </div>
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button variant="outline" onClick={() => setOpenAddDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddCustomSource}>
+              Add Source
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 
   return (
     <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-100 dark:border-blue-900/50">
       <CardHeader className="pb-3">
         <div className="flex justify-between items-start">
+          {isMobile && (
+            <div className="absolute top-5 right-5">
+              <AddSourceButton />
+            </div>
+          )}
           <div className={isMobile ? "mt-8" : ""}>
             <CardTitle className="text-xl bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 font-bold whitespace-nowrap">
               Job Search Engine
@@ -172,57 +227,17 @@ export default function JobSourcesDisplay() {
               Searching across {activeSourcesCount} platforms, {totalJobsFound} jobs found
             </CardDescription>
           </div>
-          <div className="flex gap-2">
-            <Dialog open={openAddDialog} onOpenChange={setOpenAddDialog}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="flex items-center gap-1">
-                  <PlusIcon className="h-3.5 w-3.5" />
-                  Add Source
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Add Custom Job Source</DialogTitle>
-                  <DialogDescription>
-                    Add a custom website to search for job opportunities
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <label htmlFor="sourceName" className="text-sm font-medium">
-                      Source Name
-                    </label>
-                    <Input
-                      id="sourceName"
-                      value={newSourceName}
-                      onChange={(e) => setNewSourceName(e.target.value)}
-                      placeholder="e.g., Company Careers Page"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label htmlFor="sourceUrl" className="text-sm font-medium">
-                      Source URL
-                    </label>
-                    <Input
-                      id="sourceUrl"
-                      value={newSourceUrl}
-                      onChange={(e) => setNewSourceUrl(e.target.value)}
-                      placeholder="https://example.com/careers"
-                    />
-                  </div>
-                  <div className="flex justify-end space-x-2 pt-4">
-                    <Button variant="outline" onClick={() => setOpenAddDialog(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleAddCustomSource}>
-                      Add Source
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-            <JobScraperConfig onConfigUpdate={handleSourceUpdate} />
-          </div>
+          {!isMobile && (
+            <div className="flex gap-2">
+              <AddSourceButton />
+              <JobScraperConfig onConfigUpdate={handleSourceUpdate} />
+            </div>
+          )}
+          {isMobile && (
+            <div className="absolute top-5 right-16">
+              <JobScraperConfig onConfigUpdate={handleSourceUpdate} />
+            </div>
+          )}
         </div>
       </CardHeader>
       <CardContent>
