@@ -215,11 +215,12 @@ export default function JobSourcesDisplay() {
       <CardHeader className="pb-3">
         <div className="flex justify-between items-start">
           {isMobile && (
-            <div className="absolute top-5 right-5">
+            <div className="w-full flex justify-between items-center mb-4">
               <AddSourceButton />
+              <JobScraperConfig onConfigUpdate={handleSourceUpdate} />
             </div>
           )}
-          <div className={isMobile ? "mt-8" : ""}>
+          <div>
             <CardTitle className="text-xl bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 font-bold whitespace-nowrap">
               Job Search Engine
             </CardTitle>
@@ -230,11 +231,6 @@ export default function JobSourcesDisplay() {
           {!isMobile && (
             <div className="flex gap-2">
               <AddSourceButton />
-              <JobScraperConfig onConfigUpdate={handleSourceUpdate} />
-            </div>
-          )}
-          {isMobile && (
-            <div className="absolute top-5 right-16">
               <JobScraperConfig onConfigUpdate={handleSourceUpdate} />
             </div>
           )}
