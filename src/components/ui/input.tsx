@@ -12,6 +12,12 @@ export interface InputProps
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, icon, iconPosition = "left", onClear, ...props }, ref) => {
+    const handleClear = () => {
+      if (onClear) {
+        onClear();
+      }
+    };
+
     return (
       <div className="relative w-full">
         {icon && iconPosition === "left" && (
@@ -40,7 +46,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           <button 
             type="button"
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
-            onClick={onClear}
+            onClick={handleClear}
             aria-label="Clear input"
           >
             <X size={16} />

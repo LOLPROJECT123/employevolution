@@ -48,98 +48,98 @@ interface PatternData {
 const leetcodePatterns: PatternData[] = [
   { 
     name: "Arrays & Hashing", 
-    count: 15, 
+    count: 6, 
     mastery: 60,
     description: "Techniques for array manipulation, hash tables for efficient lookups, and in-place operations."
   },
   { 
     name: "Two Pointers", 
-    count: 12, 
+    count: 6, 
     mastery: 75,
     description: "Using two different pointers to solve problems efficiently, often with sorted arrays or linked lists."
   },
   { 
     name: "Sliding Window", 
-    count: 10, 
+    count: 6, 
     mastery: 55,
     description: "A fixed or dynamic window that slides through array/string to efficiently process subarrays."
   },
   { 
     name: "Stack", 
-    count: 12, 
+    count: 6, 
     mastery: 70,
     description: "Using stacks for problems involving matching, nesting, or backtracking scenarios."
   },
   { 
     name: "Binary Search", 
-    count: 14, 
+    count: 6, 
     mastery: 80,
     description: "Using divide and conquer approach on sorted arrays to achieve O(log n) time complexity."
   },
   { 
     name: "Linked List", 
-    count: 16, 
+    count: 6, 
     mastery: 65,
     description: "Techniques for manipulating linked lists including reversal, finding cycles, and merging."
   },
   { 
     name: "Trees", 
-    count: 18, 
+    count: 6, 
     mastery: 60,
     description: "Binary trees, BST operations, traversals, and tree construction problems."
   },
   { 
     name: "Tries", 
-    count: 8, 
+    count: 6, 
     mastery: 45,
     description: "Efficient retrieval of strings, particularly useful for prefix matching problems."
   },
   { 
     name: "Heap / Priority Queue", 
-    count: 12, 
+    count: 6, 
     mastery: 50,
     description: "Managing elements by priority, particularly useful for top-k problems."
   },
   { 
     name: "Graphs", 
-    count: 20, 
+    count: 6, 
     mastery: 40,
     description: "DFS, BFS, topological sort, shortest paths, and connected components problems."
   },
   { 
     name: "Dynamic Programming", 
-    count: 25, 
+    count: 6, 
     mastery: 35,
     description: "Breaking down complex problems into simpler subproblems, then combining their solutions."
   },
   { 
     name: "Greedy", 
-    count: 14, 
+    count: 6, 
     mastery: 60,
     description: "Making locally optimal choices with the hope of finding a global optimum."
   },
   { 
     name: "Backtracking", 
-    count: 15, 
+    count: 6, 
     mastery: 40,
     description: "Systematic exploration of all possible solutions by incrementally building candidates."
   },
   { 
     name: "Bit Manipulation", 
-    count: 10, 
+    count: 6, 
     mastery: 45,
     description: "Manipulating binary representations of data to solve problems more efficiently."
   },
   { 
     name: "Math & Geometry", 
-    count: 13, 
+    count: 6, 
     mastery: 55,
     description: "Mathematical tricks and geometrical concepts used to solve computational problems."
   }
 ];
 
 const sampleProblems: LeetcodeProblem[] = [
-  // Arrays & Hashing
+  // Arrays & Hashing - 2 Easy, 2 Medium, 2 Hard
   {
     id: 1,
     title: "Two Sum",
@@ -201,7 +201,7 @@ const sampleProblems: LeetcodeProblem[] = [
     completed: false
   },
   
-  // Two Pointers
+  // Two Pointers - 2 Easy, 2 Medium, 2 Hard
   {
     id: 125,
     title: "Valid Palindrome",
@@ -263,7 +263,7 @@ const sampleProblems: LeetcodeProblem[] = [
     completed: false
   },
   
-  // Sliding Window
+  // Sliding Window - 2 Easy, 2 Medium, 2 Hard
   {
     id: 121,
     title: "Best Time to Buy and Sell Stock",
@@ -325,7 +325,7 @@ const sampleProblems: LeetcodeProblem[] = [
     completed: false
   },
   
-  // Stack
+  // Stack - 2 Easy, 2 Medium, 2 Hard
   {
     id: 20,
     title: "Valid Parentheses",
@@ -387,7 +387,7 @@ const sampleProblems: LeetcodeProblem[] = [
     completed: false
   },
   
-  // Binary Search
+  // Binary Search - 2 Easy, 2 Medium, 2 Hard
   {
     id: 704,
     title: "Binary Search",
@@ -449,7 +449,7 @@ const sampleProblems: LeetcodeProblem[] = [
     completed: false
   },
   
-  // Linked List
+  // Linked List - 2 Easy, 2 Medium, 2 Hard
   {
     id: 206,
     title: "Reverse Linked List",
@@ -511,7 +511,7 @@ const sampleProblems: LeetcodeProblem[] = [
     completed: false
   },
   
-  // Trees
+  // Trees - 2 Easy, 2 Medium, 2 Hard
   {
     id: 104,
     title: "Maximum Depth of Binary Tree",
@@ -573,7 +573,7 @@ const sampleProblems: LeetcodeProblem[] = [
     completed: false
   },
   
-  // Tries
+  // Tries - 2 Easy, 2 Medium, 2 Hard
   {
     id: 14,
     title: "Longest Common Prefix",
@@ -635,7 +635,7 @@ const sampleProblems: LeetcodeProblem[] = [
     completed: false
   },
   
-  // Heap / Priority Queue
+  // Heap / Priority Queue - 2 Easy, 2 Medium, 2 Hard
   {
     id: 703,
     title: "Kth Largest Element in a Stream",
@@ -697,7 +697,7 @@ const sampleProblems: LeetcodeProblem[] = [
     completed: false
   },
   
-  // Graphs
+  // Graphs - 2 Easy, 2 Medium, 2 Hard
   {
     id: 733,
     title: "Flood Fill",
@@ -759,7 +759,7 @@ const sampleProblems: LeetcodeProblem[] = [
     completed: false
   },
   
-  // Dynamic Programming
+  // Dynamic Programming - 2 Easy, 2 Medium, 2 Hard
   {
     id: 70,
     title: "Climbing Stairs",
@@ -821,7 +821,7 @@ const sampleProblems: LeetcodeProblem[] = [
     completed: false
   },
   
-  // Greedy
+  // Greedy - 2 Easy, 2 Medium, 2 Hard
   {
     id: 53,
     title: "Maximum Subarray",
@@ -883,7 +883,7 @@ const sampleProblems: LeetcodeProblem[] = [
     completed: false
   },
   
-  // Backtracking
+  // Backtracking - 2 Easy, 2 Medium, 2 Hard
   {
     id: 401,
     title: "Binary Watch",
@@ -945,7 +945,7 @@ const sampleProblems: LeetcodeProblem[] = [
     completed: false
   },
   
-  // Bit Manipulation
+  // Bit Manipulation - 2 Easy, 2 Medium, 2 Hard
   {
     id: 191,
     title: "Number of 1 Bits",
@@ -1007,7 +1007,7 @@ const sampleProblems: LeetcodeProblem[] = [
     completed: false
   },
   
-  // Math & Geometry
+  // Math & Geometry - 2 Easy, 2 Medium, 2 Hard
   {
     id: 9,
     title: "Palindrome Number",
