@@ -121,13 +121,7 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
   const xPosition = direction === "left" ? -1000 : direction === "right" ? 1000 : 0;
 
   return (
-    <div className="w-full max-w-md mx-auto pb-8">
-      {/* Job Count Display Section - Added above the swipe instructions */}
-      <div className="mb-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-        <h3 className="text-lg font-semibold">Found {jobs.length} Matching Jobs</h3>
-        <p className="text-sm text-muted-foreground">Displaying Jobs That Match Your Search Criteria.</p>
-      </div>
-      
+    <div className="w-full max-w-md mx-auto">
       <h3 className="text-xl font-semibold mb-4 text-center">
         Swipe Right To Apply, Left To Skip
       </h3>
@@ -140,8 +134,8 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
         animate={{ x: xPosition }}
         transition={{ duration: 0.3 }}
       >
-        <Card className="border-2 h-[calc(100vh-250px)] flex flex-col">
-          {/* Job Match Percentage Badge - Added to the top right */}
+        <Card className="border border-gray-200 dark:border-gray-700 shadow-sm rounded-xl overflow-hidden">
+          {/* Job Match Percentage Badge */}
           {currentJob.matchPercentage && (
             <div className="absolute top-3 right-3 z-10">
               <div className={`px-3 py-1.5 rounded-full ${getMatchBgColor(currentJob.matchPercentage)} ${getMatchColor(currentJob.matchPercentage)} text-sm font-semibold flex items-center shadow-sm`}>
@@ -150,80 +144,87 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
             </div>
           )}
           
-          <CardContent className="flex-1 p-6">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold mb-1">{currentJob.title}</h2>
-              <div className="flex items-center text-muted-foreground">
-                <Building2 className="w-4 h-4 mr-2" />
-                <span>{currentJob.company}</span>
-              </div>
-              <div className="flex items-center text-muted-foreground mt-1">
-                <MapPin className="w-4 h-4 mr-2" />
-                <span>{currentJob.location}</span>
-              </div>
-              <div className="flex items-center text-muted-foreground mt-1">
-                <Briefcase className="w-4 h-4 mr-2" />
-                <span className="capitalize">{currentJob.level} • {currentJob.type}</span>
-              </div>
-              <div className="flex items-center text-muted-foreground mt-1">
-                <DollarSign className="w-4 h-4 mr-2" />
-                <span>{formattedSalary}</span>
-              </div>
-              <div className="flex items-center text-muted-foreground mt-1">
-                <Clock className="w-4 h-4 mr-2" />
-                <span>Posted {timeAgo}</span>
+          <CardContent className="p-5">
+            <div className="mb-5">
+              <h2 className="text-2xl font-bold mb-3">{currentJob.title}</h2>
+              
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center text-muted-foreground">
+                  <Building2 className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span>{currentJob.company}</span>
+                </div>
+                
+                <div className="flex items-center text-muted-foreground">
+                  <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span>{currentJob.location}</span>
+                </div>
+                
+                <div className="flex items-center text-muted-foreground">
+                  <Briefcase className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span className="capitalize">{currentJob.level} • {currentJob.type}</span>
+                </div>
+                
+                <div className="flex items-center text-muted-foreground">
+                  <DollarSign className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span>{formattedSalary}</span>
+                </div>
+                
+                <div className="flex items-center text-muted-foreground">
+                  <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span>Posted {timeAgo}</span>
+                </div>
               </div>
             </div>
             
             <div className="space-y-4">
-              <h3 className="text-lg font-medium">About This Role</h3>
-              <p className="text-muted-foreground">
-                {currentJob.description.substring(0, 200)}...
-              </p>
+              <div>
+                <h3 className="text-lg font-medium mb-2">About This Role</h3>
+                <p className="text-muted-foreground text-sm">
+                  {currentJob.description}
+                </p>
+              </div>
               
               <div>
                 <h3 className="text-lg font-medium mb-2">Skills</h3>
                 <div className="flex flex-wrap gap-2">
                   {currentJob.skills.slice(0, 5).map((skill, index) => (
-                    <div key={index} className="px-3 py-1 rounded-full bg-secondary/70 text-sm capitalize">
+                    <div key={index} className="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-sm capitalize">
                       {skill}
                     </div>
                   ))}
                 </div>
               </div>
             </div>
-          </CardContent>
-          
-          {/* Added an explicit Apply button above the swipe controls */}
-          <div className="px-6 pb-2">
+            
+            {/* Apply button */}
             <Button 
-              className="w-full mb-4"
+              className="w-full mt-6"
               size="lg"
               onClick={handleApply}
             >
               <Zap className="w-4 h-4 mr-2" />
               Apply Now
             </Button>
-          </div>
+          </CardContent>
           
-          <CardFooter className="border-t pt-4 pb-4">
-            <div className="flex justify-between w-full">
+          <CardFooter className="border-t pt-4 pb-4 flex justify-center">
+            <div className="flex justify-between w-full max-w-xs">
               <Button 
                 variant="outline" 
                 size="lg" 
-                className="rounded-full h-16 w-16 bg-red-100 hover:bg-red-200 border-none"
+                className="rounded-full h-14 w-14 bg-red-100 hover:bg-red-200 border-none"
                 onClick={() => handleSwipe("left")}
               >
-                <X className="h-8 w-8 text-red-500" />
+                <X className="h-6 w-6 text-red-500" />
               </Button>
               
               <Button 
                 variant="outline" 
                 size="lg" 
-                className="rounded-full h-16 w-16 bg-green-100 hover:bg-green-200 border-none"
+                className="rounded-full h-14 w-14 bg-green-100 hover:bg-green-200 border-none"
                 onClick={() => handleSwipe("right")}
               >
-                <Check className="h-8 w-8 text-green-500" />
+                <Check className="h-6 w-6 text-green-500" />
               </Button>
             </div>
           </CardFooter>
@@ -231,7 +232,7 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
       </motion.div>
       
       <div className="text-center mt-4 text-muted-foreground">
-        Job {currentIndex + 1} Of {jobs.length}
+        Job {currentIndex + 1} of {jobs.length}
       </div>
     </div>
   );
