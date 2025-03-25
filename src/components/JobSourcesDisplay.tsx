@@ -10,6 +10,7 @@ import { JobScraperConfig } from "@/components/JobScraperConfig";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useIsMobile } from '@/hooks/use-mobile';
+import { formatRelativeTime } from '@/utils/dateUtils';
 
 interface JobSource {
   id: string;
@@ -264,23 +265,28 @@ export default function JobSourcesDisplay() {
               />
             </div>
           ) : (
-            <div className="flex justify-between items-center">
-              <div className="text-sm text-blue-600/70 dark:text-blue-400/70">
-                Last updated: {getFormattedLastScraped()}
+            <div className="flex flex-col space-y-3">
+              {/* Updated layout for mobile to show time and badge on same line */}
+              <div className="flex items-center text-sm text-blue-600/70 dark:text-blue-400/70">
+                <span>Last updated: {getFormattedLastScraped()}</span>
                 {newJobsFound > 0 && (
                   <Badge variant="outline" className="ml-2 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 border-green-300 dark:border-green-700">
                     +{newJobsFound} new
                   </Badge>
                 )}
               </div>
-              <Button 
-                size="sm" 
-                onClick={handleStartScraping}
-                className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                <RefreshCwIcon className="h-3.5 w-3.5" />
-                Refresh Now
-              </Button>
+              
+              {/* Refresh button now on its own line with spacing */}
+              <div className="flex justify-end">
+                <Button 
+                  size="sm" 
+                  onClick={handleStartScraping}
+                  className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <RefreshCwIcon className="h-3.5 w-3.5" />
+                  Refresh Now
+                </Button>
+              </div>
             </div>
           )}
         </div>
