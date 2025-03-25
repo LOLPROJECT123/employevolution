@@ -138,13 +138,13 @@ const JobApplicationAutomation = () => {
       const jobId = extractJobId(finalUrl);
       console.log("Extracted job ID:", jobId);
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 800));
       
       toast.success("Application prepared successfully!", {
-        description: "You're being redirected to complete your application."
+        description: "Your application will open in a new tab"
       });
       
-      // Open the job URL in a new tab to avoid navigation issues
+      // Always open in a new tab for better user experience
       window.open(finalUrl, '_blank', 'noopener,noreferrer');
       
       // Don't clear inputs after submission so they can be reused
@@ -162,7 +162,7 @@ const JobApplicationAutomation = () => {
       <CardHeader>
         <CardTitle>Automated Job Application</CardTitle>
         <CardDescription>
-          Paste a job URL and your resume to automatically apply
+          Paste a job URL and your resume to quickly apply to jobs
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
