@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +18,6 @@ interface JobSource {
 }
 
 export default function JobSourcesDisplay() {
-  // These would come from the backend in a real app
   const [jobSources, setJobSources] = useState<JobSource[]>([]);
   const [lastScraped, setLastScraped] = useState<string | null>(null);
   const [isScrapingNow, setIsScrapingNow] = useState(false);
@@ -32,13 +30,11 @@ export default function JobSourcesDisplay() {
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    // Load job sources from localStorage
     try {
       const savedSources = localStorage.getItem('jobSources');
       if (savedSources) {
         setJobSources(JSON.parse(savedSources));
       } else {
-        // Default to initial sources if nothing saved - now with 6 platforms
         const defaultSources = [
           { id: 'linkedin', name: 'LinkedIn', isActive: true },
           { id: 'github', name: 'GitHub Jobs', isActive: true },
@@ -78,7 +74,6 @@ export default function JobSourcesDisplay() {
       description: "Searching for matching opportunities across all platforms"
     });
     
-    // Simulate scraping progress
     const intervalId = setInterval(() => {
       setScrapingProgress(prev => {
         const newProgress = prev + Math.random() * 10;
@@ -86,7 +81,6 @@ export default function JobSourcesDisplay() {
           clearInterval(intervalId);
           setIsScrapingNow(false);
           
-          // Simulate finding new jobs
           const newJobs = Math.floor(Math.random() * 20) + 5;
           setNewJobsFound(newJobs);
           setTotalJobsFound(prev => prev + newJobs);
@@ -131,13 +125,10 @@ export default function JobSourcesDisplay() {
     }
 
     try {
-      // Validate URL
       new URL(newSourceUrl);
       
-      // Create unique ID from name
       const newId = `custom-${newSourceName.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
       
-      // Check if ID already exists
       if (jobSources.some(source => source.id === newId)) {
         toast.error("A source with this name already exists");
         return;
@@ -154,7 +145,6 @@ export default function JobSourcesDisplay() {
       setJobSources(updatedSources);
       localStorage.setItem('jobSources', JSON.stringify(updatedSources));
       
-      // Reset fields
       setNewSourceName('');
       setNewSourceUrl('');
       setOpenAddDialog(false);
@@ -173,7 +163,7 @@ export default function JobSourcesDisplay() {
     <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-100 dark:border-blue-900/50">
       <CardHeader className="pb-3">
         <div className="flex justify-between items-start">
-          <div className={isMobile ? "mt-4" : ""}>
+          <div className={isMobile ? "mt-8" : ""}>
             <CardTitle className="text-xl bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 font-bold whitespace-nowrap">
               Job Search Engine
             </CardTitle>
