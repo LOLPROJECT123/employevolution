@@ -1,7 +1,7 @@
 
 import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
-import { BookmarkIcon, Building2, MapPin, Clock, CheckCircle, ArrowRight, ArrowRightCircle } from "lucide-react";
+import { BookmarkIcon, Building2, MapPin, Clock, CheckCircle, ArrowRight, ArrowRightCircle, Zap } from "lucide-react";
 import { formatRelativeTime } from "@/utils/dateUtils";
 import { Badge } from "./ui/badge";
 
@@ -78,6 +78,7 @@ export function JobCard({
         className={`px-4 py-3 cursor-pointer transition-colors relative ${isSelected ? 'bg-primary/5 dark:bg-primary/10' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'}`}
       >
         <div className="flex items-center space-x-3">
+          {/* Company avatar with initial */}
           <div className={`w-10 h-10 flex-shrink-0 rounded-md flex items-center justify-center ${getCompanyColor()}`}>
             {getCompanyInitial()}
           </div>
@@ -86,10 +87,10 @@ export function JobCard({
             <div className="flex justify-between items-start">
               <h3 className="text-sm font-medium truncate">{job.title}</h3>
               
-              {/* Match Percentage Badge - Added to job card */}
+              {/* Match Percentage Badge - Made more prominent */}
               {job.matchPercentage && (
-                <Badge variant="outline" className={`ml-2 px-2 py-0.5 text-xs ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)}`}>
-                  {job.matchPercentage}%
+                <Badge variant="outline" className={`ml-2 px-2 py-0.5 text-xs font-bold ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)}`}>
+                  {job.matchPercentage}% Match
                 </Badge>
               )}
             </div>
@@ -111,7 +112,7 @@ export function JobCard({
             </div>
           </div>
           
-          <div className="ml-2">
+          <div className="ml-2 flex flex-col items-end gap-2">
             {isApplied ? (
               <Badge className="bg-green-100 hover:bg-green-100 text-green-700 border-green-200">
                 <CheckCircle className="mr-1 h-3 w-3" /> Applied
@@ -144,12 +145,11 @@ export function JobCard({
           </div>
         </div>
         
-        {/* Add Apply button to job card for better visibility */}
+        {/* Apply button - Made more prominent */}
         <div className="mt-2">
           <Button 
             size="sm" 
-            variant="outline"
-            className="w-full justify-between text-xs"
+            className="w-full justify-between text-xs bg-blue-600 hover:bg-blue-700"
             onClick={(e) => {
               e.stopPropagation();
               onApply?.(job);
@@ -170,16 +170,19 @@ export function JobCard({
         isSelected ? 'ring-2 ring-primary border-primary' : 'hover:shadow-md hover:border-primary/30'
       }`}
     >
+      {/* Match percentage badge at the top right - Made larger and more prominent */}
+      <div className="absolute top-3 right-3">
+        {job.matchPercentage && (
+          <Badge variant="outline" className={`px-2.5 py-1 text-xs font-bold ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)}`}>
+            {job.matchPercentage}% Match
+          </Badge>
+        )}
+      </div>
+      
       <div className="flex justify-between items-start mb-3">
         <div className={`w-12 h-12 flex-shrink-0 rounded-lg flex items-center justify-center ${getCompanyColor()}`}>
           {getCompanyInitial()}
         </div>
-        
-        {job.matchPercentage && (
-          <Badge variant="outline" className={`px-2 py-1 text-xs ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)}`}>
-            {job.matchPercentage}% Match
-          </Badge>
-        )}
       </div>
       
       <h3 className="font-medium">{job.title}</h3>
@@ -200,8 +203,7 @@ export function JobCard({
       <div className="flex items-center justify-between mt-4">
         <Button
           size="sm"
-          variant={isApplied ? "outline" : "default"}
-          className={isApplied ? "text-green-600 border-green-200 bg-green-50" : ""}
+          className={isApplied ? "text-green-600 border-green-200 bg-green-50 w-full" : "bg-blue-600 hover:bg-blue-700 w-full"}
           onClick={(e) => {
             e.stopPropagation();
             onApply?.(job);
@@ -213,7 +215,7 @@ export function JobCard({
             </>
           ) : (
             <>
-              Apply Now <ArrowRightCircle className="ml-1 h-3 w-3" />
+              Apply Now <Zap className="ml-1 h-3 w-3" />
             </>
           )}
         </Button>
@@ -221,7 +223,7 @@ export function JobCard({
         <Button
           variant="ghost"
           size="icon"
-          className={isSaved ? "text-primary" : ""}
+          className={isSaved ? "text-primary ml-2" : "ml-2"}
           onClick={(e) => {
             e.stopPropagation();
             onSave?.();
