@@ -11,7 +11,7 @@ import {
   Search,
   SlidersHorizontal,
   ArrowLeft,
-  Share2
+  X
 } from "lucide-react";
 
 interface MobileJobsProps {
@@ -198,53 +198,57 @@ export default function MobileJobs() {
     setSelectedJob(job);
     setShowDetailView(true);
   };
+
+  const handleClearSearch = () => {
+    setSearchTerm("");
+  };
   
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900">
       <div className="fixed top-0 left-0 right-0 z-10 bg-white dark:bg-gray-900 border-b dark:border-gray-800">
         <div className="p-4">
           {!showDetailView ? (
             <>
               <h1 className="text-2xl font-bold mb-4">Search All Jobs</h1>
               
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <div className="relative mb-4">
                 <Input
                   type="text"
                   placeholder="Search for roles, companies, or locations"
-                  className="pl-10 pr-4 py-3 rounded-full border-gray-300 dark:border-gray-700"
+                  className="pl-10 pr-10 py-3 rounded-full border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 h-12"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  icon={<Search className="h-4 w-4" />}
+                  iconPosition="left"
+                  onClear={handleClearSearch}
                 />
               </div>
               
-              <div className="mt-4 flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2 mb-4">
                 <Button
                   variant="outline"
-                  className="rounded-full border-gray-300 dark:border-gray-700 py-2 px-4 text-base"
+                  className="rounded-full border-gray-200 dark:border-gray-700 py-2 px-4 text-sm flex-grow-0 bg-white dark:bg-gray-800"
                 >
                   <SlidersHorizontal className="w-4 h-4 mr-2" />
                   Filter Jobs (3)
                 </Button>
                 
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    className="rounded-full border-gray-300 dark:border-gray-700 px-4 py-2"
-                  >
-                    Save Search
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    className="rounded-full border-gray-300 dark:border-gray-700 px-4 py-2"
-                  >
-                    Clear
-                  </Button>
-                </div>
+                <Button
+                  variant="outline"
+                  className="rounded-full border-gray-200 dark:border-gray-700 px-4 py-2 text-sm bg-white dark:bg-gray-800"
+                >
+                  Save Search
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  className="rounded-full border-gray-200 dark:border-gray-700 px-4 py-2 text-sm bg-white dark:bg-gray-800"
+                >
+                  Clear
+                </Button>
               </div>
               
-              <div className="mt-4 flex items-center justify-between py-2 border-t border-b">
+              <div className="flex items-center justify-between py-2 border-t border-b border-gray-200 dark:border-gray-700">
                 <span className="text-sm text-gray-600 dark:text-gray-400">
                   Showing {filteredJobs.length} of {jobs.length} Jobs
                 </span>
@@ -260,9 +264,9 @@ export default function MobileJobs() {
         </div>
       </div>
       
-      <main className={`flex-1 ${!showDetailView ? 'pt-48' : ''}`}>
+      <main className={`flex-1 ${!showDetailView ? 'pt-44' : ''}`}>
         {!showDetailView ? (
-          <div className="divide-y divide-gray-200 dark:divide-gray-800">
+          <div>
             {filteredJobs.map(job => (
               <MobileJobCard
                 key={job.id}

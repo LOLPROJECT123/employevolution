@@ -22,13 +22,13 @@ export function MobileJobCard({
   
   const getCompanyColor = () => {
     const colors = [
+      'bg-pink-100 text-pink-600',
       'bg-blue-100 text-blue-600',
       'bg-green-100 text-green-600',
       'bg-purple-100 text-purple-600',
       'bg-yellow-100 text-yellow-600',
       'bg-red-100 text-red-600',
       'bg-indigo-100 text-indigo-600',
-      'bg-pink-100 text-pink-600',
       'bg-orange-100 text-orange-600',
     ];
     
@@ -45,44 +45,39 @@ export function MobileJobCard({
   
   return (
     <div 
-      className="p-4 border-b border-gray-200 dark:border-gray-700 active:bg-gray-50 dark:active:bg-gray-800/60"
+      className="py-3 px-4 active:bg-gray-50 dark:active:bg-gray-800/60"
       onClick={onClick}
     >
-      <div className="flex items-start space-x-3">
-        <div className={`w-12 h-12 flex-shrink-0 rounded-lg flex items-center justify-center ${getCompanyColor()}`}>
+      <div className="flex items-center gap-3">
+        <div className={`w-10 h-10 flex-shrink-0 rounded-md flex items-center justify-center ${getCompanyColor()}`}>
           {getCompanyInitial()}
         </div>
         
         <div className="flex-1 min-w-0">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-sm text-gray-500">{job.company} {job.level === 'intern' ? '• Internship' : ''}</p>
-              <h3 className="text-base font-medium mt-1">{job.title}</h3>
-            </div>
-            
-            <button 
-              className="ml-2 flex-shrink-0 p-1"
-              onClick={(e) => {
-                e.stopPropagation();
-                onSave?.();
-              }}
-            >
-              <BookmarkIcon className={`h-5 w-5 ${isSaved ? "fill-primary text-primary" : "text-gray-400"}`} />
-            </button>
-          </div>
+          <h3 className="text-base font-medium leading-tight mb-1">{job.title}</h3>
           
-          <div className="flex flex-col mt-2 gap-1.5">
-            <div className="flex items-center gap-1 text-sm text-gray-500">
-              <DollarSign className="h-4 w-4" />
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-1.5 text-sm text-gray-500">
+              <DollarSign className="h-3.5 w-3.5" />
               <span>{formattedSalary}</span>
             </div>
             
-            <div className="flex items-center gap-1 text-sm text-gray-500">
-              <MapPin className="h-4 w-4" />
+            <div className="flex items-center gap-1.5 text-sm text-gray-500">
+              <MapPin className="h-3.5 w-3.5" />
               <span>{job.location}</span>
             </div>
           </div>
         </div>
+        
+        <button 
+          className="ml-2 flex-shrink-0 p-1"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSave?.();
+          }}
+        >
+          <BookmarkIcon className={`h-5 w-5 ${isSaved ? "fill-primary text-primary" : "text-gray-400"}`} />
+        </button>
       </div>
     </div>
   );
