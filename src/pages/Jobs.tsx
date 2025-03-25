@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Navbar from "@/components/Navbar";
 import { Job, JobFilters } from "@/types/job";
 import { JobDetailView } from "@/components/JobDetailView";
@@ -140,7 +139,6 @@ const generateSampleJobs = (count: number): Job[] => {
   });
 };
 
-// Create 100 sample jobs for a more realistic job search experience
 const sampleJobs: Job[] = generateSampleJobs(100);
 
 const Jobs = () => {
@@ -166,13 +164,13 @@ const Jobs = () => {
     companySize: [],
     benefits: []
   });
+  const toastDisplayedRef = useRef(false);
 
   useEffect(() => {
     setViewMode(isMobile ? 'swipe' : 'list');
   }, [isMobile]);
 
   useEffect(() => {
-    // Select the first job by default when jobs are loaded
     if (filteredJobs.length > 0 && !selectedJob) {
       setSelectedJob(filteredJobs[0]);
     }
@@ -271,7 +269,6 @@ const Jobs = () => {
   };
 
   const handleSkipJob = (job: Job) => {
-    // Implementation for skipping a job - currently just placeholder
   };
 
   const toggleViewMode = () => {
@@ -282,94 +279,87 @@ const Jobs = () => {
     setShowMyJobs(!showMyJobs);
   };
 
-  // Enhanced filter application function
   const applyFilters = (filters: JobFilters) => {
     setActiveFilters(filters);
     
-    // Start with all jobs
     let newFilteredJobs = [...jobs];
     
-    // Filter by location
     if (filters.location && filters.location.trim() !== "") {
       newFilteredJobs = newFilteredJobs.filter(job => 
         job.location.toLowerCase().includes(filters.location.toLowerCase())
       );
     }
     
-    // Filter by remote
     if (filters.remote) {
       newFilteredJobs = newFilteredJobs.filter(job => job.remote === true);
     }
     
-    // Filter by job type
     if (filters.jobType && filters.jobType.length > 0) {
       newFilteredJobs = newFilteredJobs.filter(job => 
         filters.jobType.includes(job.type)
       );
     }
     
-    // Filter by experience level
     if (filters.experienceLevels && filters.experienceLevels.length > 0) {
       newFilteredJobs = newFilteredJobs.filter(job => 
         filters.experienceLevels.includes(job.level)
       );
     }
     
-    // Filter by salary range
     if (filters.salaryRange && filters.salaryRange[0] !== 0 && filters.salaryRange[1] !== 300000) {
       newFilteredJobs = newFilteredJobs.filter(job => 
         job.salary.min >= filters.salaryRange[0] && job.salary.max <= filters.salaryRange[1]
       );
     }
     
-    // Filter by skills
     if (filters.skills && filters.skills.length > 0) {
       newFilteredJobs = newFilteredJobs.filter(job => 
         filters.skills.some(skill => job.skills.includes(skill))
       );
     }
     
-    // Filter by companies
     if (filters.companies && filters.companies.length > 0) {
       newFilteredJobs = newFilteredJobs.filter(job => 
         filters.companies.includes(job.company)
       );
     }
     
-    // Filter by work model
     if (filters.workModel && filters.workModel.length > 0) {
       newFilteredJobs = newFilteredJobs.filter(job => 
         job.workModel && filters.workModel.includes(job.workModel)
       );
     }
     
-    // Filter by job titles/roles
     if (filters.title && filters.title.length > 0) {
       newFilteredJobs = newFilteredJobs.filter(job => 
         filters.title.some(title => job.title.toLowerCase().includes(title.toLowerCase()))
       );
     }
     
-    // Update filtered jobs
     setFilteredJobs(newFilteredJobs);
     
-    // Update selected job if needed
     if (newFilteredJobs.length > 0 && (!selectedJob || !newFilteredJobs.find(job => job.id === selectedJob.id))) {
       setSelectedJob(newFilteredJobs[0]);
     }
     
-    // If no jobs match the filters, show a toast
-    if (newFilteredJobs.length === 0) {
-      toast.info("No jobs match your filters", {
-        description: "Try adjusting your search criteria to find more opportunities."
-      });
-    } else {
-      toast.success(`Found ${newFilteredJobs.length} matching jobs`, {
-        description: "Displaying jobs that match your search criteria."
-      });
+    if (!toastDisplayedRef.current) {
+      if (newFilteredJobs.length === 0) {
+        toast.info("No jobs match your filters", {
+          description: "Try adjusting your search criteria to find more opportunities."
+        });
+      } else {
+        toast.success(`Found ${newFilteredJobs.length} matching jobs`, {
+          description: "Displaying jobs that match your search criteria."
+        });
+      }
+      toastDisplayedRef.current = true;
+      
+      setTimeout(() => {
+        toastDisplayedRef.current = false;
+      }, 3000);
     }
   };
-  
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900/30">
       <Navbar />
