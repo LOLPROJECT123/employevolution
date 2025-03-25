@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Loader2, ExternalLink } from "lucide-react";
+import { Loader2, ExternalLink, Info } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const JobApplicationAutomation = () => {
   const [jobUrl, setJobUrl] = useState("");
@@ -21,6 +22,7 @@ const JobApplicationAutomation = () => {
   const [coverLetterText, setCoverLetterText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState("manual");
+  const navigate = useNavigate();
 
   // Load saved data from localStorage
   useEffect(() => {
@@ -33,6 +35,11 @@ const JobApplicationAutomation = () => {
       const savedCoverLetter = localStorage.getItem('userCoverLetter');
       if (savedCoverLetter) {
         setCoverLetterText(savedCoverLetter);
+      }
+
+      const savedTab = localStorage.getItem('preferredApplicationTab');
+      if (savedTab) {
+        setActiveTab(savedTab);
       }
     } catch (error) {
       console.error("Error loading saved resume:", error);
@@ -60,6 +67,34 @@ const JobApplicationAutomation = () => {
     }
   };
 
+  // Extract job ID from URL if present
+  const extractJobId = (url) => {
+    try {
+      const urlObj = new URL(url);
+      const pathParts = urlObj.pathname.split('/');
+      // Look for "job" or "jobs" in the path
+      const jobIndex = pathParts.findIndex(part => 
+        part === 'job' || part === 'jobs' || part === 'position' || part === 'posting');
+      
+      if (jobIndex >= 0 && jobIndex < pathParts.length - 1) {
+        return pathParts[jobIndex + 1];
+      }
+      
+      // Try to extract from query params
+      const jobId = urlObj.searchParams.get('jobId') || 
+                   urlObj.searchParams.get('id') || 
+                   urlObj.searchParams.get('job');
+      
+      if (jobId) return jobId;
+      
+      // Last resort: just return the last part of the path
+      return pathParts[pathParts.length - 1];
+    } catch (e) {
+      console.error("Error extracting job ID:", e);
+      return null;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -84,7 +119,6 @@ const JobApplicationAutomation = () => {
     
     // Use the fixed URL if needed
     const finalUrl = typeof validatedUrl === 'string' ? validatedUrl : jobUrl;
-    
     setIsSubmitting(true);
     
     try {
@@ -97,23 +131,28 @@ const JobApplicationAutomation = () => {
         localStorage.setItem('userCoverLetter', coverLetterText);
       }
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Save the active tab preference
+      localStorage.setItem('preferredApplicationTab', activeTab);
+      
+      // Extract job ID for potential future reference
+      const jobId = extractJobId(finalUrl);
+      console.log("Extracted job ID:", jobId);
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       toast.success("Application prepared successfully!", {
         description: "You're being redirected to complete your application."
       });
       
       // Open the job URL in a new tab to avoid navigation issues
-      window.open(finalUrl, '_blank');
+      window.open(finalUrl, '_blank', 'noopener,noreferrer');
       
       // Don't clear inputs after submission so they can be reused
-      // Instead, just clear the job URL field
       setJobUrl("");
+      setIsSubmitting(false);
     } catch (error) {
       console.error("Error submitting application:", error);
       toast.error("Failed to submit application. Please try again.");
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -138,9 +177,10 @@ const JobApplicationAutomation = () => {
               value={jobUrl}
               onChange={(e) => setJobUrl(e.target.value)}
             />
-            <p className="text-xs text-muted-foreground">
-              Paste the full URL of the job posting you want to apply to
-            </p>
+            <div className="flex items-center text-xs text-muted-foreground gap-1">
+              <Info className="h-3 w-3" />
+              <p>Paste the full URL of the job posting you want to apply to</p>
+            </div>
           </div>
           
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -186,7 +226,10 @@ const JobApplicationAutomation = () => {
                   <Button 
                     variant="outline" 
                     type="button"
-                    onClick={() => toast.info("Profile settings will open in a new tab")}
+                    onClick={() => {
+                      toast.info("Profile settings will open in a new tab");
+                      navigate("/profile", { state: { returnTo: "/resume-tools" } });
+                    }}
                   >
                     Configure Auto-fill Settings
                   </Button>

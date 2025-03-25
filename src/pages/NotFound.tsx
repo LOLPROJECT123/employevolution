@@ -2,7 +2,7 @@
 import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Home } from "lucide-react";
+import { ArrowLeft, Home, Search } from "lucide-react";
 
 const NotFound = () => {
   const location = useLocation();
@@ -17,6 +17,7 @@ const NotFound = () => {
   // Extract the URL to display to the user
   const attemptedUrl = location.pathname;
   const isJobUrl = attemptedUrl.includes('/job/') || location.state?.fromJobApplication;
+  const jobId = location.state?.jobId;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
@@ -42,6 +43,13 @@ const NotFound = () => {
               Return to Jobs
             </Button>
           )}
+          
+          <Link to="/jobs" className="block">
+            <Button variant="outline" className="w-full">
+              <Search className="mr-2 h-4 w-4" />
+              Browse All Jobs
+            </Button>
+          </Link>
           
           <Link to="/" className="block">
             <Button className="w-full">
