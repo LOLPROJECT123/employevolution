@@ -135,14 +135,12 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
         transition={{ duration: 0.3 }}
       >
         <Card className="border border-gray-200 dark:border-gray-700 shadow-sm rounded-xl overflow-hidden">
-          {/* Job Match Percentage Badge */}
-          {currentJob.matchPercentage && (
-            <div className="absolute top-3 right-3 z-10">
-              <div className={`px-3 py-1.5 rounded-full ${getMatchBgColor(currentJob.matchPercentage)} ${getMatchColor(currentJob.matchPercentage)} text-sm font-semibold flex items-center shadow-sm`}>
-                <span className="text-base font-bold mr-1">{currentJob.matchPercentage}%</span> Match
-              </div>
+          {/* Job Match Percentage Badge - Now more prominent and always displayed */}
+          <div className="absolute top-4 right-4 z-10">
+            <div className={`px-3 py-1.5 rounded-full ${getMatchBgColor(currentJob.matchPercentage)} ${getMatchColor(currentJob.matchPercentage)} text-sm font-bold flex items-center shadow-md`}>
+              <span className="text-base font-bold mr-1">{currentJob.matchPercentage || 0}%</span> Match
             </div>
-          )}
+          </div>
           
           <CardContent className="p-5">
             <div className="mb-5">
@@ -196,13 +194,13 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
               </div>
             </div>
             
-            {/* Apply button */}
+            {/* Apply button - Now always visible and prominent */}
             <Button 
-              className="w-full mt-6"
+              className="w-full mt-6 py-6 text-base font-medium"
               size="lg"
               onClick={handleApply}
             >
-              <Zap className="w-4 h-4 mr-2" />
+              <Zap className="w-5 h-5 mr-2" />
               Apply Now
             </Button>
           </CardContent>
