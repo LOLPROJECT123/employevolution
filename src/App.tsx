@@ -12,6 +12,7 @@ import NotFound from "./pages/NotFound";
 import InterviewPractice from "./pages/InterviewPractice";
 import Referrals from "./pages/Referrals";
 import Jobs from "./pages/Jobs";
+import MobileJobs from "./pages/MobileJobs"; // New import
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import ResumeTools from "./pages/ResumeTools";
@@ -23,6 +24,7 @@ const queryClient = new QueryClient();
 
 const App = () => {
   const [environment, setEnvironment] = useState<'web' | 'mobile' | 'extension'>('web');
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     // Detect what environment we're running in
@@ -36,6 +38,18 @@ const App = () => {
       setEnvironment('web');
       console.log("Running as web app");
     }
+    
+    // Check if screen size is mobile
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
   }, []);
 
   return (
@@ -49,7 +63,8 @@ const App = () => {
               <Route path="/" element={<Index />} />
               <Route path="/interview-practice" element={<InterviewPractice />} />
               <Route path="/referrals" element={<Referrals />} />
-              <Route path="/jobs" element={<Jobs />} />
+              <Route path="/jobs" element={isMobile ? <MobileJobs /> : <Jobs />} />
+              <Route path="/mobile-jobs" element={<MobileJobs />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/resume-tools" element={<ResumeTools />} />
