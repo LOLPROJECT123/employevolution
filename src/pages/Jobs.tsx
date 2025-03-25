@@ -519,20 +519,47 @@ const Jobs = () => {
                 </div>
               )}
               
-              {(!isMobile || (isMobile && showMyJobs)) && (
-                <SavedAndAppliedJobs
-                  savedJobs={savedJobs}
-                  appliedJobs={appliedJobs}
-                  onApply={handleApplyJob}
-                  onSave={handleSaveJob}
-                  onSelect={handleJobSelect}
-                  selectedJobId={selectedJob?.id || null}
-                />
+              {isMobile && showMyJobs ? (
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                  <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 className="font-semibold text-lg">My Jobs</h2>
+                  </div>
+                  <div className="p-4">
+                    <SavedAndAppliedJobs
+                      savedJobs={savedJobs}
+                      appliedJobs={appliedJobs}
+                      onApply={handleApplyJob}
+                      onSave={handleSaveJob}
+                      onSelect={handleJobSelect}
+                      selectedJobId={selectedJob?.id || null}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                  {!isMobile && (
+                    <>
+                      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                        <h2 className="font-semibold text-lg">My Jobs</h2>
+                      </div>
+                      <div className="p-4">
+                        <SavedAndAppliedJobs
+                          savedJobs={savedJobs}
+                          appliedJobs={appliedJobs}
+                          onApply={handleApplyJob}
+                          onSave={handleSaveJob}
+                          onSelect={handleJobSelect}
+                          selectedJobId={selectedJob?.id || null}
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
               )}
             </div>
             
             <div className="lg:col-span-9 space-y-6">
-              {(viewMode === 'list' || !isMobile) && (!showMyJobs || !isMobile) && (
+              {(viewMode === 'list' || !isMobile) && (
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                   <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
                     <div>
