@@ -7,7 +7,7 @@ import { JobCard } from "@/components/JobCard";
 import { useIsMobile } from "@/hooks/use-mobile";
 import SwipeJobsInterface from "@/components/SwipeJobsInterface";
 import { SavedAndAppliedJobs } from "@/components/SavedAndAppliedJobs";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import AutomationSettings from "@/components/AutomationSettings";
 import { Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -165,6 +165,7 @@ const Jobs = () => {
     benefits: []
   });
   const toastDisplayedRef = useRef(false);
+  const filtersAppliedRef = useRef(false);
 
   useEffect(() => {
     setViewMode(isMobile ? 'swipe' : 'list');
@@ -342,21 +343,25 @@ const Jobs = () => {
       setSelectedJob(newFilteredJobs[0]);
     }
     
-    if (!toastDisplayedRef.current) {
+    if (!filtersAppliedRef.current) {
       if (newFilteredJobs.length === 0) {
-        toast.info("No jobs match your filters", {
-          description: "Try adjusting your search criteria to find more opportunities."
+        toast({
+          title: "No jobs match your filters",
+          description: "Try adjusting your search criteria to find more opportunities.",
+          variant: "default",
         });
       } else {
-        toast.success(`Found ${newFilteredJobs.length} matching jobs`, {
-          description: "Displaying jobs that match your search criteria."
+        toast({
+          title: `Found ${newFilteredJobs.length} matching jobs`,
+          description: "Displaying jobs that match your search criteria.",
+          variant: "default",
         });
       }
-      toastDisplayedRef.current = true;
+      filtersAppliedRef.current = true;
       
       setTimeout(() => {
-        toastDisplayedRef.current = false;
-      }, 3000);
+        filtersAppliedRef.current = false;
+      }, 5000);
     }
   };
 
