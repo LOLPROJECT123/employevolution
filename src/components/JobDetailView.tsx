@@ -1,6 +1,7 @@
 import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
-import { 
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import {
   Tabs,
   TabsContent,
   TabsList,
@@ -40,17 +41,17 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
 
   if (!job) {
     return (
-      <div className="h-full flex items-center justify-center p-6 text-center">
-        <div className="max-w-md mx-auto">
+      <Card className="h-full flex items-center justify-center">
+        <CardContent className="text-center py-12">
           <div className="mx-auto w-16 h-16 rounded-full bg-secondary flex items-center justify-center mb-4">
             <Building2 className="w-8 h-8 text-muted-foreground" />
           </div>
           <h3 className="text-lg font-medium">No Job Selected</h3>
           <p className="text-muted-foreground mt-2">
-            Select A Job From The List To View Details
+            Select a job from the list to view details
           </p>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -82,8 +83,8 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
       setIsApplying(true);
       onApply(job);
     } catch (error) {
-      toast.error("Failed To Apply", {
-        description: "There Was An Error Submitting Your Application. Please Try Again."
+      toast.error("Failed to apply", {
+        description: "There was an error submitting your application. Please try again."
       });
       console.error("Application error:", error);
     } finally {
@@ -94,16 +95,16 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
   const handleAutomatedApply = () => {
     try {
       if (!job.applyUrl) {
-        toast.error("Cannot Automate Application", {
-          description: "This Job Doesn't Have An Application URL."
+        toast.error("Cannot automate application", {
+          description: "This job doesn't have an application URL."
         });
         return;
       }
       
       const automationConfig = localStorage.getItem('automationConfig');
       if (!automationConfig) {
-        toast.error("Automation Not Configured", {
-          description: "Please Configure Your Automation Settings First."
+        toast.error("Automation not configured", {
+          description: "Please configure your automation settings first."
         });
         return;
       }
@@ -113,15 +114,15 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
       // Start the automation process
       startAutomation(job.applyUrl, config);
       
-      toast.success("Automation Initiated", {
-        description: `The Automation Script Will Now Apply To This Job On ${platform || 'The Job Platform'}. Please Check The Browser Extension For Details.`
+      toast.success("Automation initiated", {
+        description: `The automation script will now apply to this job on ${platform || 'the job platform'}. Please check the browser extension for details.`
       });
       
       // Also mark as applied in our system
       onApply(job);
     } catch (error) {
-      toast.error("Automation Failed", {
-        description: "There Was An Error Starting The Automation Process."
+      toast.error("Automation failed", {
+        description: "There was an error starting the automation process."
       });
       console.error("Automation error:", error);
     }
@@ -130,20 +131,20 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
   const getAutomationButtonText = () => {
     switch(platform) {
       case 'linkedin':
-        return "AutoApply With LinkedIn Script";
+        return "AutoApply with LinkedIn Script";
       case 'indeed':
-        return "AutoApply With Indeed Script";
+        return "AutoApply with Indeed Script";
       case 'handshake':
-        return "AutoApply With Handshake Script";
+        return "AutoApply with Handshake Script";
       default:
-        return "AutoApply With Script";
+        return "AutoApply with Script";
     }
   };
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="p-4 border-b">
-        <div className="flex justify-between items-start">
+    <Card className="h-full">
+      <CardHeader className="pb-2">
+        <div className="flex justify-between">
           <div>
             <div className="flex items-center gap-3 mb-2">
               <h2 className="text-xl font-bold">{job.title}</h2>
@@ -158,14 +159,8 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
                 </Badge>
               )}
             </div>
-            <p className="text-muted-foreground flex items-center gap-2">
-              <Building2 className="w-4 h-4" /> {job.company}
-            </p>
-            <p className="text-muted-foreground flex items-center gap-2 mt-1">
-              <MapPin className="w-4 h-4" /> {job.location}
-            </p>
-            <p className="text-muted-foreground flex items-center gap-2 mt-1">
-              <Clock className="w-4 h-4" /> Posted {new Date(job.postedAt).toLocaleDateString()}
+            <p className="text-muted-foreground">
+              {job.company} • {job.location}
             </p>
           </div>
           <div className="flex gap-2">
@@ -189,15 +184,9 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
             )}
           </div>
         </div>
-        
-        <div className="flex flex-wrap gap-2 mt-3">
-          <Badge variant="secondary" className="capitalize">{job.type}</Badge>
-          <Badge variant="secondary" className="capitalize">{job.level}</Badge>
-          <Badge variant="outline">{formattedSalary}</Badge>
-        </div>
-      </div>
+      </CardHeader>
       
-      <div className="flex-1 overflow-y-auto p-4">
+      <CardContent className="max-h-[calc(100vh-300px)] overflow-y-auto pb-0">
         <Tabs defaultValue="summary" className="mb-6">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="summary">Summary</TabsTrigger>
@@ -208,9 +197,9 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
             {job.matchCriteria && (
               <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg">
                 <div className="mb-2">
-                  <p className="font-medium">You Match The Following {job.company}'s Candidate Preferences</p>
+                  <p className="font-medium">You match the following {job.company}'s candidate preferences</p>
                   <p className="text-sm text-yellow-600 dark:text-yellow-400 flex items-center gap-1 mt-1">
-                    <span className="text-lg">✨</span> Employers Are More Likely To Interview You If You Match These Preferences:
+                    <span className="text-lg">✨</span> Employers are more likely to interview you if you match these preferences:
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-4 mt-3">
@@ -242,21 +231,32 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
               </div>
             )}
             
-            <div>
-              <h3 className="text-lg font-medium mb-3">About This Role</h3>
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">About This Role</h3>
               <p className="text-muted-foreground leading-relaxed">
                 {job.description.substring(0, 300)}...
               </p>
             </div>
             
-            <div>
-              <h3 className="text-lg font-medium mb-3">Requirements</h3>
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Requirements</h3>
               <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
                 {job.requirements.map((req, idx) => (
                   <li key={idx}>{req}</li>
                 ))}
               </ul>
             </div>
+            
+            {job.responsibilities && job.responsibilities.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Responsibilities</h3>
+                <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                  {job.responsibilities.map((responsibility, idx) => (
+                    <li key={idx}>{responsibility}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
             
             <div>
               <h3 className="text-lg font-medium mb-3">Skills</h3>
@@ -267,6 +267,23 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
                   </div>
                 ))}
               </div>
+            </div>
+            
+            <div className="flex flex-wrap gap-3">
+              <div className="px-3 py-1 rounded-full bg-secondary text-sm">
+                {job.type}
+              </div>
+              <div className="px-3 py-1 rounded-full bg-secondary text-sm">
+                {job.level}
+              </div>
+              <div className="px-3 py-1 rounded-full bg-secondary text-sm">
+                {formattedSalary}
+              </div>
+            </div>
+            
+            <div className="flex items-center text-sm text-muted-foreground">
+              <Clock className="w-4 h-4 mr-2" />
+              Posted on {new Date(job.postedAt).toLocaleDateString()}
             </div>
           </TabsContent>
           
@@ -286,9 +303,9 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
             {job.matchCriteria && (
               <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg">
                 <div className="mb-2">
-                  <p className="font-medium">You Match The Following {job.company}'s Candidate Preferences</p>
+                  <p className="font-medium">You match the following {job.company}'s candidate preferences</p>
                   <p className="text-sm text-yellow-600 dark:text-yellow-400 flex items-center gap-1 mt-1">
-                    <span className="text-lg">✨</span> Employers Are More Likely To Interview You If You Match These Preferences:
+                    <span className="text-lg">✨</span> Employers are more likely to interview you if you match these preferences:
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-4 mt-3">
@@ -399,40 +416,51 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
             )}
           </TabsContent>
         </Tabs>
-      </div>
+      </CardContent>
       
-      <div className="border-t p-4">
-        <div className="flex gap-3">
-          <Button
-            className="flex-1"
-            onClick={handleApplyClick}
-            disabled={isApplying}
-          >
-            {isApplying ? "Applying..." : "Apply Now"}
-          </Button>
-          
-          <Button
-            variant="outline"
-            className="flex-1"
-            onClick={() => onSave(job)}
-          >
-            Save Job
-          </Button>
-        </div>
-        
-        {canAutomate && automationEnabled && (
-          <div className="mt-3">
+      <CardFooter className="border-t pt-4">
+        <div className="space-y-3 w-full">
+          <div className="flex flex-col sm:flex-row gap-3 w-full">
+            <Button
+              className="w-full button-hover"
+              onClick={handleApplyClick}
+              disabled={isApplying}
+            >
+              {isApplying ? "Applying..." : "Apply Now"}
+            </Button>
             <Button
               variant="outline"
-              className="w-full bg-primary/10 hover:bg-primary/20"
-              onClick={handleAutomatedApply}
+              className="w-full button-hover"
+              onClick={() => onSave(job)}
             >
-              <Zap className="w-4 h-4 mr-2" />
-              {getAutomationButtonText()}
+              Save Job
             </Button>
           </div>
-        )}
-      </div>
-    </div>
+          
+          {canAutomate && automationEnabled && (
+            <div className="flex flex-col gap-3">
+              <Button
+                variant="outline"
+                className="w-full bg-primary/10 hover:bg-primary/20 button-hover"
+                onClick={handleAutomatedApply}
+              >
+                <Zap className="w-4 h-4 mr-2" />
+                {getAutomationButtonText()}
+              </Button>
+              
+              <div className="flex justify-end w-full">
+                <AutomationSettings />
+              </div>
+            </div>
+          )}
+          
+          {canAutomate && !automationEnabled && (
+            <div className="flex justify-end w-full">
+              <AutomationSettings />
+            </div>
+          )}
+        </div>
+      </CardFooter>
+    </Card>
   );
 }

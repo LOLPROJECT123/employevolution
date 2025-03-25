@@ -59,68 +59,69 @@ export function SavedAndAppliedJobs({
   
   return (
     <Card className="mb-6">
-      <CardHeader className="border-b pb-3">
+      <CardHeader className="border-b">
         <CardTitle className="text-lg">My Jobs</CardTitle>
       </CardHeader>
-      <CardContent className="p-0">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 rounded-none border-b">
-            <TabsTrigger value="saved" className="text-sm rounded-none py-3">
-              Saved Jobs ({savedJobs.length})
-            </TabsTrigger>
-            <TabsTrigger value="applied" className="text-sm rounded-none py-3">
-              Applied Jobs ({appliedJobs.length})
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="saved" className="p-0 pt-2">
-            {savedJobs.length === 0 ? (
-              <p className="text-center text-muted-foreground py-4 text-sm">
-                You Haven't Saved Any Jobs Yet.
-              </p>
-            ) : (
-              <div className="divide-y">
-                {savedJobs.map(job => (
-                  <JobCard 
-                    key={job.id}
-                    job={job}
-                    onApply={onApply}
-                    isSelected={selectedJobId === job.id}
-                    isSaved={true}
-                    isApplied={appliedJobs.some(j => j.id === job.id)}
-                    onClick={() => onSelect(job)}
-                    onSave={() => onSave(job)}
-                    variant="list"
-                  />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="applied" className="p-0 pt-2">
-            {appliedJobs.length === 0 ? (
-              <p className="text-center text-muted-foreground py-4 text-sm">
-                You Haven't Applied To Any Jobs Yet.
-              </p>
-            ) : (
-              <div className="divide-y">
-                {appliedJobs.map(job => (
-                  <JobCard 
-                    key={job.id}
-                    job={job}
-                    onApply={onApply}
-                    isSelected={selectedJobId === job.id}
-                    isSaved={savedJobs.some(j => j.id === job.id)}
-                    isApplied={true}
-                    onClick={() => onSelect(job)}
-                    onSave={() => onSave(job)}
-                    variant="list"
-                  />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+      <CardContent>
+        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border">
+          <h3 className="font-medium mb-2 text-center">My Jobs</h3>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="saved" className="text-sm">
+                Saved Jobs ({savedJobs.length})
+              </TabsTrigger>
+              <TabsTrigger value="applied" className="text-sm">
+                Applied Jobs ({appliedJobs.length})
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="saved" className="space-y-4">
+              {savedJobs.length === 0 ? (
+                <p className="text-center text-muted-foreground py-4 text-sm">
+                  You Haven't Saved Any Jobs Yet.
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {savedJobs.map(job => (
+                    <JobCard 
+                      key={job.id}
+                      job={job}
+                      onApply={onApply}
+                      isSelected={selectedJobId === job.id}
+                      isSaved={true}
+                      isApplied={appliedJobs.some(j => j.id === job.id)}
+                      onClick={() => onSelect(job)}
+                      onSave={() => onSave(job)}
+                    />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="applied" className="space-y-4">
+              {appliedJobs.length === 0 ? (
+                <p className="text-center text-muted-foreground py-4 text-sm">
+                  You Haven't Applied To Any Jobs Yet.
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {appliedJobs.map(job => (
+                    <JobCard 
+                      key={job.id}
+                      job={job}
+                      onApply={onApply}
+                      isSelected={selectedJobId === job.id}
+                      isSaved={savedJobs.some(j => j.id === job.id)}
+                      isApplied={true}
+                      onClick={() => onSelect(job)}
+                      onSave={() => onSave(job)}
+                    />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
       </CardContent>
     </Card>
   );
