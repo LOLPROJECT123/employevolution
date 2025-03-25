@@ -485,6 +485,18 @@ const Jobs = () => {
             <div className="w-full">
               <JobSourcesDisplay />
             </div>
+
+            {/* My Jobs Section - Now Moved Above Filters */}
+            <div className="lg:hidden">
+              <SavedAndAppliedJobs
+                savedJobs={savedJobs}
+                appliedJobs={appliedJobs}
+                onApply={handleApplyJob}
+                onSave={handleSaveJob}
+                onSelect={handleJobSelect}
+                selectedJobId={selectedJob?.id || null}
+              />
+            </div>
             
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
               <div className="p-4 border-b border-gray-200 dark:border-gray-700">
@@ -531,7 +543,7 @@ const Jobs = () => {
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
               {/* Sidebar with saved jobs on the left */}
-              <div className="lg:col-span-3">
+              <div className="lg:col-span-3 hidden lg:block">
                 <SavedAndAppliedJobs
                   savedJobs={savedJobs}
                   appliedJobs={appliedJobs}
