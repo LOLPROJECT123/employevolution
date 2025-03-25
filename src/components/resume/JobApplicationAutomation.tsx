@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Loader2 } from "lucide-react";
+import { Loader2, ExternalLink } from "lucide-react";
 
 const JobApplicationAutomation = () => {
   const [jobUrl, setJobUrl] = useState("");
@@ -22,8 +22,8 @@ const JobApplicationAutomation = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState("manual");
 
-  // Try to load the resume from localStorage
-  useState(() => {
+  // Load saved data from localStorage
+  useEffect(() => {
     try {
       const savedResume = localStorage.getItem('userResume');
       if (savedResume) {
@@ -37,7 +37,28 @@ const JobApplicationAutomation = () => {
     } catch (error) {
       console.error("Error loading saved resume:", error);
     }
-  });
+  }, []);
+
+  const validateUrl = (url) => {
+    if (!url) return false;
+    
+    try {
+      // Try to create a URL object to validate
+      new URL(url);
+      return true;
+    } catch (e) {
+      // If it fails, check if it might be missing the protocol
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        try {
+          new URL('https://' + url);
+          return 'https://' + url;
+        } catch (e) {
+          return false;
+        }
+      }
+      return false;
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,6 +73,18 @@ const JobApplicationAutomation = () => {
       return;
     }
     
+    // Validate and potentially fix the URL
+    const validatedUrl = validateUrl(jobUrl);
+    if (!validatedUrl) {
+      toast.error("Please enter a valid job URL", {
+        description: "The URL should start with http:// or https://"
+      });
+      return;
+    }
+    
+    // Use the fixed URL if needed
+    const finalUrl = typeof validatedUrl === 'string' ? validatedUrl : jobUrl;
+    
     setIsSubmitting(true);
     
     try {
@@ -65,9 +98,14 @@ const JobApplicationAutomation = () => {
       }
       
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      toast.success("Application submitted successfully!");
+      toast.success("Application prepared successfully!", {
+        description: "You're being redirected to complete your application."
+      });
+      
+      // Open the job URL in a new tab to avoid navigation issues
+      window.open(finalUrl, '_blank');
       
       // Don't clear inputs after submission so they can be reused
       // Instead, just clear the job URL field
@@ -100,6 +138,9 @@ const JobApplicationAutomation = () => {
               value={jobUrl}
               onChange={(e) => setJobUrl(e.target.value)}
             />
+            <p className="text-xs text-muted-foreground">
+              Paste the full URL of the job posting you want to apply to
+            </p>
           </div>
           
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -160,9 +201,13 @@ const JobApplicationAutomation = () => {
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Submitting...
+                Preparing Application...
               </>
-            ) : "Apply to Job"}
+            ) : (
+              <>
+                Apply to Job <ExternalLink className="ml-2 h-4 w-4" />
+              </>
+            )}
           </Button>
         </CardFooter>
       </form>
