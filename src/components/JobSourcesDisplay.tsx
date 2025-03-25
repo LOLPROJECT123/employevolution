@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -210,28 +211,43 @@ export default function JobSourcesDisplay() {
     </Dialog>
   );
 
+  const activeSourcesCount = jobSources.filter(source => source.isActive).length;
+
   return (
     <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-100 dark:border-blue-900/50">
       <CardHeader className="pb-3">
-        <div className="flex justify-between items-start">
+        <div className="flex flex-col">
           {isMobile && (
-            <div className="w-full flex justify-between items-center mb-4">
-              <AddSourceButton />
-              <JobScraperConfig onConfigUpdate={handleSourceUpdate} />
-            </div>
+            <>
+              <div>
+                <CardTitle className="text-xl bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 font-bold whitespace-nowrap">
+                  Job Search Engine
+                </CardTitle>
+                <CardDescription className="text-blue-600/70 dark:text-blue-400/70 whitespace-nowrap text-xs md:text-sm">
+                  Searching across {activeSourcesCount} platforms, {totalJobsFound} jobs found
+                </CardDescription>
+              </div>
+              <div className="flex justify-between items-center mt-3">
+                <AddSourceButton />
+                <JobScraperConfig onConfigUpdate={handleSourceUpdate} />
+              </div>
+            </>
           )}
-          <div>
-            <CardTitle className="text-xl bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 font-bold whitespace-nowrap">
-              Job Search Engine
-            </CardTitle>
-            <CardDescription className="text-blue-600/70 dark:text-blue-400/70 whitespace-nowrap text-xs md:text-sm">
-              Searching across {activeSourcesCount} platforms, {totalJobsFound} jobs found
-            </CardDescription>
-          </div>
+          
           {!isMobile && (
-            <div className="flex gap-2">
-              <AddSourceButton />
-              <JobScraperConfig onConfigUpdate={handleSourceUpdate} />
+            <div className="flex justify-between items-start">
+              <div>
+                <CardTitle className="text-xl bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 font-bold whitespace-nowrap">
+                  Job Search Engine
+                </CardTitle>
+                <CardDescription className="text-blue-600/70 dark:text-blue-400/70 whitespace-nowrap text-xs md:text-sm">
+                  Searching across {activeSourcesCount} platforms, {totalJobsFound} jobs found
+                </CardDescription>
+              </div>
+              <div className="flex gap-2">
+                <AddSourceButton />
+                <JobScraperConfig onConfigUpdate={handleSourceUpdate} />
+              </div>
             </div>
           )}
         </div>
