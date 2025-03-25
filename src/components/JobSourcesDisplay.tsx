@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +8,7 @@ import { toast } from "sonner";
 import { JobScraperConfig } from "@/components/JobScraperConfig";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface JobSource {
   id: string;
@@ -28,6 +28,7 @@ export default function JobSourcesDisplay() {
   const [newSourceUrl, setNewSourceUrl] = useState('');
   const [newSourceName, setNewSourceName] = useState('');
   const [openAddDialog, setOpenAddDialog] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     // Load job sources from localStorage
@@ -172,11 +173,8 @@ export default function JobSourcesDisplay() {
       <CardHeader className="pb-3">
         <div className="flex justify-between items-start">
           <div>
-            <CardTitle className="text-xl bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 font-bold">
-              Job Search 
-            </CardTitle>
-            <CardTitle className="text-xl bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 font-bold">
-              Engine
+            <CardTitle className="text-xl bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 font-bold whitespace-nowrap">
+              Job Search Engine
             </CardTitle>
             <CardDescription className="text-blue-600/70 dark:text-blue-400/70">
               Searching across {activeSourcesCount} platforms, {totalJobsFound} jobs found
