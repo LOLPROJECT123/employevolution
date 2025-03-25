@@ -37,9 +37,9 @@ export function JobCard({
 
   const getMatchLabel = (percentage?: number) => {
     if (!percentage) return "";
-    if (percentage >= 70) return "GOOD MATCH";
-    if (percentage >= 50) return "FAIR MATCH";
-    return "WEAK MATCH";
+    if (percentage >= 70) return "Good Match";
+    if (percentage >= 50) return "Fair Match";
+    return "Weak Match";
   };
 
   const getMatchBorderColor = (percentage?: number) => {
