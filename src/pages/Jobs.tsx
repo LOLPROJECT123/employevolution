@@ -28,27 +28,49 @@ const generateSampleJobs = (count: number): Job[] => {
   const companies = [
     'TechCorp', 'InnovateCo', 'Google', 'Amazon', 'Microsoft', 'Facebook', 'Apple', 
     'Netflix', 'Tesla', 'Twitter', 'LinkedIn', 'Uber', 'Airbnb', 'Stripe', 'Square',
-    'Salesforce', 'Adobe', 'IBM', 'Oracle', 'Intel', 'Cisco', 'Dell', 'HP', 'Lenovo'
+    'Salesforce', 'Adobe', 'IBM', 'Oracle', 'Intel', 'Cisco', 'Dell', 'HP', 'Lenovo',
+    'Accenture', 'Deloitte', 'KPMG', 'EY', 'PwC', 'McKinsey', 'BCG', 'Bain',
+    'Goldman Sachs', 'JPMorgan', 'Morgan Stanley', 'Barclays', 'HSBC', 'Citi',
+    'Dropbox', 'Slack', 'Zoom', 'Spotify', 'ByteDance', 'Tencent', 'Alibaba',
+    'Samsung', 'Sony', 'Nintendo', 'Electronic Arts', 'Ubisoft', 'Activision Blizzard'
   ];
   
   const locations = [
     'San Francisco, CA', 'New York, NY', 'Seattle, WA', 'Boston, MA', 'Austin, TX',
     'Chicago, IL', 'Los Angeles, CA', 'Denver, CO', 'Atlanta, GA', 'Portland, OR',
-    'Miami, FL', 'Washington, DC', 'Philadelphia, PA', 'San Diego, CA', 'Dallas, TX'
+    'Miami, FL', 'Washington, DC', 'Philadelphia, PA', 'San Diego, CA', 'Dallas, TX',
+    'Houston, TX', 'Phoenix, AZ', 'San Antonio, TX', 'San Jose, CA', 'Nashville, TN',
+    'Charlotte, NC', 'Indianapolis, IN', 'Columbus, OH', 'Detroit, MI', 'Minneapolis, MN',
+    'Kansas City, MO', 'Raleigh, NC', 'Pittsburgh, PA', 'Cleveland, OH', 'Cincinnati, OH',
+    'St. Louis, MO', 'Salt Lake City, UT', 'Orlando, FL', 'Tampa, FL', 'Baltimore, MD',
+    'Richmond, VA', 'Sacramento, CA', 'Las Vegas, NV', 'Milwaukee, WI', 'Albuquerque, NM'
   ];
   
   const titles = [
     'Software Engineer', 'Product Manager', 'Data Scientist', 'UX Designer', 'DevOps Engineer',
     'Machine Learning Engineer', 'Frontend Developer', 'Backend Developer', 'Full Stack Developer',
     'Engineering Manager', 'QA Engineer', 'Systems Architect', 'Technical Writer', 'Database Administrator',
-    'Cloud Engineer', 'Mobile Developer', 'Security Engineer', 'Network Engineer', 'UI Designer'
+    'Cloud Engineer', 'Mobile Developer', 'Security Engineer', 'Network Engineer', 'UI Designer',
+    'Data Analyst', 'Business Analyst', 'Sales Engineer', 'Solutions Architect', 'Technical Support Engineer',
+    'IT Manager', 'Project Manager', 'Scrum Master', 'Site Reliability Engineer', 'AI Engineer',
+    'Blockchain Developer', 'Game Developer', 'iOS Developer', 'Android Developer', 'React Developer',
+    'Angular Developer', 'Vue.js Developer', 'Node.js Developer', 'Python Developer', 'Java Developer',
+    'C# Developer', 'Ruby Developer', 'PHP Developer', 'Golang Developer', 'Rust Developer',
+    'Scala Developer', 'Swift Developer', 'Kotlin Developer', 'TypeScript Developer', 'WordPress Developer'
   ];
   
   const skills = [
     'React', 'TypeScript', 'Node.js', 'Python', 'Java', 'C++', 'C#', 'Ruby', 'PHP', 'Go',
     'AWS', 'Azure', 'GCP', 'Docker', 'Kubernetes', 'Git', 'Redux', 'GraphQL', 'REST API',
     'SQL', 'MongoDB', 'PostgreSQL', 'MySQL', 'TensorFlow', 'PyTorch', 'Swift', 'Kotlin',
-    'Angular', 'Vue.js', 'Svelte', 'Express', 'Django', 'Rails', 'Spring', 'Hadoop', 'Spark'
+    'Angular', 'Vue.js', 'Svelte', 'Express', 'Django', 'Rails', 'Spring', 'Hadoop', 'Spark',
+    'React Native', 'Flutter', 'Xamarin', 'Unity', 'Unreal Engine', 'Figma', 'Sketch', 'Adobe XD',
+    'Photoshop', 'Illustrator', 'InDesign', 'After Effects', 'Premiere Pro', 'Blender',
+    'HTML', 'CSS', 'JavaScript', 'jQuery', 'Bootstrap', 'Tailwind CSS', 'Material UI',
+    'Webpack', 'Babel', 'ESLint', 'Jest', 'Cypress', 'Selenium', 'Jenkins', 'CircleCI',
+    'GitHub Actions', 'Travis CI', 'Ansible', 'Terraform', 'Puppet', 'Chef', 'Grafana',
+    'Prometheus', 'ELK Stack', 'Datadog', 'New Relic', 'AWS Lambda', 'S3', 'EC2', 'RDS',
+    'DynamoDB', 'Redis', 'Elasticsearch', 'Kafka', 'RabbitMQ', 'NGINX', 'Apache', 'IIS'
   ];
   
   const requirements = [
@@ -56,10 +78,20 @@ const generateSampleJobs = (count: number): Job[] => {
     'Excellent communication skills', 'Ability to work in a team environment',
     'Passion for creating quality software', 'Understanding of CI/CD workflows',
     'Experience with agile methodologies', 'Knowledge of design patterns',
-    'Familiarity with version control systems', 'Experience with databases'
+    'Familiarity with version control systems', 'Experience with databases',
+    'Knowledge of RESTful APIs', 'Experience with cloud platforms',
+    'Understanding of software development lifecycle', 'Strong analytical skills',
+    'Ability to work independently', 'Knowledge of testing methodologies',
+    'Experience with containerization', 'Understanding of security principles',
+    'Knowledge of performance optimization', 'Experience with microservices',
+    'Familiarity with serverless architecture', 'Strong debugging skills',
+    'Experience with code reviews', 'Knowledge of accessibility standards',
+    'Familiarity with responsive design', 'Experience with mobile development',
+    'Understanding of cross-browser compatibility', 'Knowledge of SEO principles',
+    'Experience with data structures and algorithms', 'Understanding of system design'
   ];
   
-  const platforms = ['linkedin.com', 'indeed.com', 'glassdoor.com', 'monster.com', 'joinhandshake.com'];
+  const platforms = ['linkedin.com', 'indeed.com', 'glassdoor.com', 'monster.com', 'joinhandshake.com', 'ziprecruiter.com', 'dice.com', 'hired.com', 'wellfound.com', 'stackoverflow.com/jobs'];
 
   return Array.from({ length: count }, (_, i) => {
     const randomSalaryMin = Math.floor(Math.random() * 15) * 10000 + 50000;
@@ -75,36 +107,41 @@ const generateSampleJobs = (count: number): Job[] => {
     ).filter((item, pos, arr) => arr.indexOf(item) === pos); // Remove duplicates
     
     const randomTitle = titles[Math.floor(Math.random() * titles.length)];
+    const randomType = jobTypes[Math.floor(Math.random() * jobTypes.length)];
     const randomLevel = levels[Math.floor(Math.random() * levels.length)];
     const randomPrefix = randomLevel === 'senior' ? 'Senior ' : 
                          randomLevel === 'lead' ? 'Lead ' : 
                          randomLevel === 'manager' ? 'Manager, ' : '';
+    const randomRemote = Math.random() > 0.5;
+    const randomWorkModel = randomRemote ? 'remote' : Math.random() > 0.5 ? 'hybrid' : 'onsite';
+    const randomCompany = companies[Math.floor(Math.random() * companies.length)];
+    const randomLocation = locations[Math.floor(Math.random() * locations.length)];
     
     return {
       id: (i + 1).toString(),
       title: `${randomPrefix}${randomTitle}`,
-      company: companies[Math.floor(Math.random() * companies.length)],
-      location: locations[Math.floor(Math.random() * locations.length)],
+      company: randomCompany,
+      location: randomLocation,
       salary: {
         min: randomSalaryMin,
         max: randomSalaryMax,
         currency: '$'
       },
-      type: jobTypes[Math.floor(Math.random() * jobTypes.length)],
+      type: randomType,
       level: randomLevel,
       description: `We are looking for a talented ${randomTitle} to join our growing team. The ideal candidate will have experience with ${randomSkills.slice(0, 3).join(', ')} and a passion for building high-quality software.`,
       requirements: randomRequirements,
       postedAt: new Date(Date.now() - Math.floor(Math.random() * 30) * 86400000).toISOString(),
       skills: randomSkills,
       applyUrl: `https://${platforms[Math.floor(Math.random() * platforms.length)]}/jobs/example${i + 1}`,
-      remote: Math.random() > 0.5,
-      workModel: Math.random() > 0.7 ? 'remote' : Math.random() > 0.5 ? 'hybrid' : 'onsite'
+      remote: randomRemote,
+      workModel: randomWorkModel
     };
   });
 };
 
-// Create 30 sample jobs
-const sampleJobs: Job[] = generateSampleJobs(30);
+// Create 100 sample jobs for a more realistic job search experience
+const sampleJobs: Job[] = generateSampleJobs(100);
 
 const Jobs = () => {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
@@ -245,15 +282,15 @@ const Jobs = () => {
     setShowMyJobs(!showMyJobs);
   };
 
-  // New function to apply filters
+  // Enhanced filter application function
   const applyFilters = (filters: JobFilters) => {
     setActiveFilters(filters);
     
-    // Filter jobs based on the provided filters
+    // Start with all jobs
     let newFilteredJobs = [...jobs];
     
     // Filter by location
-    if (filters.location) {
+    if (filters.location && filters.location.trim() !== "") {
       newFilteredJobs = newFilteredJobs.filter(job => 
         job.location.toLowerCase().includes(filters.location.toLowerCase())
       );
@@ -279,7 +316,7 @@ const Jobs = () => {
     }
     
     // Filter by salary range
-    if (filters.salaryRange) {
+    if (filters.salaryRange && filters.salaryRange[0] !== 0 && filters.salaryRange[1] !== 300000) {
       newFilteredJobs = newFilteredJobs.filter(job => 
         job.salary.min >= filters.salaryRange[0] && job.salary.max <= filters.salaryRange[1]
       );
@@ -292,6 +329,13 @@ const Jobs = () => {
       );
     }
     
+    // Filter by companies
+    if (filters.companies && filters.companies.length > 0) {
+      newFilteredJobs = newFilteredJobs.filter(job => 
+        filters.companies.includes(job.company)
+      );
+    }
+    
     // Filter by work model
     if (filters.workModel && filters.workModel.length > 0) {
       newFilteredJobs = newFilteredJobs.filter(job => 
@@ -299,8 +343,20 @@ const Jobs = () => {
       );
     }
     
+    // Filter by job titles/roles
+    if (filters.title && filters.title.length > 0) {
+      newFilteredJobs = newFilteredJobs.filter(job => 
+        filters.title.some(title => job.title.toLowerCase().includes(title.toLowerCase()))
+      );
+    }
+    
     // Update filtered jobs
     setFilteredJobs(newFilteredJobs);
+    
+    // Update selected job if needed
+    if (newFilteredJobs.length > 0 && (!selectedJob || !newFilteredJobs.find(job => job.id === selectedJob.id))) {
+      setSelectedJob(newFilteredJobs[0]);
+    }
     
     // If no jobs match the filters, show a toast
     if (newFilteredJobs.length === 0) {

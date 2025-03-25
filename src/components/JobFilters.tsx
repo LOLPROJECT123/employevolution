@@ -48,7 +48,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { JobFilters } from "@/types/job";
 
 type JobFunctionType = string;
@@ -142,9 +142,8 @@ export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) =>
     
     setFiltersApplied(true);
     
-    toast({
-      title: "Filters applied",
-      description: "Your job search filters have been applied.",
+    toast.success("Filters applied", {
+      description: "Your job search filters have been applied."
     });
   };
   
@@ -258,9 +257,8 @@ export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) =>
       });
     }
     
-    toast({
-      title: "Filters reset",
-      description: "All job search filters have been reset.",
+    toast.success("Filters reset", {
+      description: "All job search filters have been reset."
     });
   };
   

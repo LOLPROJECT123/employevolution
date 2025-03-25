@@ -7,10 +7,11 @@ export interface InputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
   icon?: React.ReactNode;
   iconPosition?: "left" | "right";
+  onClear?: () => void;
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, icon, iconPosition = "left", ...props }, ref) => {
+  ({ className, type, icon, iconPosition = "left", onClear, ...props }, ref) => {
     return (
       <div className="relative w-full">
         {icon && iconPosition === "left" && (
@@ -33,6 +34,29 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
             {icon}
           </div>
+        )}
+        {props.value && props.value.toString().length > 0 && onClear && (
+          <button 
+            type="button"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
+            onClick={onClear}
+            aria-label="Clear input"
+          >
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              width="16" 
+              height="16" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         )}
       </div>
     )
