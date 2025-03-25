@@ -22,13 +22,18 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
-import { X, Plus, Search, Filter, Info, Check } from "lucide-react";
+import { X, Plus, Search, Filter, Info, Check, ChevronDown } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -183,6 +188,9 @@ export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) =>
 
   // Flag to track if filters have been applied
   const [filtersApplied, setFiltersApplied] = useState(!!savedFilters);
+
+  // State to track if the filters section is open
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
   // Apply saved filters on component mount
   useEffect(() => {
@@ -399,440 +407,448 @@ export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) =>
   return (
     <Card className="border border-border bg-background">
       <CardContent className="p-0">
-        <div className="p-4 md:p-6 space-y-4">
-          {/* Job Filters Accordion */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium flex items-center gap-2">
+        <Collapsible
+          open={isFiltersOpen}
+          onOpenChange={setIsFiltersOpen}
+          className="w-full"
+        >
+          <div className="p-4 border-b flex items-center justify-between">
+            <CollapsibleTrigger className="flex items-center justify-between w-full text-left">
+              <div className="flex items-center gap-2">
                 <Filter className="w-4 h-4" />
-                All Filters
+                <h3 className="text-lg font-medium">All Filters</h3>
                 {activeFilterCount > 0 && (
                   <Badge variant="secondary" className="ml-2">
                     {activeFilterCount}
                   </Badge>
                 )}
-              </h3>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleResetFilters}
-                className="text-xs h-8"
-              >
-                Reset All
-              </Button>
-            </div>
-            
-            <Accordion type="multiple" defaultValue={["location", "salary", "job-type"]}>
-              {/* Location Section */}
-              <AccordionItem value="location">
-                <AccordionTrigger>Location</AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-4">
-                    <div className="flex flex-col space-y-2">
-                      <Label htmlFor="location">City, State, or Zip</Label>
-                      <Input 
-                        id="location" 
-                        placeholder="e.g. San Francisco, CA" 
-                        value={location} 
-                        onChange={(e) => setLocation(e.target.value)}
-                      />
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Switch 
-                        id="remote" 
-                        checked={remote} 
-                        onCheckedChange={setRemote} 
-                      />
-                      <Label htmlFor="remote">Remote only</Label>
-                    </div>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-              
-              {/* Salary Range Section */}
-              <AccordionItem value="salary">
-                <AccordionTrigger>Salary Range</AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">{formatSalary(salaryRange[0])}</span>
-                      <span className="text-sm font-medium">{formatSalary(salaryRange[1])}</span>
-                    </div>
-                    <Slider
-                      defaultValue={[50000, 150000]}
-                      min={0}
-                      max={300000}
-                      step={5000}
-                      value={salaryRange}
-                      onValueChange={(value) => setSalaryRange(value as [number, number])}
-                    />
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-              
-              {/* Job Type Section */}
-              <AccordionItem value="job-type">
-                <AccordionTrigger>Job Type</AccordionTrigger>
-                <AccordionContent>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="full-time" 
-                        checked={jobTypes["full-time"]} 
-                        onCheckedChange={() => handleJobTypeToggle("full-time")}
-                      />
-                      <Label htmlFor="full-time" className="cursor-pointer">Full-time</Label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="part-time" 
-                        checked={jobTypes["part-time"]} 
-                        onCheckedChange={() => handleJobTypeToggle("part-time")}
-                      />
-                      <Label htmlFor="part-time" className="cursor-pointer">Part-time</Label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="contract" 
-                        checked={jobTypes["contract"]} 
-                        onCheckedChange={() => handleJobTypeToggle("contract")}
-                      />
-                      <Label htmlFor="contract" className="cursor-pointer">Contract</Label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="internship" 
-                        checked={jobTypes["internship"]} 
-                        onCheckedChange={() => handleJobTypeToggle("internship")}
-                      />
-                      <Label htmlFor="internship" className="cursor-pointer">Internship</Label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="temporary" 
-                        checked={jobTypes["temporary"]} 
-                        onCheckedChange={() => handleJobTypeToggle("temporary")}
-                      />
-                      <Label htmlFor="temporary" className="cursor-pointer">Temporary</Label>
-                    </div>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-              
-              {/* Experience Level Section */}
-              <AccordionItem value="experience">
-                <AccordionTrigger>Experience Level</AccordionTrigger>
-                <AccordionContent>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="entry" 
-                        checked={experienceLevels["entry"]} 
-                        onCheckedChange={() => handleExperienceLevelToggle("entry")}
-                      />
-                      <Label htmlFor="entry" className="cursor-pointer">Entry Level</Label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="mid" 
-                        checked={experienceLevels["mid"]} 
-                        onCheckedChange={() => handleExperienceLevelToggle("mid")}
-                      />
-                      <Label htmlFor="mid" className="cursor-pointer">Mid Level</Label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="senior" 
-                        checked={experienceLevels["senior"]} 
-                        onCheckedChange={() => handleExperienceLevelToggle("senior")}
-                      />
-                      <Label htmlFor="senior" className="cursor-pointer">Senior Level</Label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="lead" 
-                        checked={experienceLevels["lead"]} 
-                        onCheckedChange={() => handleExperienceLevelToggle("lead")}
-                      />
-                      <Label htmlFor="lead" className="cursor-pointer">Lead</Label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="manager" 
-                        checked={experienceLevels["manager"]} 
-                        onCheckedChange={() => handleExperienceLevelToggle("manager")}
-                      />
-                      <Label htmlFor="manager" className="cursor-pointer">Manager</Label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="director" 
-                        checked={experienceLevels["director"]} 
-                        onCheckedChange={() => handleExperienceLevelToggle("director")}
-                      />
-                      <Label htmlFor="director" className="cursor-pointer">Director</Label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="executive" 
-                        checked={experienceLevels["executive"]} 
-                        onCheckedChange={() => handleExperienceLevelToggle("executive")}
-                      />
-                      <Label htmlFor="executive" className="cursor-pointer">Executive</Label>
-                    </div>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-              
-              {/* Job Function Section */}
-              <AccordionItem value="job-function">
-                <AccordionTrigger>Job Function</AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-4">
-                    <div className="flex flex-wrap gap-2">
-                      {jobFunctions.map((jobFunction, index) => (
-                        <Badge 
-                          key={index} 
-                          variant="secondary"
-                          className="flex items-center gap-1 py-1"
-                        >
-                          {jobFunction}
-                          <button 
-                            onClick={() => handleRemoveJobFunction(jobFunction)}
-                            className="ml-1 rounded-full hover:bg-muted p-0.5"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </Badge>
-                      ))}
-                      
-                      <Dialog open={showAddJobFunctionModal} onOpenChange={setShowAddJobFunctionModal}>
-                        <DialogTrigger asChild>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="h-7 text-xs gap-1 px-2"
-                          >
-                            <Plus className="h-3 w-3" />
-                            Add
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-md">
-                          <DialogHeader>
-                            <DialogTitle>Add Job Function</DialogTitle>
-                            <DialogDescription>
-                              Enter a job function to add to your filters
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="grid gap-4 py-4">
-                            <Input 
-                              placeholder="e.g. Software Development" 
-                              value={newJobFunction}
-                              onChange={(e) => setNewJobFunction(e.target.value)}
-                              ref={jobFunctionInputRef}
-                            />
-                          </div>
-                          <DialogFooter>
-                            <Button variant="outline" onClick={() => setShowAddJobFunctionModal(false)}>Cancel</Button>
-                            <Button onClick={handleAddJobFunction}>Add</Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-              
-              {/* Skills Section */}
-              <AccordionItem value="skills">
-                <AccordionTrigger>Skills</AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-4">
-                    <div className="flex flex-wrap gap-2">
-                      {skills.map((skill, index) => (
-                        <Badge 
-                          key={index} 
-                          variant="secondary"
-                          className="flex items-center gap-1 py-1"
-                        >
-                          {skill}
-                          <button 
-                            onClick={() => handleRemoveSkill(skill)}
-                            className="ml-1 rounded-full hover:bg-muted p-0.5"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </Badge>
-                      ))}
-                      
-                      <Dialog open={showAddSkillModal} onOpenChange={setShowAddSkillModal}>
-                        <DialogTrigger asChild>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="h-7 text-xs gap-1 px-2"
-                          >
-                            <Plus className="h-3 w-3" />
-                            Add
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-md">
-                          <DialogHeader>
-                            <DialogTitle>Add Skill</DialogTitle>
-                            <DialogDescription>
-                              Enter a skill to add to your filters
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="grid gap-4 py-4">
-                            <Input 
-                              placeholder="e.g. React" 
-                              value={newSkill}
-                              onChange={(e) => setNewSkill(e.target.value)}
-                              ref={skillInputRef}
-                            />
-                          </div>
-                          <DialogFooter>
-                            <Button variant="outline" onClick={() => setShowAddSkillModal(false)}>Cancel</Button>
-                            <Button onClick={handleAddSkill}>Add</Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-              
-              {/* Companies Section */}
-              <AccordionItem value="companies">
-                <AccordionTrigger>Companies</AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-4">
-                    <div className="flex flex-wrap gap-2">
-                      {companies.map((company, index) => (
-                        <Badge 
-                          key={index} 
-                          variant="secondary"
-                          className="flex items-center gap-1 py-1"
-                        >
-                          {company}
-                          <button 
-                            onClick={() => handleRemoveCompany(company)}
-                            className="ml-1 rounded-full hover:bg-muted p-0.5"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </Badge>
-                      ))}
-                      
-                      <Dialog open={showAddCompanyModal} onOpenChange={setShowAddCompanyModal}>
-                        <DialogTrigger asChild>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="h-7 text-xs gap-1 px-2"
-                          >
-                            <Plus className="h-3 w-3" />
-                            Add
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-md">
-                          <DialogHeader>
-                            <DialogTitle>Add Company</DialogTitle>
-                            <DialogDescription>
-                              Enter a company to add to your filters
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="grid gap-4 py-4">
-                            <Input 
-                              placeholder="e.g. Google" 
-                              value={newCompany}
-                              onChange={(e) => setNewCompany(e.target.value)}
-                              ref={companyInputRef}
-                            />
-                          </div>
-                          <DialogFooter>
-                            <Button variant="outline" onClick={() => setShowAddCompanyModal(false)}>Cancel</Button>
-                            <Button onClick={handleAddCompany}>Add</Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-              
-              {/* Job Titles Section */}
-              <AccordionItem value="job-titles">
-                <AccordionTrigger>Job Titles</AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-4">
-                    <div className="flex flex-wrap gap-2">
-                      {jobTitles.map((jobTitle, index) => (
-                        <Badge 
-                          key={index} 
-                          variant="secondary"
-                          className="flex items-center gap-1 py-1"
-                        >
-                          {jobTitle}
-                          <button 
-                            onClick={() => handleRemoveJobTitle(jobTitle)}
-                            className="ml-1 rounded-full hover:bg-muted p-0.5"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </Badge>
-                      ))}
-                      
-                      <Dialog open={showAddJobTitleModal} onOpenChange={setShowAddJobTitleModal}>
-                        <DialogTrigger asChild>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="h-7 text-xs gap-1 px-2"
-                          >
-                            <Plus className="h-3 w-3" />
-                            Add
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-md">
-                          <DialogHeader>
-                            <DialogTitle>Add Job Title</DialogTitle>
-                            <DialogDescription>
-                              Enter a job title to add to your filters
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="grid gap-4 py-4">
-                            <Input 
-                              placeholder="e.g. Software Engineer" 
-                              value={newJobTitle}
-                              onChange={(e) => setNewJobTitle(e.target.value)}
-                              ref={jobTitleInputRef}
-                            />
-                          </div>
-                          <DialogFooter>
-                            <Button variant="outline" onClick={() => setShowAddJobTitleModal(false)}>Cancel</Button>
-                            <Button onClick={handleAddJobTitle}>Add</Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+              </div>
+              <ChevronDown className={`h-5 w-5 transition-transform ${isFiltersOpen ? 'rotate-180' : ''}`} />
+            </CollapsibleTrigger>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleResetFilters}
+              className="text-xs h-8 ml-2"
+            >
+              Reset All
+            </Button>
           </div>
-        </div>
+          
+          <CollapsibleContent>
+            <div className="p-4 md:p-6 space-y-4">
+              <Accordion type="single" collapsible className="w-full divide-y">
+                {/* Location Section */}
+                <AccordionItem value="location" className="border-0 py-2">
+                  <AccordionTrigger className="py-2 text-base font-medium">Location</AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-4">
+                      <div className="flex flex-col space-y-2">
+                        <Label htmlFor="location">City, State, or Zip</Label>
+                        <Input 
+                          id="location" 
+                          placeholder="e.g. San Francisco, CA" 
+                          value={location} 
+                          onChange={(e) => setLocation(e.target.value)}
+                        />
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Switch 
+                          id="remote" 
+                          checked={remote} 
+                          onCheckedChange={setRemote} 
+                        />
+                        <Label htmlFor="remote">Remote only</Label>
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+                
+                {/* Salary Range Section */}
+                <AccordionItem value="salary" className="border-0 py-2">
+                  <AccordionTrigger className="py-2 text-base font-medium">Salary Range</AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium">{formatSalary(salaryRange[0])}</span>
+                        <span className="text-sm font-medium">{formatSalary(salaryRange[1])}</span>
+                      </div>
+                      <Slider
+                        defaultValue={[50000, 150000]}
+                        min={0}
+                        max={300000}
+                        step={5000}
+                        value={salaryRange}
+                        onValueChange={(value) => setSalaryRange(value as [number, number])}
+                      />
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+                
+                {/* Job Type Section */}
+                <AccordionItem value="job-type" className="border-0 py-2">
+                  <AccordionTrigger className="py-2 text-base font-medium">Job Type</AccordionTrigger>
+                  <AccordionContent>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="full-time" 
+                          checked={jobTypes["full-time"]} 
+                          onCheckedChange={() => handleJobTypeToggle("full-time")}
+                        />
+                        <Label htmlFor="full-time" className="cursor-pointer">Full-time</Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="part-time" 
+                          checked={jobTypes["part-time"]} 
+                          onCheckedChange={() => handleJobTypeToggle("part-time")}
+                        />
+                        <Label htmlFor="part-time" className="cursor-pointer">Part-time</Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="contract" 
+                          checked={jobTypes["contract"]} 
+                          onCheckedChange={() => handleJobTypeToggle("contract")}
+                        />
+                        <Label htmlFor="contract" className="cursor-pointer">Contract</Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="internship" 
+                          checked={jobTypes["internship"]} 
+                          onCheckedChange={() => handleJobTypeToggle("internship")}
+                        />
+                        <Label htmlFor="internship" className="cursor-pointer">Internship</Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="temporary" 
+                          checked={jobTypes["temporary"]} 
+                          onCheckedChange={() => handleJobTypeToggle("temporary")}
+                        />
+                        <Label htmlFor="temporary" className="cursor-pointer">Temporary</Label>
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+                
+                {/* Experience Level Section */}
+                <AccordionItem value="experience" className="border-0 py-2">
+                  <AccordionTrigger className="py-2 text-base font-medium">Experience Level</AccordionTrigger>
+                  <AccordionContent>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="entry" 
+                          checked={experienceLevels["entry"]} 
+                          onCheckedChange={() => handleExperienceLevelToggle("entry")}
+                        />
+                        <Label htmlFor="entry" className="cursor-pointer">Entry Level</Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="mid" 
+                          checked={experienceLevels["mid"]} 
+                          onCheckedChange={() => handleExperienceLevelToggle("mid")}
+                        />
+                        <Label htmlFor="mid" className="cursor-pointer">Mid Level</Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="senior" 
+                          checked={experienceLevels["senior"]} 
+                          onCheckedChange={() => handleExperienceLevelToggle("senior")}
+                        />
+                        <Label htmlFor="senior" className="cursor-pointer">Senior Level</Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="lead" 
+                          checked={experienceLevels["lead"]} 
+                          onCheckedChange={() => handleExperienceLevelToggle("lead")}
+                        />
+                        <Label htmlFor="lead" className="cursor-pointer">Lead</Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="manager" 
+                          checked={experienceLevels["manager"]} 
+                          onCheckedChange={() => handleExperienceLevelToggle("manager")}
+                        />
+                        <Label htmlFor="manager" className="cursor-pointer">Manager</Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="director" 
+                          checked={experienceLevels["director"]} 
+                          onCheckedChange={() => handleExperienceLevelToggle("director")}
+                        />
+                        <Label htmlFor="director" className="cursor-pointer">Director</Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="executive" 
+                          checked={experienceLevels["executive"]} 
+                          onCheckedChange={() => handleExperienceLevelToggle("executive")}
+                        />
+                        <Label htmlFor="executive" className="cursor-pointer">Executive</Label>
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+                
+                {/* Job Function Section */}
+                <AccordionItem value="job-function" className="border-0 py-2">
+                  <AccordionTrigger className="py-2 text-base font-medium">Job Function</AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-4">
+                      <div className="flex flex-wrap gap-2">
+                        {jobFunctions.map((jobFunction, index) => (
+                          <Badge 
+                            key={index} 
+                            variant="secondary"
+                            className="flex items-center gap-1 py-1"
+                          >
+                            {jobFunction}
+                            <button 
+                              onClick={() => handleRemoveJobFunction(jobFunction)}
+                              className="ml-1 rounded-full hover:bg-muted p-0.5"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                        
+                        <Dialog open={showAddJobFunctionModal} onOpenChange={setShowAddJobFunctionModal}>
+                          <DialogTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="h-7 text-xs gap-1 px-2"
+                            >
+                              <Plus className="h-3 w-3" />
+                              Add
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-md">
+                            <DialogHeader>
+                              <DialogTitle>Add Job Function</DialogTitle>
+                              <DialogDescription>
+                                Enter a job function to add to your filters
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                              <Input 
+                                placeholder="e.g. Software Development" 
+                                value={newJobFunction}
+                                onChange={(e) => setNewJobFunction(e.target.value)}
+                                ref={jobFunctionInputRef}
+                              />
+                            </div>
+                            <DialogFooter>
+                              <Button variant="outline" onClick={() => setShowAddJobFunctionModal(false)}>Cancel</Button>
+                              <Button onClick={handleAddJobFunction}>Add</Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+                
+                {/* Skills Section */}
+                <AccordionItem value="skills" className="border-0 py-2">
+                  <AccordionTrigger className="py-2 text-base font-medium">Skills</AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-4">
+                      <div className="flex flex-wrap gap-2">
+                        {skills.map((skill, index) => (
+                          <Badge 
+                            key={index} 
+                            variant="secondary"
+                            className="flex items-center gap-1 py-1"
+                          >
+                            {skill}
+                            <button 
+                              onClick={() => handleRemoveSkill(skill)}
+                              className="ml-1 rounded-full hover:bg-muted p-0.5"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                        
+                        <Dialog open={showAddSkillModal} onOpenChange={setShowAddSkillModal}>
+                          <DialogTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="h-7 text-xs gap-1 px-2"
+                            >
+                              <Plus className="h-3 w-3" />
+                              Add
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-md">
+                            <DialogHeader>
+                              <DialogTitle>Add Skill</DialogTitle>
+                              <DialogDescription>
+                                Enter a skill to add to your filters
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                              <Input 
+                                placeholder="e.g. React" 
+                                value={newSkill}
+                                onChange={(e) => setNewSkill(e.target.value)}
+                                ref={skillInputRef}
+                              />
+                            </div>
+                            <DialogFooter>
+                              <Button variant="outline" onClick={() => setShowAddSkillModal(false)}>Cancel</Button>
+                              <Button onClick={handleAddSkill}>Add</Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+                
+                {/* Companies Section */}
+                <AccordionItem value="companies" className="border-0 py-2">
+                  <AccordionTrigger className="py-2 text-base font-medium">Companies</AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-4">
+                      <div className="flex flex-wrap gap-2">
+                        {companies.map((company, index) => (
+                          <Badge 
+                            key={index} 
+                            variant="secondary"
+                            className="flex items-center gap-1 py-1"
+                          >
+                            {company}
+                            <button 
+                              onClick={() => handleRemoveCompany(company)}
+                              className="ml-1 rounded-full hover:bg-muted p-0.5"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                        
+                        <Dialog open={showAddCompanyModal} onOpenChange={setShowAddCompanyModal}>
+                          <DialogTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="h-7 text-xs gap-1 px-2"
+                            >
+                              <Plus className="h-3 w-3" />
+                              Add
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-md">
+                            <DialogHeader>
+                              <DialogTitle>Add Company</DialogTitle>
+                              <DialogDescription>
+                                Enter a company to add to your filters
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                              <Input 
+                                placeholder="e.g. Google" 
+                                value={newCompany}
+                                onChange={(e) => setNewCompany(e.target.value)}
+                                ref={companyInputRef}
+                              />
+                            </div>
+                            <DialogFooter>
+                              <Button variant="outline" onClick={() => setShowAddCompanyModal(false)}>Cancel</Button>
+                              <Button onClick={handleAddCompany}>Add</Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+                
+                {/* Job Titles Section */}
+                <AccordionItem value="job-titles" className="border-0 py-2">
+                  <AccordionTrigger className="py-2 text-base font-medium">Job Titles</AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-4">
+                      <div className="flex flex-wrap gap-2">
+                        {jobTitles.map((jobTitle, index) => (
+                          <Badge 
+                            key={index} 
+                            variant="secondary"
+                            className="flex items-center gap-1 py-1"
+                          >
+                            {jobTitle}
+                            <button 
+                              onClick={() => handleRemoveJobTitle(jobTitle)}
+                              className="ml-1 rounded-full hover:bg-muted p-0.5"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                        
+                        <Dialog open={showAddJobTitleModal} onOpenChange={setShowAddJobTitleModal}>
+                          <DialogTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="h-7 text-xs gap-1 px-2"
+                            >
+                              <Plus className="h-3 w-3" />
+                              Add
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-md">
+                            <DialogHeader>
+                              <DialogTitle>Add Job Title</DialogTitle>
+                              <DialogDescription>
+                                Enter a job title to add to your filters
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                              <Input 
+                                placeholder="e.g. Software Engineer" 
+                                value={newJobTitle}
+                                onChange={(e) => setNewJobTitle(e.target.value)}
+                                ref={jobTitleInputRef}
+                              />
+                            </div>
+                            <DialogFooter>
+                              <Button variant="outline" onClick={() => setShowAddJobTitleModal(false)}>Cancel</Button>
+                              <Button onClick={handleAddJobTitle}>Add</Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </CardContent>
       <CardFooter className="border-t p-4">
         <Button 
