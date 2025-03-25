@@ -1,62 +1,97 @@
 
-import * as React from "react";
-import { X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import { toast } from "sonner";
 
-export interface InputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {
-  icon?: React.ReactNode;
-  iconPosition?: "left" | "right";
-  onClear?: () => void;
-}
+const JobApplicationAutomation = () => {
+  const [jobUrl, setJobUrl] = useState("");
+  const [resumeText, setResumeText] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, icon, iconPosition = "left", onClear, ...props }, ref) => {
-    const handleClear = () => {
-      if (onClear) {
-        onClear();
-      }
-    };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!jobUrl.trim()) {
+      toast.error("Please enter a job URL");
+      return;
+    }
+    
+    if (!resumeText.trim()) {
+      toast.error("Please enter your resume text");
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      toast.success("Application submitted successfully!");
+      setJobUrl("");
+      setResumeText("");
+    } catch (error) {
+      console.error("Error submitting application:", error);
+      toast.error("Failed to submit application. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-    return (
-      <div className="relative w-full">
-        {icon && iconPosition === "left" && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-            {icon}
+  return (
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>Automated Job Application</CardTitle>
+        <CardDescription>
+          Paste a job URL and your resume to automatically apply
+        </CardDescription>
+      </CardHeader>
+      <form onSubmit={handleSubmit}>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <label htmlFor="job-url" className="text-sm font-medium">
+              Job URL
+            </label>
+            <Input
+              id="job-url"
+              placeholder="https://www.example.com/job/12345"
+              value={jobUrl}
+              onChange={(e) => setJobUrl(e.target.value)}
+            />
           </div>
-        )}
-        <input
-          type={type}
-          className={cn(
-            "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm transition-colors",
-            icon && iconPosition === "left" && "pl-10",
-            icon && iconPosition === "right" && "pr-10",
-            onClear && "pr-10",
-            className
-          )}
-          ref={ref}
-          {...props}
-        />
-        {icon && iconPosition === "right" && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-            {icon}
+          
+          <div className="space-y-2">
+            <label htmlFor="resume" className="text-sm font-medium">
+              Resume Text
+            </label>
+            <Textarea
+              id="resume"
+              placeholder="Paste your resume text here..."
+              rows={8}
+              value={resumeText}
+              onChange={(e) => setResumeText(e.target.value)}
+            />
           </div>
-        )}
-        {props.value && props.value.toString().length > 0 && onClear && (
-          <button 
-            type="button"
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
-            onClick={handleClear}
-            aria-label="Clear input"
-          >
-            <X size={16} />
-          </button>
-        )}
-      </div>
-    );
-  }
-);
-Input.displayName = "Input";
+        </CardContent>
+        
+        <CardFooter>
+          <Button type="submit" disabled={isSubmitting} className="w-full">
+            {isSubmitting ? "Submitting..." : "Apply to Job"}
+          </Button>
+        </CardFooter>
+      </form>
+    </Card>
+  );
+};
 
-// Export the Input component as a named export, not default
-export { Input };
+export default JobApplicationAutomation;

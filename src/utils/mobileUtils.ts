@@ -1,45 +1,62 @@
 
 import { Capacitor } from '@capacitor/core';
+import { Device } from '@capacitor/device';
 
 /**
- * Utility functions for mobile-specific features
+ * Types of platforms the app can run on
  */
+export enum PlatformType {
+  WEB = 'web',
+  ANDROID = 'android',
+  IOS = 'ios',
+  EXTENSION = 'extension'
+}
 
 /**
- * Check if the app is running on a mobile device
+ * Check if the app is running in a mobile environment (Capacitor)
  */
 export const isMobileApp = (): boolean => {
   return Capacitor.isNativePlatform();
 };
 
 /**
- * Check if the app is running on iOS
- */
-export const isIOS = (): boolean => {
-  return Capacitor.getPlatform() === 'ios';
-};
-
-/**
- * Check if the app is running on Android
- */
-export const isAndroid = (): boolean => {
-  return Capacitor.getPlatform() === 'android';
-};
-
-/**
- * Get information about the current platform
- */
-export const getPlatformInfo = () => {
-  return {
-    platform: Capacitor.getPlatform(),
-    isNative: Capacitor.isNativePlatform(),
-    isWeb: Capacitor.platform === 'web'
-  };
-};
-
-/**
- * Check if app is running as a Chrome extension
+ * Check if the app is running as a Chrome extension
  */
 export const isChromeExtension = (): boolean => {
-  return typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id !== undefined;
+  return typeof window !== 'undefined' && 
+         typeof (window as any).chrome !== 'undefined' && 
+         typeof (window as any).chrome.runtime !== 'undefined' && 
+         typeof (window as any).chrome.runtime.id !== 'undefined';
+};
+
+/**
+ * Get the current platform the app is running on
+ */
+export const getCurrentPlatform = async (): Promise<PlatformType> => {
+  if (isChromeExtension()) {
+    return PlatformType.EXTENSION;
+  }
+  
+  if (isMobileApp()) {
+    try {
+      const info = await Device.getInfo();
+      if (info.platform === 'android') {
+        return PlatformType.ANDROID;
+      } else if (info.platform === 'ios') {
+        return PlatformType.IOS;
+      }
+    } catch (error) {
+      console.error('Error getting device info:', error);
+    }
+  }
+  
+  return PlatformType.WEB;
+};
+
+/**
+ * Check if the app is running in a specific platform
+ */
+export const isPlatform = async (platform: PlatformType): Promise<boolean> => {
+  const currentPlatform = await getCurrentPlatform();
+  return currentPlatform === platform;
 };
