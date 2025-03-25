@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Job } from "@/types/job";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { X, Check, Building2, MapPin, Briefcase, DollarSign, Clock } from "lucide-react";
+import { X, Check, Building2, MapPin, Briefcase, DollarSign, Clock, Zap } from "lucide-react";
 import { motion, PanInfo } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { formatRelativeTime } from "@/utils/dateUtils";
@@ -102,6 +102,21 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
   const formattedSalary = `${currentJob.salary.currency}${currentJob.salary.min.toLocaleString()} - ${currentJob.salary.currency}${currentJob.salary.max.toLocaleString()}`;
   const timeAgo = formatRelativeTime(currentJob.postedAt);
 
+  // Get match color based on percentage
+  const getMatchColor = (percentage?: number) => {
+    if (!percentage) return "";
+    if (percentage >= 70) return "text-green-500";
+    if (percentage >= 50) return "text-amber-500";
+    return "text-red-500";
+  };
+
+  const getMatchBgColor = (percentage?: number) => {
+    if (!percentage) return "bg-gray-100 dark:bg-gray-800";
+    if (percentage >= 70) return "bg-green-50 dark:bg-green-900/30";
+    if (percentage >= 50) return "bg-amber-50 dark:bg-amber-900/30";
+    return "bg-red-50 dark:bg-red-900/30";
+  };
+
   // Swipe direction animation values
   const xPosition = direction === "left" ? -1000 : direction === "right" ? 1000 : 0;
 
@@ -126,6 +141,15 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
         transition={{ duration: 0.3 }}
       >
         <Card className="border-2 h-[calc(100vh-250px)] flex flex-col">
+          {/* Job Match Percentage Badge - Added to the top right */}
+          {currentJob.matchPercentage && (
+            <div className="absolute top-3 right-3 z-10">
+              <div className={`px-3 py-1.5 rounded-full ${getMatchBgColor(currentJob.matchPercentage)} ${getMatchColor(currentJob.matchPercentage)} text-sm font-semibold flex items-center shadow-sm`}>
+                <span className="text-base font-bold mr-1">{currentJob.matchPercentage}%</span> Match
+              </div>
+            </div>
+          )}
+          
           <CardContent className="flex-1 p-6">
             <div className="mb-6">
               <h2 className="text-2xl font-bold mb-1">{currentJob.title}</h2>
@@ -169,6 +193,18 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
               </div>
             </div>
           </CardContent>
+          
+          {/* Added an explicit Apply button above the swipe controls */}
+          <div className="px-6 pb-2">
+            <Button 
+              className="w-full mb-4"
+              size="lg"
+              onClick={handleApply}
+            >
+              <Zap className="w-4 h-4 mr-2" />
+              Apply Now
+            </Button>
+          </div>
           
           <CardFooter className="border-t pt-4 pb-4">
             <div className="flex justify-between w-full">
