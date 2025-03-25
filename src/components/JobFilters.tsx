@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -60,31 +61,107 @@ interface JobFiltersSectionProps {
   onApplyFilters?: (filters: JobFilters) => void;
 }
 
+// Storage key for persisting filters
+const FILTER_STORAGE_KEY = 'jobSearchFilters';
+
+// Helper function to load filters from localStorage
+const loadSavedFilters = (): JobFilters | null => {
+  try {
+    const savedFilters = localStorage.getItem(FILTER_STORAGE_KEY);
+    if (savedFilters) {
+      return JSON.parse(savedFilters);
+    }
+  } catch (error) {
+    console.error('Error loading saved filters:', error);
+  }
+  return null;
+};
+
+// Helper function to save filters to localStorage
+const saveFilters = (filters: JobFilters) => {
+  try {
+    localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(filters));
+  } catch (error) {
+    console.error('Error saving filters:', error);
+  }
+};
+
 export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) => {
-  // State for all filters
-  const [jobFunctions, setJobFunctions] = useState<JobFunctionType[]>([]);
-  const [skills, setSkills] = useState<SkillType[]>([]);
-  const [companies, setCompanies] = useState<CompanyType[]>([]);
-  const [jobTitles, setJobTitles] = useState<JobTitleType[]>([]);
-  const [salaryRange, setSalaryRange] = useState<[number, number]>([50000, 150000]);
-  const [location, setLocation] = useState("");
-  const [remote, setRemote] = useState(false);
-  const [jobTypes, setJobTypes] = useState<{[key: string]: boolean}>({
-    "full-time": false,
-    "part-time": false,
-    "contract": false,
-    "internship": false,
-    "temporary": false
-  });
-  const [experienceLevels, setExperienceLevels] = useState<{[key: string]: boolean}>({
-    "entry": false,
-    "mid": false,
-    "senior": false,
-    "lead": false,
-    "manager": false,
-    "director": false,
-    "executive": false
-  });
+  const savedFilters = loadSavedFilters();
+  
+  // State for all filters - initialize from localStorage if available
+  const [jobFunctions, setJobFunctions] = useState<JobFunctionType[]>(
+    savedFilters?.jobFunction || []
+  );
+  const [skills, setSkills] = useState<SkillType[]>(
+    savedFilters?.skills || []
+  );
+  const [companies, setCompanies] = useState<CompanyType[]>(
+    savedFilters?.companies || []
+  );
+  const [jobTitles, setJobTitles] = useState<JobTitleType[]>(
+    savedFilters?.title || []
+  );
+  const [salaryRange, setSalaryRange] = useState<[number, number]>(
+    savedFilters?.salaryRange || [50000, 150000]
+  );
+  const [location, setLocation] = useState(
+    savedFilters?.location || ""
+  );
+  const [remote, setRemote] = useState(
+    savedFilters?.remote || false
+  );
+  
+  // Initialize job types from saved filters or defaults
+  const initJobTypes = () => {
+    const defaultTypes = {
+      "full-time": false,
+      "part-time": false,
+      "contract": false,
+      "internship": false,
+      "temporary": false
+    };
+    
+    if (savedFilters?.jobType?.length) {
+      const savedTypes = { ...defaultTypes };
+      savedFilters.jobType.forEach(type => {
+        if (type in savedTypes) {
+          savedTypes[type] = true;
+        }
+      });
+      return savedTypes;
+    }
+    
+    return defaultTypes;
+  };
+  
+  // Initialize experience levels from saved filters or defaults
+  const initExperienceLevels = () => {
+    const defaultLevels = {
+      "entry": false,
+      "mid": false,
+      "senior": false,
+      "lead": false,
+      "manager": false,
+      "director": false,
+      "executive": false
+    };
+    
+    if (savedFilters?.experienceLevels?.length) {
+      const savedLevels = { ...defaultLevels };
+      savedFilters.experienceLevels.forEach(level => {
+        if (level in savedLevels) {
+          savedLevels[level] = true;
+        }
+      });
+      return savedLevels;
+    }
+    
+    return defaultLevels;
+  };
+  
+  const [jobTypes, setJobTypes] = useState<{[key: string]: boolean}>(initJobTypes());
+  const [experienceLevels, setExperienceLevels] = useState<{[key: string]: boolean}>(initExperienceLevels());
   
   // Input refs for the add functionality
   const jobFunctionInputRef = useRef<HTMLInputElement>(null);
@@ -105,7 +182,15 @@ export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) =>
   const [newJobTitle, setNewJobTitle] = useState("");
 
   // Flag to track if filters have been applied
-  const [filtersApplied, setFiltersApplied] = useState(false);
+  const [filtersApplied, setFiltersApplied] = useState(!!savedFilters);
+
+  // Apply saved filters on component mount
+  useEffect(() => {
+    if (savedFilters && onApplyFilters) {
+      onApplyFilters(savedFilters);
+      setFiltersApplied(true);
+    }
+  }, [onApplyFilters]);
 
   // Handle applying filters
   const handleApplyFilters = () => {
@@ -135,6 +220,9 @@ export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) =>
       title: jobTitles,
     };
     
+    // Save filters to localStorage
+    saveFilters(filters);
+    
     // Call the callback function with the filters
     if (onApplyFilters) {
       onApplyFilters(filters);
@@ -143,7 +231,7 @@ export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) =>
     setFiltersApplied(true);
     
     toast.success("Filters applied", {
-      description: "Your job search filters have been applied."
+      description: "Your job search filters have been applied and saved."
     });
   };
   
@@ -215,6 +303,9 @@ export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) =>
   
   // Handle reset all filters
   const handleResetFilters = () => {
+    // Clear localStorage
+    localStorage.removeItem(FILTER_STORAGE_KEY);
+    
     setJobFunctions([]);
     setSkills([]);
     setCompanies([]);
