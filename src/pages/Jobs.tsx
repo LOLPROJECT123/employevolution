@@ -496,7 +496,7 @@ const Jobs = () => {
             </div>
           </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
+          <div className="grid grid-cols-1 gap-6 mt-6">
             <div className="lg:col-span-12">
               {isMobile && (
                 <div className="space-y-3 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
@@ -521,7 +521,7 @@ const Jobs = () => {
               )}
             </div>
             
-            <div className="lg:col-span-3 space-y-6">
+            <div className="w-full">
               {(!isMobile || (isMobile && showMyJobs)) && (
                 <SavedAndAppliedJobs
                   savedJobs={savedJobs}
@@ -534,7 +534,7 @@ const Jobs = () => {
               )}
             </div>
             
-            <div className="lg:col-span-9 space-y-6">
+            <div className="w-full">
               {(viewMode === 'list' || !isMobile) && (!showMyJobs || !isMobile) && (
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                   <div className="lg:col-span-6">
@@ -655,4 +655,3 @@ const Jobs = () => {
 };
 
 export default Jobs;
-

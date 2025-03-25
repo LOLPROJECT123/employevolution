@@ -36,7 +36,7 @@ export function SavedAndAppliedJobs({
   
   if (savedJobs.length === 0 && appliedJobs.length === 0) {
     return (
-      <Card className="mb-6">
+      <Card className="mb-6 w-full">
         <CardHeader className="pb-3 border-b">
           <CardTitle className="text-lg">My Jobs</CardTitle>
         </CardHeader>
@@ -57,7 +57,7 @@ export function SavedAndAppliedJobs({
   }
   
   return (
-    <Card className="mb-6">
+    <Card className="mb-6 w-full">
       <CardHeader className="border-b pb-3">
         <CardTitle className="text-lg">My Jobs</CardTitle>
       </CardHeader>
