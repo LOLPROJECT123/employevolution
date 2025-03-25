@@ -14,7 +14,6 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
-import { BookmarkCheck, CheckCircle } from "lucide-react";
 
 interface SavedAndAppliedJobsProps {
   savedJobs: Job[];
@@ -37,47 +36,48 @@ export function SavedAndAppliedJobs({
   
   if (savedJobs.length === 0 && appliedJobs.length === 0) {
     return (
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center">
-            <BookmarkCheck className="w-5 h-5 mr-2 text-primary" />
-            My Jobs
-          </CardTitle>
+      <Card className="h-full">
+        <CardHeader className="pb-3 border-b">
+          <CardTitle className="text-lg">My Jobs</CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-center text-muted-foreground py-6">
-            You haven't saved or applied to any jobs yet. Browse jobs and click "Save" or "Apply" to see them here.
-          </p>
+        <CardContent className="p-0">
+          <div className="px-4 py-8 text-center">
+            <div className="flex justify-center gap-6 mb-4 text-sm font-medium">
+              <span>Saved Jobs (0)</span>
+              <span className="text-muted-foreground">Applied Jobs (0)</span>
+            </div>
+            <p className="text-center text-muted-foreground text-sm">
+              You Haven't Saved Any Jobs Yet.
+            </p>
+          </div>
         </CardContent>
       </Card>
     );
   }
   
   return (
-    <Card className="mb-6">
-      <CardHeader>
+    <Card className="h-full">
+      <CardHeader className="border-b pb-3">
         <CardTitle className="text-lg">My Jobs</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-4">
-            <TabsTrigger value="saved" className="flex items-center gap-2">
-              <BookmarkCheck className="w-4 h-4" />
-              <span>Saved Jobs ({savedJobs.length})</span>
+          <TabsList className="grid w-full grid-cols-2 rounded-none border-b">
+            <TabsTrigger value="saved" className="text-sm rounded-none py-3">
+              Saved Jobs ({savedJobs.length})
             </TabsTrigger>
-            <TabsTrigger value="applied" className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4" />
-              <span>Applied Jobs ({appliedJobs.length})</span>
+            <TabsTrigger value="applied" className="text-sm rounded-none py-3">
+              Applied Jobs ({appliedJobs.length})
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="saved" className="space-y-4">
+          <TabsContent value="saved" className="p-0 pt-2 overflow-auto max-h-[calc(100vh-350px)]">
             {savedJobs.length === 0 ? (
-              <p className="text-center text-muted-foreground py-4">
-                You haven't saved any jobs yet.
+              <p className="text-center text-muted-foreground py-4 text-sm">
+                You Haven't Saved Any Jobs Yet.
               </p>
             ) : (
-              <div className="space-y-4">
+              <div className="divide-y">
                 {savedJobs.map(job => (
                   <JobCard 
                     key={job.id}
@@ -88,19 +88,20 @@ export function SavedAndAppliedJobs({
                     isApplied={appliedJobs.some(j => j.id === job.id)}
                     onClick={() => onSelect(job)}
                     onSave={() => onSave(job)}
+                    variant="list"
                   />
                 ))}
               </div>
             )}
           </TabsContent>
           
-          <TabsContent value="applied" className="space-y-4">
+          <TabsContent value="applied" className="p-0 pt-2 overflow-auto max-h-[calc(100vh-350px)]">
             {appliedJobs.length === 0 ? (
-              <p className="text-center text-muted-foreground py-4">
-                You haven't applied to any jobs yet.
+              <p className="text-center text-muted-foreground py-4 text-sm">
+                You Haven't Applied To Any Jobs Yet.
               </p>
             ) : (
-              <div className="space-y-4">
+              <div className="divide-y">
                 {appliedJobs.map(job => (
                   <JobCard 
                     key={job.id}
@@ -111,6 +112,7 @@ export function SavedAndAppliedJobs({
                     isApplied={true}
                     onClick={() => onSelect(job)}
                     onSave={() => onSave(job)}
+                    variant="list"
                   />
                 ))}
               </div>
