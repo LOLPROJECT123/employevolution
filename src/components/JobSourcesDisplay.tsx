@@ -211,8 +211,6 @@ export default function JobSourcesDisplay() {
     </Dialog>
   );
 
-  const activeSourcesCount = jobSources.filter(source => source.isActive).length;
-
   return (
     <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-100 dark:border-blue-900/50">
       <CardHeader className="pb-3">
