@@ -136,9 +136,9 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
         transition={{ duration: 0.3 }}
       >
         <Card className="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl overflow-hidden">
-          {/* Match Percentage Badge */}
+          {/* Match Percentage Badge - Made larger and more prominent */}
           <div className="absolute top-4 right-4 z-10">
-            <Badge variant="outline" className={`px-3 py-1.5 rounded-full ${getMatchBgColor(currentJob.matchPercentage)} ${getMatchColor(currentJob.matchPercentage)} text-sm font-bold shadow-sm`}>
+            <Badge variant="outline" className={`px-4 py-2 rounded-full ${getMatchBgColor(currentJob.matchPercentage)} ${getMatchColor(currentJob.matchPercentage)} text-sm font-bold shadow-sm`}>
               {currentJob.matchPercentage || 0}% Match
             </Badge>
           </div>
@@ -198,9 +198,9 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
               </div>
             </div>
             
-            {/* Apply button */}
+            {/* Apply button - Made more prominent */}
             <Button 
-              className="w-full py-6 text-base font-medium shadow-sm rounded-lg"
+              className="w-full py-6 text-base font-medium shadow-md rounded-lg"
               size="lg"
               onClick={handleApply}
             >
