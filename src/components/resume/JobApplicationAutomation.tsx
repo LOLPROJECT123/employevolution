@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Zap, FileCode, Settings, PlusCircle, Download, Play, Linkedin, Briefcase, Clock } from "lucide-react";
+import { Zap, FileCode, Settings, PlusCircle, Download, Play, Linkedin, Briefcase, Clock, X } from "lucide-react";
 import { toast } from "sonner";
 import AutomationSettings from "@/components/AutomationSettings";
 import { 
@@ -65,6 +65,10 @@ const JobApplicationAutomation = () => {
     }
   };
 
+  const clearJobUrl = () => {
+    setJobUrl('');
+  };
+
   const handleRunScript = () => {
     if (!jobUrl) {
       toast.error("Please enter a job URL");
@@ -102,23 +106,27 @@ const JobApplicationAutomation = () => {
       setAutomationStatus('running');
       
       // Trigger automation
-      startAutomation(jobUrl, JSON.parse(config));
+      const automationResult = startAutomation(jobUrl, JSON.parse(config));
       
-      toast.success("Automation started", {
-        description: `Now applying to job on ${platform}.`
-      });
-      
-      // Simulate completion after a delay (in real implementation this would be based on callback from extension)
-      setTimeout(() => {
-        setAutomationStatus('completed');
-        setStats(prev => ({
-          ...prev,
-          applied: prev.applied + 1
-        }));
-        toast.success("Application completed", {
-          description: `Successfully applied to job on ${platform}.`
+      if (automationResult) {
+        toast.success("Automation started", {
+          description: `Now applying to job on ${platform}.`
         });
-      }, 3000);
+        
+        // Simulate completion after a delay (in real implementation this would be based on callback from extension)
+        setTimeout(() => {
+          setAutomationStatus('completed');
+          setStats(prev => ({
+            ...prev,
+            applied: prev.applied + 1
+          }));
+          toast.success("Application completed", {
+            description: `Successfully applied to job on ${platform}.`
+          });
+        }, 3000);
+      } else {
+        throw new Error("Failed to start automation");
+      }
     } catch (error) {
       setAutomationStatus('failed');
       setStats(prev => ({
@@ -203,6 +211,13 @@ const JobApplicationAutomation = () => {
     }
   };
 
+  // Function to remove URL from recent list
+  const removeFromRecent = (urlToRemove: string) => {
+    const updatedUrls = recentUrls.filter(url => url !== urlToRemove);
+    setRecentUrls(updatedUrls);
+    localStorage.setItem('recentJobUrls', JSON.stringify(updatedUrls));
+  };
+
   // Function to get platform badge color
   const getPlatformBadgeColor = (url: string) => {
     const platform = detectPlatform(url);
@@ -243,6 +258,7 @@ const JobApplicationAutomation = () => {
                     placeholder="https://www.linkedin.com/jobs/view/..." 
                     value={jobUrl}
                     onChange={(e) => setJobUrl(e.target.value)}
+                    onClear={clearJobUrl}
                     className="flex-grow"
                   />
                   <Button 
@@ -297,6 +313,14 @@ const JobApplicationAutomation = () => {
                             className="h-7 px-2"
                           >
                             Use
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => removeFromRecent(url)}
+                            className="h-7 w-7 p-0 text-muted-foreground"
+                          >
+                            <X size={14} />
                           </Button>
                         </div>
                       </div>

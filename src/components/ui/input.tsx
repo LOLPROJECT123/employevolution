@@ -1,6 +1,6 @@
 
 import * as React from "react"
-
+import { X } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export interface InputProps
@@ -25,6 +25,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm transition-colors",
             icon && iconPosition === "left" && "pl-10",
             icon && iconPosition === "right" && "pr-10",
+            onClear && "pr-10",
             className
           )}
           ref={ref}
@@ -42,20 +43,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             onClick={onClear}
             aria-label="Clear input"
           >
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              width="16" 
-              height="16" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
-            >
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
+            <X size={16} />
           </button>
         )}
       </div>
