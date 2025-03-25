@@ -497,9 +497,9 @@ const Jobs = () => {
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
-            <div className="lg:col-span-3 space-y-6">
+            <div className="lg:col-span-12">
               {isMobile && (
-                <div className="space-y-3 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                <div className="space-y-3 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
                   <button 
                     onClick={toggleViewMode}
                     className="w-full py-2.5 px-4 rounded-lg bg-primary text-white font-medium"
@@ -519,7 +519,9 @@ const Jobs = () => {
                   </div>
                 </div>
               )}
-              
+            </div>
+            
+            <div className="lg:col-span-3 space-y-6">
               {(!isMobile || (isMobile && showMyJobs)) && (
                 <SavedAndAppliedJobs
                   savedJobs={savedJobs}

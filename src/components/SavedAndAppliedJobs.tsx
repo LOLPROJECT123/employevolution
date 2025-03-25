@@ -14,7 +14,6 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
-import { BookmarkCheck, CheckCircle } from "lucide-react";
 
 interface SavedAndAppliedJobsProps {
   savedJobs: Job[];
@@ -38,15 +37,15 @@ export function SavedAndAppliedJobs({
   if (savedJobs.length === 0 && appliedJobs.length === 0) {
     return (
       <Card className="mb-6">
-        <CardHeader className="border-b">
+        <CardHeader className="pb-3 border-b">
           <CardTitle className="text-lg">My Jobs</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border">
-            <h3 className="font-medium mb-2 text-center">My Jobs</h3>
-            <div className="flex justify-center gap-4 mb-4">
-              <span className="text-sm">Saved Jobs (0)</span>
-              <span className="text-sm text-gray-500">Applied Jobs (0)</span>
+        <CardContent className="p-0">
+          <div className="px-4 py-8 text-center">
+            <h3 className="text-xl font-semibold mb-2">My Jobs</h3>
+            <div className="flex justify-center gap-6 mb-4 text-sm font-medium">
+              <span>Saved Jobs (0)</span>
+              <span className="text-muted-foreground">Applied Jobs (0)</span>
             </div>
             <p className="text-center text-muted-foreground text-sm">
               You Haven't Saved Any Jobs Yet.
