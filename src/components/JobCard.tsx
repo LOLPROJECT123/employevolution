@@ -95,7 +95,7 @@ export function JobCard({
             <div className="text-sm">
               <div className="flex items-center gap-1 mb-1">
                 <span className="text-xs text-yellow-500">⭐</span>
-                <span className="text-muted-foreground">Employers are looking for:</span>
+                <span className="text-muted-foreground">Employers Are Looking For:</span>
               </div>
               <div className="flex flex-wrap gap-2 mt-2">
                 {job.matchCriteria.degree && (
@@ -129,8 +129,8 @@ export function JobCard({
       </CardHeader>
       <CardContent>
         <div className="flex flex-wrap gap-2 mb-4">
-          <Badge variant="secondary">{job.type}</Badge>
-          <Badge variant="secondary">{job.level}</Badge>
+          <Badge variant="secondary" className="capitalize">{job.type}</Badge>
+          <Badge variant="secondary" className="capitalize">{job.level}</Badge>
           <Badge variant="outline">{formattedSalary}</Badge>
           {job.remote && (
             <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
@@ -140,7 +140,7 @@ export function JobCard({
         </div>
         <div className="flex flex-wrap gap-1.5">
           {job.skills.slice(0, 5).map((skill) => (
-            <Badge key={skill} variant="secondary" className="bg-primary/10 text-primary">
+            <Badge key={skill} variant="secondary" className="bg-primary/10 text-primary capitalize">
               {skill}
             </Badge>
           ))}

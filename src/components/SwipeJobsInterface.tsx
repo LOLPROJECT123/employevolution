@@ -59,8 +59,8 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
         setCurrentIndex(prev => prev + 1);
       } else {
         toast({
-          title: "You've reviewed all available jobs",
-          description: "Check back later for more opportunities",
+          title: "You've Reviewed All Available Jobs",
+          description: "Check Back Later For More Opportunities",
         });
       }
     }, 300);
@@ -70,7 +70,7 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
     // Display success message and call the onApply callback
     toast({
       title: "Applied Successfully!",
-      description: `Your application to ${currentJob.company} for ${currentJob.title} has been submitted.`,
+      description: `Your Application To ${currentJob.company} For ${currentJob.title} Has Been Submitted.`,
       variant: "default",
     });
     onApply(currentJob);
@@ -80,7 +80,7 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
     // Display info message and call the onSkip callback
     toast({
       title: "Job Skipped",
-      description: `You skipped ${currentJob.title} at ${currentJob.company}`,
+      description: `You Skipped ${currentJob.title} At ${currentJob.company}`,
       variant: "default",
     });
     onSkip(currentJob);
@@ -92,7 +92,7 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
         <Building2 className="w-16 h-16 text-muted-foreground mb-4" />
         <h3 className="text-xl font-medium mb-2">No More Jobs</h3>
         <p className="text-muted-foreground text-center">
-          You've gone through all the available jobs. Check back later for new opportunities.
+          You've Gone Through All The Available Jobs. Check Back Later For New Opportunities.
         </p>
       </div>
     );
@@ -107,12 +107,12 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
     <div className="w-full max-w-md mx-auto pb-8">
       {/* Job Count Display Section - Added above the swipe instructions */}
       <div className="mb-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-        <h3 className="text-lg font-semibold">Found {jobs.length} matching jobs</h3>
-        <p className="text-sm text-muted-foreground">Displaying jobs that match your search criteria.</p>
+        <h3 className="text-lg font-semibold">Found {jobs.length} Matching Jobs</h3>
+        <p className="text-sm text-muted-foreground">Displaying Jobs That Match Your Search Criteria.</p>
       </div>
       
       <h3 className="text-xl font-semibold mb-4 text-center">
-        Swipe right to apply, left to skip
+        Swipe Right To Apply, Left To Skip
       </h3>
       
       <motion.div
@@ -155,7 +155,7 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
                 <h3 className="text-lg font-medium mb-2">Skills</h3>
                 <div className="flex flex-wrap gap-2">
                   {currentJob.skills.slice(0, 5).map((skill, index) => (
-                    <div key={index} className="px-3 py-1 rounded-full bg-secondary/70 text-sm">
+                    <div key={index} className="px-3 py-1 rounded-full bg-secondary/70 text-sm capitalize">
                       {skill}
                     </div>
                   ))}
@@ -189,7 +189,7 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
       </motion.div>
       
       <div className="text-center mt-4 text-muted-foreground">
-        Job {currentIndex + 1} of {jobs.length}
+        Job {currentIndex + 1} Of {jobs.length}
       </div>
     </div>
   );
