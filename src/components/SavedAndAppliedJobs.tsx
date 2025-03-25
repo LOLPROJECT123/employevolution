@@ -36,12 +36,13 @@ export function SavedAndAppliedJobs({
   
   if (savedJobs.length === 0 && appliedJobs.length === 0) {
     return (
-      <Card className="h-full">
+      <Card className="mb-6">
         <CardHeader className="pb-3 border-b">
           <CardTitle className="text-lg">My Jobs</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="px-4 py-8 text-center">
+            <h3 className="text-xl font-semibold mb-2">My Jobs</h3>
             <div className="flex justify-center gap-6 mb-4 text-sm font-medium">
               <span>Saved Jobs (0)</span>
               <span className="text-muted-foreground">Applied Jobs (0)</span>
@@ -56,7 +57,7 @@ export function SavedAndAppliedJobs({
   }
   
   return (
-    <Card className="h-full">
+    <Card className="mb-6">
       <CardHeader className="border-b pb-3">
         <CardTitle className="text-lg">My Jobs</CardTitle>
       </CardHeader>
@@ -71,7 +72,7 @@ export function SavedAndAppliedJobs({
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="saved" className="p-0 pt-2 overflow-auto max-h-[calc(100vh-350px)]">
+          <TabsContent value="saved" className="p-0 pt-2">
             {savedJobs.length === 0 ? (
               <p className="text-center text-muted-foreground py-4 text-sm">
                 You Haven't Saved Any Jobs Yet.
@@ -95,7 +96,7 @@ export function SavedAndAppliedJobs({
             )}
           </TabsContent>
           
-          <TabsContent value="applied" className="p-0 pt-2 overflow-auto max-h-[calc(100vh-350px)]">
+          <TabsContent value="applied" className="p-0 pt-2">
             {appliedJobs.length === 0 ? (
               <p className="text-center text-muted-foreground py-4 text-sm">
                 You Haven't Applied To Any Jobs Yet.
