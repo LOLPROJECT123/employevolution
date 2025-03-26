@@ -9,6 +9,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
 import { 
   Upload, 
   Mail, 
@@ -24,7 +26,16 @@ import {
   Link as LinkIcon,
   Zap, 
   PenLine, 
-  Plus
+  Plus,
+  Search as SearchIcon,
+  UserRound,
+  Building2,
+  DollarSign,
+  MapPin as LocationIcon,
+  Clock,
+  GraduationCap as EducationIcon,
+  Users,
+  Sparkles
 } from "lucide-react";
 
 const ProfilePage = () => {
@@ -137,6 +148,33 @@ const ProfilePage = () => {
     languages: ["English", "Spanish", "Hindi"]
   });
 
+  // Progress tracking
+  const [profileCompletionPercentage, setProfileCompletionPercentage] = useState(65);
+  
+  // Job preferences
+  const [jobPreferences, setJobPreferences] = useState({
+    jobTypes: ["full-time", "internship", "contract"],
+    preferredLocations: ["New York, NY", "San Francisco, CA", "Remote"],
+    salary: {
+      currency: "USD",
+      min: 80000,
+      max: 120000,
+      period: "yearly"
+    },
+    remotePreference: "hybrid",
+    experienceLevel: "entry",
+    industries: ["Technology", "Finance", "Healthcare"],
+    roles: ["Software Engineer", "Full Stack Developer", "Data Scientist"],
+    skills: ["JavaScript", "React", "Node.js", "Python", "SQL"],
+    benefits: ["Health Insurance", "401k", "Remote Work", "Professional Development"],
+    companySize: ["Startup", "Mid-size"],
+    workAuthorization: {
+      authorized: true,
+      needSponsorship: false,
+      countries: ["United States"]
+    }
+  });
+
   return (
     <div className="container mx-auto py-8 px-4 max-w-5xl">
       {/* Profile Header */}
@@ -190,6 +228,15 @@ const ProfilePage = () => {
               <div className="mt-4 text-sm text-muted-foreground">
                 <p>Get discovered by companies</p>
                 <p>Your current employer can't see you</p>
+              </div>
+              
+              {/* Profile Completion Progress */}
+              <div className="mt-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium">Profile Completion</span>
+                  <span className="text-sm font-medium">{profileCompletionPercentage}%</span>
+                </div>
+                <Progress value={profileCompletionPercentage} className="h-2" />
               </div>
             </div>
           </div>
@@ -438,104 +485,248 @@ const ProfilePage = () => {
 
         {/* Job Preferences Tab */}
         <TabsContent value="jobPreferences" className="mt-0">
-          <Card>
+          <Card className="mb-6">
             <CardHeader className="p-6">
               <CardTitle>Job Preferences</CardTitle>
               <CardDescription>Set your job preferences to find the perfect match</CardDescription>
             </CardHeader>
             <CardContent className="p-6 pt-0 space-y-6">
-              <div className="space-y-2">
-                <h3 className="font-medium">Job Types</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex items-center space-x-2">
-                    <input type="checkbox" id="fullTime" className="rounded text-primary" defaultChecked />
-                    <label htmlFor="fullTime">Full-time</label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input type="checkbox" id="partTime" className="rounded text-primary" />
-                    <label htmlFor="partTime">Part-time</label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input type="checkbox" id="contract" className="rounded text-primary" defaultChecked />
-                    <label htmlFor="contract">Contract</label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input type="checkbox" id="internship" className="rounded text-primary" defaultChecked />
-                    <label htmlFor="internship">Internship</label>
-                  </div>
+              {/* Profile Strength */}
+              <div className="bg-muted/30 rounded-lg p-4 mb-6">
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="font-medium">Profile Strength</h3>
+                  <span className="text-sm font-medium">65%</span>
+                </div>
+                <Progress value={65} className="h-2" />
+                <div className="mt-3 text-sm text-muted-foreground">
+                  Complete your profile to increase your chances of finding the perfect job
                 </div>
               </div>
-
-              <div className="space-y-2">
-                <h3 className="font-medium">Preferred Locations</h3>
-                <div className="flex flex-wrap gap-2">
-                  <div className="bg-secondary py-1 px-3 rounded-full text-sm flex items-center gap-1">
-                    New York, NY 
-                    <button className="text-muted-foreground hover:text-foreground">×</button>
-                  </div>
-                  <div className="bg-secondary py-1 px-3 rounded-full text-sm flex items-center gap-1">
-                    San Francisco, CA
-                    <button className="text-muted-foreground hover:text-foreground">×</button>
-                  </div>
-                  <div className="bg-secondary py-1 px-3 rounded-full text-sm flex items-center gap-1">
-                    Remote
-                    <button className="text-muted-foreground hover:text-foreground">×</button>
-                  </div>
-                  <Button variant="outline" size="sm" className="text-sm rounded-full">
-                    <Plus className="h-3 w-3 mr-1" /> Add location
+              
+              {/* Role & Experience Section */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-medium flex items-center">
+                    <UserRound className="mr-2 h-5 w-5 text-blue-500" />
+                    Role & Experience
+                  </h3>
+                  <Button variant="ghost" size="sm">
+                    <PenLine className="h-4 w-4 mr-1" /> Edit
                   </Button>
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="font-medium">Salary Expectation</h3>
-                <div className="flex items-center gap-2">
-                  <select className="rounded-md border border-input bg-background px-3 py-2 text-sm w-24">
-                    <option>USD</option>
-                    <option>EUR</option>
-                    <option>GBP</option>
-                  </select>
-                  <input 
-                    type="text" 
-                    className="rounded-md border border-input bg-background px-3 py-2 text-sm flex-1" 
-                    placeholder="Minimum"
-                    defaultValue="80,000"
-                  />
-                  <span>-</span>
-                  <input 
-                    type="text" 
-                    className="rounded-md border border-input bg-background px-3 py-2 text-sm flex-1" 
-                    placeholder="Maximum"
-                    defaultValue="120,000"
-                  />
-                  <select className="rounded-md border border-input bg-background px-3 py-2 text-sm w-24">
-                    <option>Yearly</option>
-                    <option>Monthly</option>
-                    <option>Hourly</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="font-medium">Remote Preferences</h3>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <input type="radio" id="remoteOnly" name="remote" className="text-primary" />
-                    <label htmlFor="remoteOnly">Remote only</label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input type="radio" id="hybrid" name="remote" className="text-primary" defaultChecked />
-                    <label htmlFor="hybrid">Hybrid (remote + in-office)</label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input type="radio" id="onsite" name="remote" className="text-primary" />
-                    <label htmlFor="onsite">Onsite only</label>
+                
+                <div className="bg-card rounded-lg border p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Desired Roles</p>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {jobPreferences.roles.map((role, index) => (
+                          <div key={index} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">
+                            {role}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <p className="text-sm text-muted-foreground">Experience Level</p>
+                      <p className="mt-2 capitalize">{jobPreferences.experienceLevel}</p>
+                    </div>
                   </div>
                 </div>
               </div>
-
+              
+              {/* Industries & Companies Section */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-medium flex items-center">
+                    <Building2 className="mr-2 h-5 w-5 text-blue-500" />
+                    Industries & Companies
+                  </h3>
+                  <Button variant="ghost" size="sm">
+                    <PenLine className="h-4 w-4 mr-1" /> Edit
+                  </Button>
+                </div>
+                
+                <div className="bg-card rounded-lg border p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Industries</p>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {jobPreferences.industries.map((industry, index) => (
+                          <div key={index} className="bg-secondary px-3 py-1 rounded-full text-sm">
+                            {industry}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <p className="text-sm text-muted-foreground">Company Size</p>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {jobPreferences.companySize.map((size, index) => (
+                          <div key={index} className="bg-secondary px-3 py-1 rounded-full text-sm">
+                            {size}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Compensation Section */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-medium flex items-center">
+                    <DollarSign className="mr-2 h-5 w-5 text-blue-500" />
+                    Compensation
+                  </h3>
+                  <Button variant="ghost" size="sm">
+                    <PenLine className="h-4 w-4 mr-1" /> Edit
+                  </Button>
+                </div>
+                
+                <div className="bg-card rounded-lg border p-4">
+                  <div className="grid grid-cols-1 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Salary Expectation</p>
+                      <p className="mt-2">{jobPreferences.salary.currency} {jobPreferences.salary.min.toLocaleString()} - {jobPreferences.salary.max.toLocaleString()} per {jobPreferences.salary.period}</p>
+                    </div>
+                    
+                    <div>
+                      <p className="text-sm text-muted-foreground">Benefits</p>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {jobPreferences.benefits.map((benefit, index) => (
+                          <div key={index} className="bg-secondary px-3 py-1 rounded-full text-sm">
+                            {benefit}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Location & Work Model Section */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-medium flex items-center">
+                    <LocationIcon className="mr-2 h-5 w-5 text-blue-500" />
+                    Location & Work Model
+                  </h3>
+                  <Button variant="ghost" size="sm">
+                    <PenLine className="h-4 w-4 mr-1" /> Edit
+                  </Button>
+                </div>
+                
+                <div className="bg-card rounded-lg border p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Preferred Locations</p>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {jobPreferences.preferredLocations.map((loc, index) => (
+                          <div key={index} className="bg-secondary px-3 py-1 rounded-full text-sm flex items-center gap-1">
+                            {loc}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <p className="text-sm text-muted-foreground">Work Model</p>
+                      <p className="mt-2 capitalize">{jobPreferences.remotePreference}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Job Types Section */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-medium flex items-center">
+                    <Clock className="mr-2 h-5 w-5 text-blue-500" />
+                    Job Types
+                  </h3>
+                  <Button variant="ghost" size="sm">
+                    <PenLine className="h-4 w-4 mr-1" /> Edit
+                  </Button>
+                </div>
+                
+                <div className="bg-card rounded-lg border p-4">
+                  <div className="flex flex-wrap gap-2">
+                    {jobPreferences.jobTypes.map((type, index) => (
+                      <div key={index} className="bg-secondary px-3 py-1 rounded-full text-sm">
+                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Skills & Qualifications Section */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-medium flex items-center">
+                    <Sparkles className="mr-2 h-5 w-5 text-blue-500" />
+                    Skills & Qualifications
+                  </h3>
+                  <Button variant="ghost" size="sm">
+                    <PenLine className="h-4 w-4 mr-1" /> Edit
+                  </Button>
+                </div>
+                
+                <div className="bg-card rounded-lg border p-4">
+                  <div className="grid grid-cols-1 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Skills</p>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {jobPreferences.skills.map((skill, index) => (
+                          <div key={index} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">
+                            {skill}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Work Authorization Section */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-medium flex items-center">
+                    <Users className="mr-2 h-5 w-5 text-blue-500" />
+                    Work Authorization
+                  </h3>
+                  <Button variant="ghost" size="sm">
+                    <PenLine className="h-4 w-4 mr-1" /> Edit
+                  </Button>
+                </div>
+                
+                <div className="bg-card rounded-lg border p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Authorized to work in</p>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {jobPreferences.workAuthorization.countries.map((country, index) => (
+                          <div key={index} className="bg-secondary px-3 py-1 rounded-full text-sm">
+                            {country}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <p className="text-sm text-muted-foreground">Need sponsorship</p>
+                      <p className="mt-2">{jobPreferences.workAuthorization.needSponsorship ? "Yes" : "No"}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
               <div className="pt-4">
-                <Button className="w-full">Save Preferences</Button>
+                <Button className="w-full bg-blue-500 hover:bg-blue-600">Update Job Preferences</Button>
               </div>
             </CardContent>
           </Card>
