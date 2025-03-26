@@ -7,7 +7,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { useEffect, useState } from "react";
 import { isMobileApp, isChromeExtension } from "./utils/mobileUtils";
-import { JobApplicationProvider } from "./contexts/JobApplicationContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import InterviewPractice from "./pages/InterviewPractice";
@@ -57,27 +56,25 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
         <TooltipProvider>
-          <JobApplicationProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/interview-practice" element={<InterviewPractice />} />
-                <Route path="/referrals" element={<Referrals />} />
-                <Route path="/jobs" element={isMobile ? <MobileJobs /> : <Jobs />} />
-                <Route path="/mobile-jobs" element={<MobileJobs />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/resume-tools" element={<ResumeTools />} />
-                <Route path="/leetcode-patterns" element={<LeetcodePatterns />} />
-                <Route path="/salary-negotiations" element={<SalaryNegotiations />} />
-                <Route path="/profile" element={<Profile />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </JobApplicationProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/interview-practice" element={<InterviewPractice />} />
+              <Route path="/referrals" element={<Referrals />} />
+              <Route path="/jobs" element={isMobile ? <MobileJobs /> : <Jobs />} />
+              <Route path="/mobile-jobs" element={<MobileJobs />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/resume-tools" element={<ResumeTools />} />
+              <Route path="/leetcode-patterns" element={<LeetcodePatterns />} />
+              <Route path="/salary-negotiations" element={<SalaryNegotiations />} />
+              <Route path="/profile" element={<Profile />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>

@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Job, JobStatus } from "@/types/job";
+import { Job } from "@/types/job";
 import { 
   Tabs, 
   TabsContent, 
@@ -14,45 +14,25 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
-import {
-  Button
-} from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
-import { useJobApplications } from "@/contexts/JobApplicationContext";
 
 interface SavedAndAppliedJobsProps {
+  savedJobs: Job[];
+  appliedJobs: Job[];
+  onApply: (job: Job) => void;
+  onSave: (job: Job) => void;
   onSelect: (job: Job) => void;
   selectedJobId: string | null;
 }
 
 export function SavedAndAppliedJobs({
+  savedJobs,
+  appliedJobs,
+  onApply,
+  onSave,
   onSelect,
   selectedJobId
 }: SavedAndAppliedJobsProps) {
   const [activeTab, setActiveTab] = useState<string>("saved");
-  
-  const { 
-    savedJobs, 
-    appliedJobs, 
-    applyToJob, 
-    saveJob, 
-    applications,
-    updateApplicationStatus,
-    getApplicationByJobId
-  } = useJobApplications();
-  
-  const handleStatusChange = (jobId: string, status: JobStatus) => {
-    const application = getApplicationByJobId(jobId);
-    if (application) {
-      updateApplicationStatus(application.id, status);
-    }
-  };
   
   if (savedJobs.length === 0 && appliedJobs.length === 0) {
     return (
@@ -102,12 +82,12 @@ export function SavedAndAppliedJobs({
                   <JobCard 
                     key={job.id}
                     job={job}
-                    onApply={() => applyToJob(job)}
+                    onApply={onApply}
                     isSelected={selectedJobId === job.id}
                     isSaved={true}
                     isApplied={appliedJobs.some(j => j.id === job.id)}
                     onClick={() => onSelect(job)}
-                    onSave={() => saveJob(job)}
+                    onSave={() => onSave(job)}
                     variant="list"
                   />
                 ))}
@@ -122,43 +102,19 @@ export function SavedAndAppliedJobs({
               </p>
             ) : (
               <div className="divide-y">
-                {appliedJobs.map(job => {
-                  const application = getApplicationByJobId(job.id);
-                  return (
-                    <div key={job.id} className="relative">
-                      <JobCard 
-                        job={job}
-                        onApply={() => applyToJob(job)}
-                        isSelected={selectedJobId === job.id}
-                        isSaved={savedJobs.some(j => j.id === job.id)}
-                        isApplied={true}
-                        onClick={() => onSelect(job)}
-                        onSave={() => saveJob(job)}
-                        variant="list"
-                      />
-                      <div className="px-4 py-2 border-t flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">
-                          Status: <span className="font-medium">{application?.status.charAt(0).toUpperCase() + application?.status.slice(1)}</span>
-                        </span>
-                        <Select
-                          value={application?.status}
-                          onValueChange={(value) => handleStatusChange(job.id, value as JobStatus)}
-                        >
-                          <SelectTrigger className="w-[160px] h-8">
-                            <SelectValue placeholder="Update status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="applied">Applied</SelectItem>
-                            <SelectItem value="interviewing">Interviewing</SelectItem>
-                            <SelectItem value="offered">Offered</SelectItem>
-                            <SelectItem value="rejected">Rejected</SelectItem>
-                            <SelectItem value="accepted">Accepted</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  );
-                })}
+                {appliedJobs.map(job => (
+                  <JobCard 
+                    key={job.id}
+                    job={job}
+                    onApply={onApply}
+                    isSelected={selectedJobId === job.id}
+                    isSaved={savedJobs.some(j => j.id === job.id)}
+                    isApplied={true}
+                    onClick={() => onSelect(job)}
+                    onSave={() => onSave(job)}
+                    variant="list"
+                  />
+                ))}
               </div>
             )}
           </TabsContent>
