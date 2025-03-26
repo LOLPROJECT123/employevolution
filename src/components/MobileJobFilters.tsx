@@ -60,14 +60,16 @@ export const MobileJobFilters = ({
           <SheetContent side="bottom" className="h-[90vh] p-0">
             <SheetHeader className="border-b border-gray-200 dark:border-gray-700 px-3 py-3 flex flex-row justify-between items-center">
               <SheetTitle className="text-base font-medium">All Filters</SheetTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 text-xs text-gray-600 dark:text-gray-400"
-                onClick={handleResetAll}
-              >
-                Reset All
-              </Button>
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 text-xs text-gray-600 dark:text-gray-400"
+                  onClick={handleResetAll}
+                >
+                  Reset All
+                </Button>
+              </div>
             </SheetHeader>
             <div className="p-3">
               <MobileJobFiltersSection onApplyFilters={handleApplyFilters} />
