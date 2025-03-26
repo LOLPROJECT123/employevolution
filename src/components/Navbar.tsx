@@ -34,6 +34,17 @@ const Navbar = () => {
     { href: "/salary-negotiations", label: "Salary Negotiations" },
   ];
 
+  // Get user name from localStorage or use default
+  const firstName = localStorage.getItem('userFirstName') || 'Varun';
+  const lastName = localStorage.getItem('userLastName') || 'Veluri';
+  
+  // Generate initials from first and last name
+  const getInitials = () => {
+    const firstInitial = firstName.charAt(0);
+    const lastInitial = lastName.charAt(0);
+    return `${firstInitial}${lastInitial}`.toUpperCase();
+  };
+
   return (
     <nav className="bg-background border-b sticky top-0 z-50">
       <div className="container flex items-center justify-between py-4">
@@ -55,7 +66,7 @@ const Navbar = () => {
                 <NavigationMenuItem>
                   <NavigationMenuTrigger>
                     <Avatar className="h-8 w-8">
-                      <AvatarFallback>VV</AvatarFallback>
+                      <AvatarFallback>{getInitials()}</AvatarFallback>
                     </Avatar>
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>

@@ -31,23 +31,49 @@ import { ModeToggle } from "@/components/ModeToggle";
 interface SavedAndAppliedJobsProps {
   onSelect: (job: Job) => void;
   selectedJobId: string | null;
+  // Add these props to match how it's used in Jobs.tsx
+  savedJobs?: Job[];
+  appliedJobs?: Job[];
+  onApply?: (job: Job) => void;
+  onSave?: (job: Job) => void;
 }
 
 export function SavedAndAppliedJobs({
   onSelect,
-  selectedJobId
+  selectedJobId,
+  savedJobs: propSavedJobs,
+  appliedJobs: propAppliedJobs,
+  onApply: propOnApply,
+  onSave: propOnSave
 }: SavedAndAppliedJobsProps) {
   const [activeTab, setActiveTab] = useState<string>("saved");
   
   const { 
-    savedJobs, 
-    appliedJobs, 
-    applyToJob, 
-    saveJob, 
+    savedJobs: contextSavedJobs, 
+    appliedJobs: contextAppliedJobs, 
+    applyToJob: contextApplyToJob, 
+    saveJob: contextSaveJob, 
     applications,
     updateApplicationStatus,
     getApplicationByJobId
   } = useJobApplications();
+  
+  // Use props if provided, otherwise fall back to context values
+  const savedJobs = propSavedJobs || contextSavedJobs;
+  const appliedJobs = propAppliedJobs || contextAppliedJobs;
+  const applyToJob = propOnApply || contextApplyToJob;
+  const saveJob = propOnSave || contextSaveJob;
+  
+  // Get user name from localStorage or use default
+  const firstName = localStorage.getItem('userFirstName') || 'Varun';
+  const lastName = localStorage.getItem('userLastName') || 'Veluri';
+  
+  // Generate initials from first and last name
+  const getInitials = () => {
+    const firstInitial = firstName.charAt(0);
+    const lastInitial = lastName.charAt(0);
+    return `${firstInitial}${lastInitial}`.toUpperCase();
+  };
   
   const handleStatusChange = (jobId: string, status: JobStatus) => {
     const application = getApplicationByJobId(jobId);
@@ -60,7 +86,7 @@ export function SavedAndAppliedJobs({
   const profileHeader = (
     <div className="flex justify-between items-center bg-background py-2 px-4 border-b">
       <Avatar className="h-8 w-8">
-        <AvatarFallback>VV</AvatarFallback>
+        <AvatarFallback>{getInitials()}</AvatarFallback>
       </Avatar>
       <ModeToggle />
     </div>
