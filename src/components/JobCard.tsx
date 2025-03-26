@@ -1,7 +1,7 @@
 
 import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
-import { BookmarkIcon, Building2, MapPin, Clock, CheckCircle, ArrowRight, Zap } from "lucide-react";
+import { BookmarkIcon, Building2, MapPin, Clock, CheckCircle, ArrowRight, Zap, Percent } from "lucide-react";
 import { formatRelativeTime } from "@/utils/dateUtils";
 import { Badge } from "./ui/badge";
 
@@ -82,8 +82,9 @@ export function JobCard({
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium truncate">{job.title}</h3>
               
-              {job.matchPercentage && (
-                <Badge variant="outline" className={`ml-2 px-2 py-0.5 text-xs font-bold ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)}`}>
+              {job.matchPercentage !== undefined && (
+                <Badge variant="outline" className={`ml-2 px-2 py-0.5 text-xs font-bold ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)} flex items-center gap-1`}>
+                  <Percent className="w-3 h-3" />
                   {job.matchPercentage}% Match
                 </Badge>
               )}
@@ -167,8 +168,9 @@ export function JobCard({
           {getCompanyInitial()}
         </div>
         
-        {job.matchPercentage && (
-          <Badge variant="outline" className={`px-2.5 py-0.5 text-xs font-bold ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)}`}>
+        {job.matchPercentage !== undefined && (
+          <Badge variant="outline" className={`px-2.5 py-0.5 text-xs font-bold ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)} flex items-center gap-1`}>
+            <Percent className="w-3 h-3" />
             {job.matchPercentage}% Match
           </Badge>
         )}

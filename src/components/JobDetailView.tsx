@@ -1,3 +1,4 @@
+
 import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
 import { 
@@ -21,7 +22,8 @@ import {
   Award,
   Globe,
   HeartHandshake,
-  Newspaper
+  Newspaper,
+  Percent
 } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -254,14 +256,15 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
           </div>
           
           {job.matchPercentage && (
-            <div>
-              <Badge variant="outline" className={`px-3 py-1.5 rounded-full ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)} text-sm font-bold shadow-sm`}>
+            <div className="mr-4">
+              <Badge variant="outline" className={`px-3 py-1.5 rounded-full ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)} text-sm font-bold shadow-sm flex items-center gap-1.5`}>
+                <Percent className="w-4 h-4" />
                 {job.matchPercentage}% Match
               </Badge>
             </div>
           )}
           
-          <div className="flex gap-2 ml-4">
+          <div className="flex gap-2">
             <Button
               variant={isSaved ? "default" : "outline"}
               size="icon"
@@ -319,11 +322,13 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
       
       <div className="flex-1 overflow-hidden flex flex-col">
         <Tabs defaultValue="summary" className="w-full flex-1 flex flex-col overflow-hidden">
-          <TabsList className="w-full grid grid-cols-3 mb-4 mx-4 mt-4">
-            <TabsTrigger value="summary">Summary</TabsTrigger>
-            <TabsTrigger value="company">Company</TabsTrigger>
-            <TabsTrigger value="full-posting">Full Job Posting</TabsTrigger>
-          </TabsList>
+          <div className="px-4 mt-4">
+            <TabsList className="w-full grid grid-cols-3 mb-4">
+              <TabsTrigger value="summary">Summary</TabsTrigger>
+              <TabsTrigger value="company">Company</TabsTrigger>
+              <TabsTrigger value="full-posting">Full Job Posting</TabsTrigger>
+            </TabsList>
+          </div>
           
           <div className="flex-1 overflow-y-auto px-4 pb-4">
             <TabsContent value="summary" className="mt-0 space-y-6 h-full data-[state=active]:flex-1 data-[state=active]:flex data-[state=active]:flex-col">
