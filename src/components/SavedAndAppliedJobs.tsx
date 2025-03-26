@@ -29,17 +29,25 @@ import { useJobApplications } from "@/contexts/JobApplicationContext";
 interface SavedAndAppliedJobsProps {
   onSelect: (job: Job) => void;
   selectedJobId: string | null;
+  savedJobs?: Job[];
+  appliedJobs?: Job[];
+  onApply?: (job: Job) => void;
+  onSave?: (job: Job) => void;
 }
 
 export function SavedAndAppliedJobs({
   onSelect,
-  selectedJobId
+  selectedJobId,
+  savedJobs: externalSavedJobs,
+  appliedJobs: externalAppliedJobs,
+  onApply,
+  onSave
 }: SavedAndAppliedJobsProps) {
   const [activeTab, setActiveTab] = useState<string>("saved");
   
   const { 
-    savedJobs, 
-    appliedJobs, 
+    savedJobs: contextSavedJobs, 
+    appliedJobs: contextAppliedJobs, 
     applyToJob, 
     saveJob, 
     applications,
@@ -47,10 +55,30 @@ export function SavedAndAppliedJobs({
     getApplicationByJobId
   } = useJobApplications();
   
+  // Use externally provided jobs if available, otherwise use from context
+  const savedJobs = externalSavedJobs || contextSavedJobs;
+  const appliedJobs = externalAppliedJobs || contextAppliedJobs;
+  
   const handleStatusChange = (jobId: string, status: JobStatus) => {
     const application = getApplicationByJobId(jobId);
     if (application) {
       updateApplicationStatus(application.id, status);
+    }
+  };
+  
+  const handleApply = (job: Job) => {
+    if (onApply) {
+      onApply(job);
+    } else {
+      applyToJob(job);
+    }
+  };
+  
+  const handleSave = (job: Job) => {
+    if (onSave) {
+      onSave(job);
+    } else {
+      saveJob(job);
     }
   };
   
@@ -102,12 +130,12 @@ export function SavedAndAppliedJobs({
                   <JobCard 
                     key={job.id}
                     job={job}
-                    onApply={() => applyToJob(job)}
+                    onApply={() => handleApply(job)}
                     isSelected={selectedJobId === job.id}
                     isSaved={true}
                     isApplied={appliedJobs.some(j => j.id === job.id)}
                     onClick={() => onSelect(job)}
-                    onSave={() => saveJob(job)}
+                    onSave={() => handleSave(job)}
                     variant="list"
                   />
                 ))}
@@ -128,12 +156,12 @@ export function SavedAndAppliedJobs({
                     <div key={job.id} className="relative">
                       <JobCard 
                         job={job}
-                        onApply={() => applyToJob(job)}
+                        onApply={() => handleApply(job)}
                         isSelected={selectedJobId === job.id}
                         isSaved={savedJobs.some(j => j.id === job.id)}
                         isApplied={true}
                         onClick={() => onSelect(job)}
-                        onSave={() => saveJob(job)}
+                        onSave={() => handleSave(job)}
                         variant="list"
                       />
                       <div className="px-4 py-2 border-t flex items-center justify-between">

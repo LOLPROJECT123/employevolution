@@ -31,9 +31,11 @@ import { useJobApplications } from "@/contexts/JobApplicationContext";
 
 interface JobDetailViewProps {
   job: Job | null;
+  onApply?: (job: Job) => void;
+  onSave?: (job: Job) => void;
 }
 
-export function JobDetailView({ job }: JobDetailViewProps) {
+export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
   const [isApplying, setIsApplying] = useState(false);
   const { saveJob, applyToJob, savedJobs, appliedJobs, getApplicationByJobId } = useJobApplications();
   
@@ -167,7 +169,11 @@ export function JobDetailView({ job }: JobDetailViewProps) {
   const handleApplyClick = async () => {
     try {
       setIsApplying(true);
-      applyToJob(job);
+      if (onApply) {
+        onApply(job);
+      } else {
+        applyToJob(job);
+      }
     } catch (error) {
       toast.error("Failed To Apply", {
         description: "There Was An Error Submitting Your Application. Please Try Again."
@@ -175,6 +181,14 @@ export function JobDetailView({ job }: JobDetailViewProps) {
       console.error("Application error:", error);
     } finally {
       setIsApplying(false);
+    }
+  };
+  
+  const handleSaveClick = () => {
+    if (onSave) {
+      onSave(job);
+    } else {
+      saveJob(job);
     }
   };
   
@@ -205,7 +219,11 @@ export function JobDetailView({ job }: JobDetailViewProps) {
       });
       
       // Also mark as applied in our system
-      applyToJob(job);
+      if (onApply) {
+        onApply(job);
+      } else {
+        applyToJob(job);
+      }
     } catch (error) {
       toast.error("Automation Failed", {
         description: "There Was An Error Starting The Automation Process."
@@ -264,7 +282,7 @@ export function JobDetailView({ job }: JobDetailViewProps) {
             <Button
               variant={isSaved ? "default" : "outline"}
               size="icon"
-              onClick={() => saveJob(job)}
+              onClick={handleSaveClick}
               className="button-hover"
             >
               <BookmarkIcon className="w-4 h-4" />
@@ -605,7 +623,7 @@ export function JobDetailView({ job }: JobDetailViewProps) {
           <Button
             variant={isSaved ? "default" : "outline"}
             className="flex-1"
-            onClick={() => saveJob(job)}
+            onClick={handleSaveClick}
           >
             {isSaved ? "Saved" : "Save Job"}
           </Button>
@@ -637,4 +655,3 @@ export function JobDetailView({ job }: JobDetailViewProps) {
     </div>
   );
 }
-
