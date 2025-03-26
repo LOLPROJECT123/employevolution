@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Job, JobFilters } from "@/types/job";
 import { MobileJobCard } from "@/components/MobileJobCard";
@@ -312,43 +313,57 @@ export default function MobileJobs() {
           <div className="p-3">
             <h1 className="text-xl font-bold mb-3">Search All Jobs</h1>
             
-            <div className="mb-4">
-              <SavedAndAppliedJobs
-                onSelect={handleSelectJob}
-                selectedJobId={selectedJob?.id || null}
-                savedJobs={jobs.filter(job => savedJobIds.includes(job.id))}
-                appliedJobs={jobs.filter(job => appliedJobIds.includes(job.id))}
-                onApply={handleApplyJob}
-                onSave={handleSaveJob}
-              />
-            </div>
-            
-            <div className="relative mb-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  type="text"
-                  placeholder="Search for roles, companies, or locations"
-                  className="pl-9 pr-9 py-2 rounded-full border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 h-10 text-sm"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+            <div className="bg-white dark:bg-gray-900 border rounded-lg shadow-sm mb-4">
+              <div className="p-3 border-b border-gray-100 dark:border-gray-800">
+                <h2 className="text-lg font-medium">My Jobs</h2>
+              </div>
+              <div className="p-0">
+                <SavedAndAppliedJobs
+                  onSelect={handleSelectJob}
+                  selectedJobId={selectedJob?.id || null}
+                  savedJobs={jobs.filter(job => savedJobIds.includes(job.id))}
+                  appliedJobs={jobs.filter(job => appliedJobIds.includes(job.id))}
+                  onApply={handleApplyJob}
+                  onSave={handleSaveJob}
                 />
-                {searchTerm && (
-                  <button 
-                    onClick={handleClearSearch}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
               </div>
             </div>
             
-            <MobileJobFilters
-              onApply={handleApplyFilters}
-              onClose={handleCloseFilters}
-              activeFilterCount={activeFilterCount}
-            />
+            <div className="bg-white dark:bg-gray-900 border rounded-lg shadow-sm mb-4">
+              <div className="p-3 border-b border-gray-100 dark:border-gray-800">
+                <h2 className="text-lg font-medium">Filter Jobs</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Narrow Down Your Search</p>
+              </div>
+              
+              <div className="p-3">
+                <div className="relative mb-3">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      type="text"
+                      placeholder="Search for roles, companies, or locations"
+                      className="pl-9 pr-9 py-2 rounded-full border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 h-10 text-sm"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                    {searchTerm && (
+                      <button 
+                        onClick={handleClearSearch}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+                
+                <MobileJobFilters
+                  onApply={handleApplyFilters}
+                  onClose={handleCloseFilters}
+                  activeFilterCount={activeFilterCount}
+                />
+              </div>
+            </div>
           </div>
         ) : null}
       </div>
