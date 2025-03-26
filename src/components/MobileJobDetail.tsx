@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
@@ -60,7 +59,6 @@ export function MobileJobDetail({
     return "bg-red-50 dark:bg-red-900/30";
   };
 
-  // Enhanced job requirements with more detailed descriptions
   const enhancedRequirements = [
     "Ability to organize large amounts of information and prioritize workload to meet deadlines, ensuring projects are completed efficiently and on time.",
     "Effectively collaborate and work as a team with a diverse group of individuals, demonstrating strong interpersonal skills and adaptability in cross-functional environments.",
@@ -70,7 +68,6 @@ export function MobileJobDetail({
     "Excellent written and verbal communication skills with experience interacting with clients and stakeholders at all levels."
   ];
 
-  // Enhanced job responsibilities with more detailed descriptions
   const enhancedResponsibilities = [
     "Administrative duties as needed such as answering phones, filing, scanning, travel and expense reports, data entry, and scheduling appointments, ensuring smooth daily operations and efficient workflow.",
     "Collection of information needed for performance reports and coordinating the appropriate paperwork and materials for client meetings, including preparation of presentation materials and follow-up documentation.",
@@ -80,7 +77,6 @@ export function MobileJobDetail({
     "Support senior staff by preparing reports, analyzing data, and creating visual presentations for stakeholder meetings."
   ];
 
-  // Mock company news
   const companyNews = [
     {
       source: "AdvisorHub",
@@ -102,7 +98,6 @@ export function MobileJobDetail({
     }
   ];
 
-  // Detailed company information
   const companyDetails = {
     size: job.companySize === 'enterprise' ? '5,001-10,000' : '100-500',
     stage: job.companyType === 'public' ? 'IPO' : 'Series C',
@@ -110,14 +105,12 @@ export function MobileJobDetail({
     founded: 2023 - Math.floor(Math.random() * 50) - 5
   };
 
-  // Company unique points
   const companyUniquePoints = [
     `${job.company} Discover offers personalized financial content, enhancing user engagement through AI and data analytics.`,
     `Sponsorship of Haskins and ANNIKA Awards boosts brand visibility among younger demographics.`,
     `${job.company}'s recruitment of a $1.35 billion team shows competitive edge in talent acquisition.`
   ];
 
-  // Enhanced benefits
   const enhancedBenefits = [
     "Health Insurance",
     "Dental Insurance",
@@ -147,7 +140,7 @@ export function MobileJobDetail({
           </Tabs>
         </div>
         
-        <div className="w-5"></div> {/* Spacer for alignment */}
+        <div className="w-5"></div>
       </header>
       
       <div className="flex-1 overflow-y-auto">
@@ -459,7 +452,7 @@ export function MobileJobDetail({
         </Tabs>
       </div>
       
-      <div className="p-4 border-t flex items-center justify-between bg-white dark:bg-gray-900 sticky bottom-0">
+      <div className="p-3 border-t flex items-center justify-between bg-white dark:bg-gray-900 sticky bottom-0">
         <button 
           className="text-primary text-sm"
           onClick={() => {}}
@@ -467,20 +460,24 @@ export function MobileJobDetail({
           Already Applied?
         </button>
         
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           <Button
             variant="outline"
             size="icon"
-            className="h-12 w-12 rounded-lg"
-            onClick={() => onSave(job)}
+            className="h-10 w-10 rounded-full"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSave(job!);
+            }}
+            aria-label={isSaved ? "Unsave job" : "Save job"}
           >
             <BookmarkIcon className={`h-5 w-5 ${isSaved ? "fill-current text-primary" : ""}`} />
           </Button>
           
           <Button
             size="lg"
-            className="bg-primary rounded-lg px-6 h-12"
-            onClick={() => onApply(job)}
+            className="bg-primary rounded-lg px-6 h-10"
+            onClick={() => onApply(job!)}
             disabled={isApplied}
           >
             {isApplied ? (

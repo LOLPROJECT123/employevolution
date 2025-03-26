@@ -110,11 +110,12 @@ export function MobileJobCard({
         </div>
         
         <button 
-          className="ml-1 flex-shrink-0 p-1"
+          className="ml-auto flex-shrink-0 p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           onClick={(e) => {
             e.stopPropagation();
             onSave?.();
           }}
+          aria-label={isSaved ? "Unsave job" : "Save job"}
         >
           <BookmarkIcon className={`h-5 w-5 ${isSaved ? "fill-primary text-primary" : "text-gray-400"}`} />
         </button>
