@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Job, JobFilters } from "@/types/job";
 import { MobileJobCard } from "@/components/MobileJobCard";
@@ -10,11 +9,17 @@ import { MobileJobFilters } from "@/components/MobileJobFilters";
 import { SavedAndAppliedJobs } from "@/components/SavedAndAppliedJobs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
+  Drawer,
+  DrawerContent,
+  DrawerTrigger
+} from "@/components/ui/drawer";
+import { 
   Search,
   SlidersHorizontal,
   X,
   Check
 } from "lucide-react";
+import Navbar from "@/components/Navbar";
 
 export default function MobileJobs() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -309,36 +314,14 @@ export default function MobileJobs() {
   
   return (
     <div className="h-screen flex flex-col bg-white dark:bg-gray-900 overflow-hidden">
-      <div className="fixed top-0 left-0 right-0 z-10 bg-white dark:bg-gray-900 border-b dark:border-gray-800">
-        {!showDetailView ? (
-          <div className="p-3">
-            <h1 className="text-xl font-bold mb-3">Search All Jobs</h1>
-            
-            <div className="bg-white dark:bg-gray-900 border rounded-lg shadow-sm mb-4">
-              <div className="p-3 border-b border-gray-100 dark:border-gray-800">
-                <h2 className="text-lg font-medium">My Jobs</h2>
-              </div>
-              <div className="p-0 max-h-[200px] overflow-hidden">
-                <SavedAndAppliedJobs
-                  hideTitle={true}
-                  onSelect={handleSelectJob}
-                  selectedJobId={selectedJob?.id || null}
-                  savedJobs={jobs.filter(job => savedJobIds.includes(job.id))}
-                  appliedJobs={jobs.filter(job => appliedJobIds.includes(job.id))}
-                  onApply={handleApplyJob}
-                  onSave={handleSaveJob}
-                />
-              </div>
-            </div>
-            
-            <div className="bg-white dark:bg-gray-900 border rounded-lg shadow-sm mb-4">
-              <div className="p-3 border-b border-gray-100 dark:border-gray-800">
-                <h2 className="text-lg font-medium">Filter Jobs</h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Narrow Down Your Search</p>
-              </div>
-              
-              <div className="p-3">
-                <div className="relative mb-3">
+      <Navbar />
+      
+      {!showDetailView ? (
+        <div className="relative flex-1 overflow-hidden">
+          <Drawer>
+            <DrawerTrigger asChild>
+              <div className="p-3 border-b">
+                <div className="relative mb-0">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
@@ -358,21 +341,48 @@ export default function MobileJobs() {
                     )}
                   </div>
                 </div>
-                
-                <MobileJobFilters
-                  onApply={handleApplyFilters}
-                  onClose={handleCloseFilters}
-                  activeFilterCount={activeFilterCount}
-                />
               </div>
-            </div>
-          </div>
-        ) : null}
-      </div>
-      
-      <main className={`flex-1 ${!showDetailView ? 'pt-[400px]' : ''} overflow-hidden`}>
-        {!showDetailView ? (
-          <ScrollArea className="h-[calc(100vh-400px)]">
+            </DrawerTrigger>
+            <DrawerContent className="max-h-[85vh] overflow-auto">
+              <div className="p-4">
+                <h1 className="text-xl font-bold mb-3">Search All Jobs</h1>
+                
+                <div className="bg-white dark:bg-gray-900 border rounded-lg shadow-sm mb-4">
+                  <div className="p-3 border-b border-gray-100 dark:border-gray-800">
+                    <h2 className="text-lg font-medium">My Jobs</h2>
+                  </div>
+                  <div className="p-0 max-h-[200px] overflow-hidden">
+                    <SavedAndAppliedJobs
+                      hideTitle={true}
+                      onSelect={handleSelectJob}
+                      selectedJobId={selectedJob?.id || null}
+                      savedJobs={jobs.filter(job => savedJobIds.includes(job.id))}
+                      appliedJobs={jobs.filter(job => appliedJobIds.includes(job.id))}
+                      onApply={handleApplyJob}
+                      onSave={handleSaveJob}
+                    />
+                  </div>
+                </div>
+                
+                <div className="bg-white dark:bg-gray-900 border rounded-lg shadow-sm mb-4">
+                  <div className="p-3 border-b border-gray-100 dark:border-gray-800">
+                    <h2 className="text-lg font-medium">Filter Jobs</h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Narrow Down Your Search</p>
+                  </div>
+                  
+                  <div className="p-3">
+                    <MobileJobFilters
+                      onApply={handleApplyFilters}
+                      onClose={handleCloseFilters}
+                      activeFilterCount={activeFilterCount}
+                    />
+                  </div>
+                </div>
+              </div>
+            </DrawerContent>
+          </Drawer>
+          
+          <ScrollArea className="h-[calc(100vh-112px)]">
             <div className="divide-y divide-gray-100 dark:divide-gray-800">
               {filteredJobs.map(job => (
                 <MobileJobCard
@@ -400,17 +410,17 @@ export default function MobileJobs() {
               )}
             </div>
           </ScrollArea>
-        ) : (
-          <MobileJobDetail
-            job={selectedJob}
-            onApply={handleApplyJob}
-            onSave={handleSaveJob}
-            onBack={() => setShowDetailView(false)}
-            isSaved={selectedJob ? savedJobIds.includes(selectedJob.id) : false}
-            isApplied={selectedJob ? appliedJobIds.includes(selectedJob.id) : false}
-          />
-        )}
-      </main>
+        </div>
+      ) : (
+        <MobileJobDetail
+          job={selectedJob}
+          onApply={handleApplyJob}
+          onSave={handleSaveJob}
+          onBack={() => setShowDetailView(false)}
+          isSaved={selectedJob ? savedJobIds.includes(selectedJob.id) : false}
+          isApplied={selectedJob ? appliedJobIds.includes(selectedJob.id) : false}
+        />
+      )}
     </div>
   );
 }
