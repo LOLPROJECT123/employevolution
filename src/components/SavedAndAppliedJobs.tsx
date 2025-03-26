@@ -25,6 +25,8 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { useJobApplications } from "@/contexts/JobApplicationContext";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ModeToggle } from "@/components/ModeToggle";
 
 interface SavedAndAppliedJobsProps {
   onSelect: (job: Job) => void;
@@ -54,9 +56,20 @@ export function SavedAndAppliedJobs({
     }
   };
   
+  // User profile avatar with initials at the top
+  const profileHeader = (
+    <div className="flex justify-between items-center bg-background py-2 px-4 border-b">
+      <Avatar className="h-8 w-8">
+        <AvatarFallback>VV</AvatarFallback>
+      </Avatar>
+      <ModeToggle />
+    </div>
+  );
+  
   if (savedJobs.length === 0 && appliedJobs.length === 0) {
     return (
       <Card className="h-full">
+        {profileHeader}
         <CardHeader className="pb-3 border-b">
           <CardTitle className="text-lg">My Jobs</CardTitle>
         </CardHeader>
@@ -77,6 +90,7 @@ export function SavedAndAppliedJobs({
   
   return (
     <Card className="h-full">
+      {profileHeader}
       <CardHeader className="border-b pb-3">
         <CardTitle className="text-lg">My Jobs</CardTitle>
       </CardHeader>
