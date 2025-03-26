@@ -1,0 +1,87 @@
+
+import React, { useState } from 'react';
+import { JobFilters } from "@/types/job";
+import { Button } from "@/components/ui/button";
+import { ChevronDown, Check } from "lucide-react";
+
+interface MobileJobFiltersProps {
+  onApply: (filters: JobFilters) => void;
+  onClose: () => void;
+  activeFilterCount?: number;
+}
+
+export const MobileJobFilters = ({ 
+  onApply, 
+  onClose, 
+  activeFilterCount = 0 
+}: MobileJobFiltersProps) => {
+  const [location, setLocation] = useState("");
+  const [remote, setRemote] = useState(false);
+  
+  const handleApplyFilters = () => {
+    const filters: JobFilters = {
+      search: "",
+      location,
+      locationRadius: 0,
+      jobType: [],
+      remote,
+      experienceLevels: [],
+      education: [],
+      salaryRange: [0, 300000],
+      skills: [],
+      companyTypes: [],
+      companySize: [],
+      benefits: []
+    };
+    
+    onApply(filters);
+  };
+
+  const handleResetAll = () => {
+    // Reset all filters
+    onClose();
+  };
+  
+  return (
+    <div className="bg-white dark:bg-gray-800 shadow-sm">
+      {/* Header */}
+      <div className="border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-3 py-2">
+        <div className="flex items-center">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 border-gray-200 dark:border-gray-700 rounded-md"
+            onClick={onClose}
+          >
+            <ChevronDown className="h-4 w-4 mr-1.5" />
+            All Filters
+            {activeFilterCount > 0 && (
+              <span className="ml-1.5 text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 px-1.5 py-0.5 rounded-full">
+                {activeFilterCount}
+              </span>
+            )}
+          </Button>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 text-xs text-gray-600 dark:text-gray-400"
+          onClick={handleResetAll}
+        >
+          Reset All
+        </Button>
+      </div>
+      
+      {/* Apply Button */}
+      <div className="p-3">
+        <Button 
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 h-12 font-medium"
+          onClick={handleApplyFilters}
+        >
+          <Check className="h-5 w-5 mr-2" />
+          Apply Filters
+        </Button>
+      </div>
+    </div>
+  );
+};

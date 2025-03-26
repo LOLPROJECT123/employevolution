@@ -1,23 +1,17 @@
-
 import { useState, useEffect } from 'react';
-import { Job } from "@/types/job";
-import Navbar from "@/components/Navbar";
+import { Job, JobFilters } from "@/types/job";
 import { MobileJobCard } from "@/components/MobileJobCard";
 import { MobileJobDetail } from "@/components/MobileJobDetail";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
-import { JobFiltersSection } from "@/components/JobFilters";
+import { MobileJobFiltersSection } from "@/components/MobileJobFiltersSection";
 import { 
   Search,
   SlidersHorizontal,
-  ArrowLeft,
-  X
+  X,
+  Check
 } from "lucide-react";
-
-interface MobileJobsProps {
-  jobs: Job[];
-}
 
 export default function MobileJobs() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -27,6 +21,19 @@ export default function MobileJobs() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showDetailView, setShowDetailView] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<JobFilters>({
+    search: "",
+    location: "",
+    jobType: [],
+    remote: false,
+    experienceLevels: [],
+    education: [],
+    salaryRange: [0, 300000],
+    skills: [],
+    companyTypes: [],
+    companySize: [],
+    benefits: []
+  });
   
   useEffect(() => {
     const fetchJobs = async () => {
@@ -155,11 +162,49 @@ export default function MobileJobs() {
     fetchJobs();
   }, []);
   
-  const filteredJobs = jobs.filter(job => 
-    job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    job.location.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const applyFiltersToJobs = (jobs: Job[], filters: JobFilters) => {
+    let filtered = [...jobs];
+    
+    if (searchTerm) {
+      filtered = filtered.filter(job => 
+        job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        job.location.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    if (filters.location) {
+      filtered = filtered.filter(job => 
+        job.location.toLowerCase().includes(filters.location.toLowerCase())
+      );
+    }
+    
+    if (filters.remote) {
+      filtered = filtered.filter(job => job.remote === true);
+    }
+    
+    if (filters.jobType && filters.jobType.length > 0) {
+      filtered = filtered.filter(job => 
+        filters.jobType.includes(job.type)
+      );
+    }
+    
+    if (filters.experienceLevels && filters.experienceLevels.length > 0) {
+      filtered = filtered.filter(job => 
+        filters.experienceLevels.includes(job.level)
+      );
+    }
+    
+    if (filters.salaryRange && (filters.salaryRange[0] !== 0 || filters.salaryRange[1] !== 300000)) {
+      filtered = filtered.filter(job => 
+        job.salary.min >= filters.salaryRange[0] && job.salary.max <= filters.salaryRange[1]
+      );
+    }
+    
+    return filtered;
+  };
+  
+  const filteredJobs = applyFiltersToJobs(jobs, activeFilters);
   
   const handleSaveJob = (job: Job) => {
     if (savedJobIds.includes(job.id)) {
@@ -205,12 +250,53 @@ export default function MobileJobs() {
     setShowFilters(!showFilters);
   };
   
-  const handleApplyFilters = (filters) => {
+  const handleApplyFilters = (filters: JobFilters) => {
+    setActiveFilters(filters);
     setShowFilters(false);
     
     toast({
       title: "Filters applied",
       description: "Your job search filters have been applied.",
+    });
+  };
+  
+  const getActiveFilterCount = () => {
+    let count = 0;
+    
+    if (activeFilters.location) count++;
+    if (activeFilters.remote) count++;
+    if (activeFilters.jobType?.length) count += activeFilters.jobType.length;
+    if (activeFilters.experienceLevels?.length) count += activeFilters.experienceLevels.length;
+    if (activeFilters.skills?.length) count += activeFilters.skills.length;
+    
+    if (activeFilters.salaryRange && 
+        (activeFilters.salaryRange[0] !== 0 || activeFilters.salaryRange[1] !== 300000)) {
+      count++;
+    }
+    
+    return count;
+  };
+  
+  const activeFilterCount = getActiveFilterCount();
+  
+  const handleClearFilters = () => {
+    setActiveFilters({
+      search: "",
+      location: "",
+      jobType: [],
+      remote: false,
+      experienceLevels: [],
+      education: [],
+      salaryRange: [0, 300000],
+      skills: [],
+      companyTypes: [],
+      companySize: [],
+      benefits: []
+    });
+    
+    toast({
+      title: "Filters cleared",
+      description: "All job filters have been reset.",
     });
   };
   
@@ -250,6 +336,11 @@ export default function MobileJobs() {
               >
                 <SlidersHorizontal className="w-3 h-3 mr-1.5" />
                 Filter Jobs
+                {activeFilterCount > 0 && (
+                  <span className="ml-1.5 bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 px-1.5 py-0.5 rounded-full text-xs">
+                    {activeFilterCount}
+                  </span>
+                )}
               </Button>
               
               <Button
@@ -262,6 +353,7 @@ export default function MobileJobs() {
               <Button
                 variant="outline"
                 className="rounded-full border-gray-200 dark:border-gray-700 px-3 py-1 text-xs flex-shrink-0 bg-white dark:bg-gray-800 h-8"
+                onClick={handleClearFilters}
               >
                 Clear
               </Button>
@@ -284,8 +376,40 @@ export default function MobileJobs() {
       
       <main className={`flex-1 ${!showDetailView ? 'pt-[158px]' : ''}`}>
         {showFilters && !showDetailView ? (
-          <div className="p-3">
-            <JobFiltersSection onApplyFilters={handleApplyFilters} />
+          <div className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 shadow-sm">
+            <div className="border-b border-gray-200 dark:border-gray-700 px-3 py-2 flex items-center justify-between">
+              <div className="flex items-center">
+                <button 
+                  onClick={toggleFilters}
+                  className="flex items-center gap-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded px-3 py-1.5 text-sm font-medium"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className=""><path d="m6 9 6 6 6-6"/></svg>
+                  All Filters
+                </button>
+              </div>
+              <button 
+                onClick={handleClearFilters}
+                className="text-sm text-gray-500 dark:text-gray-400"
+              >
+                Reset All
+              </button>
+            </div>
+            
+            <div className="p-3">
+              <Button 
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 h-10 font-medium"
+                onClick={() => {
+                  setShowFilters(false);
+                }}
+              >
+                <Check className="h-5 w-5 mr-2" />
+                Apply Filters
+              </Button>
+            </div>
+            
+            <div className="px-3 pt-0 pb-3">
+              <MobileJobFiltersSection onApplyFilters={handleApplyFilters} />
+            </div>
           </div>
         ) : !showDetailView ? (
           <div className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -298,6 +422,21 @@ export default function MobileJobs() {
                 onClick={() => handleSelectJob(job)}
               />
             ))}
+            
+            {filteredJobs.length === 0 && (
+              <div className="p-6 text-center">
+                <p className="text-gray-500 dark:text-gray-400">
+                  No jobs match your search criteria. Try adjusting your filters.
+                </p>
+                <Button 
+                  variant="outline" 
+                  className="mt-3"
+                  onClick={handleClearFilters}
+                >
+                  Clear Filters
+                </Button>
+              </div>
+            )}
           </div>
         ) : (
           <MobileJobDetail
