@@ -6,6 +6,7 @@ import { MobileJobDetail } from "@/components/MobileJobDetail";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
+import { JobFiltersSection } from "@/components/JobFilters";
 import { 
   Search,
   SlidersHorizontal,
@@ -24,6 +25,7 @@ export default function MobileJobs() {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showDetailView, setShowDetailView] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   
   useEffect(() => {
     const fetchJobs = async () => {
@@ -198,6 +200,19 @@ export default function MobileJobs() {
     setSearchTerm("");
   };
   
+  const toggleFilters = () => {
+    setShowFilters(!showFilters);
+  };
+  
+  const handleApplyFilters = (filters) => {
+    setShowFilters(false);
+    
+    toast({
+      title: "Filters applied",
+      description: "Your job search filters have been applied.",
+    });
+  };
+  
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900">
       <div className="fixed top-0 left-0 right-0 z-10 bg-white dark:bg-gray-900 border-b dark:border-gray-800">
@@ -222,6 +237,7 @@ export default function MobileJobs() {
               <Button
                 variant="outline"
                 className="rounded-full border-gray-200 dark:border-gray-700 py-1 px-3 text-xs flex-shrink-0 bg-white dark:bg-gray-800 h-8"
+                onClick={toggleFilters}
               >
                 <SlidersHorizontal className="w-3 h-3 mr-1.5" />
                 Filter Jobs
@@ -258,7 +274,11 @@ export default function MobileJobs() {
       </div>
       
       <main className={`flex-1 ${!showDetailView ? 'pt-[158px]' : ''}`}>
-        {!showDetailView ? (
+        {showFilters && !showDetailView ? (
+          <div className="p-4">
+            <JobFiltersSection onApplyFilters={handleApplyFilters} />
+          </div>
+        ) : !showDetailView ? (
           <div className="divide-y divide-gray-100 dark:divide-gray-800">
             {filteredJobs.map(job => (
               <MobileJobCard
