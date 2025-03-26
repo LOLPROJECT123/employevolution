@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import { 
@@ -13,6 +14,16 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { 
   CalendarIcon, 
   Mail, 
@@ -26,12 +37,68 @@ import {
   Briefcase,
   GraduationCap,
   Wrench,
-  Languages
+  Languages,
+  Check,
+  X
 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+
+type ContactInfo = {
+  name: string;
+  email: string;
+  phone: string;
+  birthdate: string;
+  location: string;
+};
+
+type JobSearchStatus = "Actively looking" | "Open to offers" | "Not looking";
 
 const Profile = () => {
-  const [jobSearchStatus, setJobSearchStatus] = useState("Actively looking");
+  const [jobSearchStatus, setJobSearchStatus] = useState<JobSearchStatus>("Actively looking");
   const [showProfile, setShowProfile] = useState(true);
+  const [jobSearchEnabled, setJobSearchEnabled] = useState(true);
+  
+  // States for editing different sections
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [isEditingContact, setIsEditingContact] = useState(false);
+  
+  // Contact information state
+  const [contactInfo, setContactInfo] = useState<ContactInfo>({
+    name: "Varun Veluri",
+    email: "vveluri6@gmail.com",
+    phone: "+1 (469) 551-9662",
+    birthdate: "06/19/2006",
+    location: "Atlanta, GA, USA"
+  });
+  
+  // Form for editing profile
+  const profileForm = useForm<{ name: string; status: JobSearchStatus }>({
+    defaultValues: {
+      name: contactInfo.name,
+      status: jobSearchStatus
+    }
+  });
+  
+  // Form for editing contact
+  const contactForm = useForm<ContactInfo>({
+    defaultValues: contactInfo
+  });
+  
+  // Handle saving profile changes
+  const handleSaveProfile = (data: { name: string; status: JobSearchStatus }) => {
+    setContactInfo(prev => ({ ...prev, name: data.name }));
+    setJobSearchStatus(data.status);
+    setIsEditingProfile(false);
+    toast.success("Profile updated successfully");
+  };
+  
+  // Handle saving contact changes
+  const handleSaveContact = (data: ContactInfo) => {
+    setContactInfo(data);
+    setIsEditingContact(false);
+    toast.success("Contact information updated successfully");
+  };
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -44,22 +111,85 @@ const Profile = () => {
             <CardContent className="pt-6">
               <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
                 <Avatar className="h-24 w-24 bg-primary text-white text-4xl">
-                  <AvatarFallback>VV</AvatarFallback>
+                  <AvatarFallback>{contactInfo.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                 </Avatar>
                 
                 <div className="flex-1 text-center md:text-left">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h1 className="text-2xl font-bold">Varun Veluri</h1>
-                      <p className="text-muted-foreground mt-1">Job Search Status</p>
-                      <Badge className="mt-1 bg-cyan-100 text-cyan-800 hover:bg-cyan-200">
-                        {jobSearchStatus}
-                      </Badge>
+                  {isEditingProfile ? (
+                    <Form {...profileForm}>
+                      <form onSubmit={profileForm.handleSubmit(handleSaveProfile)} className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="w-full space-y-2">
+                            <FormField
+                              control={profileForm.control}
+                              name="name"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormControl>
+                                    <Input placeholder="Your name" {...field} className="text-xl font-bold" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <p className="text-muted-foreground">Job Search Status</p>
+                            
+                            <FormField
+                              control={profileForm.control}
+                              name="status"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormControl>
+                                    <select 
+                                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                      disabled={!jobSearchEnabled}
+                                      {...field}
+                                    >
+                                      <option value="Actively looking">Actively looking</option>
+                                      <option value="Open to offers">Open to offers</option>
+                                      <option value="Not looking">Not looking</option>
+                                    </select>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="flex justify-end space-x-2">
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            onClick={() => setIsEditingProfile(false)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button type="submit">Save Changes</Button>
+                        </div>
+                      </form>
+                    </Form>
+                  ) : (
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h1 className="text-2xl font-bold">{contactInfo.name}</h1>
+                        <p className="text-muted-foreground mt-1">Job Search Status</p>
+                        {jobSearchEnabled ? (
+                          <Badge className="mt-1 bg-cyan-100 text-cyan-800 hover:bg-cyan-200">
+                            {jobSearchStatus}
+                          </Badge>
+                        ) : (
+                          <Badge className="mt-1 bg-gray-100 text-gray-800 hover:bg-gray-200">
+                            Not Visible
+                          </Badge>
+                        )}
+                      </div>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsEditingProfile(true)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
                     </div>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  )}
                   
                   <div className="mt-6 flex flex-col md:flex-row md:items-center gap-3">
                     <div className="flex items-center gap-2">
@@ -67,14 +197,35 @@ const Profile = () => {
                         variant="outline"
                         size="sm"
                         className="flex items-center gap-2"
+                        disabled={!jobSearchEnabled}
                       >
                         <span className="text-yellow-500">⚡</span>
                         Show Profile to Recruiters
                         <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-muted text-xs">?</span>
                       </Button>
                       <Switch
-                        checked={showProfile}
+                        checked={showProfile && jobSearchEnabled}
                         onCheckedChange={setShowProfile}
+                        disabled={!jobSearchEnabled}
+                      />
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2"
+                      >
+                        <span className="text-gray-500">🔍</span>
+                        Job Search Status
+                        <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-muted text-xs">?</span>
+                      </Button>
+                      <Switch
+                        checked={jobSearchEnabled}
+                        onCheckedChange={(checked) => {
+                          setJobSearchEnabled(checked);
+                          if (!checked) setShowProfile(false);
+                        }}
                       />
                     </div>
                   </div>
@@ -111,27 +262,122 @@ const Profile = () => {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle>Contact</CardTitle>
-                  <Button variant="ghost" size="icon">
-                    <Pencil className="h-4 w-4" />
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={() => {
+                      if (isEditingContact) {
+                        contactForm.reset(contactInfo);
+                        setIsEditingContact(false);
+                      } else {
+                        contactForm.reset(contactInfo);
+                        setIsEditingContact(true);
+                      }
+                    }}
+                  >
+                    {isEditingContact ? <X className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
                   </Button>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <Mail className="h-5 w-5 text-muted-foreground" />
-                    <span>vveluri6@gmail.com</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Phone className="h-5 w-5 text-muted-foreground" />
-                    <span>+1 (469) 551-9662</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <CalendarIcon className="h-5 w-5 text-muted-foreground" />
-                    <span>06/19/2006</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <MapPin className="h-5 w-5 text-muted-foreground" />
-                    <span>Atlanta, GA, USA</span>
-                  </div>
+                  {isEditingContact ? (
+                    <Form {...contactForm}>
+                      <form onSubmit={contactForm.handleSubmit(handleSaveContact)} className="space-y-4">
+                        <FormField
+                          control={contactForm.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="flex items-center gap-3">
+                                <Mail className="h-5 w-5 text-muted-foreground" />
+                                Email
+                              </FormLabel>
+                              <FormControl>
+                                <Input placeholder="Email address" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={contactForm.control}
+                          name="phone"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="flex items-center gap-3">
+                                <Phone className="h-5 w-5 text-muted-foreground" />
+                                Phone
+                              </FormLabel>
+                              <FormControl>
+                                <Input placeholder="Phone number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={contactForm.control}
+                          name="birthdate"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="flex items-center gap-3">
+                                <CalendarIcon className="h-5 w-5 text-muted-foreground" />
+                                Date of Birth
+                              </FormLabel>
+                              <FormControl>
+                                <Input placeholder="MM/DD/YYYY" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={contactForm.control}
+                          name="location"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="flex items-center gap-3">
+                                <MapPin className="h-5 w-5 text-muted-foreground" />
+                                Location
+                              </FormLabel>
+                              <FormControl>
+                                <Input placeholder="City, State, Country" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <div className="flex justify-end">
+                          <Button type="submit" className="flex items-center gap-2">
+                            <Check className="h-4 w-4" />
+                            Save Changes
+                          </Button>
+                        </div>
+                      </form>
+                    </Form>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-3">
+                        <Mail className="h-5 w-5 text-muted-foreground" />
+                        <span>{contactInfo.email}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Phone className="h-5 w-5 text-muted-foreground" />
+                        <span>{contactInfo.phone}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <CalendarIcon className="h-5 w-5 text-muted-foreground" />
+                        <span>{contactInfo.birthdate}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <MapPin className="h-5 w-5 text-muted-foreground" />
+                        <span>{contactInfo.location}</span>
+                      </div>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
