@@ -45,38 +45,38 @@ export function MobileJobCard({
   
   return (
     <div 
-      className="py-3 px-4 active:bg-gray-50 dark:active:bg-gray-800/60"
+      className="py-2.5 px-3 active:bg-gray-50 dark:active:bg-gray-800/60 border-b border-gray-100 dark:border-gray-800"
       onClick={onClick}
     >
-      <div className="flex items-center gap-3">
-        <div className={`w-10 h-10 flex-shrink-0 rounded-md flex items-center justify-center ${getCompanyColor()}`}>
+      <div className="flex items-center gap-2.5">
+        <div className={`w-9 h-9 flex-shrink-0 rounded-md flex items-center justify-center ${getCompanyColor()}`}>
           {getCompanyInitial()}
         </div>
         
         <div className="flex-1 min-w-0">
-          <h3 className="text-base font-medium leading-tight mb-1 line-clamp-1">{job.title}</h3>
+          <h3 className="text-sm font-medium leading-tight mb-0.5 line-clamp-1">{job.title}</h3>
           
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-1.5 text-sm text-gray-500">
-              <DollarSign className="h-3.5 w-3.5 flex-shrink-0" />
+          <div className="flex flex-col gap-0.5">
+            <div className="flex items-center gap-1 text-xs text-gray-500">
+              <DollarSign className="h-3 w-3 flex-shrink-0" />
               <span className="truncate">{formattedSalary}</span>
             </div>
             
-            <div className="flex items-center gap-1.5 text-sm text-gray-500">
-              <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+            <div className="flex items-center gap-1 text-xs text-gray-500">
+              <MapPin className="h-3 w-3 flex-shrink-0" />
               <span className="truncate">{job.location}</span>
             </div>
           </div>
         </div>
         
         <button 
-          className="ml-2 flex-shrink-0 p-1"
+          className="ml-1 flex-shrink-0 p-1"
           onClick={(e) => {
             e.stopPropagation();
             onSave?.();
           }}
         >
-          <BookmarkIcon className={`h-5 w-5 ${isSaved ? "fill-primary text-primary" : "text-gray-400"}`} />
+          <BookmarkIcon className={`h-4 w-4 ${isSaved ? "fill-primary text-primary" : "text-gray-400"}`} />
         </button>
       </div>
     </div>

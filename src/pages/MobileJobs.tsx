@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Job } from "@/types/job";
 import Navbar from "@/components/Navbar";
@@ -27,12 +26,8 @@ export default function MobileJobs() {
   const [showDetailView, setShowDetailView] = useState(false);
   
   useEffect(() => {
-    // Generate sample jobs from the parent component
-    // This would be replaced with an API call in a real app
     const fetchJobs = async () => {
-      // Imported directly in the Jobs.tsx component
       const generateSampleJobs = (count: number): Job[] => {
-        // ... this function should be the same as the one in Jobs.tsx
         const jobTypes: Array<'full-time' | 'part-time' | 'contract' | 'internship' | 'temporary' | 'volunteer' | 'other'> = 
           ['full-time', 'part-time', 'contract', 'internship', 'temporary', 'volunteer', 'other'];
         
@@ -87,12 +82,12 @@ export default function MobileJobs() {
           const randomSkills = Array.from(
             { length: Math.floor(Math.random() * 5) + 3 },
             () => skills[Math.floor(Math.random() * skills.length)]
-          ).filter((item, pos, arr) => arr.indexOf(item) === pos); // Remove duplicates
+          ).filter((item, pos, arr) => arr.indexOf(item) === pos);
           
           const randomRequirements = Array.from(
             { length: Math.floor(Math.random() * 4) + 2 },
             () => requirements[Math.floor(Math.random() * requirements.length)]
-          ).filter((item, pos, arr) => arr.indexOf(item) === pos); // Remove duplicates
+          ).filter((item, pos, arr) => arr.indexOf(item) === pos);
           
           const randomResponsibilities = Array.from(
             { length: Math.floor(Math.random() * 4) + 2 },
@@ -206,67 +201,65 @@ export default function MobileJobs() {
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900">
       <div className="fixed top-0 left-0 right-0 z-10 bg-white dark:bg-gray-900 border-b dark:border-gray-800">
-        <div className="p-4">
-          {!showDetailView ? (
-            <>
-              <h1 className="text-2xl font-bold mb-4">Search All Jobs</h1>
+        {!showDetailView ? (
+          <div className="p-3">
+            <h1 className="text-xl font-bold mb-3">Search All Jobs</h1>
+            
+            <div className="relative mb-3">
+              <Input
+                type="text"
+                placeholder="Search for roles, companies, or locations"
+                className="pl-9 pr-9 py-2 rounded-full border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 h-10 text-sm"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                icon={<Search className="h-3.5 w-3.5" />}
+                iconPosition="left"
+                onClear={handleClearSearch}
+              />
+            </div>
+            
+            <div className="flex items-center gap-2 mb-2 overflow-x-auto pb-1 no-scrollbar">
+              <Button
+                variant="outline"
+                className="rounded-full border-gray-200 dark:border-gray-700 py-1 px-3 text-xs flex-shrink-0 bg-white dark:bg-gray-800 h-8"
+              >
+                <SlidersHorizontal className="w-3 h-3 mr-1.5" />
+                Filter Jobs
+              </Button>
               
-              <div className="relative mb-4">
-                <Input
-                  type="text"
-                  placeholder="Search for roles, companies, or locations"
-                  className="pl-10 pr-10 py-3 rounded-full border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 h-12"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  icon={<Search className="h-4 w-4" />}
-                  iconPosition="left"
-                  onClear={handleClearSearch}
-                />
-              </div>
+              <Button
+                variant="outline"
+                className="rounded-full border-gray-200 dark:border-gray-700 px-3 py-1 text-xs flex-shrink-0 bg-white dark:bg-gray-800 h-8"
+              >
+                Save Search
+              </Button>
               
-              <div className="flex items-center justify-between gap-2 mb-4">
-                <Button
-                  variant="outline"
-                  className="rounded-full border-gray-200 dark:border-gray-700 py-2 px-4 text-sm flex-grow-0 bg-white dark:bg-gray-800"
-                >
-                  <SlidersHorizontal className="w-4 h-4 mr-2" />
-                  Filter Jobs (3)
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  className="rounded-full border-gray-200 dark:border-gray-700 px-4 py-2 text-sm bg-white dark:bg-gray-800"
-                >
-                  Save Search
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  className="rounded-full border-gray-200 dark:border-gray-700 px-4 py-2 text-sm bg-white dark:bg-gray-800"
-                >
-                  Clear
-                </Button>
-              </div>
+              <Button
+                variant="outline"
+                className="rounded-full border-gray-200 dark:border-gray-700 px-3 py-1 text-xs flex-shrink-0 bg-white dark:bg-gray-800 h-8"
+              >
+                Clear
+              </Button>
+            </div>
+            
+            <div className="flex items-center justify-between py-1.5 border-t border-b border-gray-200 dark:border-gray-700">
+              <span className="text-xs text-gray-600 dark:text-gray-400">
+                Showing {filteredJobs.length} of {jobs.length} Jobs
+              </span>
               
-              <div className="flex items-center justify-between py-2 border-t border-b border-gray-200 dark:border-gray-700">
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Showing {filteredJobs.length} of {jobs.length} Jobs
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-600 dark:text-gray-400">
+                  Most recent
                 </span>
-                
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Most recent
-                  </span>
-                </div>
               </div>
-            </>
-          ) : null}
-        </div>
+            </div>
+          </div>
+        ) : null}
       </div>
       
-      <main className={`flex-1 ${!showDetailView ? 'pt-44' : ''}`}>
+      <main className={`flex-1 ${!showDetailView ? 'pt-[158px]' : ''}`}>
         {!showDetailView ? (
-          <div>
+          <div className="divide-y divide-gray-100 dark:divide-gray-800">
             {filteredJobs.map(job => (
               <MobileJobCard
                 key={job.id}
