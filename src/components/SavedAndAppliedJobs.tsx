@@ -25,7 +25,6 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { useJobApplications } from "@/contexts/JobApplicationContext";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ModeToggle } from "@/components/ModeToggle";
 
 interface SavedAndAppliedJobsProps {
@@ -64,15 +63,6 @@ export function SavedAndAppliedJobs({
   const applyToJob = propOnApply || contextApplyToJob;
   const saveJob = propOnSave || contextSaveJob;
   
-  // Get user name from localStorage or use default
-  const firstName = localStorage.getItem('userFirstName') || 'Varun';
-  const lastName = localStorage.getItem('userLastName') || 'Veluri';
-  
-  // Generate initials from first and last name
-  const getInitials = () => {
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
-  };
-  
   const handleStatusChange = (jobId: string, status: JobStatus) => {
     const application = getApplicationByJobId(jobId);
     if (application) {
@@ -80,22 +70,16 @@ export function SavedAndAppliedJobs({
     }
   };
   
-  // User profile avatar with initials at the top
-  const profileHeader = (
-    <div className="flex justify-between items-center bg-background py-3 px-4 border-b">
-      <div className="flex items-center gap-2">
-        <Avatar className="h-8 w-8">
-          <AvatarFallback>{getInitials()}</AvatarFallback>
-        </Avatar>
-        <span className="text-sm font-medium hidden md:inline">{firstName} {lastName}</span>
-      </div>
+  // Simple header with just the theme toggle
+  const header = (
+    <div className="flex justify-end items-center bg-background py-3 px-4 border-b">
       <ModeToggle />
     </div>
   );
   
   return (
     <Card className="h-full shadow-none border-0 sm:border sm:shadow-sm overflow-hidden">
-      {profileHeader}
+      {header}
       <CardHeader className="border-b pb-3 pt-4">
         <CardTitle className="text-lg">My Jobs</CardTitle>
       </CardHeader>
@@ -110,7 +94,7 @@ export function SavedAndAppliedJobs({
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="saved" className="p-0 pt-2 overflow-auto max-h-[calc(100vh-280px)]">
+          <TabsContent value="saved" className="p-0 pt-2 overflow-auto max-h-[calc(100vh-220px)]">
             {savedJobs.length === 0 ? (
               <div className="p-6 text-center">
                 <p className="text-muted-foreground mb-2">
@@ -139,7 +123,7 @@ export function SavedAndAppliedJobs({
             )}
           </TabsContent>
           
-          <TabsContent value="applied" className="p-0 pt-2 overflow-auto max-h-[calc(100vh-280px)]">
+          <TabsContent value="applied" className="p-0 pt-2 overflow-auto max-h-[calc(100vh-220px)]">
             {appliedJobs.length === 0 ? (
               <div className="p-6 text-center">
                 <p className="text-muted-foreground mb-2">
