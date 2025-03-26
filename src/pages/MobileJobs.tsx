@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Job, JobFilters } from "@/types/job";
 import { MobileJobCard } from "@/components/MobileJobCard";
@@ -7,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { MobileJobFilters } from "@/components/MobileJobFilters";
-import { SavedAndAppliedJobs } from "@/components/SavedAndAppliedJobs";
 import { 
   Search,
   SlidersHorizontal,
@@ -207,8 +205,6 @@ export default function MobileJobs() {
   };
   
   const filteredJobs = applyFiltersToJobs(jobs, activeFilters);
-  const savedJobs = jobs.filter(job => savedJobIds.includes(job.id));
-  const appliedJobs = jobs.filter(job => appliedJobIds.includes(job.id));
 
   const handleSaveJob = (job: Job) => {
     if (savedJobIds.includes(job.id)) {
@@ -315,18 +311,6 @@ export default function MobileJobs() {
           <div className="p-3">
             <h1 className="text-xl font-bold mb-3">Search All Jobs</h1>
             
-            {/* My Jobs Section - Moved to the top */}
-            <div className="mb-3">
-              <SavedAndAppliedJobs
-                savedJobs={savedJobs}
-                appliedJobs={appliedJobs}
-                onApply={handleApplyJob}
-                onSave={handleSaveJob}
-                onSelect={handleSelectJob}
-                selectedJobId={selectedJob?.id || null}
-              />
-            </div>
-            
             <div className="relative mb-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -357,7 +341,7 @@ export default function MobileJobs() {
         ) : null}
       </div>
       
-      <main className={`flex-1 ${!showDetailView ? 'pt-[320px]' : ''}`}>
+      <main className={`flex-1 ${!showDetailView ? 'pt-[180px]' : ''}`}>
         {!showDetailView ? (
           <div className="divide-y divide-gray-100 dark:divide-gray-800">
             {filteredJobs.map(job => (
