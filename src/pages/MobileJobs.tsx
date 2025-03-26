@@ -332,60 +332,17 @@ export default function MobileJobs() {
               </div>
             </div>
             
-            <div className="flex items-center gap-2 mb-2 overflow-x-auto pb-1 no-scrollbar">
-              <Button
-                variant="outline"
-                className={`rounded-full border-gray-200 dark:border-gray-700 py-1 px-3 text-xs flex-shrink-0 h-8 transition-colors ${showFilters ? 'bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700' : 'bg-white dark:bg-gray-800'}`}
-                onClick={toggleFilters}
-              >
-                <SlidersHorizontal className="w-3 h-3 mr-1.5" />
-                Filter Jobs
-                {activeFilterCount > 0 && (
-                  <span className="ml-1.5 bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 px-1.5 py-0.5 rounded-full text-xs">
-                    {activeFilterCount}
-                  </span>
-                )}
-              </Button>
-              
-              <Button
-                variant="outline"
-                className="rounded-full border-gray-200 dark:border-gray-700 px-3 py-1 text-xs flex-shrink-0 bg-white dark:bg-gray-800 h-8"
-              >
-                Save Search
-              </Button>
-              
-              <Button
-                variant="outline"
-                className="rounded-full border-gray-200 dark:border-gray-700 px-3 py-1 text-xs flex-shrink-0 bg-white dark:bg-gray-800 h-8"
-                onClick={handleClearFilters}
-              >
-                Clear
-              </Button>
-            </div>
-            
-            <div className="flex items-center justify-between py-1.5 border-t border-b border-gray-200 dark:border-gray-700">
-              <span className="text-xs text-gray-600 dark:text-gray-400">
-                Showing {filteredJobs.length} of {jobs.length} Jobs
-              </span>
-              
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-600 dark:text-gray-400">
-                  Most recent
-                </span>
-              </div>
-            </div>
+            <MobileJobFilters
+              onApply={handleApplyFilters}
+              onClose={handleCloseFilters}
+              activeFilterCount={activeFilterCount}
+            />
           </div>
         ) : null}
       </div>
       
-      <main className={`flex-1 ${!showDetailView ? 'pt-[158px]' : ''}`}>
-        {showFilters && !showDetailView ? (
-          <MobileJobFilters 
-            onApply={handleApplyFilters}
-            onClose={handleCloseFilters}
-            activeFilterCount={activeFilterCount}
-          />
-        ) : !showDetailView ? (
+      <main className={`flex-1 ${!showDetailView ? 'pt-[180px]' : ''}`}>
+        {!showDetailView ? (
           <div className="divide-y divide-gray-100 dark:divide-gray-800">
             {filteredJobs.map(job => (
               <MobileJobCard

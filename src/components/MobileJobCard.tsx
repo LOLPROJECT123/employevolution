@@ -16,55 +16,68 @@ export function MobileJobCard({
   onSave,
   onClick
 }: MobileJobCardProps) {
-  const getCompanyInitial = () => {
-    return job.company.charAt(0).toUpperCase();
-  };
-  
-  const getCompanyColor = () => {
-    const colors = [
-      'bg-pink-100 text-pink-600',
-      'bg-blue-100 text-blue-600',
-      'bg-green-100 text-green-600',
-      'bg-purple-100 text-purple-600',
-      'bg-yellow-100 text-yellow-600',
-      'bg-red-100 text-red-600',
-      'bg-indigo-100 text-indigo-600',
-      'bg-orange-100 text-orange-600',
-    ];
+  // Generate a colored initial badge for the company
+  const getInitialBadgeColor = () => {
+    const initialMap: Record<string, string> = {
+      'A': 'bg-green-100 text-green-600',
+      'B': 'bg-blue-100 text-blue-600',
+      'C': 'bg-yellow-100 text-yellow-600',
+      'D': 'bg-orange-100 text-orange-600',
+      'E': 'bg-purple-100 text-purple-600',
+      'F': 'bg-indigo-100 text-indigo-600',
+      'G': 'bg-red-100 text-red-600',
+      'H': 'bg-emerald-100 text-emerald-600',
+      'I': 'bg-cyan-100 text-cyan-600',
+      'J': 'bg-violet-100 text-violet-600',
+      'K': 'bg-fuchsia-100 text-fuchsia-600',
+      'L': 'bg-rose-100 text-rose-600',
+      'M': 'bg-pink-100 text-pink-600',
+      'N': 'bg-amber-100 text-amber-600',
+      'O': 'bg-lime-100 text-lime-600',
+      'P': 'bg-teal-100 text-teal-600',
+      'Q': 'bg-sky-100 text-sky-600',
+      'R': 'bg-emerald-100 text-emerald-600',
+      'S': 'bg-blue-100 text-blue-600',
+      'T': 'bg-pink-100 text-pink-600',
+      'U': 'bg-purple-100 text-purple-600',
+      'V': 'bg-yellow-100 text-yellow-600',
+      'W': 'bg-green-100 text-green-600',
+      'X': 'bg-red-100 text-red-600',
+      'Y': 'bg-orange-100 text-orange-600',
+      'Z': 'bg-indigo-100 text-indigo-600',
+    };
     
-    const charSum = job.company
-      .split('')
-      .reduce((sum, char) => sum + char.charCodeAt(0), 0);
-    
-    return colors[charSum % colors.length];
+    const initial = job.company.charAt(0).toUpperCase();
+    return initialMap[initial] || 'bg-gray-100 text-gray-600';
   };
   
   const formattedSalary = job.level === 'intern' 
-    ? `${job.salary.currency}${job.salary.min.toLocaleString()} /hr` 
-    : `${job.salary.currency}${job.salary.min.toLocaleString()}`;
+    ? `$ ${job.salary.min.toLocaleString()} /hr` 
+    : `$ ${job.salary.min.toLocaleString()}`;
   
   return (
     <div 
-      className="py-2.5 px-3 active:bg-gray-50 dark:active:bg-gray-800/60 border-b border-gray-100 dark:border-gray-800"
+      className="py-3 px-3 border-b border-gray-100 dark:border-gray-800 active:bg-gray-50 dark:active:bg-gray-800/60"
       onClick={onClick}
     >
-      <div className="flex items-center gap-2.5">
-        <div className={`w-9 h-9 flex-shrink-0 rounded-md flex items-center justify-center ${getCompanyColor()}`}>
-          {getCompanyInitial()}
+      <div className="flex items-start gap-3">
+        {/* Initial badge */}
+        <div className={`w-8 h-8 flex items-center justify-center rounded-md ${getInitialBadgeColor()}`}>
+          {job.company.charAt(0).toUpperCase()}
         </div>
         
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-medium leading-tight mb-0.5 line-clamp-1">{job.title}</h3>
+          <h3 className="text-base font-bold leading-tight mb-1">{job.title}</h3>
           
-          <div className="flex flex-col gap-0.5">
-            <div className="flex items-center gap-1 text-xs text-gray-500">
-              <DollarSign className="h-3 w-3 flex-shrink-0" />
-              <span className="truncate">{formattedSalary}</span>
+          <div className="flex flex-col gap-0.5 mb-1">
+            <div className="flex items-center gap-1 text-sm text-gray-600">
+              <DollarSign className="h-3.5 w-3.5 flex-shrink-0" />
+              <span>{formattedSalary}</span>
             </div>
             
-            <div className="flex items-center gap-1 text-xs text-gray-500">
-              <MapPin className="h-3 w-3 flex-shrink-0" />
-              <span className="truncate">{job.location}</span>
+            <div className="flex items-center gap-1 text-sm text-gray-600">
+              <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+              <span>{job.location}</span>
             </div>
           </div>
         </div>
@@ -76,7 +89,7 @@ export function MobileJobCard({
             onSave?.();
           }}
         >
-          <BookmarkIcon className={`h-4 w-4 ${isSaved ? "fill-primary text-primary" : "text-gray-400"}`} />
+          <BookmarkIcon className={`h-5 w-5 ${isSaved ? "fill-primary text-primary" : "text-gray-400"}`} />
         </button>
       </div>
     </div>
