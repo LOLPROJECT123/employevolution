@@ -5,7 +5,7 @@ import { MobileJobDetail } from "@/components/MobileJobDetail";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
-import { MobileJobFiltersSection } from "@/components/MobileJobFiltersSection";
+import { MobileJobFilters } from "@/components/MobileJobFilters";
 import { 
   Search,
   SlidersHorizontal,
@@ -34,7 +34,7 @@ export default function MobileJobs() {
     companySize: [],
     benefits: []
   });
-  
+
   useEffect(() => {
     const fetchJobs = async () => {
       const generateSampleJobs = (count: number): Job[] => {
@@ -161,7 +161,7 @@ export default function MobileJobs() {
     
     fetchJobs();
   }, []);
-  
+
   const applyFiltersToJobs = (jobs: Job[], filters: JobFilters) => {
     let filtered = [...jobs];
     
@@ -205,7 +205,7 @@ export default function MobileJobs() {
   };
   
   const filteredJobs = applyFiltersToJobs(jobs, activeFilters);
-  
+
   const handleSaveJob = (job: Job) => {
     if (savedJobIds.includes(job.id)) {
       setSavedJobIds(savedJobIds.filter(id => id !== job.id));
@@ -258,6 +258,10 @@ export default function MobileJobs() {
       title: "Filters applied",
       description: "Your job search filters have been applied.",
     });
+  };
+  
+  const handleCloseFilters = () => {
+    setShowFilters(false);
   };
   
   const getActiveFilterCount = () => {
@@ -376,41 +380,11 @@ export default function MobileJobs() {
       
       <main className={`flex-1 ${!showDetailView ? 'pt-[158px]' : ''}`}>
         {showFilters && !showDetailView ? (
-          <div className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 shadow-sm">
-            <div className="border-b border-gray-200 dark:border-gray-700 px-3 py-2 flex items-center justify-between">
-              <div className="flex items-center">
-                <button 
-                  onClick={toggleFilters}
-                  className="flex items-center gap-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded px-3 py-1.5 text-sm font-medium"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className=""><path d="m6 9 6 6 6-6"/></svg>
-                  All Filters
-                </button>
-              </div>
-              <button 
-                onClick={handleClearFilters}
-                className="text-sm text-gray-500 dark:text-gray-400"
-              >
-                Reset All
-              </button>
-            </div>
-            
-            <div className="p-3">
-              <Button 
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 h-10 font-medium"
-                onClick={() => {
-                  setShowFilters(false);
-                }}
-              >
-                <Check className="h-5 w-5 mr-2" />
-                Apply Filters
-              </Button>
-            </div>
-            
-            <div className="px-3 pt-0 pb-3">
-              <MobileJobFiltersSection onApplyFilters={handleApplyFilters} />
-            </div>
-          </div>
+          <MobileJobFilters 
+            onApply={handleApplyFilters}
+            onClose={handleCloseFilters}
+            activeFilterCount={activeFilterCount}
+          />
         ) : !showDetailView ? (
           <div className="divide-y divide-gray-100 dark:divide-gray-800">
             {filteredJobs.map(job => (

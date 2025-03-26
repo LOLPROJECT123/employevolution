@@ -2,7 +2,15 @@
 import React, { useState } from 'react';
 import { JobFilters } from "@/types/job";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, Check } from "lucide-react";
+import { ChevronDown, X, Check } from "lucide-react";
+import { 
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger
+} from "@/components/ui/sheet";
+import { MobileJobFiltersSection } from "@/components/MobileJobFiltersSection";
 
 interface MobileJobFiltersProps {
   onApply: (filters: JobFilters) => void;
@@ -17,24 +25,11 @@ export const MobileJobFilters = ({
 }: MobileJobFiltersProps) => {
   const [location, setLocation] = useState("");
   const [remote, setRemote] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   
-  const handleApplyFilters = () => {
-    const filters: JobFilters = {
-      search: "",
-      location,
-      locationRadius: 0,
-      jobType: [],
-      remote,
-      experienceLevels: [],
-      education: [],
-      salaryRange: [0, 300000],
-      skills: [],
-      companyTypes: [],
-      companySize: [],
-      benefits: []
-    };
-    
+  const handleApplyFilters = (filters: JobFilters) => {
     onApply(filters);
+    setIsOpen(false);
   };
 
   const handleResetAll = () => {
@@ -47,20 +42,48 @@ export const MobileJobFilters = ({
       {/* Header */}
       <div className="border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-3 py-2">
         <div className="flex items-center">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 border-gray-200 dark:border-gray-700 rounded-md"
-            onClick={onClose}
-          >
-            <ChevronDown className="h-4 w-4 mr-1.5" />
-            All Filters
-            {activeFilterCount > 0 && (
-              <span className="ml-1.5 text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 px-1.5 py-0.5 rounded-full">
-                {activeFilterCount}
-              </span>
-            )}
-          </Button>
+          <Sheet open={isOpen} onOpenChange={setIsOpen}>
+            <SheetTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 border-gray-200 dark:border-gray-700 rounded-md"
+              >
+                <ChevronDown className="h-4 w-4 mr-1.5" />
+                All Filters
+                {activeFilterCount > 0 && (
+                  <span className="ml-1.5 text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 px-1.5 py-0.5 rounded-full">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="h-[90vh] p-0">
+              <SheetHeader className="border-b border-gray-200 dark:border-gray-700 px-3 py-3 flex flex-row justify-between items-center">
+                <SheetTitle className="text-base font-medium">All Filters</SheetTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 text-xs text-gray-600 dark:text-gray-400"
+                  onClick={handleResetAll}
+                >
+                  Reset All
+                </Button>
+              </SheetHeader>
+              <div className="p-3">
+                <MobileJobFiltersSection onApplyFilters={handleApplyFilters} />
+              </div>
+              <div className="p-3 border-t border-gray-200 dark:border-gray-700">
+                <Button 
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 h-12 font-medium"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <Check className="h-5 w-5 mr-2" />
+                  Apply Filters
+                </Button>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
         <Button
           variant="ghost"
@@ -76,7 +99,23 @@ export const MobileJobFilters = ({
       <div className="p-3">
         <Button 
           className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 h-12 font-medium"
-          onClick={handleApplyFilters}
+          onClick={() => {
+            const filters: JobFilters = {
+              search: "",
+              location,
+              locationRadius: 0,
+              jobType: [],
+              remote,
+              experienceLevels: [],
+              education: [],
+              salaryRange: [0, 300000],
+              skills: [],
+              companyTypes: [],
+              companySize: [],
+              benefits: []
+            };
+            onApply(filters);
+          }}
         >
           <Check className="h-5 w-5 mr-2" />
           Apply Filters
