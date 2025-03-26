@@ -31,16 +31,19 @@ import { useJobApplications } from "@/contexts/JobApplicationContext";
 
 interface JobDetailViewProps {
   job: Job | null;
+  onApply?: (job: Job) => void;
+  onSave?: (job: Job) => void;
 }
 
-export function JobDetailView({ job }: JobDetailViewProps) {
+export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
   const [isApplying, setIsApplying] = useState(false);
   const { saveJob, applyToJob, savedJobs, appliedJobs, getApplicationByJobId } = useJobApplications();
   
-  // Check if automation is possible for this job
+  const handleSaveJob = onSave || saveJob;
+  const handleApplyToJob = onApply || applyToJob;
+  
   const canAutomate = job?.applyUrl ? detectPlatform(job.applyUrl) !== null : false;
   
-  // Check if automation is enabled in local storage
   const automationEnabled = (() => {
     try {
       const config = JSON.parse(localStorage.getItem('automationConfig') || '{}');
@@ -50,7 +53,6 @@ export function JobDetailView({ job }: JobDetailViewProps) {
     }
   })();
 
-  // Get the platform type for job-specific automation options
   const platform = job?.applyUrl ? detectPlatform(job.applyUrl) : null;
 
   if (!job) {
@@ -167,7 +169,7 @@ export function JobDetailView({ job }: JobDetailViewProps) {
   const handleApplyClick = async () => {
     try {
       setIsApplying(true);
-      applyToJob(job);
+      handleApplyToJob(job);
     } catch (error) {
       toast.error("Failed To Apply", {
         description: "There Was An Error Submitting Your Application. Please Try Again."
@@ -197,15 +199,13 @@ export function JobDetailView({ job }: JobDetailViewProps) {
       
       const config = JSON.parse(automationConfig);
       
-      // Start the automation process
       startAutomation(job.applyUrl, config);
       
       toast.success("Automation Initiated", {
         description: `The Automation Script Will Now Apply To This Job On ${platform || 'The Job Platform'}. Please Check The Browser Extension For Details.`
       });
       
-      // Also mark as applied in our system
-      applyToJob(job);
+      handleApplyToJob(job);
     } catch (error) {
       toast.error("Automation Failed", {
         description: "There Was An Error Starting The Automation Process."
@@ -264,7 +264,7 @@ export function JobDetailView({ job }: JobDetailViewProps) {
             <Button
               variant={isSaved ? "default" : "outline"}
               size="icon"
-              onClick={() => saveJob(job)}
+              onClick={() => handleSaveJob(job)}
               className="button-hover"
             >
               <BookmarkIcon className="w-4 h-4" />
@@ -605,7 +605,7 @@ export function JobDetailView({ job }: JobDetailViewProps) {
           <Button
             variant={isSaved ? "default" : "outline"}
             className="flex-1"
-            onClick={() => saveJob(job)}
+            onClick={() => handleSaveJob(job)}
           >
             {isSaved ? "Saved" : "Save Job"}
           </Button>
@@ -637,4 +637,3 @@ export function JobDetailView({ job }: JobDetailViewProps) {
     </div>
   );
 }
-
