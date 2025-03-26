@@ -1,3 +1,4 @@
+
 import { useState, useRef } from "react";
 import Navbar from "@/components/Navbar";
 import { 
@@ -934,4 +935,761 @@ const Profile = () => {
                               </div>
                             ) : (
                               <>
-                                <div className="flex items-start justify
+                                <div className="flex items-start justify-between">
+                                  <div>
+                                    <h3 className="font-medium">{experience.title}</h3>
+                                    <p className="text-sm text-muted-foreground">{experience.company}</p>
+                                    <p className="text-sm text-muted-foreground">{experience.location}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                      {experience.startDate} - {experience.endDate}
+                                    </p>
+                                  </div>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-8 w-8"
+                                    onClick={() => handleEditWorkExperience(experience.id, { isEditingThisItem: true })}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                                <p className="text-sm whitespace-pre-line">{experience.description}</p>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {workExperiences.length === 0 && (
+                      <div className="text-center py-6 text-muted-foreground">
+                        <p>No work experience added yet.</p>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="mt-2"
+                          onClick={handleAddWorkExperience}
+                        >
+                          Add your first work experience
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+                
+                {/* Education */}
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle>Education</CardTitle>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex items-center gap-2"
+                      onClick={handleAddEducation}
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Education
+                    </Button>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {educations.map((education, index) => (
+                      <div key={education.id}>
+                        {index > 0 && <Separator className="my-6" />}
+                        <div className="flex gap-4">
+                          <div className="bg-cyan-100 rounded-md p-3 h-12 w-12 flex items-center justify-center flex-shrink-0">
+                            <GraduationCap className="h-5 w-5 text-cyan-600" />
+                          </div>
+                          <div className="space-y-2 flex-1">
+                            {education.isEditingThisItem ? (
+                              <div className="space-y-4">
+                                <Input 
+                                  placeholder="School/University" 
+                                  value={education.school}
+                                  onChange={(e) => handleEditEducation(education.id, { school: e.target.value })}
+                                />
+                                <div className="grid gap-4 md:grid-cols-2">
+                                  <Input 
+                                    placeholder="Degree (e.g. Bachelor's, Master's)" 
+                                    value={education.degree}
+                                    onChange={(e) => handleEditEducation(education.id, { degree: e.target.value })}
+                                  />
+                                  <Input 
+                                    placeholder="Field of Study" 
+                                    value={education.field}
+                                    onChange={(e) => handleEditEducation(education.id, { field: e.target.value })}
+                                  />
+                                </div>
+                                <div className="grid gap-4 md:grid-cols-2">
+                                  <Input 
+                                    placeholder="Start Date (e.g. Jan 2022)" 
+                                    value={education.startDate}
+                                    onChange={(e) => handleEditEducation(education.id, { startDate: e.target.value })}
+                                  />
+                                  <Input 
+                                    placeholder="End Date (e.g. Dec 2023 or Present)" 
+                                    value={education.endDate}
+                                    onChange={(e) => handleEditEducation(education.id, { endDate: e.target.value })}
+                                  />
+                                </div>
+                                <div className="flex justify-end gap-2">
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={() => handleEditEducation(education.id, { isEditingThisItem: false })}
+                                  >
+                                    Cancel
+                                  </Button>
+                                  <Button 
+                                    variant="destructive" 
+                                    size="sm"
+                                    onClick={() => handleDeleteEducation(education.id)}
+                                  >
+                                    Delete
+                                  </Button>
+                                  <Button 
+                                    size="sm"
+                                    onClick={() => handleSaveEducation(education.id)}
+                                  >
+                                    Save
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="flex items-start justify-between">
+                                  <div>
+                                    <h3 className="font-medium">{education.school}</h3>
+                                    <p className="text-sm text-muted-foreground">
+                                      {education.degree}{education.field ? `, ${education.field}` : ''}
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">
+                                      {education.startDate} - {education.endDate}
+                                    </p>
+                                  </div>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-8 w-8"
+                                    onClick={() => handleEditEducation(education.id, { isEditingThisItem: true })}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {educations.length === 0 && (
+                      <div className="text-center py-6 text-muted-foreground">
+                        <p>No education added yet.</p>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="mt-2"
+                          onClick={handleAddEducation}
+                        >
+                          Add your first education
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+                
+                {/* Projects */}
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle>Projects</CardTitle>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex items-center gap-2"
+                      onClick={handleAddProject}
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Project
+                    </Button>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {projects.map((project, index) => (
+                      <div key={project.id}>
+                        {index > 0 && <Separator className="my-6" />}
+                        <div className="flex gap-4">
+                          <div className="bg-cyan-100 rounded-md p-3 h-12 w-12 flex items-center justify-center flex-shrink-0">
+                            <Wrench className="h-5 w-5 text-cyan-600" />
+                          </div>
+                          <div className="space-y-2 flex-1">
+                            {project.isEditingThisItem ? (
+                              <div className="space-y-4">
+                                <Input 
+                                  placeholder="Project Name" 
+                                  value={project.name}
+                                  onChange={(e) => handleEditProject(project.id, { name: e.target.value })}
+                                />
+                                <div className="grid gap-4 md:grid-cols-2">
+                                  <Input 
+                                    placeholder="Start Date (e.g. Jan 2022)" 
+                                    value={project.startDate}
+                                    onChange={(e) => handleEditProject(project.id, { startDate: e.target.value })}
+                                  />
+                                  <Input 
+                                    placeholder="End Date (e.g. Dec 2023 or Present)" 
+                                    value={project.endDate}
+                                    onChange={(e) => handleEditProject(project.id, { endDate: e.target.value })}
+                                  />
+                                </div>
+                                <Textarea 
+                                  placeholder="Description of the project" 
+                                  value={project.description}
+                                  onChange={(e) => handleEditProject(project.id, { description: e.target.value })}
+                                  className="min-h-[100px]"
+                                />
+                                <div className="flex justify-end gap-2">
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={() => handleEditProject(project.id, { isEditingThisItem: false })}
+                                  >
+                                    Cancel
+                                  </Button>
+                                  <Button 
+                                    variant="destructive" 
+                                    size="sm"
+                                    onClick={() => handleDeleteProject(project.id)}
+                                  >
+                                    Delete
+                                  </Button>
+                                  <Button 
+                                    size="sm"
+                                    onClick={() => handleSaveProject(project.id)}
+                                  >
+                                    Save
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="flex items-start justify-between">
+                                  <div>
+                                    <h3 className="font-medium">{project.name}</h3>
+                                    <p className="text-sm text-muted-foreground">
+                                      {project.startDate} - {project.endDate}
+                                    </p>
+                                  </div>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-8 w-8"
+                                    onClick={() => handleEditProject(project.id, { isEditingThisItem: true })}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                                <p className="text-sm whitespace-pre-line">{project.description}</p>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {projects.length === 0 && (
+                      <div className="text-center py-6 text-muted-foreground">
+                        <p>No projects added yet.</p>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="mt-2"
+                          onClick={handleAddProject}
+                        >
+                          Add your first project
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+                
+                {/* Social Links */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Social Links</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {socialLinks.map((link) => (
+                      <div key={link.type} className="flex items-center gap-3">
+                        {getSocialLinkIcon(link.type)}
+                        <div className="flex-1">
+                          {link.isEditingThisItem ? (
+                            <Input 
+                              placeholder={`Enter your ${getSocialLinkTitle(link.type)}`}
+                              value={link.url}
+                              onChange={(e) => handleEditSocialLink(link.type, e.target.value)}
+                            />
+                          ) : (
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="font-medium">{getSocialLinkTitle(link.type)}</p>
+                                <p className="text-sm text-muted-foreground overflow-hidden text-ellipsis">
+                                  {link.url || "Not provided"}
+                                </p>
+                              </div>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8"
+                                onClick={() => setSocialLinks(prev => 
+                                  prev.map(l => 
+                                    l.type === link.type ? {...l, isEditingThisItem: true} : l
+                                  )
+                                )}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {isEditingAnySocialLinks && (
+                      <div className="flex justify-end">
+                        <Button onClick={handleSaveSocialLinks}>
+                          Save Links
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+            
+            {/* Job Preferences Tab */}
+            <TabsContent value="preferences">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Job Preferences</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">Set your job search preferences to help us find better matches for you.</p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            {/* Equal Employment Tab */}
+            <TabsContent value="equal">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>Equal Employment</CardTitle>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setIsEEODialogOpen(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <Pencil className="h-4 w-4" />
+                    Edit Data
+                  </Button>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-medium">Ethnicity</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {equalEmploymentData.ethnicity.length > 0 ? (
+                        equalEmploymentData.ethnicity.map(eth => (
+                          <Badge key={eth} variant="outline" className="bg-muted">
+                            {eth}
+                          </Badge>
+                        ))
+                      ) : (
+                        <p className="text-muted-foreground">No ethnicity selected</p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-medium">Work Authorization</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex items-center justify-between">
+                        <p>Authorized to work in the US</p>
+                        <Badge variant={equalEmploymentData.authorizedUS ? "default" : "outline"}>
+                          {equalEmploymentData.authorizedUS === null ? "Not specified" : 
+                            equalEmploymentData.authorizedUS ? "Yes" : "No"}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <p>Authorized to work in Canada</p>
+                        <Badge variant={equalEmploymentData.authorizedCanada ? "default" : "outline"}>
+                          {equalEmploymentData.authorizedCanada === null ? "Not specified" : 
+                            equalEmploymentData.authorizedCanada ? "Yes" : "No"}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <p>Authorized to work in the UK</p>
+                        <Badge variant={equalEmploymentData.authorizedUK ? "default" : "outline"}>
+                          {equalEmploymentData.authorizedUK === null ? "Not specified" : 
+                            equalEmploymentData.authorizedUK ? "Yes" : "No"}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <p>Need sponsorship for work authorization</p>
+                        <Badge variant={equalEmploymentData.needsSponsorship ? "default" : "outline"}>
+                          {equalEmploymentData.needsSponsorship === null ? "Not specified" : 
+                            equalEmploymentData.needsSponsorship ? "Yes" : "No"}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-medium">Demographic Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex items-center justify-between">
+                        <p>Gender</p>
+                        <Badge variant="outline">
+                          {equalEmploymentData.gender || "Not specified"}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <p>LGBTQ+</p>
+                        <Badge variant={equalEmploymentData.lgbtq ? "default" : "outline"}>
+                          {equalEmploymentData.lgbtq === null ? "Not specified" : 
+                            equalEmploymentData.lgbtq ? "Yes" : "No"}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <p>Person with a disability</p>
+                        <Badge variant={equalEmploymentData.hasDisability ? "default" : "outline"}>
+                          {equalEmploymentData.hasDisability === null ? "Not specified" : 
+                            equalEmploymentData.hasDisability ? "Yes" : "No"}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <p>Veteran status</p>
+                        <Badge variant={equalEmploymentData.veteran ? "default" : "outline"}>
+                          {equalEmploymentData.veteran === null ? "Not specified" : 
+                            equalEmploymentData.veteran ? "Yes" : "No"}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-muted p-4 rounded-md flex items-start gap-3">
+                    <Info className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm">
+                        Equal Employment Opportunity (EEO) information is collected for statistical purposes only. 
+                        This information will be kept separate from your application and will not be used in the hiring decision.
+                      </p>
+                      <p className="text-sm mt-2">
+                        Providing this information is voluntary and declining to provide it will not subject you to any adverse treatment.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Dialog open={isEEODialogOpen} onOpenChange={setIsEEODialogOpen}>
+                <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Equal Employment Data</DialogTitle>
+                    <DialogDescription>
+                      Providing this information is voluntary and will not be used in the hiring decision.
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <div className="space-y-6 py-4">
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-medium">Ethnicity</h3>
+                      <p className="text-sm text-muted-foreground">Select all that apply</p>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {ethnicityOptions.map(ethnicity => (
+                          <div key={ethnicity} className="flex items-center space-x-2">
+                            <Checkbox 
+                              id={`ethnicity-${ethnicity}`} 
+                              checked={equalEmploymentData.ethnicity.includes(ethnicity)}
+                              onCheckedChange={() => handleEthnicityChange(ethnicity)}
+                            />
+                            <label
+                              htmlFor={`ethnicity-${ethnicity}`}
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                              {ethnicity}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-medium">Work Authorization</h3>
+                      
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <p>Authorized to work in the US</p>
+                          <div className="flex items-center gap-2">
+                            <Button 
+                              size="sm" 
+                              variant={equalEmploymentData.authorizedUS === true ? "default" : "outline"}
+                              onClick={() => handleYesNoClick("authorizedUS", true)}
+                            >
+                              Yes
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant={equalEmploymentData.authorizedUS === false ? "default" : "outline"}
+                              onClick={() => handleYesNoClick("authorizedUS", false)}
+                            >
+                              No
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant={equalEmploymentData.authorizedUS === null ? "default" : "outline"}
+                              onClick={() => handleYesNoClick("authorizedUS", null)}
+                            >
+                              Prefer not to say
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <p>Authorized to work in Canada</p>
+                          <div className="flex items-center gap-2">
+                            <Button 
+                              size="sm" 
+                              variant={equalEmploymentData.authorizedCanada === true ? "default" : "outline"}
+                              onClick={() => handleYesNoClick("authorizedCanada", true)}
+                            >
+                              Yes
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant={equalEmploymentData.authorizedCanada === false ? "default" : "outline"}
+                              onClick={() => handleYesNoClick("authorizedCanada", false)}
+                            >
+                              No
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant={equalEmploymentData.authorizedCanada === null ? "default" : "outline"}
+                              onClick={() => handleYesNoClick("authorizedCanada", null)}
+                            >
+                              Prefer not to say
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <p>Authorized to work in the UK</p>
+                          <div className="flex items-center gap-2">
+                            <Button 
+                              size="sm" 
+                              variant={equalEmploymentData.authorizedUK === true ? "default" : "outline"}
+                              onClick={() => handleYesNoClick("authorizedUK", true)}
+                            >
+                              Yes
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant={equalEmploymentData.authorizedUK === false ? "default" : "outline"}
+                              onClick={() => handleYesNoClick("authorizedUK", false)}
+                            >
+                              No
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant={equalEmploymentData.authorizedUK === null ? "default" : "outline"}
+                              onClick={() => handleYesNoClick("authorizedUK", null)}
+                            >
+                              Prefer not to say
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <p>Need sponsorship for work authorization</p>
+                          <div className="flex items-center gap-2">
+                            <Button 
+                              size="sm" 
+                              variant={equalEmploymentData.needsSponsorship === true ? "default" : "outline"}
+                              onClick={() => handleYesNoClick("needsSponsorship", true)}
+                            >
+                              Yes
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant={equalEmploymentData.needsSponsorship === false ? "default" : "outline"}
+                              onClick={() => handleYesNoClick("needsSponsorship", false)}
+                            >
+                              No
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant={equalEmploymentData.needsSponsorship === null ? "default" : "outline"}
+                              onClick={() => handleYesNoClick("needsSponsorship", null)}
+                            >
+                              Prefer not to say
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-medium">Demographic Information</h3>
+                      
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <p>Gender</p>
+                          <div className="flex flex-wrap gap-2">
+                            <Button 
+                              size="sm" 
+                              variant={equalEmploymentData.gender === "Male" ? "default" : "outline"}
+                              onClick={() => handleGenderChange("Male")}
+                            >
+                              Male
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant={equalEmploymentData.gender === "Female" ? "default" : "outline"}
+                              onClick={() => handleGenderChange("Female")}
+                            >
+                              Female
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant={equalEmploymentData.gender === "Non-Binary" ? "default" : "outline"}
+                              onClick={() => handleGenderChange("Non-Binary")}
+                            >
+                              Non-Binary
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant={equalEmploymentData.gender === "Decline" ? "default" : "outline"}
+                              onClick={() => handleGenderChange("Decline")}
+                            >
+                              Prefer not to say
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <p>LGBTQ+</p>
+                          <div className="flex items-center gap-2">
+                            <Button 
+                              size="sm" 
+                              variant={equalEmploymentData.lgbtq === true ? "default" : "outline"}
+                              onClick={() => handleYesNoClick("lgbtq", true)}
+                            >
+                              Yes
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant={equalEmploymentData.lgbtq === false ? "default" : "outline"}
+                              onClick={() => handleYesNoClick("lgbtq", false)}
+                            >
+                              No
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant={equalEmploymentData.lgbtq === null ? "default" : "outline"}
+                              onClick={() => handleYesNoClick("lgbtq", null)}
+                            >
+                              Prefer not to say
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <p>Person with a disability</p>
+                          <div className="flex items-center gap-2">
+                            <Button 
+                              size="sm" 
+                              variant={equalEmploymentData.hasDisability === true ? "default" : "outline"}
+                              onClick={() => handleYesNoClick("hasDisability", true)}
+                            >
+                              Yes
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant={equalEmploymentData.hasDisability === false ? "default" : "outline"}
+                              onClick={() => handleYesNoClick("hasDisability", false)}
+                            >
+                              No
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant={equalEmploymentData.hasDisability === null ? "default" : "outline"}
+                              onClick={() => handleYesNoClick("hasDisability", null)}
+                            >
+                              Prefer not to say
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <p>Veteran status</p>
+                          <div className="flex items-center gap-2">
+                            <Button 
+                              size="sm" 
+                              variant={equalEmploymentData.veteran === true ? "default" : "outline"}
+                              onClick={() => handleYesNoClick("veteran", true)}
+                            >
+                              Yes
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant={equalEmploymentData.veteran === false ? "default" : "outline"}
+                              onClick={() => handleYesNoClick("veteran", false)}
+                            >
+                              No
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant={equalEmploymentData.veteran === null ? "default" : "outline"}
+                              onClick={() => handleYesNoClick("veteran", null)}
+                            >
+                              Prefer not to say
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsEEODialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={() => handleSaveEEOData(equalEmploymentData)}>
+                      Save Changes
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </TabsContent>
+            
+            {/* Settings Tab */}
+            <TabsContent value="settings">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Settings</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">Configure your profile settings and preferences.</p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Profile;
