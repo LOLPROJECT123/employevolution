@@ -116,33 +116,6 @@ export const MobileJobFilters = ({
           </span>
         </div>
       </div>
-      
-      {/* Apply Button */}
-      <div className="p-3">
-        <Button 
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 h-12 font-medium"
-          onClick={() => {
-            const filters: JobFilters = {
-              search: "",
-              location,
-              locationRadius: 0,
-              jobType: [],
-              remote,
-              experienceLevels: [],
-              education: [],
-              salaryRange: [0, 300000],
-              skills: [],
-              companyTypes: [],
-              companySize: [],
-              benefits: []
-            };
-            onApply(filters);
-          }}
-        >
-          <Check className="h-5 w-5 mr-2" />
-          Apply Filters
-        </Button>
-      </div>
     </div>
   );
 };
