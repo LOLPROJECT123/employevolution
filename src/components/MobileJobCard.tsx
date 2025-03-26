@@ -81,9 +81,9 @@ export function MobileJobCard({
           {job.company.charAt(0).toUpperCase()}
         </div>
         
-        <div className="flex-1 min-w-0 overflow-hidden pr-2">
+        <div className="flex-1 min-w-0 overflow-hidden pr-3">
           <div className="flex items-start justify-between mb-1">
-            <h3 className="text-base font-bold leading-tight truncate max-w-[80%]">{job.title}</h3>
+            <h3 className="text-base font-bold leading-tight truncate max-w-[75%]">{job.title}</h3>
             
             {job.matchPercentage !== undefined && (
               <Badge variant="outline" className={`flex-shrink-0 px-1.5 py-0.5 text-xs font-medium ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)}`}>
@@ -110,7 +110,7 @@ export function MobileJobCard({
         </div>
         
         <button 
-          className="ml-0.5 flex-shrink-0 p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          className="flex-shrink-0 p-1.5 -mr-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           onClick={(e) => {
             e.stopPropagation();
             onSave?.();
