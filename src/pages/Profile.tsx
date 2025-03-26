@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import Navbar from "@/components/Navbar";
 import { 
@@ -16,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -23,6 +23,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { 
   CalendarIcon, 
@@ -43,7 +44,8 @@ import {
   Plus,
   Upload,
   Trash2,
-  FileText
+  FileText,
+  Info
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -54,6 +56,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 type ContactInfo = {
   name: string;
@@ -99,6 +110,18 @@ type SocialLink = {
   type: "linkedin" | "github" | "portfolio" | "other";
   url: string;
   isEditingThisItem?: boolean;
+};
+
+type EqualEmploymentData = {
+  ethnicity: string[];
+  authorizedUS: boolean | null;
+  authorizedCanada: boolean | null;
+  authorizedUK: boolean | null;
+  needsSponsorship: boolean | null;
+  hasDisability: boolean | null;
+  lgbtq: boolean | null;
+  gender: "Male" | "Female" | "Non-Binary" | "Decline" | null;
+  veteran: boolean | null;
 };
 
 const Profile = () => {
@@ -206,6 +229,35 @@ const Profile = () => {
   const contactForm = useForm<ContactInfo>({
     defaultValues: contactInfo
   });
+  
+  // State for equal employment data
+  const [equalEmploymentData, setEqualEmploymentData] = useState<EqualEmploymentData>({
+    ethnicity: ["Southeast Asian"],
+    authorizedUS: true,
+    authorizedCanada: false,
+    authorizedUK: false,
+    needsSponsorship: false,
+    hasDisability: null,
+    lgbtq: null,
+    gender: "Male",
+    veteran: null
+  });
+  
+  // State for EEO dialog
+  const [isEEODialogOpen, setIsEEODialogOpen] = useState(false);
+  
+  // Ethnicity options
+  const ethnicityOptions = [
+    "Black/African American",
+    "East Asian",
+    "Hispanic/Latinx",
+    "Middle Eastern",
+    "Native American/Alaskan",
+    "Native Hawaiian/Pacific Islander",
+    "South Asian",
+    "Southeast Asian",
+    "White",
+  ];
   
   // Handle saving profile changes
   const handleSaveProfile = (data: { name: string; status: JobSearchStatus }) => {
@@ -421,6 +473,42 @@ const Profile = () => {
   
   // Check if any social links are being edited
   const isEditingAnySocialLinks = socialLinks.some(link => link.isEditingThisItem);
+
+  // Function to handle saving equal employment data
+  const handleSaveEEOData = (data: Partial<EqualEmploymentData>) => {
+    setEqualEmploymentData((prev) => ({ ...prev, ...data }));
+    setIsEEODialogOpen(false);
+    toast.success("Equal employment information updated");
+  };
+  
+  // Function to handle the yes/no button click
+  const handleYesNoClick = (field: keyof EqualEmploymentData, value: boolean | null) => {
+    setEqualEmploymentData((prev) => ({ ...prev, [field]: value }));
+  };
+  
+  // Function to handle ethnicity selection
+  const handleEthnicityChange = (ethnicity: string) => {
+    const currentEthnicity = [...equalEmploymentData.ethnicity];
+    if (currentEthnicity.includes(ethnicity)) {
+      setEqualEmploymentData({
+        ...equalEmploymentData,
+        ethnicity: currentEthnicity.filter(item => item !== ethnicity)
+      });
+    } else {
+      setEqualEmploymentData({
+        ...equalEmploymentData,
+        ethnicity: [...currentEthnicity, ethnicity]
+      });
+    }
+  };
+  
+  // Function to handle gender selection
+  const handleGenderChange = (gender: "Male" | "Female" | "Non-Binary" | "Decline" | null) => {
+    setEqualEmploymentData({
+      ...equalEmploymentData,
+      gender
+    });
+  };
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -846,435 +934,4 @@ const Profile = () => {
                               </div>
                             ) : (
                               <>
-                                <div className="flex items-start justify-between">
-                                  <div>
-                                    <h3 className="font-semibold">{experience.title}</h3>
-                                    <p className="text-sm">{experience.company} • {experience.location}</p>
-                                    <p className="text-sm text-muted-foreground">{experience.startDate} - {experience.endDate}</p>
-                                  </div>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-8 w-8"
-                                    onClick={() => handleEditWorkExperience(experience.id, { isEditingThisItem: true })}
-                                  >
-                                    <Pencil className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                                <div className="whitespace-pre-line text-sm">
-                                  {experience.description}
-                                </div>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                    
-                    {workExperiences.length === 0 && (
-                      <div className="text-center p-6">
-                        <p className="text-muted-foreground">No work experience added yet.</p>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="mt-2"
-                          onClick={handleAddWorkExperience}
-                        >
-                          Add Your First Work Experience
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-                
-                {/* Education */}
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>Education</CardTitle>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="flex items-center gap-2"
-                      onClick={handleAddEducation}
-                    >
-                      <Plus className="h-4 w-4" />
-                      Add Education
-                    </Button>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    {educations.map((education, index) => (
-                      <div key={education.id}>
-                        {index > 0 && <Separator className="my-6" />}
-                        <div className="flex gap-4">
-                          <div className="flex-shrink-0">
-                            <Avatar className="h-12 w-12">
-                              <AvatarImage src="/lovable-uploads/8d78f162-7185-4058-b018-02e6724321d1.png" alt="Georgia Tech" />
-                              <AvatarFallback>{education.school.split(' ').map(s => s[0]).join('').substring(0, 2)}</AvatarFallback>
-                            </Avatar>
-                          </div>
-                          <div className="flex-1">
-                            {education.isEditingThisItem ? (
-                              <div className="space-y-4">
-                                <Input 
-                                  placeholder="School Name" 
-                                  value={education.school}
-                                  onChange={(e) => handleEditEducation(education.id, { school: e.target.value })}
-                                />
-                                <div className="grid gap-4 md:grid-cols-2">
-                                  <Select
-                                    value={education.degree}
-                                    onValueChange={(value) => handleEditEducation(education.id, { degree: value })}
-                                  >
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Degree Type" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="Associate's">Associate's</SelectItem>
-                                      <SelectItem value="Bachelor's">Bachelor's</SelectItem>
-                                      <SelectItem value="Master's">Master's</SelectItem>
-                                      <SelectItem value="Doctorate">Doctorate</SelectItem>
-                                      <SelectItem value="Certificate">Certificate</SelectItem>
-                                      <SelectItem value="High School">High School</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                  <Input 
-                                    placeholder="Field of Study" 
-                                    value={education.field}
-                                    onChange={(e) => handleEditEducation(education.id, { field: e.target.value })}
-                                  />
-                                </div>
-                                <div className="grid gap-4 md:grid-cols-2">
-                                  <Input 
-                                    placeholder="Start Date (e.g. Sep 2022)" 
-                                    value={education.startDate}
-                                    onChange={(e) => handleEditEducation(education.id, { startDate: e.target.value })}
-                                  />
-                                  <Input 
-                                    placeholder="End Date (e.g. May 2026 or Present)" 
-                                    value={education.endDate}
-                                    onChange={(e) => handleEditEducation(education.id, { endDate: e.target.value })}
-                                  />
-                                </div>
-                                <div className="flex justify-end gap-2">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => handleEditEducation(education.id, { isEditingThisItem: false })}
-                                  >
-                                    Cancel
-                                  </Button>
-                                  <Button 
-                                    variant="destructive" 
-                                    size="sm"
-                                    onClick={() => handleDeleteEducation(education.id)}
-                                  >
-                                    Delete
-                                  </Button>
-                                  <Button 
-                                    size="sm"
-                                    onClick={() => handleSaveEducation(education.id)}
-                                  >
-                                    Save
-                                  </Button>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="flex items-start justify-between">
-                                <div>
-                                  <h3 className="font-semibold">{education.school}</h3>
-                                  <p className="text-sm">{education.degree}, {education.field}</p>
-                                  <p className="text-sm text-muted-foreground">{education.startDate} - {education.endDate}</p>
-                                </div>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  className="h-8 w-8"
-                                  onClick={() => handleEditEducation(education.id, { isEditingThisItem: true })}
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                    
-                    {educations.length === 0 && (
-                      <div className="text-center p-6">
-                        <p className="text-muted-foreground">No education added yet.</p>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="mt-2"
-                          onClick={handleAddEducation}
-                        >
-                          Add Your Education
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-                
-                {/* Projects */}
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>Projects & Outside Experience</CardTitle>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="flex items-center gap-2"
-                      onClick={handleAddProject}
-                    >
-                      <Plus className="h-4 w-4" />
-                      Add Project
-                    </Button>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    {projects.map((project, index) => (
-                      <div key={project.id}>
-                        {index > 0 && <Separator className="my-6" />}
-                        <div className="flex gap-4">
-                          <div className="bg-cyan-100 rounded-md p-3 h-12 w-12 flex items-center justify-center flex-shrink-0">
-                            <Wrench className="h-5 w-5 text-cyan-600" />
-                          </div>
-                          <div className="space-y-2 flex-1">
-                            {project.isEditingThisItem ? (
-                              <div className="space-y-4">
-                                <Input 
-                                  placeholder="Project Name" 
-                                  value={project.name}
-                                  onChange={(e) => handleEditProject(project.id, { name: e.target.value })}
-                                />
-                                <div className="grid gap-4 md:grid-cols-2">
-                                  <Input 
-                                    placeholder="Start Date (e.g. Jan 2022)" 
-                                    value={project.startDate}
-                                    onChange={(e) => handleEditProject(project.id, { startDate: e.target.value })}
-                                  />
-                                  <Input 
-                                    placeholder="End Date (e.g. Dec 2023 or Present)" 
-                                    value={project.endDate}
-                                    onChange={(e) => handleEditProject(project.id, { endDate: e.target.value })}
-                                  />
-                                </div>
-                                <Textarea 
-                                  placeholder="Description of your project" 
-                                  value={project.description}
-                                  onChange={(e) => handleEditProject(project.id, { description: e.target.value })}
-                                  className="min-h-[100px]"
-                                />
-                                <div className="flex justify-end gap-2">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => handleEditProject(project.id, { isEditingThisItem: false })}
-                                  >
-                                    Cancel
-                                  </Button>
-                                  <Button 
-                                    variant="destructive" 
-                                    size="sm"
-                                    onClick={() => handleDeleteProject(project.id)}
-                                  >
-                                    Delete
-                                  </Button>
-                                  <Button 
-                                    size="sm"
-                                    onClick={() => handleSaveProject(project.id)}
-                                  >
-                                    Save
-                                  </Button>
-                                </div>
-                              </div>
-                            ) : (
-                              <>
-                                <div className="flex items-start justify-between">
-                                  <div>
-                                    <h3 className="font-semibold">{project.name}</h3>
-                                    <p className="text-sm text-muted-foreground">{project.startDate} - {project.endDate}</p>
-                                  </div>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-8 w-8"
-                                    onClick={() => handleEditProject(project.id, { isEditingThisItem: true })}
-                                  >
-                                    <Pencil className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                                <div className="whitespace-pre-line text-sm">
-                                  {project.description}
-                                </div>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                    
-                    {projects.length === 0 && (
-                      <div className="text-center p-6">
-                        <p className="text-muted-foreground">No projects added yet.</p>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="mt-2"
-                          onClick={handleAddProject}
-                        >
-                          Add Your First Project
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-                
-                {/* Portfolio & Socials */}
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>Portfolio & Socials</CardTitle>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => {
-                        if (isEditingAnySocialLinks) {
-                          setSocialLinks(prev => prev.map(link => ({...link, isEditingThisItem: false})));
-                        } else {
-                          setSocialLinks(prev => prev.map(link => ({...link, isEditingThisItem: true})));
-                        }
-                      }}
-                    >
-                      {isEditingAnySocialLinks ? <Check className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
-                    </Button>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {socialLinks.map((link) => (
-                      <div key={link.type} className="flex items-center gap-3">
-                        {getSocialLinkIcon(link.type)}
-                        <div className="flex-1">
-                          <p className="font-medium">{getSocialLinkTitle(link.type)}</p>
-                          {link.isEditingThisItem ? (
-                            <Input
-                              value={link.url}
-                              onChange={(e) => handleEditSocialLink(link.type, e.target.value)}
-                              placeholder={`Enter your ${link.type} URL`}
-                              className="mt-1"
-                            />
-                          ) : (
-                            link.url ? (
-                              <a href={link.url} className="text-sm text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">
-                                {link.url}
-                              </a>
-                            ) : (
-                              <p className="text-sm text-muted-foreground italic">Not provided</p>
-                            )
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                    
-                    {isEditingAnySocialLinks && (
-                      <div className="flex justify-end mt-4">
-                        <Button onClick={handleSaveSocialLinks}>
-                          Save Links
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-                
-                {/* Skills */}
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>Skills</CardTitle>
-                    <Button variant="ghost" size="icon">
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        "Python", "Java", "MATLAB", "HTML/CSS", "Blender",
-                        "Adobe Premiere Pro", "Adobe Photoshop", "Animation",
-                        "C/C++", "Firebase", "Excel/Numbers/Sheets", "Business Analytics",
-                        "Adobe Illustrator", "Git", "Agile", "AngularJS",
-                        "Arduino", "Assembly", "AutoCAD", "Bash", "CAD",
-                        "Adobe Lightroom", "Adobe After Effects", "Adobe Creative Suite",
-                        "Canva", "Communications", "Data Analysis", "Data Science",
-                        "Data Structures & Algorithms", "Discrete Math", "Flask",
-                        "JavaScript", "Jupyter", "Linux/Unix", "MySQL", "MongoDB",
-                        "Microeconomics", "React.js", "Wireshark", "Next.js",
-                        "Node.js", "NoSQL", "NumPy", "Oscilloscope", "Oracle",
-                        "Power BI", "PowerShell", "PowerPoint/Keynote/Slides", "Pandas"
-                      ].map((skill, index) => (
-                        <Badge key={index} className="bg-cyan-100 text-cyan-800 hover:bg-cyan-200">
-                          {skill}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                {/* Languages */}
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>Languages</CardTitle>
-                    <Button variant="ghost" size="icon">
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-2">
-                      <Badge className="bg-cyan-100 text-cyan-800 hover:bg-cyan-200">
-                        Spanish
-                      </Badge>
-                      <Badge className="bg-cyan-100 text-cyan-800 hover:bg-cyan-200">
-                        Telugu
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-            
-            {/* Other tabs - placeholders */}
-            <TabsContent value="preferences">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Job Preferences</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">Your job preferences settings will appear here.</p>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="equal">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Equal Employment</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">Equal employment information will appear here.</p>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="settings">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Account Settings</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">Account settings will appear here.</p>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default Profile;
+                                <div className="flex items-start justify
