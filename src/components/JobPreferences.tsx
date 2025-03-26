@@ -1,776 +1,1275 @@
 
-import { useState, useEffect } from 'react';
-import { Check, ChevronRight, Edit, MapPin, Plus, Save, X } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { 
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
-} from "@/components/ui/dialog";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { 
-  Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle 
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
+import { Slider } from "@/components/ui/slider";
+import { X, Check, ChevronLeft, ChevronRight, Info } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 
-// Types for job preferences
-interface JobValue {
-  id: string;
-  name: string;
-  selected: boolean;
-}
-
-interface JobLocation {
-  id: string;
-  name: string;
-  selected: boolean;
-}
-
-interface JobRole {
-  id: string;
-  name: string;
-  selected: boolean;
-}
-
-interface Industry {
-  id: string;
-  name: string;
-  selected: boolean;
-}
-
+// Define types for our job preferences
 interface JobPreference {
-  id: string;
-  jobValues: JobValue[];
-  locations: JobLocation[];
-  roles: JobRole[];
-  industries: Industry[];
-  experienceYears: number;
-  remotePreference: string;
-  salaryExpectation: string;
-  workSchedulePreference: string[];
-  additionalNotes: string;
-  willingToRelocate: boolean;
-  createdAt: string;
-  updatedAt: string;
+  values: string[];
+  roleTypes: string[];
+  roleSpecializations: Record<string, string[]>;
+  locations: {
+    countries: Record<string, string[]>;
+  };
+  experienceLevels: string[];
+  companySizes: string[];
+  industries: string[];
+  avoidIndustries: string[];
+  skills: string[];
+  avoidSkills: string[];
+  minSalary: number;
+  securityClearance: boolean;
+  jobSearchStatus: string;
 }
 
-// Mock data for job values
-const jobValuesList: JobValue[] = [
-  { id: '1', name: 'Work-life balance', selected: false },
-  { id: '2', name: 'Professional growth', selected: false },
-  { id: '3', name: 'Meaningful work', selected: false },
-  { id: '4', name: 'Collaborative environment', selected: false },
-  { id: '5', name: 'Creative freedom', selected: false },
-  { id: '6', name: 'Diversity & inclusion', selected: false },
-  { id: '7', name: 'Leadership opportunities', selected: false },
-  { id: '8', name: 'Innovation', selected: false },
-  { id: '9', name: 'Compensation', selected: false },
-  { id: '10', name: 'Job security', selected: false },
-  { id: '11', name: 'Recognition', selected: false },
-  { id: '12', name: 'Ethical practices', selected: false },
-];
-
-// Mock data for locations
-const locationsList: JobLocation[] = [
-  { id: '1', name: 'San Francisco, CA', selected: false },
-  { id: '2', name: 'New York, NY', selected: false },
-  { id: '3', name: 'Austin, TX', selected: false },
-  { id: '4', name: 'Seattle, WA', selected: false },
-  { id: '5', name: 'Chicago, IL', selected: false },
-  { id: '6', name: 'Los Angeles, CA', selected: false },
-  { id: '7', name: 'Boston, MA', selected: false },
-  { id: '8', name: 'Denver, CO', selected: false },
-  { id: '9', name: 'Atlanta, GA', selected: false },
-  { id: '10', name: 'Remote', selected: false },
-];
-
-// Mock data for roles
-const rolesList: JobRole[] = [
-  { id: '1', name: 'Software Engineer', selected: false },
-  { id: '2', name: 'Frontend Developer', selected: false },
-  { id: '3', name: 'Backend Developer', selected: false },
-  { id: '4', name: 'Full Stack Developer', selected: false },
-  { id: '5', name: 'DevOps Engineer', selected: false },
-  { id: '6', name: 'Data Scientist', selected: false },
-  { id: '7', name: 'Product Manager', selected: false },
-  { id: '8', name: 'UX Designer', selected: false },
-  { id: '9', name: 'QA Engineer', selected: false },
-  { id: '10', name: 'Technical Writer', selected: false },
-];
-
-// Mock data for industries
-const industriesList: Industry[] = [
-  { id: '1', name: 'Technology', selected: false },
-  { id: '2', name: 'Finance', selected: false },
-  { id: '3', name: 'Healthcare', selected: false },
-  { id: '4', name: 'Education', selected: false },
-  { id: '5', name: 'E-commerce', selected: false },
-  { id: '6', name: 'Entertainment', selected: false },
-  { id: '7', name: 'Travel', selected: false },
-  { id: '8', name: 'Retail', selected: false },
-  { id: '9', name: 'Manufacturing', selected: false },
-  { id: '10', name: 'Consulting', selected: false },
-];
-
-// Mock saved preference
-const mockSavedPreference: JobPreference = {
-  id: '1',
-  jobValues: [
-    { id: '1', name: 'Work-life balance', selected: true },
-    { id: '3', name: 'Meaningful work', selected: true },
-    { id: '9', name: 'Compensation', selected: true },
-  ],
-  locations: [
-    { id: '1', name: 'San Francisco, CA', selected: true },
-    { id: '10', name: 'Remote', selected: true },
-  ],
-  roles: [
-    { id: '2', name: 'Frontend Developer', selected: true },
-    { id: '4', name: 'Full Stack Developer', selected: true },
-  ],
-  industries: [
-    { id: '1', name: 'Technology', selected: true },
-    { id: '5', name: 'E-commerce', selected: true },
-  ],
-  experienceYears: 3,
-  remotePreference: 'Hybrid',
-  salaryExpectation: '$120,000 - $150,000',
-  workSchedulePreference: ['Full-time'],
-  additionalNotes: 'Looking for a company with a strong engineering culture and opportunities for growth.',
-  willingToRelocate: true,
-  createdAt: '2023-05-15T12:00:00Z',
-  updatedAt: '2023-07-20T14:30:00Z',
+const defaultJobPreference: JobPreference = {
+  values: [],
+  roleTypes: [],
+  roleSpecializations: {},
+  locations: {
+    countries: {}
+  },
+  experienceLevels: [],
+  companySizes: [],
+  industries: [],
+  avoidIndustries: [],
+  skills: [],
+  avoidSkills: [],
+  minSalary: 0,
+  securityClearance: false,
+  jobSearchStatus: "Actively looking"
 };
 
-export default function JobPreferences() {
-  const [isEditMode, setIsEditMode] = useState(false);
+const JobPreferencesDialog = ({ onSave }: { onSave: (prefs: JobPreference) => void }) => {
   const [currentStep, setCurrentStep] = useState(1);
-  const [progress, setProgress] = useState(0);
-  const [searchLocation, setSearchLocation] = useState('');
-  const [searchRole, setSearchRole] = useState('');
-  const [showSavedPreference, setShowSavedPreference] = useState(true);
-  
-  // State for job preferences
-  const [jobValues, setJobValues] = useState<JobValue[]>(jobValuesList);
-  const [locations, setLocations] = useState<JobLocation[]>(locationsList);
-  const [roles, setRoles] = useState<JobRole[]>(rolesList);
-  const [industries, setIndustries] = useState<Industry[]>(industriesList);
-  const [experienceYears, setExperienceYears] = useState(0);
-  const [remotePreference, setRemotePreference] = useState('No preference');
-  const [salaryExpectation, setSalaryExpectation] = useState('');
-  const [workSchedulePreference, setWorkSchedulePreference] = useState<string[]>([]);
-  const [additionalNotes, setAdditionalNotes] = useState('');
-  const [willingToRelocate, setWillingToRelocate] = useState(false);
-  
-  // For loading saved preferences
-  const [savedPreference, setSavedPreference] = useState<JobPreference | null>(null);
-  
-  useEffect(() => {
-    // Load saved preference (simulated)
-    setSavedPreference(mockSavedPreference);
-    
-    // Update progress based on current step
-    const totalSteps = 5;
-    setProgress((currentStep / totalSteps) * 100);
-  }, [currentStep]);
-  
-  // Filter locations based on search term
-  const filteredLocations = locations.filter(location => 
-    location.name.toLowerCase().includes(searchLocation.toLowerCase())
-  );
-  
-  // Filter roles based on search term
-  const filteredRoles = roles.filter(role => 
-    role.name.toLowerCase().includes(searchRole.toLowerCase())
-  );
-  
-  // Toggle selection of job values
-  const toggleJobValue = (id: string) => {
-    setJobValues(jobValues.map(value => 
-      value.id === id ? { ...value, selected: !value.selected } : value
-    ));
-  };
-  
-  // Toggle selection of locations
-  const toggleLocation = (id: string) => {
-    setLocations(locations.map(location => 
-      location.id === id ? { ...location, selected: !location.selected } : location
-    ));
-  };
-  
-  // Toggle selection of roles
-  const toggleRole = (id: string) => {
-    setRoles(roles.map(role => 
-      role.id === id ? { ...role, selected: !role.selected } : role
-    ));
-  };
-  
-  // Toggle selection of industries
-  const toggleIndustry = (id: string) => {
-    setIndustries(industries.map(industry => 
-      industry.id === id ? { ...industry, selected: !industry.selected } : industry
-    ));
-  };
-  
-  // Toggle work schedule preference
-  const toggleWorkSchedule = (schedule: string) => {
-    if (workSchedulePreference.includes(schedule)) {
-      setWorkSchedulePreference(workSchedulePreference.filter(s => s !== schedule));
-    } else {
-      setWorkSchedulePreference([...workSchedulePreference, schedule]);
+  const [progress, setProgress] = useState(10);
+  const [jobPreference, setJobPreference] = useState<JobPreference>(defaultJobPreference);
+
+  // Available options for each preference section
+  const availableValues = [
+    "Diversity & inclusion",
+    "Impactful work",
+    "Independence & autonomy",
+    "Innovative product & tech",
+    "Mentorship & career development",
+    "Progressive leadership",
+    "Recognition & reward",
+    "Role mobility",
+    "Social responsibility & sustainability",
+    "Transparency & communication",
+    "Work-life balance"
+  ];
+
+  const roleCategories = [
+    {
+      name: "Technical & Engineering",
+      roles: [
+        "Aerospace Engineering",
+        "AI & Machine Learning",
+        "Architecture & Civil Engineering",
+        "Data & Analytics",
+        "Developer Relations",
+        "DevOps & Infrastructure",
+        "Electrical Engineering",
+        "Engineering Management",
+        "Hardware Engineering",
+        "IT & Security",
+        "Mechanical Engineering",
+        "Process Engineering",
+        "QA & Testing",
+        "Quantitative Finance",
+        "Quantum Computing",
+        "Sales & Solution Engineering",
+        "Software Engineering"
+      ]
+    },
+    {
+      name: "Finance & Operations & Strategy",
+      roles: [
+        "Accounting",
+        "Business & Strategy",
+        "Consulting",
+        "Finance & Banking",
+        "Growth & Marketing",
+        "Operations & Logistics",
+        "Product",
+        "Real Estate",
+        "Retail",
+        "Sales & Account Management"
+      ]
+    },
+    {
+      name: "Creative & Design",
+      roles: [
+        "Art, Graphics & Animation",
+        "Audio & Sound Design",
+        "Content & Writing",
+        "Creative Production",
+        "Journalism",
+        "Social Media",
+        "UI/UX & Design"
+      ]
+    },
+    {
+      name: "Education & Training",
+      roles: [
+        "Education",
+        "Training"
+      ]
+    },
+    {
+      name: "Legal & Support & Administration",
+      roles: [
+        "Administrative & Executive Assistance",
+        "Clerical & Data Entry",
+        "Customer Experience & Support",
+        "Legal & Compliance",
+        "People & HR",
+        "Security & Protective Services"
+      ]
+    },
+    {
+      name: "Life Sciences",
+      roles: [
+        "Biology & Biotech",
+        "Lab & Research",
+        "Medical, Clinical & Veterinary"
+      ]
     }
+  ];
+
+  const roleSpecializations: Record<string, string[]> = {
+    "AI & Machine Learning": [
+      "AI Research",
+      "Applied Machine Learning",
+      "Computer Vision",
+      "Conversational AI & Chatbots",
+      "Deep Learning",
+      "Natural Language Processing (NLP)",
+      "Robotics & Autonomous Systems",
+      "Speech Recognition"
+    ],
+    "Data & Analytics": [
+      "Data Analysis",
+      "Data Engineering",
+      "Data Management",
+      "Data Science"
+    ],
+    "DevOps & Infrastructure": [
+      "Cloud Analyst",
+      "Cloud Engineering", 
+      "Database Administration",
+      "DevOps Engineering",
+      "Financial Operations",
+      "Network Engineering",
+      "Platform Engineering",
+      "Server Administration",
+      "Site Reliability Engineering"
+    ],
+    "Software Engineering": [
+      "Android Development",
+      "Backend Engineering",
+      "Embedded Engineering",
+      "FinTech Engineering",
+      "Frontend Engineering",
+      "Full-Stack Engineering",
+      "Game Engineering",
+      "iOS Development",
+      "IT & Support",
+      "Mobile Engineering",
+      "Security Engineering",
+      "Software QA & Testing",
+      "Web Development"
+    ],
+    "Quantitative Finance": [
+      "Algorithm Development",
+      "Quantitative Analysis",
+      "Quantitative Research",
+      "Quantitative Trading"
+    ]
   };
-  
-  // Reset form to saved preferences
-  const resetForm = () => {
-    if (savedPreference) {
-      // Reset all form fields to saved preference values
-      setJobValues(jobValuesList.map(value => ({
-        ...value,
-        selected: savedPreference.jobValues.some(v => v.id === value.id && v.selected),
-      })));
-      
-      setLocations(locationsList.map(location => ({
-        ...location,
-        selected: savedPreference.locations.some(l => l.id === location.id && l.selected),
-      })));
-      
-      setRoles(rolesList.map(role => ({
-        ...role,
-        selected: savedPreference.roles.some(r => r.id === role.id && r.selected),
-      })));
-      
-      setIndustries(industriesList.map(industry => ({
-        ...industry,
-        selected: savedPreference.industries.some(i => i.id === industry.id && i.selected),
-      })));
-      
-      setExperienceYears(savedPreference.experienceYears);
-      setRemotePreference(savedPreference.remotePreference);
-      setSalaryExpectation(savedPreference.salaryExpectation);
-      setWorkSchedulePreference(savedPreference.workSchedulePreference);
-      setAdditionalNotes(savedPreference.additionalNotes);
-      setWillingToRelocate(savedPreference.willingToRelocate);
+
+  const countries = [
+    {
+      name: "United States",
+      cities: [
+        "Atlanta",
+        "Austin",
+        "Boston",
+        "Charlotte",
+        "Chicago",
+        "Dallas",
+        "Denver",
+        "Las Vegas",
+        "Los Angeles",
+        "Miami",
+        "New York City",
+        "Philadelphia",
+        "Pittsburgh",
+        "Portland",
+        "Remote in USA",
+        "San Diego",
+        "San Francisco Bay Area",
+        "Seattle",
+        "Washington D.C."
+      ]
+    },
+    {
+      name: "Canada",
+      cities: [
+        "Montreal",
+        "Ottawa",
+        "Quebec City",
+        "Remote in Canada",
+        "Toronto",
+        "Vancouver",
+        "Winnipeg"
+      ]
+    },
+    {
+      name: "United Kingdom",
+      cities: [
+        "Birmingham",
+        "Liverpool",
+        "London",
+        "Manchester",
+        "Remote in UK"
+      ]
     }
-  };
-  
-  // Save job preferences
-  const savePreferences = () => {
-    // Create a new preference object
-    const newPreference: JobPreference = {
-      id: savedPreference ? savedPreference.id : Date.now().toString(),
-      jobValues: jobValues.filter(value => value.selected),
-      locations: locations.filter(location => location.selected),
-      roles: roles.filter(role => role.selected),
-      industries: industries.filter(industry => industry.selected),
-      experienceYears,
-      remotePreference,
-      salaryExpectation,
-      workSchedulePreference,
-      additionalNotes,
-      willingToRelocate,
-      createdAt: savedPreference ? savedPreference.createdAt : new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    
-    // Update saved preference
-    setSavedPreference(newPreference);
-    setIsEditMode(false);
-    setCurrentStep(1);
-    setShowSavedPreference(true);
-    
-    toast.success("Job preferences saved", {
-      description: "Your job preferences have been updated successfully."
+  ];
+
+  const experienceLevels = [
+    "Internship",
+    "Entry Level & New Grad",
+    "Junior (1 to 2 years)",
+    "Mid-level (3 to 4 years)",
+    "Senior (5 to 8 years)",
+    "Expert & Leadership (9+ years)"
+  ];
+
+  const companySizes = [
+    "1-10 employees",
+    "11-50 employees",
+    "51-200 employees",
+    "201-500 employees",
+    "501-1,000 employees",
+    "1,001-5,000 employees",
+    "5,001-10,000 employees",
+    "10,001+ employees"
+  ];
+
+  const industries = [
+    "Aerospace",
+    "AI & Machine Learning",
+    "Automotive & Transportation",
+    "Biotechnology",
+    "Consulting",
+    "Consumer Goods",
+    "Consumer Software",
+    "Crypto & Web3",
+    "Cybersecurity",
+    "Data & Analytics",
+    "Defense",
+    "Design",
+    "Education",
+    "Energy",
+    "Enterprise Software",
+    "Entertainment",
+    "Financial Services",
+    "Fintech",
+    "Food & Agriculture",
+    "Gaming",
+    "Government & Public Sector",
+    "Hardware",
+    "Healthcare",
+    "Industrial & Manufacturing",
+    "Legal",
+    "Quantitative Finance",
+    "Real Estate",
+    "Robotics & Automation",
+    "Social Impact",
+    "Venture Capital",
+    "VR & AR"
+  ];
+
+  const skills = [
+    "Adobe Illustrator",
+    "Business Analytics",
+    "Excel/Numbers/Sheets",
+    "Git",
+    "HTML/CSS",
+    "Java",
+    "MailChimp",
+    "MATLAB",
+    "Operations Research",
+    "Python",
+    "SEO",
+    "Zendesk",
+    "Blender",
+    "Adobe Premiere Pro",
+    "Adobe Photoshop",
+    "Animation",
+    "C/C++",
+    "Firebase",
+    "Agile",
+    "Angular.js",
+    "Arduino",
+    "Assembly",
+    "AutoCAD",
+    "Bash",
+    "CAD",
+    "Adobe Lightroom",
+    "Adobe After Effects",
+    "Adobe Creative Suite",
+    "Canva",
+    "Communications",
+    "Data Analysis",
+    "Data Science",
+    "Data Structures & Algorithms",
+    "Discrete Math",
+    "Flask",
+    "JavaScript",
+    "Jupyter",
+    "Linux/Unix",
+    "MySQL",
+    "MongoDB",
+    "Microeconomics",
+    "React.js",
+    "Wireshark",
+    "Next.js",
+    "Node.js",
+    "NoSQL",
+    "NumPy",
+    "Oscilloscope",
+    "Oracle",
+    "Power BI",
+    "PowerShell",
+    "PowerPoint/Keynote/Slides",
+    "Pandas",
+    "Printed Circuit Board (PCB) Design",
+    "Public Speaking",
+    "Product Management",
+    "PyTorch",
+    "Word/Pages/Docs",
+    "VHDL",
+    "Verilog",
+    "Vercel",
+    "Web Development",
+    "VLSI Design",
+    "TCP/IP",
+    "Video Editing",
+    "Selenium",
+    "SQL",
+    "Software Testing"
+  ];
+
+  // Helper functions to update job preferences
+  const toggleValue = (value: string) => {
+    setJobPreference(prev => {
+      const newValues = prev.values.includes(value)
+        ? prev.values.filter(v => v !== value)
+        : [...prev.values, value];
+      return { ...prev, values: newValues };
     });
   };
-  
-  // Go to next step in wizard
-  const nextStep = () => {
-    if (currentStep < 5) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      savePreferences();
-    }
+
+  const toggleRoleType = (role: string) => {
+    setJobPreference(prev => {
+      const newRoleTypes = prev.roleTypes.includes(role)
+        ? prev.roleTypes.filter(r => r !== role)
+        : [...prev.roleTypes, role];
+      return { ...prev, roleTypes: newRoleTypes };
+    });
   };
-  
-  // Go to previous step in wizard
-  const prevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    } else {
-      setIsEditMode(false);
-      setShowSavedPreference(true);
-      resetForm();
-    }
+
+  const toggleRoleSpecialization = (roleType: string, specialization: string) => {
+    setJobPreference(prev => {
+      const prevSpecializations = prev.roleSpecializations[roleType] || [];
+      const newSpecializations = prevSpecializations.includes(specialization)
+        ? prevSpecializations.filter(s => s !== specialization)
+        : [...prevSpecializations, specialization];
+      
+      return { 
+        ...prev, 
+        roleSpecializations: { 
+          ...prev.roleSpecializations, 
+          [roleType]: newSpecializations 
+        } 
+      };
+    });
   };
-  
-  // Start editing preferences
-  const startEditing = () => {
-    resetForm();
-    setIsEditMode(true);
-    setShowSavedPreference(false);
+
+  const toggleLocation = (country: string, city: string) => {
+    setJobPreference(prev => {
+      const prevCities = prev.locations.countries[country] || [];
+      const newCities = prevCities.includes(city)
+        ? prevCities.filter(c => c !== city)
+        : [...prevCities, city];
+      
+      return { 
+        ...prev, 
+        locations: { 
+          ...prev.locations,
+          countries: {
+            ...prev.locations.countries,
+            [country]: newCities
+          } 
+        } 
+      };
+    });
   };
-  
-  // Render job values selection step
-  const renderJobValuesStep = () => {
-    return (
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium">What matters most to you in a job?</h3>
-        <p className="text-sm text-muted-foreground">
-          Select up to 5 values that are important to you in your next role.
-        </p>
-        
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4">
-          {jobValues.map((value) => (
-            <button
-              key={value.id}
-              onClick={() => toggleJobValue(value.id)}
-              className={`p-3 rounded-lg border text-left flex items-start space-x-2 ${
-                value.selected 
-                  ? 'border-primary bg-primary/10 text-primary' 
-                  : 'border-border hover:border-primary/50'
-              }`}
-            >
-              <div className={`mt-0.5 rounded-full w-4 h-4 border flex items-center justify-center ${
-                value.selected ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground'
-              }`}>
-                {value.selected && <Check className="h-3 w-3" />}
-              </div>
-              <span>{value.name}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-    );
+
+  const toggleExperienceLevel = (level: string) => {
+    setJobPreference(prev => {
+      const newLevels = prev.experienceLevels.includes(level)
+        ? prev.experienceLevels.filter(l => l !== level)
+        : [...prev.experienceLevels, level];
+      return { ...prev, experienceLevels: newLevels };
+    });
   };
-  
-  // Render location preferences step
-  const renderLocationStep = () => {
-    return (
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium">Where would you like to work?</h3>
-        <p className="text-sm text-muted-foreground">
-          Select locations where you'd be interested in working.
-        </p>
-        
-        <div className="relative">
-          <Input
-            placeholder="Search locations..."
-            value={searchLocation}
-            onChange={(e) => setSearchLocation(e.target.value)}
-            className="pl-9"
-          />
-          <div className="absolute left-3 top-2.5 text-muted-foreground">
-            <MapPin className="h-4 w-4" />
-          </div>
-        </div>
-        
-        <ScrollArea className="h-[240px] mt-2 rounded-md border p-2">
-          <div className="space-y-2">
-            {filteredLocations.map((location) => (
-              <button
-                key={location.id}
-                onClick={() => toggleLocation(location.id)}
-                className={`w-full p-2 rounded-md text-left flex items-center space-x-2 ${
-                  location.selected 
-                    ? 'bg-primary/10 text-primary' 
-                    : 'hover:bg-muted'
-                }`}
-              >
-                <div className={`rounded-full w-4 h-4 border flex items-center justify-center ${
-                  location.selected ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground'
-                }`}>
-                  {location.selected && <Check className="h-3 w-3" />}
-                </div>
-                <span>{location.name}</span>
-              </button>
-            ))}
-          </div>
-        </ScrollArea>
-        
-        <div className="flex items-center space-x-2 mt-4">
-          <Switch
-            id="willing-to-relocate"
-            checked={willingToRelocate}
-            onCheckedChange={setWillingToRelocate}
-          />
-          <Label htmlFor="willing-to-relocate">I'm willing to relocate for the right opportunity</Label>
-        </div>
-      </div>
-    );
+
+  const toggleCompanySize = (size: string) => {
+    setJobPreference(prev => {
+      const newSizes = prev.companySizes.includes(size)
+        ? prev.companySizes.filter(s => s !== size)
+        : [...prev.companySizes, size];
+      return { ...prev, companySizes: newSizes };
+    });
   };
-  
-  // Render role preferences step
-  const renderRoleStep = () => {
-    return (
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium">What roles are you looking for?</h3>
-        <p className="text-sm text-muted-foreground">
-          Select all roles that you would be interested in.
-        </p>
-        
-        <div className="relative">
-          <Input
-            placeholder="Search roles..."
-            value={searchRole}
-            onChange={(e) => setSearchRole(e.target.value)}
-            className="pl-9"
-          />
-          <div className="absolute left-3 top-2.5 text-muted-foreground">
-            <MapPin className="h-4 w-4" />
-          </div>
-        </div>
-        
-        <ScrollArea className="h-[240px] mt-2 rounded-md border p-2">
-          <div className="space-y-2">
-            {filteredRoles.map((role) => (
-              <button
-                key={role.id}
-                onClick={() => toggleRole(role.id)}
-                className={`w-full p-2 rounded-md text-left flex items-center space-x-2 ${
-                  role.selected 
-                    ? 'bg-primary/10 text-primary' 
-                    : 'hover:bg-muted'
-                }`}
-              >
-                <div className={`rounded-full w-4 h-4 border flex items-center justify-center ${
-                  role.selected ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground'
-                }`}>
-                  {role.selected && <Check className="h-3 w-3" />}
-                </div>
-                <span>{role.name}</span>
-              </button>
-            ))}
-          </div>
-        </ScrollArea>
-        
-        <div className="space-y-4 mt-4">
-          <div>
-            <Label>Years of Experience</Label>
-            <div className="flex justify-between text-xs text-muted-foreground mt-1">
-              <span>0 years</span>
-              <span>10+ years</span>
-            </div>
-            <Slider
-              value={[experienceYears]}
-              min={0}
-              max={10}
-              step={1}
-              onValueChange={(value) => setExperienceYears(value[0])}
-              className="mt-2"
-            />
-            <div className="text-center mt-2">
-              <span className="text-sm font-medium">{experienceYears} {experienceYears === 1 ? 'year' : 'years'}</span>
-            </div>
-          </div>
-          
-          <div>
-            <Label>Industries</Label>
-            <div className="grid grid-cols-2 gap-2 mt-2">
-              {industries.map((industry) => (
-                <button
-                  key={industry.id}
-                  onClick={() => toggleIndustry(industry.id)}
-                  className={`p-2 text-sm rounded-md text-left ${
-                    industry.selected 
-                      ? 'bg-primary/10 text-primary' 
-                      : 'border hover:bg-muted'
-                  }`}
-                >
-                  {industry.name}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+
+  const toggleIndustry = (industry: string) => {
+    setJobPreference(prev => {
+      const newIndustries = prev.industries.includes(industry)
+        ? prev.industries.filter(i => i !== industry)
+        : [...prev.industries, industry];
+      return { ...prev, industries: newIndustries };
+    });
   };
-  
-  // Render work preferences step
-  const renderWorkPreferencesStep = () => {
-    return (
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium">Work Preferences</h3>
-        <p className="text-sm text-muted-foreground">
-          Tell us about your ideal working conditions.
-        </p>
-        
-        <div className="space-y-4 mt-4">
-          <div>
-            <Label>Remote Work Preference</Label>
-            <div className="grid grid-cols-3 gap-2 mt-2">
-              {['Remote', 'Hybrid', 'On-site'].map((option) => (
-                <button
-                  key={option}
-                  onClick={() => setRemotePreference(option)}
-                  className={`p-2 rounded-md text-center ${
-                    remotePreference === option 
-                      ? 'bg-primary text-primary-foreground' 
-                      : 'border hover:bg-muted'
-                  }`}
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
-          </div>
-          
-          <div>
-            <Label>Work Schedule</Label>
-            <div className="grid grid-cols-2 gap-2 mt-2">
-              {['Full-time', 'Part-time', 'Contract', 'Temporary'].map((option) => (
-                <button
-                  key={option}
-                  onClick={() => toggleWorkSchedule(option)}
-                  className={`p-2 rounded-md text-center ${
-                    workSchedulePreference.includes(option) 
-                      ? 'bg-primary/10 text-primary' 
-                      : 'border hover:bg-muted'
-                  }`}
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
-          </div>
-          
-          <div>
-            <Label htmlFor="salary-expectation">Salary Expectation</Label>
-            <Input
-              id="salary-expectation"
-              placeholder="e.g., $80,000 - $100,000"
-              value={salaryExpectation}
-              onChange={(e) => setSalaryExpectation(e.target.value)}
-              className="mt-1"
-            />
-          </div>
-        </div>
-      </div>
-    );
+
+  const toggleAvoidIndustry = (industry: string) => {
+    setJobPreference(prev => {
+      const newAvoidIndustries = prev.avoidIndustries.includes(industry)
+        ? prev.avoidIndustries.filter(i => i !== industry)
+        : [...prev.avoidIndustries, industry];
+      return { ...prev, avoidIndustries: newAvoidIndustries };
+    });
   };
-  
-  // Render additional notes step
-  const renderAdditionalNotesStep = () => {
-    return (
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium">Additional Notes</h3>
-        <p className="text-sm text-muted-foreground">
-          Add any other information that might help with your job search.
-        </p>
-        
-        <div className="mt-4">
-          <Label htmlFor="additional-notes">Notes</Label>
-          <Textarea
-            id="additional-notes"
-            placeholder="e.g., Specific companies you're interested in, preferred benefits, deal-breakers, etc."
-            value={additionalNotes}
-            onChange={(e) => setAdditionalNotes(e.target.value)}
-            className="mt-1 h-[200px]"
-          />
-        </div>
-      </div>
-    );
+
+  const toggleSkill = (skill: string) => {
+    setJobPreference(prev => {
+      const newSkills = prev.skills.includes(skill)
+        ? prev.skills.filter(s => s !== skill)
+        : [...prev.skills, skill];
+      return { ...prev, skills: newSkills };
+    });
   };
-  
-  // Render saved preference card
-  const renderSavedPreference = () => {
-    if (!savedPreference) return null;
-    
-    return (
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle>Job Preferences</CardTitle>
-            <Button variant="outline" size="sm" onClick={startEditing}>
-              <Edit className="h-4 w-4 mr-2" />
-              Edit
-            </Button>
-          </div>
-          <CardDescription>
-            Last updated on {new Date(savedPreference.updatedAt).toLocaleDateString()}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {savedPreference.jobValues.length > 0 && (
-            <div>
-              <h4 className="text-sm font-medium mb-2">Values</h4>
-              <div className="flex flex-wrap gap-2">
-                {savedPreference.jobValues.map(value => (
-                  <Badge key={value.id} variant="secondary">{value.name}</Badge>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {savedPreference.locations.length > 0 && (
-            <div>
-              <h4 className="text-sm font-medium mb-2">Locations</h4>
-              <div className="flex flex-wrap gap-2">
-                {savedPreference.locations.map(location => (
-                  <Badge key={location.id} variant="outline" className="flex items-center">
-                    <MapPin className="h-3 w-3 mr-1" />
-                    {location.name}
-                  </Badge>
-                ))}
-              </div>
-              {savedPreference.willingToRelocate && (
-                <p className="text-xs text-muted-foreground mt-1">Willing to relocate</p>
-              )}
-            </div>
-          )}
-          
-          {savedPreference.roles.length > 0 && (
-            <div>
-              <h4 className="text-sm font-medium mb-2">Roles</h4>
-              <div className="flex flex-wrap gap-2">
-                {savedPreference.roles.map(role => (
-                  <Badge key={role.id}>{role.name}</Badge>
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {savedPreference.experienceYears} {savedPreference.experienceYears === 1 ? 'year' : 'years'} of experience
-              </p>
-            </div>
-          )}
-          
-          {savedPreference.industries.length > 0 && (
-            <div>
-              <h4 className="text-sm font-medium mb-2">Industries</h4>
-              <div className="flex flex-wrap gap-2">
-                {savedPreference.industries.map(industry => (
-                  <Badge key={industry.id} variant="outline">{industry.name}</Badge>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          <div className="grid grid-cols-2 gap-4 mt-2">
-            <div>
-              <h4 className="text-sm font-medium mb-1">Remote Preference</h4>
-              <p className="text-sm">{savedPreference.remotePreference}</p>
-            </div>
-            
-            <div>
-              <h4 className="text-sm font-medium mb-1">Work Schedule</h4>
-              <p className="text-sm">{savedPreference.workSchedulePreference.join(', ')}</p>
-            </div>
-            
-            <div>
-              <h4 className="text-sm font-medium mb-1">Salary Expectation</h4>
-              <p className="text-sm">{savedPreference.salaryExpectation || 'Not specified'}</p>
-            </div>
-          </div>
-          
-          {savedPreference.additionalNotes && (
-            <div>
-              <h4 className="text-sm font-medium mb-1">Additional Notes</h4>
-              <p className="text-sm text-muted-foreground">{savedPreference.additionalNotes}</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    );
+
+  const toggleAvoidSkill = (skill: string) => {
+    setJobPreference(prev => {
+      const newAvoidSkills = prev.avoidSkills.includes(skill)
+        ? prev.avoidSkills.filter(s => s !== skill)
+        : [...prev.avoidSkills, skill];
+      return { ...prev, avoidSkills: newAvoidSkills };
+    });
   };
-  
-  // Render current step of the wizard
-  const renderCurrentStep = () => {
+
+  const setMinSalary = (salary: number) => {
+    setJobPreference(prev => ({ ...prev, minSalary: salary }));
+  };
+
+  const toggleSecurityClearance = (clearance: boolean) => {
+    setJobPreference(prev => ({ ...prev, securityClearance: clearance }));
+  };
+
+  const setJobSearchStatus = (status: string) => {
+    setJobPreference(prev => ({ ...prev, jobSearchStatus: status }));
+  };
+
+  // Navigation functions
+  const goToNextStep = () => {
+    const nextStep = currentStep + 1;
+    setCurrentStep(nextStep);
+    setProgress(nextStep * 10);
+  };
+
+  const goToPreviousStep = () => {
+    const prevStep = currentStep - 1;
+    setCurrentStep(prevStep > 0 ? prevStep : 1);
+    setProgress(prevStep > 0 ? prevStep * 10 : 10);
+  };
+
+  const handleSaveAndContinue = () => {
+    onSave(jobPreference);
+    toast.success("Job preferences saved successfully!");
+  };
+
+  // Render step content
+  const renderStepContent = () => {
     switch (currentStep) {
       case 1:
-        return renderJobValuesStep();
+        return (
+          <div className="space-y-6">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-bold tracking-tight">Let's get started!</h2>
+              <p className="text-xl">What do you value in a new role?</p>
+              <p className="text-sm text-muted-foreground">Select up to 3</p>
+            </div>
+
+            <div className="flex flex-wrap gap-2 justify-center mt-6">
+              {availableValues.map((value) => (
+                <button
+                  key={value}
+                  onClick={() => toggleValue(value)}
+                  className={`px-4 py-2 rounded-full border transition-colors ${
+                    jobPreference.values.includes(value)
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-background border-input hover:bg-accent hover:text-accent-foreground"
+                  }`}
+                  disabled={jobPreference.values.length >= 3 && !jobPreference.values.includes(value)}
+                >
+                  {value}
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+
       case 2:
-        return renderLocationStep();
+        return (
+          <div className="space-y-6">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-bold tracking-tight">What kinds of roles are you interested in?</h2>
+              <p className="text-sm text-muted-foreground">Select up to 5</p>
+            </div>
+
+            <div className="space-y-6">
+              {roleCategories.map((category) => (
+                <div key={category.name} className="space-y-3">
+                  <h3 className="font-semibold text-lg">{category.name}</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {category.roles.map((role) => (
+                      <button
+                        key={role}
+                        onClick={() => toggleRoleType(role)}
+                        className={`px-4 py-2 rounded-full border transition-colors ${
+                          jobPreference.roleTypes.includes(role)
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background border-input hover:bg-accent hover:text-accent-foreground"
+                        }`}
+                        disabled={jobPreference.roleTypes.length >= 5 && !jobPreference.roleTypes.includes(role)}
+                      >
+                        {role}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
       case 3:
-        return renderRoleStep();
+        return (
+          <div className="space-y-6">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-bold tracking-tight">Choose specializations</h2>
+              <p className="text-sm text-muted-foreground">
+                Select the most relevant specializations for you
+              </p>
+            </div>
+
+            <div className="space-y-6">
+              {jobPreference.roleTypes.map(roleType => 
+                roleSpecializations[roleType] ? (
+                  <div key={roleType} className="space-y-3">
+                    <h3 className="font-semibold">{roleType}</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {roleSpecializations[roleType].map(specialization => (
+                        <div 
+                          key={specialization}
+                          className={`flex items-center space-x-2 border rounded-lg p-2 cursor-pointer ${
+                            jobPreference.roleSpecializations[roleType]?.includes(specialization)
+                              ? "border-primary bg-primary/10"
+                              : "border-input"
+                          }`}
+                          onClick={() => toggleRoleSpecialization(roleType, specialization)}
+                        >
+                          <Checkbox 
+                            checked={jobPreference.roleSpecializations[roleType]?.includes(specialization) || false}
+                            onCheckedChange={() => toggleRoleSpecialization(roleType, specialization)}
+                            className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                          />
+                          <Label className="cursor-pointer">{specialization}</Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null
+              )}
+
+              {!jobPreference.roleTypes.some(type => roleSpecializations[type]) && (
+                <div className="text-center p-4 bg-muted rounded-lg">
+                  <p>No specializations available for your selected role types.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+
       case 4:
-        return renderWorkPreferencesStep();
+        return (
+          <div className="space-y-6">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-bold tracking-tight">Where would you like to work?</h2>
+            </div>
+
+            <div className="space-y-6 max-h-[400px] overflow-y-auto pr-2">
+              {countries.map((country) => (
+                <div key={country.name} className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold">{country.name}</h3>
+                    <div className="flex items-center">
+                      <Checkbox 
+                        id={`select-all-${country.name}`} 
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setJobPreference(prev => ({
+                              ...prev,
+                              locations: {
+                                ...prev.locations,
+                                countries: {
+                                  ...prev.locations.countries,
+                                  [country.name]: [...country.cities]
+                                }
+                              }
+                            }));
+                          } else {
+                            setJobPreference(prev => ({
+                              ...prev,
+                              locations: {
+                                ...prev.locations,
+                                countries: {
+                                  ...prev.locations.countries,
+                                  [country.name]: []
+                                }
+                              }
+                            }));
+                          }
+                        }}
+                        checked={(jobPreference.locations.countries[country.name]?.length || 0) === country.cities.length}
+                      />
+                      <Label htmlFor={`select-all-${country.name}`} className="ml-2">
+                        Select all in {country.name}
+                      </Label>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {country.cities.map((city) => (
+                      <div 
+                        key={city}
+                        className={`flex items-center space-x-2 border rounded-lg p-2 cursor-pointer ${
+                          jobPreference.locations.countries[country.name]?.includes(city)
+                            ? "border-primary bg-primary/10"
+                            : "border-input"
+                        }`}
+                        onClick={() => toggleLocation(country.name, city)}
+                      >
+                        <Checkbox 
+                          checked={jobPreference.locations.countries[country.name]?.includes(city) || false}
+                          onCheckedChange={() => toggleLocation(country.name, city)}
+                          className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                        />
+                        <Label className="cursor-pointer">{city}</Label>
+                        {city.includes("Remote") && (
+                          <Badge variant="outline" className="ml-auto bg-blue-50 text-blue-700 border-blue-300">Remote</Badge>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
       case 5:
-        return renderAdditionalNotesStep();
+        return (
+          <div className="space-y-6">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-bold tracking-tight">What level of roles are you looking for?</h2>
+              <p className="text-sm text-muted-foreground">Select up to 2</p>
+            </div>
+
+            <div className="space-y-3">
+              {experienceLevels.map((level) => (
+                <div 
+                  key={level}
+                  className={`flex items-center space-x-2 border rounded-lg p-4 cursor-pointer ${
+                    jobPreference.experienceLevels.includes(level)
+                      ? "border-primary bg-primary/10"
+                      : "border-input"
+                  }`}
+                  onClick={() => toggleExperienceLevel(level)}
+                >
+                  <Checkbox 
+                    checked={jobPreference.experienceLevels.includes(level)}
+                    onCheckedChange={() => toggleExperienceLevel(level)}
+                    className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                    disabled={jobPreference.experienceLevels.length >= 2 && !jobPreference.experienceLevels.includes(level)}
+                  />
+                  <Label className="cursor-pointer">{level}</Label>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 6:
+        return (
+          <div className="space-y-6">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-bold tracking-tight">What is your ideal company size?</h2>
+            </div>
+
+            <div className="space-y-3">
+              <div 
+                className={`flex items-center space-x-2 border rounded-lg p-4 cursor-pointer ${
+                  jobPreference.companySizes.length === 0
+                    ? "border-primary bg-primary/10"
+                    : "border-input"
+                }`}
+                onClick={() => setJobPreference(prev => ({ ...prev, companySizes: [] }))}
+              >
+                <Checkbox 
+                  checked={jobPreference.companySizes.length === 0}
+                  onCheckedChange={() => setJobPreference(prev => ({ ...prev, companySizes: [] }))}
+                  className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                />
+                <Label className="cursor-pointer">Unselect all sizes</Label>
+              </div>
+              {companySizes.map((size) => (
+                <div 
+                  key={size}
+                  className={`flex items-center space-x-2 border rounded-lg p-4 cursor-pointer ${
+                    jobPreference.companySizes.includes(size)
+                      ? "border-primary bg-primary/10"
+                      : "border-input"
+                  }`}
+                  onClick={() => toggleCompanySize(size)}
+                >
+                  <Checkbox 
+                    checked={jobPreference.companySizes.includes(size)}
+                    onCheckedChange={() => toggleCompanySize(size)}
+                    className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                  />
+                  <Label className="cursor-pointer">{size}</Label>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 7:
+        return (
+          <div className="space-y-6">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-bold tracking-tight">What industries are exciting to you?</h2>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2 bg-muted/50 p-3 rounded-lg">
+                <Checkbox 
+                  id="exciting-industries" 
+                  checked={true}
+                  className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                  disabled
+                />
+                <Label htmlFor="exciting-industries">First, what industries are exciting to you?</Label>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {industries.map((industry) => (
+                  <button
+                    key={industry}
+                    onClick={() => toggleIndustry(industry)}
+                    className={`px-4 py-2 rounded-full border transition-colors ${
+                      jobPreference.industries.includes(industry)
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background border-input hover:bg-accent hover:text-accent-foreground"
+                    }`}
+                  >
+                    {industry}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center space-x-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300 p-3 rounded-lg mt-6">
+                <X size={16} className="text-red-500" />
+                <Label>Second, are there any industries you don't want to work in?</Label>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {industries.map((industry) => (
+                  <button
+                    key={`avoid-${industry}`}
+                    onClick={() => toggleAvoidIndustry(industry)}
+                    className={`px-4 py-2 rounded-full border transition-colors ${
+                      jobPreference.avoidIndustries.includes(industry)
+                        ? "bg-red-100 text-red-700 border-red-300 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700"
+                        : "bg-background border-input hover:bg-accent hover:text-accent-foreground"
+                    }`}
+                  >
+                    {industry}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 8:
+        return (
+          <div className="space-y-6">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-bold tracking-tight">What skills do you have or enjoy working with?</h2>
+              <p className="text-sm text-muted-foreground">Select all that applies</p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-muted/30 p-4 rounded-lg flex items-start space-x-3">
+                <Info size={20} className="text-blue-500 flex-shrink-0 mt-1" />
+                <p className="text-sm">
+                  Click on a skill once to indicate you enjoy working with it. Click on a skill twice to indicate that you'd prefer roles that utilize that skill.
+                </p>
+              </div>
+
+              <div className="relative">
+                <Input 
+                  placeholder="Search all skills..." 
+                  className="pl-9"
+                />
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                  <Search size={16} />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {skills.map((skill) => (
+                  <button
+                    key={skill}
+                    onClick={() => toggleSkill(skill)}
+                    className={`px-4 py-2 rounded-full border transition-colors ${
+                      jobPreference.skills.includes(skill)
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background border-input hover:bg-accent hover:text-accent-foreground"
+                    }`}
+                  >
+                    {skill}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center space-x-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300 p-3 rounded-lg mt-6">
+                <X size={16} className="text-red-500" />
+                <Label>Are there any skills you don't want to work with?</Label>
+              </div>
+
+              <div className="relative">
+                <Input 
+                  placeholder="Skills to filter out" 
+                  className="pl-9"
+                />
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                  <Search size={16} />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {skills.map((skill) => (
+                  <button
+                    key={`avoid-${skill}`}
+                    onClick={() => toggleAvoidSkill(skill)}
+                    className={`px-4 py-2 rounded-full border transition-colors ${
+                      jobPreference.avoidSkills.includes(skill)
+                        ? "bg-red-100 text-red-700 border-red-300 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700"
+                        : "bg-background border-input hover:bg-accent hover:text-accent-foreground"
+                    }`}
+                  >
+                    {skill}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 9:
+        return (
+          <div className="space-y-6">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-bold tracking-tight">What is your minimum expected salary?</h2>
+            </div>
+
+            <div className="space-y-8">
+              <div className="bg-muted/30 p-4 rounded-lg flex items-start space-x-3">
+                <div className="flex-shrink-0 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                  <img 
+                    src="https://randomuser.me/api/portraits/men/32.jpg" 
+                    alt="User avatar" 
+                    className="w-8 h-8 rounded-full"
+                  />
+                </div>
+                <p className="text-sm">
+                  We'll only use this to match you with jobs and will not share this data.
+                </p>
+              </div>
+
+              <div className="flex flex-col items-center justify-center">
+                <div className="w-32 h-32 rounded-full bg-muted flex flex-col items-center justify-center">
+                  <span className="text-sm text-muted-foreground">At least</span>
+                  <span className="text-3xl font-bold">${jobPreference.minSalary}k</span>
+                  <span className="text-sm bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded mt-1">USD</span>
+                </div>
+              </div>
+
+              <div className="px-4">
+                <Slider
+                  defaultValue={[0]}
+                  max={300}
+                  step={5}
+                  value={[jobPreference.minSalary]}
+                  onValueChange={(value) => setMinSalary(value[0])}
+                />
+              </div>
+            </div>
+          </div>
+        );
+
+      case 10:
+        return (
+          <div className="space-y-6">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-bold tracking-tight">Would you like to see roles that require top security clearance?</h2>
+              <p className="text-sm text-muted-foreground">
+                Certain government and defense-related positions may require security clearance.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <div 
+                className={`flex items-center space-x-2 border rounded-lg p-4 cursor-pointer ${
+                  jobPreference.securityClearance
+                    ? "border-primary bg-primary/10"
+                    : "border-input"
+                }`}
+                onClick={() => toggleSecurityClearance(true)}
+              >
+                <Checkbox 
+                  checked={jobPreference.securityClearance}
+                  onCheckedChange={() => toggleSecurityClearance(true)}
+                  className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                />
+                <Label className="cursor-pointer">Yes</Label>
+              </div>
+              <div 
+                className={`flex items-center space-x-2 border rounded-lg p-4 cursor-pointer ${
+                  !jobPreference.securityClearance
+                    ? "border-primary bg-primary/10"
+                    : "border-input"
+                }`}
+                onClick={() => toggleSecurityClearance(false)}
+              >
+                <Checkbox 
+                  checked={!jobPreference.securityClearance}
+                  onCheckedChange={() => toggleSecurityClearance(false)}
+                  className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                />
+                <Label className="cursor-pointer">No</Label>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 11:
+        return (
+          <div className="space-y-6">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-bold tracking-tight">Lastly, what's the status of your job search?</h2>
+            </div>
+
+            <div className="space-y-3">
+              <div 
+                className={`flex items-center space-x-2 border rounded-lg p-4 cursor-pointer ${
+                  jobPreference.jobSearchStatus === "Actively looking"
+                    ? "border-primary bg-primary/10"
+                    : "border-input"
+                }`}
+                onClick={() => setJobSearchStatus("Actively looking")}
+              >
+                <Checkbox 
+                  checked={jobPreference.jobSearchStatus === "Actively looking"}
+                  onCheckedChange={() => setJobSearchStatus("Actively looking")}
+                  className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                />
+                <Label className="cursor-pointer">Actively looking</Label>
+              </div>
+              <div 
+                className={`flex items-center space-x-2 border rounded-lg p-4 cursor-pointer ${
+                  jobPreference.jobSearchStatus === "Not looking but open to offers"
+                    ? "border-primary bg-primary/10"
+                    : "border-input"
+                }`}
+                onClick={() => setJobSearchStatus("Not looking but open to offers")}
+              >
+                <Checkbox 
+                  checked={jobPreference.jobSearchStatus === "Not looking but open to offers"}
+                  onCheckedChange={() => setJobSearchStatus("Not looking but open to offers")}
+                  className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                />
+                <Label className="cursor-pointer">Not looking but open to offers</Label>
+              </div>
+              <div 
+                className={`flex items-center space-x-2 border rounded-lg p-4 cursor-pointer ${
+                  jobPreference.jobSearchStatus === "Not looking and closed to offers"
+                    ? "border-primary bg-primary/10"
+                    : "border-input"
+                }`}
+                onClick={() => setJobSearchStatus("Not looking and closed to offers")}
+              >
+                <Checkbox 
+                  checked={jobPreference.jobSearchStatus === "Not looking and closed to offers"}
+                  onCheckedChange={() => setJobSearchStatus("Not looking and closed to offers")}
+                  className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                />
+                <Label className="cursor-pointer">Not looking and closed to offers</Label>
+              </div>
+            </div>
+          </div>
+        );
+
       default:
         return null;
     }
   };
-  
-  // Wizard navigation
-  const renderWizardNavigation = () => {
-    return (
-      <div className="flex justify-between mt-6">
-        <Button variant="outline" onClick={prevStep}>
-          {currentStep === 1 ? 'Cancel' : 'Back'}
-        </Button>
-        <Button onClick={nextStep}>
-          {currentStep === 5 ? 'Save' : 'Next'}
-          {currentStep !== 5 && <ChevronRight className="ml-2 h-4 w-4" />}
-        </Button>
-      </div>
-    );
-  };
-  
-  // Render job preferences editor wizard
-  const renderPreferencesEditor = () => {
-    return (
-      <div className="space-y-6">
-        <div>
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="text-sm font-medium">Step {currentStep} of 5</h3>
-            <span className="text-sm text-muted-foreground">{Math.round(progress)}% Complete</span>
-          </div>
-          <Progress value={progress} className="h-2" />
-        </div>
-        
-        {renderCurrentStep()}
-        {renderWizardNavigation()}
-      </div>
-    );
-  };
-  
+
   return (
-    <Dialog open={isEditMode} onOpenChange={(open) => {
-      if (!open) {
-        setIsEditMode(false);
-        setShowSavedPreference(true);
-        resetForm();
-      }
-    }}>
-      <div>
-        {showSavedPreference ? (
-          <>
-            {savedPreference ? (
-              renderSavedPreference()
-            ) : (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Job Preferences</CardTitle>
-                  <CardDescription>Set up your job preferences to help us find the right opportunities for you.</CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-col items-center justify-center py-8">
-                  <div className="text-center space-y-4">
-                    <p className="text-muted-foreground">You haven't set up your job preferences yet.</p>
-                    <Button onClick={startEditing}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Set Job Preferences
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </>
+    <Card className="w-full max-w-3xl mx-auto">
+      <CardHeader className="pb-4 relative">
+        <div className="absolute inset-x-0 top-0 px-6 pt-6">
+          <div className="flex justify-between items-center mb-2">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={goToPreviousStep}
+                disabled={currentStep === 1}
+                className="text-gray-500 hover:text-gray-700 disabled:opacity-50"
+              >
+                <ChevronLeft size={16} className="inline mr-1" />
+                BACK
+              </button>
+            </div>
+            <div>
+              <span className="text-sm text-gray-500">{progress}%</span>
+            </div>
+          </div>
+          <Progress value={progress} className="h-1.5 bg-blue-100" indicatorClassName="bg-blue-500" />
+        </div>
+        {/* Banner at the top */}
+        <div className="bg-blue-500 text-white p-4 rounded-lg mt-10 mb-4 flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Info size={20} />
+            <span>
+              New Job Preferences! • We've added more in depth role types and added new industry, skill, and company filters. Update your preferences for better matches!
+            </span>
+          </div>
+          <button className="text-white hover:bg-blue-600 rounded-full p-1">
+            <X size={20} />
+          </button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {renderStepContent()}
+      </CardContent>
+      <CardFooter className="border-t p-4 flex justify-center">
+        {currentStep === 11 ? (
+          <Button 
+            className="w-full max-w-xs gap-2"
+            onClick={handleSaveAndContinue}
+          >
+            Save and Continue
+            <ChevronRight size={16} />
+          </Button>
         ) : (
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>Job Preferences</DialogTitle>
-            </DialogHeader>
-            {renderPreferencesEditor()}
-          </DialogContent>
+          <Button 
+            className="w-full max-w-xs gap-2"
+            onClick={goToNextStep}
+          >
+            Save and Continue
+            <ChevronRight size={16} />
+          </Button>
         )}
-      </div>
-    </Dialog>
+      </CardFooter>
+    </Card>
   );
-}
+};
+
+export const JobPreferences = () => {
+  const [showPreferences, setShowPreferences] = useState(false);
+  const [savedPreferences, setSavedPreferences] = useState<JobPreference | null>(null);
+
+  const handleSavePreferences = (prefs: JobPreference) => {
+    setSavedPreferences(prefs);
+    setShowPreferences(false);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Job Preferences</h2>
+        <Button onClick={() => setShowPreferences(true)}>
+          {savedPreferences ? 'Edit Preferences' : 'Add Preferences'}
+        </Button>
+      </div>
+
+      {!savedPreferences && !showPreferences ? (
+        <Card className="bg-muted/30">
+          <CardContent className="p-8 flex flex-col items-center justify-center text-center">
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+              <Info size={24} className="text-primary" />
+            </div>
+            <h3 className="text-lg font-medium mb-2">No Job Preferences Set</h3>
+            <p className="text-muted-foreground mb-4">
+              Set your job preferences to help us find the best job matches for you.
+            </p>
+            <Button onClick={() => setShowPreferences(true)}>
+              Set Job Preferences
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        !showPreferences && savedPreferences && (
+          <Card>
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {savedPreferences.values.length > 0 && (
+                  <div>
+                    <h3 className="font-medium mb-2">Values</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {savedPreferences.values.map(value => (
+                        <Badge key={value} variant="secondary">{value}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {savedPreferences.roleTypes.length > 0 && (
+                  <div>
+                    <h3 className="font-medium mb-2">Role Types</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {savedPreferences.roleTypes.map(type => (
+                        <Badge key={type} variant="secondary">{type}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {Object.keys(savedPreferences.locations.countries).length > 0 && (
+                  <div>
+                    <h3 className="font-medium mb-2">Locations</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {Object.entries(savedPreferences.locations.countries).map(([country, cities]) => 
+                        cities.map(city => (
+                          <Badge key={`${country}-${city}`} variant="secondary">
+                            {city}
+                            {city.includes("Remote") && (
+                              <span className="ml-1 text-xs bg-blue-200 text-blue-700 px-1 rounded">Remote</span>
+                            )}
+                          </Badge>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {savedPreferences.experienceLevels.length > 0 && (
+                  <div>
+                    <h3 className="font-medium mb-2">Experience Levels</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {savedPreferences.experienceLevels.map(level => (
+                        <Badge key={level} variant="secondary">{level}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {savedPreferences.industries.length > 0 && (
+                  <div>
+                    <h3 className="font-medium mb-2">Interested Industries</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {savedPreferences.industries.map(industry => (
+                        <Badge key={industry} variant="secondary">{industry}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {savedPreferences.skills.length > 0 && (
+                  <div>
+                    <h3 className="font-medium mb-2">Skills</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {savedPreferences.skills.map(skill => (
+                        <Badge key={skill} variant="secondary">{skill}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <h3 className="font-medium mb-2">Minimum Salary</h3>
+                  <Badge variant="outline" className="text-base font-medium">${savedPreferences.minSalary}k USD</Badge>
+                </div>
+
+                <div>
+                  <h3 className="font-medium mb-2">Job Search Status</h3>
+                  <Badge 
+                    variant={savedPreferences.jobSearchStatus === "Actively looking" ? "default" : "outline"}
+                    className={savedPreferences.jobSearchStatus === "Actively looking" ? "bg-green-500" : ""}
+                  >
+                    {savedPreferences.jobSearchStatus}
+                  </Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )
+      )}
+
+      {showPreferences && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-background rounded-lg overflow-hidden w-full max-w-4xl h-[90vh] flex flex-col">
+            <div className="p-4 border-b flex justify-between items-center">
+              <h2 className="text-xl font-bold">Job Preferences</h2>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setShowPreferences(false)}
+              >
+                <X size={20} />
+              </Button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6">
+              <JobPreferencesDialog 
+                onSave={handleSavePreferences} 
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
