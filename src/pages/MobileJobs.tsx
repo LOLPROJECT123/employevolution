@@ -318,6 +318,7 @@ export default function MobileJobs() {
               </div>
               <div className="p-0">
                 <SavedAndAppliedJobs
+                  hideTitle={true}
                   onSelect={handleSelectJob}
                   selectedJobId={selectedJob?.id || null}
                   savedJobs={jobs.filter(job => savedJobIds.includes(job.id))}

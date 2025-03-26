@@ -34,6 +34,7 @@ interface SavedAndAppliedJobsProps {
   appliedJobs?: Job[];
   onApply?: (job: Job) => void;
   onSave?: (job: Job) => void;
+  hideTitle?: boolean; // New prop to hide the title
 }
 
 export function SavedAndAppliedJobs({
@@ -42,7 +43,8 @@ export function SavedAndAppliedJobs({
   savedJobs: propSavedJobs,
   appliedJobs: propAppliedJobs,
   onApply: propOnApply,
-  onSave: propOnSave
+  onSave: propOnSave,
+  hideTitle = false // Default to false
 }: SavedAndAppliedJobsProps) {
   const [activeTab, setActiveTab] = useState<string>("saved");
   
@@ -71,9 +73,11 @@ export function SavedAndAppliedJobs({
   
   return (
     <Card className="h-full shadow-none border-0 sm:border sm:shadow-sm overflow-hidden">
-      <CardHeader className="border-b pb-3 pt-4">
-        <CardTitle className="text-lg">My Jobs</CardTitle>
-      </CardHeader>
+      {!hideTitle && (
+        <CardHeader className="border-b pb-3 pt-4">
+          <CardTitle className="text-lg">My Jobs</CardTitle>
+        </CardHeader>
+      )}
       <CardContent className="p-0">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 rounded-none border-b bg-transparent h-auto">
