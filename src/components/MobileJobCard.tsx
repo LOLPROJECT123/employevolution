@@ -94,10 +94,6 @@ export function MobileJobCard({
           
           <div className="flex flex-col gap-0.5">
             <div className="flex items-center gap-1 text-sm text-gray-600 truncate">
-              <span className="truncate">{job.company}</span>
-            </div>
-            
-            <div className="flex items-center gap-1 text-sm text-gray-600 truncate">
               <DollarSign className="h-3.5 w-3.5 flex-shrink-0" />
               <span className="truncate">{formattedSalary}</span>
             </div>
