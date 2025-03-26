@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
@@ -44,6 +43,20 @@ export function MobileJobDetail({
       </div>
     );
   }
+
+  const getMatchColor = (percentage?: number) => {
+    if (!percentage) return "";
+    if (percentage >= 70) return "text-green-500";
+    if (percentage >= 50) return "text-amber-500";
+    return "text-red-500";
+  };
+
+  const getMatchBgColor = (percentage?: number) => {
+    if (!percentage) return "bg-gray-100 dark:bg-gray-800";
+    if (percentage >= 70) return "bg-green-50 dark:bg-green-900/30";
+    if (percentage >= 50) return "bg-amber-50 dark:bg-amber-900/30";
+    return "bg-red-50 dark:bg-red-900/30";
+  };
 
   // Enhanced job requirements with more detailed descriptions
   const enhancedRequirements = [
@@ -139,11 +152,19 @@ export function MobileJobDetail({
         <Tabs value={activeTab} className="w-full">
           <TabsContent value="overview" className="mt-0">
             <div className="p-4">
-              <Badge className="bg-blue-50 text-blue-600 border-0 rounded-full px-4 py-1.5 text-sm">
-                {job.level === 'intern' ? 'Internship' : job.type}
-              </Badge>
+              <div className="flex justify-between items-start mb-3">
+                <Badge className="bg-blue-50 text-blue-600 border-0 rounded-full px-4 py-1.5 text-sm">
+                  {job.level === 'intern' ? 'Internship' : job.type}
+                </Badge>
+                
+                {job.matchPercentage && (
+                  <Badge variant="outline" className={`px-3 py-1.5 rounded-full ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)} text-sm font-bold shadow-sm`}>
+                    {job.matchPercentage}% Match
+                  </Badge>
+                )}
+              </div>
               
-              <h1 className="text-2xl font-bold mt-4">{job.title}</h1>
+              <h1 className="text-2xl font-bold mt-2">{job.title}</h1>
               
               <p className="text-gray-500 mt-1">
                 Confirmed live in the last 24 hours
@@ -172,7 +193,7 @@ export function MobileJobDetail({
                 <h3 className="font-medium">Compensation Overview</h3>
                 <div className="mt-3 flex items-center text-xl font-medium">
                   <span className="text-primary mr-2">💰</span>
-                  {job.salary.currency}{job.salary.min.toLocaleString()} {job.type === 'internship' ? '/hr' : ''}
+                  {job.salary.currency}{job.salary.min.toLocaleString()} - {job.salary.currency}{job.salary.max.toLocaleString()} {job.type === 'internship' ? '/hr' : ''}
                 </div>
                 {job.type !== 'internship' && (
                   <p className="mt-1 text-gray-500">+ Bonus</p>
@@ -219,6 +240,19 @@ export function MobileJobDetail({
                 </div>
               </div>
               
+              {job.matchPercentage && (
+                <div className={`mt-6 p-4 rounded-lg ${getMatchBgColor(job.matchPercentage)}`}>
+                  <div className="flex items-center gap-2">
+                    <div className={`text-xl font-bold ${getMatchColor(job.matchPercentage)}`}>{job.matchPercentage}%</div>
+                    <div className={`font-semibold ${getMatchColor(job.matchPercentage)}`}>
+                      {job.matchPercentage >= 70 ? "GOOD MATCH" : 
+                       job.matchPercentage >= 50 ? "FAIR MATCH" : "WEAK MATCH"}
+                    </div>
+                  </div>
+                  <p className="text-sm mt-1">Based on your profile, skills, and experience</p>
+                </div>
+              )}
+              
               <div className="mt-6 border-t pt-6">
                 <Tabs defaultValue="summary" className="w-full">
                   <TabsList className="grid w-full grid-cols-2">
@@ -251,6 +285,20 @@ export function MobileJobDetail({
                               <span>Experience</span>
                             </div>
                           )}
+                          
+                          {job.matchCriteria.skills && (
+                            <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                              <CheckCircle className="text-green-500 h-5 w-5" />
+                              <span>Skills</span>
+                            </div>
+                          )}
+                          
+                          {job.matchCriteria.location && (
+                            <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                              <CheckCircle className="text-green-500 h-5 w-5" />
+                              <span>Location</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
@@ -276,14 +324,16 @@ export function MobileJobDetail({
                         </ul>
                       </div>
                       
-                      <div>
-                        <h3 className="font-medium mb-2">Responsibilities</h3>
-                        <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300">
-                          {enhancedResponsibilities.map((resp, idx) => (
-                            <li key={idx}>{resp}</li>
-                          ))}
-                        </ul>
-                      </div>
+                      {job.responsibilities && (
+                        <div>
+                          <h3 className="font-medium mb-2">Responsibilities</h3>
+                          <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300">
+                            {job.responsibilities.map((resp, idx) => (
+                              <li key={idx}>{resp}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                       
                       {job.description && (
                         <div>
@@ -428,9 +478,14 @@ export function MobileJobDetail({
             size="lg"
             className="bg-primary rounded-lg px-6 h-12"
             onClick={() => onApply(job)}
+            disabled={isApplied}
           >
-            <Zap className="h-5 w-5 mr-2" />
-            Apply
+            {isApplied ? (
+              <CheckCircle className="h-5 w-5 mr-2" />
+            ) : (
+              <Zap className="h-5 w-5 mr-2" />
+            )}
+            {isApplied ? "Applied" : "Apply"}
           </Button>
         </div>
       </div>

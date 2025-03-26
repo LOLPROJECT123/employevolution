@@ -1,3 +1,4 @@
+
 import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
 import { BookmarkIcon, Building2, MapPin, Clock, CheckCircle, ArrowRight, Zap } from "lucide-react";
@@ -78,13 +79,15 @@ export function JobCard({
           </div>
           
           <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-medium truncate">{job.title}</h3>
-            
-            {job.matchPercentage && (
-              <Badge variant="outline" className={`mt-1 px-2 py-0.5 text-xs font-bold ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)}`}>
-                {job.matchPercentage}% Match
-              </Badge>
-            )}
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium truncate">{job.title}</h3>
+              
+              {job.matchPercentage && (
+                <Badge variant="outline" className={`ml-2 px-2 py-0.5 text-xs font-bold ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)}`}>
+                  {job.matchPercentage}% Match
+                </Badge>
+              )}
+            </div>
             
             <div className="flex flex-col gap-1 mt-1.5">
               <p className="text-xs text-muted-foreground flex items-center gap-1.5">
@@ -163,15 +166,15 @@ export function JobCard({
         <div className={`w-12 h-12 flex-shrink-0 rounded-lg flex items-center justify-center ${getCompanyColor()}`}>
           {getCompanyInitial()}
         </div>
+        
+        {job.matchPercentage && (
+          <Badge variant="outline" className={`px-2.5 py-0.5 text-xs font-bold ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)}`}>
+            {job.matchPercentage}% Match
+          </Badge>
+        )}
       </div>
       
       <h3 className="font-medium mt-1">{job.title}</h3>
-      
-      {job.matchPercentage && (
-        <Badge variant="outline" className={`mt-1 px-2.5 py-0.5 text-xs font-bold ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)}`}>
-          {job.matchPercentage}% Match
-        </Badge>
-      )}
       
       <p className="text-sm text-muted-foreground mt-2">{job.company}</p>
       

@@ -1,4 +1,3 @@
-
 import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
 import { 
@@ -233,17 +232,9 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
   const application = getApplicationByJobId(job.id);
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col overflow-hidden">
       <div className="p-4 border-b relative">
-        {job.matchPercentage && (
-          <div className="absolute top-4 right-4">
-            <Badge variant="outline" className={`px-3 py-1.5 rounded-full ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)} text-sm font-bold shadow-sm`}>
-              {job.matchPercentage}% Match
-            </Badge>
-          </div>
-        )}
-
-        <div className="flex justify-between items-start pr-24">
+        <div className="flex justify-between items-start">
           <div>
             <h2 className="text-2xl font-bold">{job.title}</h2>
             
@@ -261,7 +252,16 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
               </p>
             </div>
           </div>
-          <div className="flex gap-2">
+          
+          {job.matchPercentage && (
+            <div>
+              <Badge variant="outline" className={`px-3 py-1.5 rounded-full ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)} text-sm font-bold shadow-sm`}>
+                {job.matchPercentage}% Match
+              </Badge>
+            </div>
+          )}
+          
+          <div className="flex gap-2 ml-4">
             <Button
               variant={isSaved ? "default" : "outline"}
               size="icon"
@@ -317,16 +317,28 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
         </Button>
       </div>
       
-      <div className="flex-1 overflow-y-auto p-4">
-        <Tabs defaultValue="summary" className="w-full">
-          <TabsList className="w-full grid grid-cols-3 mb-4">
+      <div className="flex-1 overflow-hidden flex flex-col">
+        <Tabs defaultValue="summary" className="w-full flex-1 flex flex-col overflow-hidden">
+          <TabsList className="w-full grid grid-cols-3 mb-4 mx-4 mt-4">
             <TabsTrigger value="summary">Summary</TabsTrigger>
             <TabsTrigger value="company">Company</TabsTrigger>
             <TabsTrigger value="full-posting">Full Job Posting</TabsTrigger>
           </TabsList>
           
-          <div className="mt-2 tab-content-container">
-            <TabsContent value="summary" className="mt-0 space-y-6 h-full">
+          <div className="flex-1 overflow-y-auto px-4 pb-4">
+            <TabsContent value="summary" className="mt-0 space-y-6 h-full data-[state=active]:flex-1 data-[state=active]:flex data-[state=active]:flex-col">
+              {job.matchPercentage && (
+                <div className={`p-4 rounded-lg ${getMatchBgColor(job.matchPercentage)} mb-4`}>
+                  <div className="flex items-center gap-2">
+                    <div className={`text-xl font-bold ${getMatchColor(job.matchPercentage)}`}>{job.matchPercentage}%</div>
+                    <div className={`font-semibold ${getMatchColor(job.matchPercentage)}`}>
+                      {getMatchLabel(job.matchPercentage)}
+                    </div>
+                  </div>
+                  <p className="text-sm mt-1">Based on your profile, skills, and experience</p>
+                </div>
+              )}
+              
               {job.matchCriteria && (
                 <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg">
                   <div className="mb-2">
@@ -392,7 +404,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
               </div>
             </TabsContent>
             
-            <TabsContent value="company" className="mt-0 space-y-6 h-full">
+            <TabsContent value="company" className="mt-0 space-y-6 h-full data-[state=active]:flex-1 data-[state=active]:flex data-[state=active]:flex-col">
               <div className="bg-gray-50 dark:bg-gray-900/50 p-5 rounded-lg">
                 <h3 className="text-lg font-medium mb-4">About {job.company}</h3>
                 
@@ -475,7 +487,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
               </div>
             </TabsContent>
             
-            <TabsContent value="full-posting" className="mt-0 space-y-6 h-full">
+            <TabsContent value="full-posting" className="mt-0 space-y-6 h-full data-[state=active]:flex-1 data-[state=active]:flex data-[state=active]:flex-col">
               {job.matchPercentage && (
                 <div className={`p-4 rounded-lg ${getMatchBgColor(job.matchPercentage)} mb-4`}>
                   <div className="flex items-center gap-2">
