@@ -70,9 +70,7 @@ export function SavedAndAppliedJobs({
   
   // Generate initials from first and last name
   const getInitials = () => {
-    const firstInitial = firstName.charAt(0);
-    const lastInitial = lastName.charAt(0);
-    return `${firstInitial}${lastInitial}`.toUpperCase();
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   };
   
   const handleStatusChange = (jobId: string, status: JobStatus) => {
@@ -84,58 +82,44 @@ export function SavedAndAppliedJobs({
   
   // User profile avatar with initials at the top
   const profileHeader = (
-    <div className="flex justify-between items-center bg-background py-2 px-4 border-b">
-      <Avatar className="h-8 w-8">
-        <AvatarFallback>{getInitials()}</AvatarFallback>
-      </Avatar>
+    <div className="flex justify-between items-center bg-background py-3 px-4 border-b">
+      <div className="flex items-center gap-2">
+        <Avatar className="h-8 w-8">
+          <AvatarFallback>{getInitials()}</AvatarFallback>
+        </Avatar>
+        <span className="text-sm font-medium hidden md:inline">{firstName} {lastName}</span>
+      </div>
       <ModeToggle />
     </div>
   );
   
-  if (savedJobs.length === 0 && appliedJobs.length === 0) {
-    return (
-      <Card className="h-full">
-        {profileHeader}
-        <CardHeader className="pb-3 border-b">
-          <CardTitle className="text-lg">My Jobs</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="px-4 py-8 text-center">
-            <div className="flex justify-center gap-6 mb-4 text-sm font-medium">
-              <span>Saved Jobs (0)</span>
-              <span className="text-muted-foreground">Applied Jobs (0)</span>
-            </div>
-            <p className="text-center text-muted-foreground text-sm">
-              You Haven't Saved Any Jobs Yet.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-  
   return (
-    <Card className="h-full">
+    <Card className="h-full shadow-none border-0 sm:border sm:shadow-sm overflow-hidden">
       {profileHeader}
-      <CardHeader className="border-b pb-3">
+      <CardHeader className="border-b pb-3 pt-4">
         <CardTitle className="text-lg">My Jobs</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 rounded-none border-b">
-            <TabsTrigger value="saved" className="text-sm rounded-none py-3">
+          <TabsList className="grid w-full grid-cols-2 rounded-none border-b bg-transparent h-auto">
+            <TabsTrigger value="saved" className="text-sm rounded-none py-3 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">
               Saved Jobs ({savedJobs.length})
             </TabsTrigger>
-            <TabsTrigger value="applied" className="text-sm rounded-none py-3">
+            <TabsTrigger value="applied" className="text-sm rounded-none py-3 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">
               Applied Jobs ({appliedJobs.length})
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="saved" className="p-0 pt-2 overflow-auto max-h-[calc(100vh-350px)]">
+          <TabsContent value="saved" className="p-0 pt-2 overflow-auto max-h-[calc(100vh-280px)]">
             {savedJobs.length === 0 ? (
-              <p className="text-center text-muted-foreground py-4 text-sm">
-                You Haven't Saved Any Jobs Yet.
-              </p>
+              <div className="p-6 text-center">
+                <p className="text-muted-foreground mb-2">
+                  You Haven't Saved Any Jobs Yet.
+                </p>
+                <p className="text-muted-foreground text-sm mb-4">
+                  Save jobs to keep track of positions you're interested in.
+                </p>
+              </div>
             ) : (
               <div className="divide-y">
                 {savedJobs.map(job => (
@@ -155,11 +139,16 @@ export function SavedAndAppliedJobs({
             )}
           </TabsContent>
           
-          <TabsContent value="applied" className="p-0 pt-2 overflow-auto max-h-[calc(100vh-350px)]">
+          <TabsContent value="applied" className="p-0 pt-2 overflow-auto max-h-[calc(100vh-280px)]">
             {appliedJobs.length === 0 ? (
-              <p className="text-center text-muted-foreground py-4 text-sm">
-                You Haven't Applied To Any Jobs Yet.
-              </p>
+              <div className="p-6 text-center">
+                <p className="text-muted-foreground mb-2">
+                  You Haven't Applied To Any Jobs Yet.
+                </p>
+                <p className="text-muted-foreground text-sm mb-4">
+                  Apply to jobs to track your application progress.
+                </p>
+              </div>
             ) : (
               <div className="divide-y">
                 {appliedJobs.map(job => {
