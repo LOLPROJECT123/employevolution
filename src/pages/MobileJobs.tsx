@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { MobileJobFilters } from "@/components/MobileJobFilters";
+import { SavedAndAppliedJobs } from "@/components/SavedAndAppliedJobs";
 import { 
   Search,
   SlidersHorizontal,
@@ -311,6 +312,17 @@ export default function MobileJobs() {
           <div className="p-3">
             <h1 className="text-xl font-bold mb-3">Search All Jobs</h1>
             
+            <div className="mb-4">
+              <SavedAndAppliedJobs
+                onSelect={handleSelectJob}
+                selectedJobId={selectedJob?.id || null}
+                savedJobs={jobs.filter(job => savedJobIds.includes(job.id))}
+                appliedJobs={jobs.filter(job => appliedJobIds.includes(job.id))}
+                onApply={handleApplyJob}
+                onSave={handleSaveJob}
+              />
+            </div>
+            
             <div className="relative mb-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -341,7 +353,7 @@ export default function MobileJobs() {
         ) : null}
       </div>
       
-      <main className={`flex-1 ${!showDetailView ? 'pt-[180px]' : ''}`}>
+      <main className={`flex-1 ${!showDetailView ? 'pt-[430px]' : ''}`}>
         {!showDetailView ? (
           <div className="divide-y divide-gray-100 dark:divide-gray-800">
             {filteredJobs.map(job => (
