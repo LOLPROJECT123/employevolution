@@ -1,4 +1,3 @@
-
 import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
 import { 
@@ -28,15 +27,15 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { detectPlatform, startAutomation } from "@/utils/automationUtils";
 import AutomationSettings from "@/components/AutomationSettings";
+import { useJobApplications } from "@/contexts/JobApplicationContext";
 
 interface JobDetailViewProps {
   job: Job | null;
-  onApply: (job: Job) => void;
-  onSave: (job: Job) => void;
 }
 
-export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
+export function JobDetailView({ job }: JobDetailViewProps) {
   const [isApplying, setIsApplying] = useState(false);
+  const { saveJob, applyToJob, savedJobs, appliedJobs, getApplicationByJobId } = useJobApplications();
   
   // Check if automation is possible for this job
   const canAutomate = job?.applyUrl ? detectPlatform(job.applyUrl) !== null : false;
@@ -93,7 +92,6 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
     return "WEAK MATCH";
   };
 
-  // Enhanced job requirements with more detailed descriptions
   const enhancedRequirements = [
     "Ability to organize large amounts of information and prioritize workload to meet deadlines, ensuring projects are completed efficiently and on time.",
     "Effectively collaborate and work as a team with a diverse group of individuals, demonstrating strong interpersonal skills and adaptability in cross-functional environments.",
@@ -103,7 +101,6 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
     "Excellent written and verbal communication skills with experience interacting with clients and stakeholders at all levels."
   ];
 
-  // Enhanced job responsibilities with more detailed descriptions
   const enhancedResponsibilities = [
     "Administrative duties as needed such as answering phones, filing, scanning, travel and expense reports, data entry, and scheduling appointments, ensuring smooth daily operations and efficient workflow.",
     "Collection of information needed for performance reports and coordinating the appropriate paperwork and materials for client meetings, including preparation of presentation materials and follow-up documentation.",
@@ -113,7 +110,6 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
     "Support senior staff by preparing reports, analyzing data, and creating visual presentations for stakeholder meetings."
   ];
 
-  // Company information
   const companyInfo = {
     size: job.companySize === 'enterprise' ? '5,000-10,000 employees' : 
           job.companySize === 'large' ? '1,000-5,000 employees' : 
@@ -126,7 +122,6 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
            job.companyType === 'nonprofit' ? 'Non-Profit' : 'Educational Institution'
   };
 
-  // Company news
   const companyNews = [
     {
       source: "Business News",
@@ -148,7 +143,6 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
     }
   ];
 
-  // Enhanced benefits
   const enhancedBenefits = [
     "Comprehensive health, dental, and vision insurance with coverage for dependents",
     "401(k) retirement plan with generous company matching up to 6%",
@@ -162,7 +156,6 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
     "Tuition reimbursement for approved educational programs"
   ];
 
-  // Company values and culture
   const companyValues = [
     "Innovation - We constantly seek new solutions and embrace creative thinking",
     "Integrity - We uphold the highest ethical standards in all our interactions",
@@ -174,7 +167,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
   const handleApplyClick = async () => {
     try {
       setIsApplying(true);
-      onApply(job);
+      applyToJob(job);
     } catch (error) {
       toast.error("Failed To Apply", {
         description: "There Was An Error Submitting Your Application. Please Try Again."
@@ -212,7 +205,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
       });
       
       // Also mark as applied in our system
-      onApply(job);
+      applyToJob(job);
     } catch (error) {
       toast.error("Automation Failed", {
         description: "There Was An Error Starting The Automation Process."
@@ -233,6 +226,10 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
         return "AutoApply With Script";
     }
   };
+
+  const isSaved = savedJobs.some(j => j.id === job.id);
+  const isApplied = appliedJobs.some(j => j.id === job.id);
+  const application = getApplicationByJobId(job.id);
 
   return (
     <div className="h-full flex flex-col">
@@ -265,9 +262,9 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
           </div>
           <div className="flex gap-2">
             <Button
-              variant="outline"
+              variant={isSaved ? "default" : "outline"}
               size="icon"
-              onClick={() => onSave(job)}
+              onClick={() => saveJob(job)}
               className="button-hover"
             >
               <BookmarkIcon className="w-4 h-4" />
@@ -295,6 +292,17 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
           <Badge variant="secondary" className="capitalize">{job.level}</Badge>
           <Badge variant="outline">{formattedSalary}</Badge>
         </div>
+        
+        {isApplied && application && (
+          <div className="mt-3 p-2 bg-secondary/50 rounded-lg">
+            <p className="text-sm font-medium">
+              Status: <span className="capitalize">{application.status}</span>
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Applied on {new Date(application.appliedAt).toLocaleDateString()}
+            </p>
+          </div>
+        )}
       </div>
       
       <div className="p-4 border-b bg-gray-50 dark:bg-gray-800/50">
@@ -302,9 +310,9 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
           className="w-full py-6 text-base font-medium shadow-sm rounded-lg"
           size="lg"
           onClick={handleApplyClick}
-          disabled={isApplying}
+          disabled={isApplying || isApplied}
         >
-          {isApplying ? "Applying..." : "Apply Now"}
+          {isApplying ? "Applying..." : isApplied ? "Applied" : "Apply Now"}
         </Button>
       </div>
       
@@ -595,11 +603,11 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
       <div className="border-t p-4">
         <div className="flex gap-3">
           <Button
-            variant="outline"
+            variant={isSaved ? "default" : "outline"}
             className="flex-1"
-            onClick={() => onSave(job)}
+            onClick={() => saveJob(job)}
           >
-            Save Job
+            {isSaved ? "Saved" : "Save Job"}
           </Button>
           
           {job.applyUrl && (
@@ -613,7 +621,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
           )}
         </div>
         
-        {canAutomate && automationEnabled && (
+        {canAutomate && automationEnabled && !isApplied && (
           <div className="mt-3">
             <Button
               variant="outline"
@@ -629,3 +637,4 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
     </div>
   );
 }
+
