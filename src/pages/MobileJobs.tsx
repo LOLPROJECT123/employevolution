@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Job, JobFilters } from "@/types/job";
 import { MobileJobCard } from "@/components/MobileJobCard";
