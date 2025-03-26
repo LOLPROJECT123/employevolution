@@ -25,7 +25,6 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { useJobApplications } from "@/contexts/JobApplicationContext";
-import { ModeToggle } from "@/components/ModeToggle";
 
 interface SavedAndAppliedJobsProps {
   onSelect: (job: Job) => void;
@@ -70,16 +69,8 @@ export function SavedAndAppliedJobs({
     }
   };
   
-  // Simple header with just the theme toggle
-  const header = (
-    <div className="flex justify-end items-center bg-background py-3 px-4 border-b">
-      <ModeToggle />
-    </div>
-  );
-  
   return (
     <Card className="h-full shadow-none border-0 sm:border sm:shadow-sm overflow-hidden">
-      {header}
       <CardHeader className="border-b pb-3 pt-4">
         <CardTitle className="text-lg">My Jobs</CardTitle>
       </CardHeader>
@@ -94,7 +85,7 @@ export function SavedAndAppliedJobs({
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="saved" className="p-0 pt-2 overflow-auto max-h-[calc(100vh-220px)]">
+          <TabsContent value="saved" className="p-0 pt-2 overflow-auto max-h-[calc(100vh-180px)]">
             {savedJobs.length === 0 ? (
               <div className="p-6 text-center">
                 <p className="text-muted-foreground mb-2">
@@ -123,7 +114,7 @@ export function SavedAndAppliedJobs({
             )}
           </TabsContent>
           
-          <TabsContent value="applied" className="p-0 pt-2 overflow-auto max-h-[calc(100vh-220px)]">
+          <TabsContent value="applied" className="p-0 pt-2 overflow-auto max-h-[calc(100vh-180px)]">
             {appliedJobs.length === 0 ? (
               <div className="p-6 text-center">
                 <p className="text-muted-foreground mb-2">
