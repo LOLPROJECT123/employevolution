@@ -246,6 +246,15 @@ export default function JobSourcesDisplay() {
               <div className="flex gap-2">
                 <AddSourceButton />
                 <JobScraperConfig onConfigUpdate={handleSourceUpdate} />
+                <Button 
+                  size="sm" 
+                  onClick={handleStartScraping}
+                  className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
+                  disabled={isScrapingNow}
+                >
+                  <RefreshCwIcon className="h-3.5 w-3.5" />
+                  Refresh Now
+                </Button>
               </div>
             </div>
           )}
@@ -266,7 +275,7 @@ export default function JobSourcesDisplay() {
             </div>
           ) : (
             <div className="flex flex-col space-y-3">
-              {/* Updated layout for mobile to show time and badge on same line */}
+              {/* Information about last update and new jobs */}
               <div className="flex items-center text-sm text-blue-600/70 dark:text-blue-400/70">
                 <span>Last updated: {getFormattedLastScraped()}</span>
                 {newJobsFound > 0 && (
@@ -276,17 +285,20 @@ export default function JobSourcesDisplay() {
                 )}
               </div>
               
-              {/* Refresh button now on its own line with spacing */}
-              <div className="flex justify-end">
-                <Button 
-                  size="sm" 
-                  onClick={handleStartScraping}
-                  className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  <RefreshCwIcon className="h-3.5 w-3.5" />
-                  Refresh Now
-                </Button>
-              </div>
+              {/* Only show Refresh button on mobile since we moved it to the header for desktop */}
+              {isMobile && (
+                <div className="flex justify-end">
+                  <Button 
+                    size="sm" 
+                    onClick={handleStartScraping}
+                    className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
+                    disabled={isScrapingNow}
+                  >
+                    <RefreshCwIcon className="h-3.5 w-3.5" />
+                    Refresh Now
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </div>
