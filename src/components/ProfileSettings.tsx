@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Check } from 'lucide-react';
+import { Check, X, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const ProfileSettings = () => {
@@ -18,6 +18,14 @@ const ProfileSettings = () => {
   
   // Email state
   const [email, setEmail] = useState('user@example.com');
+
+  // Skills and languages states
+  const [skills, setSkills] = useState<string[]>(['React', 'TypeScript', 'Node.js']);
+  const [languages, setLanguages] = useState<string[]>(['English', 'Spanish']);
+  const [newSkill, setNewSkill] = useState('');
+  const [newLanguage, setNewLanguage] = useState('');
+  const [editingSkills, setEditingSkills] = useState(false);
+  const [editingLanguages, setEditingLanguages] = useState(false);
 
   const handleEmailPreferenceChange = (preference: 'daily' | 'weekly' | 'never') => {
     setEmailPreference(preference);
@@ -77,6 +85,66 @@ const ProfileSettings = () => {
     });
   };
 
+  const addSkill = () => {
+    if (newSkill.trim() === '') return;
+    
+    if (!skills.includes(newSkill.trim())) {
+      setSkills([...skills, newSkill.trim()]);
+      toast({
+        title: 'Skill Added',
+        description: `${newSkill.trim()} has been added to your skills.`,
+      });
+    } else {
+      toast({
+        title: 'Skill Already Exists',
+        description: 'This skill is already in your list.',
+        variant: 'destructive',
+      });
+    }
+    setNewSkill('');
+  };
+
+  const removeSkill = (skillToRemove: string) => {
+    setSkills(skills.filter(skill => skill !== skillToRemove));
+    toast({
+      title: 'Skill Removed',
+      description: `${skillToRemove} has been removed from your skills.`,
+    });
+  };
+
+  const addLanguage = () => {
+    if (newLanguage.trim() === '') return;
+    
+    if (!languages.includes(newLanguage.trim())) {
+      setLanguages([...languages, newLanguage.trim()]);
+      toast({
+        title: 'Language Added',
+        description: `${newLanguage.trim()} has been added to your languages.`,
+      });
+    } else {
+      toast({
+        title: 'Language Already Exists',
+        description: 'This language is already in your list.',
+        variant: 'destructive',
+      });
+    }
+    setNewLanguage('');
+  };
+
+  const removeLanguage = (languageToRemove: string) => {
+    setLanguages(languages.filter(language => language !== languageToRemove));
+    toast({
+      title: 'Language Removed',
+      description: `${languageToRemove} has been removed from your languages.`,
+    });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent, addFunction: () => void) => {
+    if (e.key === 'Enter') {
+      addFunction();
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -117,6 +185,104 @@ const ProfileSettings = () => {
               Never
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle>Skills</CardTitle>
+            <Button 
+              variant="outline" 
+              onClick={() => setEditingSkills(!editingSkills)}
+              className="bg-cyan-500 hover:bg-cyan-600 text-white"
+            >
+              {editingSkills ? 'Done' : 'Edit'}
+            </Button>
+          </div>
+          <CardDescription>Add or remove professional skills</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2 mb-4">
+            {skills.map((skill, index) => (
+              <div 
+                key={index} 
+                className={`px-3 py-1 rounded-full text-sm ${editingSkills ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'} flex items-center`}
+              >
+                {skill}
+                {editingSkills && (
+                  <button 
+                    onClick={() => removeSkill(skill)} 
+                    className="ml-2 text-red-600 hover:text-red-800"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+          {editingSkills && (
+            <div className="flex gap-2">
+              <Input
+                value={newSkill}
+                onChange={(e) => setNewSkill(e.target.value)}
+                placeholder="Add a new skill"
+                onKeyDown={(e) => handleKeyDown(e, addSkill)}
+              />
+              <Button onClick={addSkill} className="bg-cyan-500 hover:bg-cyan-600">
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle>Languages</CardTitle>
+            <Button 
+              variant="outline" 
+              onClick={() => setEditingLanguages(!editingLanguages)}
+              className="bg-cyan-500 hover:bg-cyan-600 text-white"
+            >
+              {editingLanguages ? 'Done' : 'Edit'}
+            </Button>
+          </div>
+          <CardDescription>Add or remove languages you speak</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2 mb-4">
+            {languages.map((language, index) => (
+              <div 
+                key={index} 
+                className={`px-3 py-1 rounded-full text-sm ${editingLanguages ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'} flex items-center`}
+              >
+                {language}
+                {editingLanguages && (
+                  <button 
+                    onClick={() => removeLanguage(language)} 
+                    className="ml-2 text-red-600 hover:text-red-800"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+          {editingLanguages && (
+            <div className="flex gap-2">
+              <Input
+                value={newLanguage}
+                onChange={(e) => setNewLanguage(e.target.value)}
+                placeholder="Add a new language"
+                onKeyDown={(e) => handleKeyDown(e, addLanguage)}
+              />
+              <Button onClick={addLanguage} className="bg-cyan-500 hover:bg-cyan-600">
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
