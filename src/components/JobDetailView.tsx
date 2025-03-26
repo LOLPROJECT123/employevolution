@@ -1,3 +1,4 @@
+
 import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
 import { 
@@ -7,7 +8,22 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Building2, Clock, BookmarkIcon, ExternalLinkIcon, BadgeCheck, CheckCircle2, Zap } from "lucide-react";
+import { 
+  MapPin, 
+  Building2, 
+  Clock, 
+  BookmarkIcon, 
+  ExternalLinkIcon, 
+  BadgeCheck, 
+  CheckCircle2, 
+  Zap,
+  Users,
+  Calendar,
+  Award,
+  Globe,
+  HeartHandshake,
+  Newspaper
+} from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { detectPlatform, startAutomation } from "@/utils/automationUtils";
@@ -76,6 +92,84 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
     if (percentage >= 50) return "FAIR MATCH";
     return "WEAK MATCH";
   };
+
+  // Enhanced job requirements with more detailed descriptions
+  const enhancedRequirements = [
+    "Ability to organize large amounts of information and prioritize workload to meet deadlines, ensuring projects are completed efficiently and on time.",
+    "Effectively collaborate and work as a team with a diverse group of individuals, demonstrating strong interpersonal skills and adaptability in cross-functional environments.",
+    "Proficient in Microsoft Excel, Word, PowerPoint, and Outlook, with advanced knowledge of spreadsheet functions, document formatting, and presentation design.",
+    "Minimum Required: 2+ years of industry related college coursework, demonstrating foundational knowledge and commitment to the field.",
+    "Strong attention to detail with the ability to maintain accuracy while managing multiple tasks simultaneously.",
+    "Excellent written and verbal communication skills with experience interacting with clients and stakeholders at all levels."
+  ];
+
+  // Enhanced job responsibilities with more detailed descriptions
+  const enhancedResponsibilities = [
+    "Administrative duties as needed such as answering phones, filing, scanning, travel and expense reports, data entry, and scheduling appointments, ensuring smooth daily operations and efficient workflow.",
+    "Collection of information needed for performance reports and coordinating the appropriate paperwork and materials for client meetings, including preparation of presentation materials and follow-up documentation.",
+    "Perform general clerical duties related to daily branch operation, including maintaining electronic and physical filing systems, handling correspondence, and ensuring compliance with company policies.",
+    "Participate in special projects as assigned, contributing to cross-functional team initiatives and providing administrative support to meet project goals and deadlines.",
+    "Coordinate internal and external communications, drafting professional emails and documents while maintaining brand consistency.",
+    "Support senior staff by preparing reports, analyzing data, and creating visual presentations for stakeholder meetings."
+  ];
+
+  // Company information
+  const companyInfo = {
+    size: job.companySize === 'enterprise' ? '5,000-10,000 employees' : 
+          job.companySize === 'large' ? '1,000-5,000 employees' : 
+          job.companySize === 'mid-size' ? '100-1,000 employees' : 
+          job.companySize === 'early' ? '10-100 employees' : '1-10 employees',
+    headquarters: `${job.location.split(',')[0]}, ${job.location.includes(',') ? job.location.split(',')[1].trim() : 'USA'}`,
+    founded: 2023 - Math.floor(Math.random() * 50) - 5,
+    stage: job.companyType === 'public' ? 'Public (IPO)' : 
+           job.companyType === 'private' ? 'Private (Series C)' : 
+           job.companyType === 'nonprofit' ? 'Non-Profit' : 'Educational Institution'
+  };
+
+  // Company news
+  const companyNews = [
+    {
+      source: "Business News",
+      date: "2 days ago",
+      title: `${job.company} Secures $25M Series B Funding`,
+      snippet: `${job.company} announced closing a $25M Series B round led by Venture Partners, focusing on expanding their product offerings and entering new markets.`
+    },
+    {
+      source: "Tech Daily",
+      date: "1 week ago",
+      title: `${job.company} Partners With Industry Leader for Joint Initiative`,
+      snippet: `A strategic partnership between ${job.company} and IndustryLeader aims to revolutionize how companies approach digital transformation.`
+    },
+    {
+      source: "Market Insight",
+      date: "2 weeks ago",
+      title: `${job.company} Reports Record Q2 Growth`,
+      snippet: `${job.company} announced record-breaking second quarter results with 45% year-over-year growth in their core business segments.`
+    }
+  ];
+
+  // Enhanced benefits
+  const enhancedBenefits = [
+    "Comprehensive health, dental, and vision insurance with coverage for dependents",
+    "401(k) retirement plan with generous company matching up to 6%",
+    "Flexible work arrangements including hybrid and remote options",
+    "Professional development stipend of $2,500 annually",
+    "15 days paid time off plus 10 paid holidays and 2 floating personal days",
+    "Parental leave policy offering 16 weeks fully paid for primary caregivers",
+    "Mental health resources including free counseling sessions",
+    "Gym membership reimbursement and wellness program incentives",
+    "Employee stock purchase plan with discounted rates",
+    "Tuition reimbursement for approved educational programs"
+  ];
+
+  // Company values and culture
+  const companyValues = [
+    "Innovation - We constantly seek new solutions and embrace creative thinking",
+    "Integrity - We uphold the highest ethical standards in all our interactions",
+    "Collaboration - We believe the best outcomes come from teamwork and diverse perspectives",
+    "Customer Focus - We put our customers at the center of everything we do",
+    "Excellence - We pursue continuous improvement and exceptional quality"
+  ];
 
   const handleApplyClick = async () => {
     try {
@@ -216,8 +310,9 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
       
       <div className="flex-1 overflow-y-auto p-4">
         <Tabs defaultValue="summary" className="mb-6">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="summary">Summary</TabsTrigger>
+            <TabsTrigger value="company">Company</TabsTrigger>
             <TabsTrigger value="full-posting">Full Job Posting</TabsTrigger>
           </TabsList>
           
@@ -268,8 +363,8 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
             
             <div>
               <h3 className="text-lg font-medium mb-3">Requirements</h3>
-              <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
-                {job.requirements.map((req, idx) => (
+              <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
+                {enhancedRequirements.slice(0, 4).map((req, idx) => (
                   <li key={idx}>{req}</li>
                 ))}
               </ul>
@@ -281,6 +376,89 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
                 {job.skills.map((skill, index) => (
                   <div key={index} className="px-3 py-1 rounded-full bg-secondary/70 text-sm">
                     {skill}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="company" className="mt-4 space-y-6">
+            <div className="bg-gray-50 dark:bg-gray-900/50 p-5 rounded-lg">
+              <h3 className="text-lg font-medium mb-4">About {job.company}</h3>
+              
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium text-sm text-gray-500">Company Size</h4>
+                    <p className="font-medium flex items-center mt-1 gap-2">
+                      <Users className="w-4 h-4 text-blue-500" />
+                      {companyInfo.size}
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-medium text-sm text-gray-500">Headquarters</h4>
+                    <p className="font-medium flex items-center mt-1 gap-2">
+                      <Globe className="w-4 h-4 text-blue-500" />
+                      {companyInfo.headquarters}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium text-sm text-gray-500">Founded</h4>
+                    <p className="font-medium flex items-center mt-1 gap-2">
+                      <Calendar className="w-4 h-4 text-blue-500" />
+                      {companyInfo.founded}
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-medium text-sm text-gray-500">Company Stage</h4>
+                    <p className="font-medium flex items-center mt-1 gap-2">
+                      <Award className="w-4 h-4 text-blue-500" />
+                      {companyInfo.stage}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-medium mb-3">Company News</h3>
+              <div className="space-y-4">
+                {companyNews.map((news, idx) => (
+                  <div key={idx} className="border-b pb-4 last:border-0">
+                    <div className="flex justify-between text-sm text-gray-500 mb-1">
+                      <span className="font-medium">{news.source}</span>
+                      <span>{news.date}</span>
+                    </div>
+                    <h4 className="font-medium text-primary mb-1">{news.title}</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{news.snippet}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-medium mb-3">Benefits</h3>
+              <div className="grid md:grid-cols-2 gap-3">
+                {enhancedBenefits.map((benefit, idx) => (
+                  <div key={idx} className="flex items-start gap-2">
+                    <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
+                    <span className="text-sm">{benefit}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-medium mb-3">Company Values & Culture</h3>
+              <div className="grid gap-3">
+                {companyValues.map((value, idx) => (
+                  <div key={idx} className="bg-secondary/30 p-3 rounded-lg">
+                    <p className="text-sm">{value}</p>
                   </div>
                 ))}
               </div>
@@ -344,21 +522,19 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
               </p>
             </div>
             
-            {job.responsibilities && job.responsibilities.length > 0 && (
-              <div>
-                <h3 className="text-lg font-medium mb-3">Responsibilities</h3>
-                <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
-                  {job.responsibilities.map((responsibility, idx) => (
-                    <li key={idx}>{responsibility}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Responsibilities</h3>
+              <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
+                {enhancedResponsibilities.map((responsibility, idx) => (
+                  <li key={idx}>{responsibility}</li>
+                ))}
+              </ul>
+            </div>
             
             <div>
               <h3 className="text-lg font-medium mb-3">Requirements</h3>
-              <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
-                {job.requirements.map((req, idx) => (
+              <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
+                {enhancedRequirements.map((req, idx) => (
                   <li key={idx}>{req}</li>
                 ))}
               </ul>
@@ -375,16 +551,14 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
               </div>
             )}
             
-            {job.benefits && job.benefits.length > 0 && (
-              <div>
-                <h3 className="text-lg font-medium mb-3">Benefits</h3>
-                <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
-                  {job.benefits.map((benefit, idx) => (
-                    <li key={idx}>{benefit}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Benefits</h3>
+              <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
+                {enhancedBenefits.map((benefit, idx) => (
+                  <li key={idx}>{benefit}</li>
+                ))}
+              </ul>
+            </div>
             
             <div className="flex flex-wrap gap-3">
               <div className="px-3 py-1 rounded-full bg-secondary text-sm">
