@@ -1,3 +1,4 @@
+
 import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
 import { 
@@ -317,286 +318,288 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
       </div>
       
       <div className="flex-1 overflow-y-auto p-4">
-        <Tabs defaultValue="summary" className="mb-6">
-          <TabsList className="grid w-full grid-cols-3">
+        <Tabs defaultValue="summary" className="w-full">
+          <TabsList className="w-full grid grid-cols-3 mb-4">
             <TabsTrigger value="summary">Summary</TabsTrigger>
             <TabsTrigger value="company">Company</TabsTrigger>
             <TabsTrigger value="full-posting">Full Job Posting</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="summary" className="mt-4 space-y-6">
-            {job.matchCriteria && (
-              <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg">
-                <div className="mb-2">
-                  <p className="font-medium">You Match The Following {job.company}'s Candidate Preferences</p>
-                  <p className="text-sm text-yellow-600 dark:text-yellow-400 flex items-center gap-1 mt-1">
-                    <span className="text-lg">✨</span> Employers Are More Likely To Interview You If You Match These Preferences:
-                  </p>
-                </div>
-                <div className="grid grid-cols-2 gap-4 mt-3">
-                  {job.matchCriteria.degree && (
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3 flex items-center">
-                      <CheckCircle2 className="w-5 h-5 text-green-500 mr-2" />
-                      <span>Degree</span>
-                    </div>
-                  )}
-                  {job.matchCriteria.experience && (
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3 flex items-center">
-                      <CheckCircle2 className="w-5 h-5 text-green-500 mr-2" />
-                      <span>Experience</span>
-                    </div>
-                  )}
-                  {job.matchCriteria.skills && (
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3 flex items-center">
-                      <CheckCircle2 className="w-5 h-5 text-green-500 mr-2" />
-                      <span>Skills</span>
-                    </div>
-                  )}
-                  {job.matchCriteria.location && (
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3 flex items-center">
-                      <CheckCircle2 className="w-5 h-5 text-green-500 mr-2" />
-                      <span>Location</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-            
-            <div>
-              <h3 className="text-lg font-medium mb-3">About This Role</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                {job.description.substring(0, 300)}...
-              </p>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-medium mb-3">Requirements</h3>
-              <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
-                {enhancedRequirements.slice(0, 4).map((req, idx) => (
-                  <li key={idx}>{req}</li>
-                ))}
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-medium mb-3">Skills</h3>
-              <div className="flex flex-wrap gap-2">
-                {job.skills.map((skill, index) => (
-                  <div key={index} className="px-3 py-1 rounded-full bg-secondary/70 text-sm">
-                    {skill}
+          <div className="mt-2 tab-content-container">
+            <TabsContent value="summary" className="mt-0 space-y-6 h-full">
+              {job.matchCriteria && (
+                <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg">
+                  <div className="mb-2">
+                    <p className="font-medium">You Match The Following {job.company}'s Candidate Preferences</p>
+                    <p className="text-sm text-yellow-600 dark:text-yellow-400 flex items-center gap-1 mt-1">
+                      <span className="text-lg">✨</span> Employers Are More Likely To Interview You If You Match These Preferences:
+                    </p>
                   </div>
-                ))}
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="company" className="mt-4 space-y-6">
-            <div className="bg-gray-50 dark:bg-gray-900/50 p-5 rounded-lg">
-              <h3 className="text-lg font-medium mb-4">About {job.company}</h3>
+                  <div className="grid grid-cols-2 gap-4 mt-3">
+                    {job.matchCriteria.degree && (
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-3 flex items-center">
+                        <CheckCircle2 className="w-5 h-5 text-green-500 mr-2" />
+                        <span>Degree</span>
+                      </div>
+                    )}
+                    {job.matchCriteria.experience && (
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-3 flex items-center">
+                        <CheckCircle2 className="w-5 h-5 text-green-500 mr-2" />
+                        <span>Experience</span>
+                      </div>
+                    )}
+                    {job.matchCriteria.skills && (
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-3 flex items-center">
+                        <CheckCircle2 className="w-5 h-5 text-green-500 mr-2" />
+                        <span>Skills</span>
+                      </div>
+                    )}
+                    {job.matchCriteria.location && (
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-3 flex items-center">
+                        <CheckCircle2 className="w-5 h-5 text-green-500 mr-2" />
+                        <span>Location</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
               
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium text-sm text-gray-500">Company Size</h4>
-                    <p className="font-medium flex items-center mt-1 gap-2">
-                      <Users className="w-4 h-4 text-blue-500" />
-                      {companyInfo.size}
-                    </p>
-                  </div>
-                  
-                  <div>
-                    <h4 className="font-medium text-sm text-gray-500">Headquarters</h4>
-                    <p className="font-medium flex items-center mt-1 gap-2">
-                      <Globe className="w-4 h-4 text-blue-500" />
-                      {companyInfo.headquarters}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium text-sm text-gray-500">Founded</h4>
-                    <p className="font-medium flex items-center mt-1 gap-2">
-                      <Calendar className="w-4 h-4 text-blue-500" />
-                      {companyInfo.founded}
-                    </p>
-                  </div>
-                  
-                  <div>
-                    <h4 className="font-medium text-sm text-gray-500">Company Stage</h4>
-                    <p className="font-medium flex items-center mt-1 gap-2">
-                      <Award className="w-4 h-4 text-blue-500" />
-                      {companyInfo.stage}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-medium mb-3">Company News</h3>
-              <div className="space-y-4">
-                {companyNews.map((news, idx) => (
-                  <div key={idx} className="border-b pb-4 last:border-0">
-                    <div className="flex justify-between text-sm text-gray-500 mb-1">
-                      <span className="font-medium">{news.source}</span>
-                      <span>{news.date}</span>
-                    </div>
-                    <h4 className="font-medium text-primary mb-1">{news.title}</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{news.snippet}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-medium mb-3">Benefits</h3>
-              <div className="grid md:grid-cols-2 gap-3">
-                {enhancedBenefits.map((benefit, idx) => (
-                  <div key={idx} className="flex items-start gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
-                    <span className="text-sm">{benefit}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-medium mb-3">Company Values & Culture</h3>
-              <div className="grid gap-3">
-                {companyValues.map((value, idx) => (
-                  <div key={idx} className="bg-secondary/30 p-3 rounded-lg">
-                    <p className="text-sm">{value}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="full-posting" className="mt-4 space-y-6">
-            {job.matchPercentage && (
-              <div className={`p-4 rounded-lg ${getMatchBgColor(job.matchPercentage)} mb-4`}>
-                <div className="flex items-center gap-2">
-                  <div className={`text-xl font-bold ${getMatchColor(job.matchPercentage)}`}>{job.matchPercentage}%</div>
-                  <div className={`font-semibold ${getMatchColor(job.matchPercentage)}`}>
-                    {getMatchLabel(job.matchPercentage)}
-                  </div>
-                </div>
-                <p className="text-sm mt-1">Based on your profile, skills, and experience</p>
-              </div>
-            )}
-            
-            {job.matchCriteria && (
-              <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg">
-                <div className="mb-2">
-                  <p className="font-medium">You Match The Following {job.company}'s Candidate Preferences</p>
-                  <p className="text-sm text-yellow-600 dark:text-yellow-400 flex items-center gap-1 mt-1">
-                    <span className="text-lg">✨</span> Employers Are More Likely To Interview You If You Match These Preferences:
-                  </p>
-                </div>
-                <div className="grid grid-cols-2 gap-4 mt-3">
-                  {job.matchCriteria.degree && (
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3 flex items-center">
-                      <CheckCircle2 className="w-5 h-5 text-green-500 mr-2" />
-                      <span>Degree</span>
-                    </div>
-                  )}
-                  {job.matchCriteria.experience && (
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3 flex items-center">
-                      <CheckCircle2 className="w-5 h-5 text-green-500 mr-2" />
-                      <span>Experience</span>
-                    </div>
-                  )}
-                  {job.matchCriteria.skills && (
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3 flex items-center">
-                      <CheckCircle2 className="w-5 h-5 text-green-500 mr-2" />
-                      <span>Skills</span>
-                    </div>
-                  )}
-                  {job.matchCriteria.location && (
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3 flex items-center">
-                      <CheckCircle2 className="w-5 h-5 text-green-500 mr-2" />
-                      <span>Location</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-            
-            <div>
-              <h3 className="text-lg font-medium mb-3">Job Description</h3>
-              <p className="text-muted-foreground whitespace-pre-line leading-relaxed">
-                {job.description}
-              </p>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-medium mb-3">Responsibilities</h3>
-              <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
-                {enhancedResponsibilities.map((responsibility, idx) => (
-                  <li key={idx}>{responsibility}</li>
-                ))}
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-medium mb-3">Requirements</h3>
-              <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
-                {enhancedRequirements.map((req, idx) => (
-                  <li key={idx}>{req}</li>
-                ))}
-              </ul>
-            </div>
-            
-            {job.education && job.education.length > 0 && (
               <div>
-                <h3 className="text-lg font-medium mb-3">Education</h3>
-                <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
-                  {job.education.map((edu, idx) => (
-                    <li key={idx}>{edu}</li>
+                <h3 className="text-lg font-medium mb-3">About This Role</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  {job.description.substring(0, 300)}...
+                </p>
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-medium mb-3">Requirements</h3>
+                <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
+                  {enhancedRequirements.slice(0, 4).map((req, idx) => (
+                    <li key={idx}>{req}</li>
                   ))}
                 </ul>
               </div>
-            )}
-            
-            <div>
-              <h3 className="text-lg font-medium mb-3">Benefits</h3>
-              <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
-                {enhancedBenefits.map((benefit, idx) => (
-                  <li key={idx}>{benefit}</li>
-                ))}
-              </ul>
-            </div>
-            
-            <div className="flex flex-wrap gap-3">
-              <div className="px-3 py-1 rounded-full bg-secondary text-sm">
-                {job.type}
-              </div>
-              <div className="px-3 py-1 rounded-full bg-secondary text-sm">
-                {job.level}
-              </div>
-              <div className="px-3 py-1 rounded-full bg-secondary text-sm">
-                {formattedSalary}
-              </div>
-            </div>
-            
-            <div className="flex items-center text-sm text-muted-foreground mb-4">
-              <Clock className="w-4 h-4 mr-2" />
-              Posted on {new Date(job.postedAt).toLocaleDateString()}
-            </div>
-            
-            {job.applyUrl && (
-              <div className="p-4 rounded-lg bg-secondary/20 text-sm">
-                <div className="flex items-center gap-2 mb-2">
-                  <BadgeCheck className="w-5 h-5 text-primary" />
-                  <span className="font-medium">Application Details</span>
+              
+              <div>
+                <h3 className="text-lg font-medium mb-3">Skills</h3>
+                <div className="flex flex-wrap gap-2">
+                  {job.skills.map((skill, index) => (
+                    <div key={index} className="px-3 py-1 rounded-full bg-secondary/70 text-sm">
+                      {skill}
+                    </div>
+                  ))}
                 </div>
-                <p className="text-muted-foreground mb-2">
-                  Click the "Apply Now" button to visit the application page.
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="company" className="mt-0 space-y-6 h-full">
+              <div className="bg-gray-50 dark:bg-gray-900/50 p-5 rounded-lg">
+                <h3 className="text-lg font-medium mb-4">About {job.company}</h3>
+                
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-medium text-sm text-gray-500">Company Size</h4>
+                      <p className="font-medium flex items-center mt-1 gap-2">
+                        <Users className="w-4 h-4 text-blue-500" />
+                        {companyInfo.size}
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-sm text-gray-500">Headquarters</h4>
+                      <p className="font-medium flex items-center mt-1 gap-2">
+                        <Globe className="w-4 h-4 text-blue-500" />
+                        {companyInfo.headquarters}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-medium text-sm text-gray-500">Founded</h4>
+                      <p className="font-medium flex items-center mt-1 gap-2">
+                        <Calendar className="w-4 h-4 text-blue-500" />
+                        {companyInfo.founded}
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-sm text-gray-500">Company Stage</h4>
+                      <p className="font-medium flex items-center mt-1 gap-2">
+                        <Award className="w-4 h-4 text-blue-500" />
+                        {companyInfo.stage}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-medium mb-3">Company News</h3>
+                <div className="space-y-4">
+                  {companyNews.map((news, idx) => (
+                    <div key={idx} className="border-b pb-4 last:border-0">
+                      <div className="flex justify-between text-sm text-gray-500 mb-1">
+                        <span className="font-medium">{news.source}</span>
+                        <span>{news.date}</span>
+                      </div>
+                      <h4 className="font-medium text-primary mb-1">{news.title}</h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{news.snippet}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-medium mb-3">Benefits</h3>
+                <div className="grid md:grid-cols-2 gap-3">
+                  {enhancedBenefits.map((benefit, idx) => (
+                    <div key={idx} className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
+                      <span className="text-sm">{benefit}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-medium mb-3">Company Values & Culture</h3>
+                <div className="grid gap-3">
+                  {companyValues.map((value, idx) => (
+                    <div key={idx} className="bg-secondary/30 p-3 rounded-lg">
+                      <p className="text-sm">{value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="full-posting" className="mt-0 space-y-6 h-full">
+              {job.matchPercentage && (
+                <div className={`p-4 rounded-lg ${getMatchBgColor(job.matchPercentage)} mb-4`}>
+                  <div className="flex items-center gap-2">
+                    <div className={`text-xl font-bold ${getMatchColor(job.matchPercentage)}`}>{job.matchPercentage}%</div>
+                    <div className={`font-semibold ${getMatchColor(job.matchPercentage)}`}>
+                      {getMatchLabel(job.matchPercentage)}
+                    </div>
+                  </div>
+                  <p className="text-sm mt-1">Based on your profile, skills, and experience</p>
+                </div>
+              )}
+              
+              {job.matchCriteria && (
+                <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg">
+                  <div className="mb-2">
+                    <p className="font-medium">You Match The Following {job.company}'s Candidate Preferences</p>
+                    <p className="text-sm text-yellow-600 dark:text-yellow-400 flex items-center gap-1 mt-1">
+                      <span className="text-lg">✨</span> Employers Are More Likely To Interview You If You Match These Preferences:
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 mt-3">
+                    {job.matchCriteria.degree && (
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-3 flex items-center">
+                        <CheckCircle2 className="w-5 h-5 text-green-500 mr-2" />
+                        <span>Degree</span>
+                      </div>
+                    )}
+                    {job.matchCriteria.experience && (
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-3 flex items-center">
+                        <CheckCircle2 className="w-5 h-5 text-green-500 mr-2" />
+                        <span>Experience</span>
+                      </div>
+                    )}
+                    {job.matchCriteria.skills && (
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-3 flex items-center">
+                        <CheckCircle2 className="w-5 h-5 text-green-500 mr-2" />
+                        <span>Skills</span>
+                      </div>
+                    )}
+                    {job.matchCriteria.location && (
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-3 flex items-center">
+                        <CheckCircle2 className="w-5 h-5 text-green-500 mr-2" />
+                        <span>Location</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              
+              <div>
+                <h3 className="text-lg font-medium mb-3">Job Description</h3>
+                <p className="text-muted-foreground whitespace-pre-line leading-relaxed">
+                  {job.description}
                 </p>
               </div>
-            )}
-          </TabsContent>
+              
+              <div>
+                <h3 className="text-lg font-medium mb-3">Responsibilities</h3>
+                <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
+                  {enhancedResponsibilities.map((responsibility, idx) => (
+                    <li key={idx}>{responsibility}</li>
+                  ))}
+                </ul>
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-medium mb-3">Requirements</h3>
+                <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
+                  {enhancedRequirements.map((req, idx) => (
+                    <li key={idx}>{req}</li>
+                  ))}
+                </ul>
+              </div>
+              
+              {job.education && job.education.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-medium mb-3">Education</h3>
+                  <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                    {job.education.map((edu, idx) => (
+                      <li key={idx}>{edu}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              <div>
+                <h3 className="text-lg font-medium mb-3">Benefits</h3>
+                <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
+                  {enhancedBenefits.map((benefit, idx) => (
+                    <li key={idx}>{benefit}</li>
+                  ))}
+                </ul>
+              </div>
+              
+              <div className="flex flex-wrap gap-3">
+                <div className="px-3 py-1 rounded-full bg-secondary text-sm">
+                  {job.type}
+                </div>
+                <div className="px-3 py-1 rounded-full bg-secondary text-sm">
+                  {job.level}
+                </div>
+                <div className="px-3 py-1 rounded-full bg-secondary text-sm">
+                  {formattedSalary}
+                </div>
+              </div>
+              
+              <div className="flex items-center text-sm text-muted-foreground mb-4">
+                <Clock className="w-4 h-4 mr-2" />
+                Posted on {new Date(job.postedAt).toLocaleDateString()}
+              </div>
+              
+              {job.applyUrl && (
+                <div className="p-4 rounded-lg bg-secondary/20 text-sm">
+                  <div className="flex items-center gap-2 mb-2">
+                    <BadgeCheck className="w-5 h-5 text-primary" />
+                    <span className="font-medium">Application Details</span>
+                  </div>
+                  <p className="text-muted-foreground mb-2">
+                    Click the "Apply Now" button to visit the application page.
+                  </p>
+                </div>
+              )}
+            </TabsContent>
+          </div>
         </Tabs>
       </div>
       
