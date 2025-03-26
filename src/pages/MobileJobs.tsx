@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Job, JobFilters } from "@/types/job";
 import { MobileJobCard } from "@/components/MobileJobCard";
@@ -7,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { MobileJobFilters } from "@/components/MobileJobFilters";
 import { SavedAndAppliedJobs } from "@/components/SavedAndAppliedJobs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Search,
   SlidersHorizontal,
@@ -306,7 +308,7 @@ export default function MobileJobs() {
   };
   
   return (
-    <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900">
+    <div className="h-screen flex flex-col bg-white dark:bg-gray-900 overflow-hidden">
       <div className="fixed top-0 left-0 right-0 z-10 bg-white dark:bg-gray-900 border-b dark:border-gray-800">
         {!showDetailView ? (
           <div className="p-3">
@@ -316,7 +318,7 @@ export default function MobileJobs() {
               <div className="p-3 border-b border-gray-100 dark:border-gray-800">
                 <h2 className="text-lg font-medium">My Jobs</h2>
               </div>
-              <div className="p-0">
+              <div className="p-0 max-h-[200px] overflow-hidden">
                 <SavedAndAppliedJobs
                   hideTitle={true}
                   onSelect={handleSelectJob}
@@ -368,34 +370,36 @@ export default function MobileJobs() {
         ) : null}
       </div>
       
-      <main className={`flex-1 ${!showDetailView ? 'pt-[430px]' : ''}`}>
+      <main className={`flex-1 ${!showDetailView ? 'pt-[400px]' : ''} overflow-hidden`}>
         {!showDetailView ? (
-          <div className="divide-y divide-gray-100 dark:divide-gray-800">
-            {filteredJobs.map(job => (
-              <MobileJobCard
-                key={job.id}
-                job={job}
-                isSaved={savedJobIds.includes(job.id)}
-                onSave={() => handleSaveJob(job)}
-                onClick={() => handleSelectJob(job)}
-              />
-            ))}
-            
-            {filteredJobs.length === 0 && (
-              <div className="p-6 text-center">
-                <p className="text-gray-500 dark:text-gray-400">
-                  No jobs match your search criteria. Try adjusting your filters.
-                </p>
-                <Button 
-                  variant="outline" 
-                  className="mt-3"
-                  onClick={handleClearFilters}
-                >
-                  Clear Filters
-                </Button>
-              </div>
-            )}
-          </div>
+          <ScrollArea className="h-[calc(100vh-400px)]">
+            <div className="divide-y divide-gray-100 dark:divide-gray-800">
+              {filteredJobs.map(job => (
+                <MobileJobCard
+                  key={job.id}
+                  job={job}
+                  isSaved={savedJobIds.includes(job.id)}
+                  onSave={() => handleSaveJob(job)}
+                  onClick={() => handleSelectJob(job)}
+                />
+              ))}
+              
+              {filteredJobs.length === 0 && (
+                <div className="p-6 text-center">
+                  <p className="text-gray-500 dark:text-gray-400">
+                    No jobs match your search criteria. Try adjusting your filters.
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    className="mt-3"
+                    onClick={handleClearFilters}
+                  >
+                    Clear Filters
+                  </Button>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
         ) : (
           <MobileJobDetail
             job={selectedJob}

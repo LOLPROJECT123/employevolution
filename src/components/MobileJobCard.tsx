@@ -54,30 +54,53 @@ export function MobileJobCard({
   const formattedSalary = job.level === 'intern' 
     ? `$ ${job.salary.min.toLocaleString()} /hr` 
     : `$ ${job.salary.min.toLocaleString()}`;
+
+  // Get match color based on percentage
+  const getMatchColor = (percentage?: number) => {
+    if (!percentage) return "";
+    if (percentage >= 70) return "text-green-500";
+    if (percentage >= 50) return "text-amber-500";
+    return "text-red-500";
+  };
+
+  const getMatchBgColor = (percentage?: number) => {
+    if (!percentage) return "bg-gray-100 dark:bg-gray-800";
+    if (percentage >= 70) return "bg-green-50 dark:bg-green-900/30";
+    if (percentage >= 50) return "bg-amber-50 dark:bg-amber-900/30";
+    return "bg-red-50 dark:bg-red-900/30";
+  };
   
   return (
     <div 
       className="py-3 px-3 border-b border-gray-100 dark:border-gray-800 active:bg-gray-50 dark:active:bg-gray-800/60"
       onClick={onClick}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-2 min-w-0">
         {/* Initial badge */}
-        <div className={`w-8 h-8 flex items-center justify-center rounded-md ${getInitialBadgeColor()}`}>
+        <div className={`w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-md ${getInitialBadgeColor()}`}>
           {job.company.charAt(0).toUpperCase()}
         </div>
         
-        <div className="flex-1 min-w-0">
-          <h3 className="text-base font-bold leading-tight mb-1">{job.title}</h3>
+        <div className="flex-1 min-w-0 overflow-hidden">
+          <div className="flex items-start justify-between mb-1">
+            <h3 className="text-base font-bold leading-tight truncate">{job.title}</h3>
+            
+            {job.matchPercentage !== undefined && (
+              <Badge variant="outline" className={`ml-1 flex-shrink-0 px-1.5 py-0.5 text-xs font-medium ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)} flex items-center`}>
+                {job.matchPercentage}%
+              </Badge>
+            )}
+          </div>
           
-          <div className="flex flex-col gap-0.5 mb-1">
-            <div className="flex items-center gap-1 text-sm text-gray-600">
+          <div className="flex flex-col gap-0.5">
+            <div className="flex items-center gap-1 text-sm text-gray-600 truncate">
               <DollarSign className="h-3.5 w-3.5 flex-shrink-0" />
-              <span>{formattedSalary}</span>
+              <span className="truncate">{formattedSalary}</span>
             </div>
             
-            <div className="flex items-center gap-1 text-sm text-gray-600">
+            <div className="flex items-center gap-1 text-sm text-gray-600 truncate">
               <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
-              <span>{job.location}</span>
+              <span className="truncate">{job.location}</span>
             </div>
           </div>
         </div>

@@ -8,6 +8,7 @@ import {
   TabsTrigger 
 } from "@/components/ui/tabs";
 import { JobCard } from "@/components/JobCard";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Card,
   CardContent,
@@ -80,7 +81,7 @@ export function SavedAndAppliedJobs({
       )}
       <CardContent className="p-0">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 rounded-none border-b bg-transparent h-auto">
+          <TabsList className="grid w-full grid-cols-2 rounded-none border-b bg-transparent h-auto sticky top-0 z-10">
             <TabsTrigger value="saved" className="text-sm rounded-none py-3 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">
               Saved Jobs ({savedJobs.length})
             </TabsTrigger>
@@ -89,86 +90,90 @@ export function SavedAndAppliedJobs({
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="saved" className="p-0 pt-2 overflow-auto max-h-[calc(100vh-180px)]">
-            {savedJobs.length === 0 ? (
-              <div className="p-6 text-center">
-                <p className="text-muted-foreground mb-2">
-                  You Haven't Saved Any Jobs Yet.
-                </p>
-                <p className="text-muted-foreground text-sm mb-4">
-                  Save jobs to keep track of positions you're interested in.
-                </p>
-              </div>
-            ) : (
-              <div className="divide-y">
-                {savedJobs.map(job => (
-                  <JobCard 
-                    key={job.id}
-                    job={job}
-                    onApply={() => applyToJob(job)}
-                    isSelected={selectedJobId === job.id}
-                    isSaved={true}
-                    isApplied={appliedJobs.some(j => j.id === job.id)}
-                    onClick={() => onSelect(job)}
-                    onSave={() => saveJob(job)}
-                    variant="list"
-                  />
-                ))}
-              </div>
-            )}
+          <TabsContent value="saved" className="p-0 pt-2 overflow-hidden">
+            <ScrollArea className="max-h-[180px]">
+              {savedJobs.length === 0 ? (
+                <div className="p-6 text-center">
+                  <p className="text-muted-foreground mb-2">
+                    You Haven't Saved Any Jobs Yet.
+                  </p>
+                  <p className="text-muted-foreground text-sm mb-4">
+                    Save jobs to keep track of positions you're interested in.
+                  </p>
+                </div>
+              ) : (
+                <div className="divide-y">
+                  {savedJobs.map(job => (
+                    <JobCard 
+                      key={job.id}
+                      job={job}
+                      onApply={() => applyToJob(job)}
+                      isSelected={selectedJobId === job.id}
+                      isSaved={true}
+                      isApplied={appliedJobs.some(j => j.id === job.id)}
+                      onClick={() => onSelect(job)}
+                      onSave={() => saveJob(job)}
+                      variant="list"
+                    />
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
           </TabsContent>
           
-          <TabsContent value="applied" className="p-0 pt-2 overflow-auto max-h-[calc(100vh-180px)]">
-            {appliedJobs.length === 0 ? (
-              <div className="p-6 text-center">
-                <p className="text-muted-foreground mb-2">
-                  You Haven't Applied To Any Jobs Yet.
-                </p>
-                <p className="text-muted-foreground text-sm mb-4">
-                  Apply to jobs to track your application progress.
-                </p>
-              </div>
-            ) : (
-              <div className="divide-y">
-                {appliedJobs.map(job => {
-                  const application = getApplicationByJobId(job.id);
-                  return (
-                    <div key={job.id} className="relative">
-                      <JobCard 
-                        job={job}
-                        onApply={() => applyToJob(job)}
-                        isSelected={selectedJobId === job.id}
-                        isSaved={savedJobs.some(j => j.id === job.id)}
-                        isApplied={true}
-                        onClick={() => onSelect(job)}
-                        onSave={() => saveJob(job)}
-                        variant="list"
-                      />
-                      <div className="px-4 py-2 border-t flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">
-                          Status: <span className="font-medium">{application?.status.charAt(0).toUpperCase() + application?.status.slice(1)}</span>
-                        </span>
-                        <Select
-                          value={application?.status}
-                          onValueChange={(value) => handleStatusChange(job.id, value as JobStatus)}
-                        >
-                          <SelectTrigger className="w-[160px] h-8">
-                            <SelectValue placeholder="Update status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="applied">Applied</SelectItem>
-                            <SelectItem value="interviewing">Interviewing</SelectItem>
-                            <SelectItem value="offered">Offered</SelectItem>
-                            <SelectItem value="rejected">Rejected</SelectItem>
-                            <SelectItem value="accepted">Accepted</SelectItem>
-                          </SelectContent>
-                        </Select>
+          <TabsContent value="applied" className="p-0 pt-2 overflow-hidden">
+            <ScrollArea className="max-h-[180px]">
+              {appliedJobs.length === 0 ? (
+                <div className="p-6 text-center">
+                  <p className="text-muted-foreground mb-2">
+                    You Haven't Applied To Any Jobs Yet.
+                  </p>
+                  <p className="text-muted-foreground text-sm mb-4">
+                    Apply to jobs to track your application progress.
+                  </p>
+                </div>
+              ) : (
+                <div className="divide-y">
+                  {appliedJobs.map(job => {
+                    const application = getApplicationByJobId(job.id);
+                    return (
+                      <div key={job.id} className="relative">
+                        <JobCard 
+                          job={job}
+                          onApply={() => applyToJob(job)}
+                          isSelected={selectedJobId === job.id}
+                          isSaved={savedJobs.some(j => j.id === job.id)}
+                          isApplied={true}
+                          onClick={() => onSelect(job)}
+                          onSave={() => saveJob(job)}
+                          variant="list"
+                        />
+                        <div className="px-4 py-2 border-t flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground">
+                            Status: <span className="font-medium">{application?.status.charAt(0).toUpperCase() + application?.status.slice(1)}</span>
+                          </span>
+                          <Select
+                            value={application?.status}
+                            onValueChange={(value) => handleStatusChange(job.id, value as JobStatus)}
+                          >
+                            <SelectTrigger className="w-[160px] h-8">
+                              <SelectValue placeholder="Update status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="applied">Applied</SelectItem>
+                              <SelectItem value="interviewing">Interviewing</SelectItem>
+                              <SelectItem value="offered">Offered</SelectItem>
+                              <SelectItem value="rejected">Rejected</SelectItem>
+                              <SelectItem value="accepted">Accepted</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                    );
+                  })}
+                </div>
+              )}
+            </ScrollArea>
           </TabsContent>
         </Tabs>
       </CardContent>
