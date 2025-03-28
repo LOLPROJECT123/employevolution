@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import RecruiterFinder from "@/components/RecruiterFinder";
 import ResearchOpportunityFinder from "@/components/ResearchOpportunityFinder";
+import { Card, CardContent } from "@/components/ui/card";
 
 const NetworkingTools = () => {
   const [activeTab, setActiveTab] = useState("recruiters");
@@ -14,20 +15,30 @@ const NetworkingTools = () => {
         Connect with recruiters, hiring managers, professors, and research opportunities
       </p>
       
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="recruiters">Recruiter Finder</TabsTrigger>
-          <TabsTrigger value="research">Research Opportunities</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="recruiters" className="mt-6">
-          <RecruiterFinder />
-        </TabsContent>
-        
-        <TabsContent value="research" className="mt-6">
-          <ResearchOpportunityFinder />
-        </TabsContent>
-      </Tabs>
+      <Card className="mt-6">
+        <CardContent className="p-0">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="w-full grid grid-cols-2 rounded-none border-b h-12">
+              <TabsTrigger value="recruiters" className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
+                Recruiter Finder
+              </TabsTrigger>
+              <TabsTrigger value="research" className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
+                Research Opportunities
+              </TabsTrigger>
+            </TabsList>
+            
+            <div className="p-6">
+              <TabsContent value="recruiters" className="mt-0">
+                <RecruiterFinder />
+              </TabsContent>
+              
+              <TabsContent value="research" className="mt-0">
+                <ResearchOpportunityFinder />
+              </TabsContent>
+            </div>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 };
