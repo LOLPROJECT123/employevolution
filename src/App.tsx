@@ -13,14 +13,13 @@ import NotFound from "./pages/NotFound";
 import InterviewPractice from "./pages/InterviewPractice";
 import Referrals from "./pages/Referrals";
 import Jobs from "./pages/Jobs";
-import MobileJobs from "./pages/MobileJobs"; 
+import MobileJobs from "./pages/MobileJobs"; // New import
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import ResumeTools from "./pages/ResumeTools";
 import LeetcodePatterns from "./pages/LeetcodePatterns";
 import SalaryNegotiations from "./pages/SalaryNegotiations";
 import Profile from "./pages/Profile";
-import NetworkingTools from "./pages/NetworkingTools"; // New import
 
 const queryClient = new QueryClient();
 
@@ -74,7 +73,6 @@ const App = () => {
                 <Route path="/leetcode-patterns" element={<LeetcodePatterns />} />
                 <Route path="/salary-negotiations" element={<SalaryNegotiations />} />
                 <Route path="/profile" element={<Profile />} />
-                <Route path="/networking" element={<NetworkingTools />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
