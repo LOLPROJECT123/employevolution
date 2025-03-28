@@ -54,24 +54,25 @@ const Navbar = () => {
 
   return (
     <div className={cn(
-      "sticky top-0 z-50 w-full transition-all duration-200",
-      isScrolled ? "bg-background/95 backdrop-blur supports-backdrop-blur:bg-background/60 border-b" : ""
+      "sticky top-0 z-50 w-full transition-all duration-200 bg-slate-50 dark:bg-slate-900 border-b",
+      isScrolled ? "shadow-sm" : ""
     )}>
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-6">
           <Link to="/">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-lg">JobHunter</span>
+              <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline" className="h-8 w-8" />
+              <span className="font-bold text-lg">Streamline</span>
             </div>
           </Link>
           
           <NavigationMenu>
-            <NavigationMenuList>
+            <NavigationMenuList className="flex space-x-1">
               <NavigationMenuItem>
                 <Link to="/dashboard">
                   <div className={cn(
-                    navigationMenuTriggerStyle(),
-                    isActive("/dashboard") ? "bg-accent text-accent-foreground" : ""
+                    "flex items-center px-3 py-2 text-sm font-medium transition-colors",
+                    isActive("/dashboard") ? "text-primary" : "text-muted-foreground hover:text-foreground"
                   )}>
                     <BriefcaseIcon className="mr-2 h-4 w-4" />
                     Dashboard
@@ -82,8 +83,8 @@ const Navbar = () => {
               <NavigationMenuItem>
                 <Link to="/jobs">
                   <div className={cn(
-                    navigationMenuTriggerStyle(),
-                    isActive("/jobs") ? "bg-accent text-accent-foreground" : ""
+                    "flex items-center px-3 py-2 text-sm font-medium transition-colors",
+                    isActive("/jobs") ? "text-primary" : "text-muted-foreground hover:text-foreground"
                   )}>
                     <BriefcaseIcon className="mr-2 h-4 w-4" />
                     Jobs
@@ -94,8 +95,8 @@ const Navbar = () => {
               <NavigationMenuItem>
                 <Link to="/resume-tools">
                   <div className={cn(
-                    navigationMenuTriggerStyle(),
-                    isActive("/resume-tools") ? "bg-accent text-accent-foreground" : ""
+                    "flex items-center px-3 py-2 text-sm font-medium transition-colors",
+                    isActive("/resume-tools") ? "text-primary" : "text-muted-foreground hover:text-foreground"
                   )}>
                     <FileText className="mr-2 h-4 w-4" />
                     Resume
@@ -106,8 +107,8 @@ const Navbar = () => {
               <NavigationMenuItem>
                 <Link to="/interview-practice">
                   <div className={cn(
-                    navigationMenuTriggerStyle(),
-                    isActive("/interview-practice") ? "bg-accent text-accent-foreground" : ""
+                    "flex items-center px-3 py-2 text-sm font-medium transition-colors",
+                    isActive("/interview-practice") ? "text-primary" : "text-muted-foreground hover:text-foreground"
                   )}>
                     <BookOpen className="mr-2 h-4 w-4" />
                     Interview Prep
@@ -118,8 +119,8 @@ const Navbar = () => {
               <NavigationMenuItem>
                 <Link to="/referrals">
                   <div className={cn(
-                    navigationMenuTriggerStyle(),
-                    isActive("/referrals") ? "bg-accent text-accent-foreground" : ""
+                    "flex items-center px-3 py-2 text-sm font-medium transition-colors",
+                    isActive("/referrals") ? "text-primary" : "text-muted-foreground hover:text-foreground"
                   )}>
                     <Users className="mr-2 h-4 w-4" />
                     Referrals
@@ -130,8 +131,8 @@ const Navbar = () => {
               <NavigationMenuItem>
                 <Link to="/salary-negotiations">
                   <div className={cn(
-                    navigationMenuTriggerStyle(),
-                    isActive("/salary-negotiations") ? "bg-accent text-accent-foreground" : ""
+                    "flex items-center px-3 py-2 text-sm font-medium transition-colors",
+                    isActive("/salary-negotiations") ? "text-primary" : "text-muted-foreground hover:text-foreground"
                   )}>
                     <DollarSign className="mr-2 h-4 w-4" />
                     Salary
@@ -142,8 +143,8 @@ const Navbar = () => {
               <NavigationMenuItem>
                 <Link to="/networking">
                   <div className={cn(
-                    navigationMenuTriggerStyle(),
-                    isActive("/networking") ? "bg-accent text-accent-foreground" : ""
+                    "flex items-center px-3 py-2 text-sm font-medium transition-colors",
+                    isActive("/networking") ? "text-primary" : "text-muted-foreground hover:text-foreground"
                   )}>
                     <Users className="mr-2 h-4 w-4" />
                     Networking
