@@ -15,9 +15,8 @@ import {
 } from "@/components/ui/drawer";
 import { 
   Search,
-  SlidersHorizontal,
   X,
-  Check
+  BookmarkIcon
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 
@@ -254,10 +253,6 @@ export default function MobileJobs() {
     setSearchTerm("");
   };
   
-  const toggleFilters = () => {
-    setShowFilters(!showFilters);
-  };
-  
   const handleApplyFilters = (filters: JobFilters) => {
     setActiveFilters(filters);
     setShowFilters(false);
@@ -318,69 +313,28 @@ export default function MobileJobs() {
       
       {!showDetailView ? (
         <div className="relative flex-1 overflow-hidden">
-          <Drawer>
-            <DrawerTrigger asChild>
-              <div className="p-3 border-b">
-                <div className="relative mb-0">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      type="text"
-                      placeholder="Search for roles, companies, or locations"
-                      className="pl-9 pr-9 py-2 rounded-full border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 h-10 text-sm"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                    {searchTerm && (
-                      <button 
-                        onClick={handleClearSearch}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
+          <div className="p-3 border-b">
+            <div className="relative mb-0">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder="Search for roles, companies, or locations"
+                  className="pl-9 pr-9 py-2 rounded-full border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 h-10 text-sm"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                {searchTerm && (
+                  <button 
+                    onClick={handleClearSearch}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
               </div>
-            </DrawerTrigger>
-            <DrawerContent className="max-h-[85vh] overflow-auto">
-              <div className="p-4">
-                <h1 className="text-xl font-bold mb-3">Search All Jobs</h1>
-                
-                <div className="bg-white dark:bg-gray-900 border rounded-lg shadow-sm mb-4">
-                  <div className="p-3 border-b border-gray-100 dark:border-gray-800">
-                    <h2 className="text-lg font-medium">My Jobs</h2>
-                  </div>
-                  <div className="p-0 max-h-[200px] overflow-hidden">
-                    <SavedAndAppliedJobs
-                      hideTitle={true}
-                      onSelect={handleSelectJob}
-                      selectedJobId={selectedJob?.id || null}
-                      savedJobs={jobs.filter(job => savedJobIds.includes(job.id))}
-                      appliedJobs={jobs.filter(job => appliedJobIds.includes(job.id))}
-                      onApply={handleApplyJob}
-                      onSave={handleSaveJob}
-                    />
-                  </div>
-                </div>
-                
-                <div className="bg-white dark:bg-gray-900 border rounded-lg shadow-sm mb-4">
-                  <div className="p-3 border-b border-gray-100 dark:border-gray-800">
-                    <h2 className="text-lg font-medium">Filter Jobs</h2>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Narrow Down Your Search</p>
-                  </div>
-                  
-                  <div className="p-3">
-                    <MobileJobFilters
-                      onApply={handleApplyFilters}
-                      onClose={handleCloseFilters}
-                      activeFilterCount={activeFilterCount}
-                    />
-                  </div>
-                </div>
-              </div>
-            </DrawerContent>
-          </Drawer>
+            </div>
+          </div>
           
           <ScrollArea className="h-[calc(100vh-112px)]">
             <div className="divide-y divide-gray-100 dark:divide-gray-800">

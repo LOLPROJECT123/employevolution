@@ -30,6 +30,13 @@ export const isChromeExtension = (): boolean => {
 };
 
 /**
+ * Check if the current device has a mobile screen size
+ */
+export const isMobileScreenSize = (): boolean => {
+  return typeof window !== 'undefined' && window.innerWidth < 768;
+};
+
+/**
  * Get the current platform the app is running on
  */
 export const getCurrentPlatform = async (): Promise<PlatformType> => {
