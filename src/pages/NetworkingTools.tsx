@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import RecruiterFinder from "@/components/RecruiterFinder";
 import ResearchOpportunityFinder from "@/components/ResearchOpportunityFinder";
-import JobApplicationAutomation from "@/components/resume/JobApplicationAutomation";
 
 const NetworkingTools = () => {
   const [activeTab, setActiveTab] = useState("recruiters");
@@ -16,7 +15,7 @@ const NetworkingTools = () => {
       </p>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
-        <TabsList className="grid w-full md:w-auto grid-cols-2 md:inline-flex">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="recruiters">Recruiter Finder</TabsTrigger>
           <TabsTrigger value="research">Research Opportunities</TabsTrigger>
         </TabsList>
