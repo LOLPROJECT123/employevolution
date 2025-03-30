@@ -24,7 +24,7 @@ import {
   Newspaper,
   Percent
 } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useState } from "react";
 import { detectPlatform, startAutomation } from "@/utils/automationUtils";
 import AutomationSettings from "@/components/AutomationSettings";
@@ -173,8 +173,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
       setIsApplying(true);
       handleApplyToJob(job);
     } catch (error) {
-      toast({
-        title: "Failed To Apply",
+      toast.error("Failed To Apply", {
         description: "There Was An Error Submitting Your Application. Please Try Again."
       });
       console.error("Application error:", error);
@@ -327,16 +326,31 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
           onValueChange={setActiveTab} 
           className="w-full flex-1 flex flex-col overflow-hidden"
         >
-          <div className="px-4 mt-4">
-            <TabsList className="w-full grid grid-cols-3 mb-4">
-              <TabsTrigger value="summary">Summary</TabsTrigger>
-              <TabsTrigger value="company">Company</TabsTrigger>
-              <TabsTrigger value="full-posting">Full Job Posting</TabsTrigger>
+          <div className="border-b">
+            <TabsList className="w-full h-auto p-0 bg-transparent space-x-0">
+              <TabsTrigger 
+                value="summary" 
+                className="flex-1 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
+              >
+                Summary
+              </TabsTrigger>
+              <TabsTrigger 
+                value="company" 
+                className="flex-1 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
+              >
+                Company
+              </TabsTrigger>
+              <TabsTrigger 
+                value="full-posting" 
+                className="flex-1 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
+              >
+                Full Job Posting
+              </TabsTrigger>
             </TabsList>
           </div>
           
-          <div className="flex-1 overflow-y-auto px-4 pb-4">
-            <TabsContent value="summary" className="mt-0 space-y-6 h-full data-[state=active]:flex-1 data-[state=active]:flex data-[state=active]:flex-col">
+          <div className="flex-1 overflow-y-auto">
+            <TabsContent value="summary" className="mt-0 p-4 space-y-6 h-full data-[state=active]:flex-1 data-[state=active]:flex data-[state=active]:flex-col">
               {job.matchPercentage && (
                 <div className={`p-4 rounded-lg ${getMatchBgColor(job.matchPercentage)} mb-4`}>
                   <div className="flex items-center gap-2">
@@ -357,7 +371,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
                       <span className="text-lg">✨</span> Employers Are More Likely To Interview You If You Match These Preferences:
                     </p>
                   </div>
-                  <div className="grid grid-cols-2 gap-4 mt-3">
+                  <div className="grid md:grid-cols-2 gap-4 mt-3">
                     {job.matchCriteria.degree && (
                       <div className="bg-white dark:bg-gray-800 rounded-lg p-3 flex items-center">
                         <CheckCircle2 className="w-5 h-5 text-green-500 mr-2" />
@@ -387,14 +401,14 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
               )}
               
               <div>
-                <h3 className="text-lg font-medium mb-3">About This Role</h3>
+                <h3 className="text-lg font-semibold mb-3">About This Role</h3>
                 <p className="text-muted-foreground leading-relaxed">
                   {job.description.substring(0, 300)}...
                 </p>
               </div>
               
               <div>
-                <h3 className="text-lg font-medium mb-3">Requirements</h3>
+                <h3 className="text-lg font-semibold mb-3">Requirements</h3>
                 <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
                   {enhancedRequirements.slice(0, 4).map((req, idx) => (
                     <li key={idx}>{req}</li>
@@ -403,7 +417,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
               </div>
               
               <div>
-                <h3 className="text-lg font-medium mb-3">Skills</h3>
+                <h3 className="text-lg font-semibold mb-3">Skills</h3>
                 <div className="flex flex-wrap gap-2">
                   {job.skills.map((skill, index) => (
                     <div key={index} className="px-3 py-1 rounded-full bg-secondary/70 text-sm">
@@ -414,9 +428,9 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
               </div>
             </TabsContent>
             
-            <TabsContent value="company" className="mt-0 space-y-6 h-full data-[state=active]:flex-1 data-[state=active]:flex data-[state=active]:flex-col">
+            <TabsContent value="company" className="mt-0 p-4 space-y-6 h-full data-[state=active]:flex-1 data-[state=active]:flex data-[state=active]:flex-col">
               <div className="bg-gray-50 dark:bg-gray-900/50 p-5 rounded-lg">
-                <h3 className="text-lg font-medium mb-4">About {job.company}</h3>
+                <h3 className="text-lg font-semibold mb-4">About {job.company}</h3>
                 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-4">
@@ -458,7 +472,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
               </div>
               
               <div>
-                <h3 className="text-lg font-medium mb-3">Company News</h3>
+                <h3 className="text-lg font-semibold mb-3">Company News</h3>
                 <div className="space-y-4">
                   {companyNews.map((news, idx) => (
                     <div key={idx} className="border-b pb-4 last:border-0">
@@ -474,7 +488,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
               </div>
               
               <div>
-                <h3 className="text-lg font-medium mb-3">Benefits</h3>
+                <h3 className="text-lg font-semibold mb-3">Benefits</h3>
                 <div className="grid md:grid-cols-2 gap-3">
                   {enhancedBenefits.map((benefit, idx) => (
                     <div key={idx} className="flex items-start gap-2">
@@ -486,7 +500,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
               </div>
               
               <div>
-                <h3 className="text-lg font-medium mb-3">Company Values & Culture</h3>
+                <h3 className="text-lg font-semibold mb-3">Company Values & Culture</h3>
                 <div className="grid gap-3">
                   {companyValues.map((value, idx) => (
                     <div key={idx} className="bg-secondary/30 p-3 rounded-lg">
@@ -497,86 +511,35 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
               </div>
             </TabsContent>
             
-            <TabsContent value="full-posting" className="mt-0 space-y-6 h-full data-[state=active]:flex-1 data-[state=active]:flex data-[state=active]:flex-col">
-              {job.matchPercentage && (
-                <div className={`p-4 rounded-lg ${getMatchBgColor(job.matchPercentage)} mb-4`}>
-                  <div className="flex items-center gap-2">
-                    <div className={`text-xl font-bold ${getMatchColor(job.matchPercentage)}`}>{job.matchPercentage}%</div>
-                    <div className={`font-semibold ${getMatchColor(job.matchPercentage)}`}>
-                      {getMatchLabel(job.matchPercentage)}
-                    </div>
-                  </div>
-                  <p className="text-sm mt-1">Based on your profile, skills, and experience</p>
-                </div>
-              )}
-              
-              {job.matchCriteria && (
-                <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg">
-                  <div className="mb-2">
-                    <p className="font-medium">You Match The Following {job.company}'s Candidate Preferences</p>
-                    <p className="text-sm text-yellow-600 dark:text-yellow-400 flex items-center gap-1 mt-1">
-                      <span className="text-lg">✨</span> Employers Are More Likely To Interview You If You Match These Preferences:
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 mt-3">
-                    {job.matchCriteria.degree && (
-                      <div className="bg-white dark:bg-gray-800 rounded-lg p-3 flex items-center">
-                        <CheckCircle2 className="w-5 h-5 text-green-500 mr-2" />
-                        <span>Degree</span>
-                      </div>
-                    )}
-                    {job.matchCriteria.experience && (
-                      <div className="bg-white dark:bg-gray-800 rounded-lg p-3 flex items-center">
-                        <CheckCircle2 className="w-5 h-5 text-green-500 mr-2" />
-                        <span>Experience</span>
-                      </div>
-                    )}
-                    {job.matchCriteria.skills && (
-                      <div className="bg-white dark:bg-gray-800 rounded-lg p-3 flex items-center">
-                        <CheckCircle2 className="w-5 h-5 text-green-500 mr-2" />
-                        <span>Skills</span>
-                      </div>
-                    )}
-                    {job.matchCriteria.location && (
-                      <div className="bg-white dark:bg-gray-800 rounded-lg p-3 flex items-center">
-                        <CheckCircle2 className="w-5 h-5 text-green-500 mr-2" />
-                        <span>Location</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-              
+            <TabsContent value="full-posting" className="mt-0 p-4 space-y-6 h-full data-[state=active]:block data-[state=active]:pb-8">
               <div>
-                <h3 className="text-lg font-medium mb-3">Job Description</h3>
+                <h3 className="text-lg font-semibold mb-4">Job Description</h3>
                 <p className="text-muted-foreground whitespace-pre-line leading-relaxed">
                   {job.description}
                 </p>
               </div>
               
-              <div>
-                <h3 className="text-lg font-medium mb-3">Responsibilities</h3>
+              <div className="mt-6">
+                <h3 className="text-lg font-semibold mb-4">Responsibilities</h3>
                 <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
-                  {job.responsibilities?.map((responsibility, idx) => (
+                  {enhancedResponsibilities.map((responsibility, idx) => (
                     <li key={idx}>{responsibility}</li>
-                  )) || (
-                    <li>Responsibilities will be discussed during the interview process.</li>
-                  )}
+                  ))}
                 </ul>
               </div>
               
-              <div>
-                <h3 className="text-lg font-medium mb-3">Requirements</h3>
+              <div className="mt-6">
+                <h3 className="text-lg font-semibold mb-4">Requirements</h3>
                 <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
-                  {job.requirements?.map((req, idx) => (
+                  {enhancedRequirements.map((req, idx) => (
                     <li key={idx}>{req}</li>
                   ))}
                 </ul>
               </div>
               
               {job.education && job.education.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-medium mb-3">Education</h3>
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold mb-4">Education</h3>
                   <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
                     {job.education.map((edu, idx) => (
                       <li key={idx}>{edu}</li>
@@ -586,8 +549,8 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
               )}
               
               {job.benefits && job.benefits.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-medium mb-3">Benefits</h3>
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold mb-4">Benefits</h3>
                   <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
                     {job.benefits.map((benefit, idx) => (
                       <li key={idx}>{benefit}</li>
@@ -596,25 +559,28 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
                 </div>
               )}
               
-              <div className="flex flex-wrap gap-3">
-                <div className="px-3 py-1 rounded-full bg-secondary text-sm">
-                  {job.type}
+              <div className="mt-6">
+                <h3 className="text-lg font-semibold mb-4">Job Details</h3>
+                <div className="flex flex-wrap gap-3">
+                  <div className="px-3 py-1 rounded-full bg-secondary text-sm">
+                    {job.type}
+                  </div>
+                  <div className="px-3 py-1 rounded-full bg-secondary text-sm">
+                    {job.level}
+                  </div>
+                  <div className="px-3 py-1 rounded-full bg-secondary text-sm">
+                    {formattedSalary}
+                  </div>
                 </div>
-                <div className="px-3 py-1 rounded-full bg-secondary text-sm">
-                  {job.level}
+                
+                <div className="flex items-center text-sm text-muted-foreground mt-4">
+                  <Clock className="w-4 h-4 mr-2" />
+                  Posted on {new Date(job.postedAt).toLocaleDateString()}
                 </div>
-                <div className="px-3 py-1 rounded-full bg-secondary text-sm">
-                  {formattedSalary}
-                </div>
-              </div>
-              
-              <div className="flex items-center text-sm text-muted-foreground mb-4">
-                <Clock className="w-4 h-4 mr-2" />
-                Posted on {new Date(job.postedAt).toLocaleDateString()}
               </div>
               
               {job.applyUrl && (
-                <div className="p-4 rounded-lg bg-secondary/20 text-sm">
+                <div className="mt-6 p-4 rounded-lg bg-secondary/20 text-sm">
                   <div className="flex items-center gap-2 mb-2">
                     <BadgeCheck className="w-5 h-5 text-primary" />
                     <span className="font-medium">Application Details</span>

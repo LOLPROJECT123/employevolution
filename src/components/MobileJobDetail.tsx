@@ -312,6 +312,13 @@ export function MobileJobDetail({
                   <TabsContent value="full-posting" className="mt-4">
                     <div className="space-y-6">
                       <div>
+                        <h3 className="font-medium mb-2">About This Role</h3>
+                        <p className="text-gray-700 dark:text-gray-300 mb-4">
+                          {job.description.substring(0, 200)}...
+                        </p>
+                      </div>
+                      
+                      <div>
                         <h3 className="font-medium mb-2">Requirements</h3>
                         <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300">
                           {enhancedRequirements.map((req, idx) => (
@@ -320,25 +327,14 @@ export function MobileJobDetail({
                         </ul>
                       </div>
                       
-                      {job.responsibilities && (
-                        <div>
-                          <h3 className="font-medium mb-2">Responsibilities</h3>
-                          <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300">
-                            {job.responsibilities.map((resp, idx) => (
-                              <li key={idx}>{resp}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      
-                      {job.description && (
-                        <div>
-                          <h3 className="font-medium mb-2">Description</h3>
-                          <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">
-                            {job.description}
-                          </p>
-                        </div>
-                      )}
+                      <div>
+                        <h3 className="font-medium mb-2">Responsibilities</h3>
+                        <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300">
+                          {enhancedResponsibilities.map((resp, idx) => (
+                            <li key={idx}>{resp}</li>
+                          ))}
+                        </ul>
+                      </div>
                       
                       {job.benefits && job.benefits.length > 0 && (
                         <div>

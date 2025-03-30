@@ -14,7 +14,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
 
-    --primary: 210 100% 50%; /* Pure blue */
+    --primary: 217 100% 50%; /* Bright blue */
     --primary-foreground: 0 0% 98%;
 
     --secondary: 240 5% 96%;
@@ -23,7 +23,7 @@
     --muted: 240 4.8% 95.9%;
     --muted-foreground: 240 3.8% 46.1%;
 
-    --accent: 210 100% 96%;
+    --accent: 217 100% 96%;
     --accent-foreground: 240 5.9% 10%;
 
     --destructive: 0 84.2% 60.2%;
@@ -42,7 +42,7 @@
     --sidebar-accent: 240 4.8% 95.9%;
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 210 100% 50%;
+    --sidebar-ring: 217 100% 50%;
   }
 
   .dark {
@@ -55,7 +55,7 @@
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 210 100% 50%; /* Pure blue */
+    --primary: 217 100% 50%; /* Bright blue */
     --primary-foreground: 0 0% 98%;
 
     --secondary: 240 3.7% 15.9%;
@@ -64,7 +64,7 @@
     --muted: 240 3.7% 15.9%;
     --muted-foreground: 240 5% 64.9%;
 
-    --accent: 210 100% 15%;
+    --accent: 217 100% 15%;
     --accent-foreground: 0 0% 98%;
 
     --destructive: 0 62.8% 30.6%;
@@ -76,12 +76,12 @@
     
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 210 100% 50%;
+    --sidebar-primary: 217 100% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 3.7% 15.9%;
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 210 100% 50%;
+    --sidebar-ring: 217 100% 50%;
   }
 }
 
@@ -147,6 +147,17 @@
 
   .button-hover {
     @apply transition-all duration-300 ease-out-expo hover:shadow-md hover:scale-[1.02] active:scale-[0.98];
+  }
+  
+  /* Job tabs styling */
+  .job-tabs .tabs-list {
+    @apply w-full flex border-b bg-transparent p-0;
+  }
+  
+  .job-tabs .tab-trigger {
+    @apply flex-1 rounded-none border-b-2 border-transparent py-3 text-sm font-medium transition-colors;
+    @apply hover:text-foreground data-[state=active]:border-primary data-[state=active]:text-foreground;
+    @apply focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-transparent;
   }
 }
 
