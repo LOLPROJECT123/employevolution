@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,15 +5,13 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Loader2, Send, Search, Mail, FileText, Pencil, Check, User } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2, Send, Search, Pencil, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type OpportunityType = 'clinic' | 'startup' | 'professor';
 
@@ -39,6 +36,7 @@ const ResearchOpportunityFinder = () => {
   const [resumeAttached, setResumeAttached] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [grammarSuggestions, setGrammarSuggestions] = useState<{text: string, suggestion: string}[]>([]);
+  const isMobile = useIsMobile();
 
   // Message templates for different opportunity types
   const messageTemplates = {
@@ -241,15 +239,13 @@ const ResearchOpportunityFinder = () => {
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Find Research Opportunities</CardTitle>
-        <CardDescription>
+    <div className="w-full space-y-4">
+      <div className="flex flex-col">
+        <h2 className="text-xl font-semibold mb-2">Find Research Opportunities</h2>
+        <p className="text-muted-foreground mb-4">
           Connect with professors, startups, and research clinics for internships and research positions
-        </CardDescription>
-      </CardHeader>
-      
-      <CardContent className="space-y-4">
+        </p>
+        
         {!selectedOpportunity ? (
           // Search form
           <div className="space-y-4">
@@ -390,12 +386,10 @@ const ResearchOpportunityFinder = () => {
             </div>
           </div>
         )}
-      </CardContent>
-      
-      <CardFooter>
+        
         {selectedOpportunity ? (
           <Button 
-            className="w-full" 
+            className="w-full mt-4" 
             onClick={handleSendMessage}
             disabled={isSending}
           >
@@ -411,13 +405,13 @@ const ResearchOpportunityFinder = () => {
               </>
             )}
           </Button>
-        ) : (
-          <div className="w-full text-center text-sm text-muted-foreground">
+        ) : searchResults.length === 0 ? (
+          <div className="w-full text-center text-sm text-muted-foreground mt-4">
             Search for opportunities and connect with professors, startups, and clinics
           </div>
-        )}
-      </CardFooter>
-    </Card>
+        ) : null}
+      </div>
+    </div>
   );
 };
 

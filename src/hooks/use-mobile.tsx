@@ -1,27 +1,29 @@
 
-import * as React from "react"
+import * as React from "react";
+import { isMobileScreenSize } from "@/utils/mobileUtils";
 
-const MOBILE_BREAKPOINT = 768
+const MOBILE_BREAKPOINT = 768;
 
 export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean>(false)
+  const [isMobile, setIsMobile] = React.useState<boolean>(false);
 
   React.useEffect(() => {
+    // Initial check for mobile via screen size
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    }
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    };
     
-    // Set initial value
-    checkMobile()
+    // Initialize on mount
+    checkMobile();
     
-    // Add event listener
-    window.addEventListener('resize', checkMobile)
+    // Add resize event listener
+    window.addEventListener('resize', checkMobile);
     
-    // Clean up
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
+    // Clean up on unmount
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
-  return isMobile
+  return isMobile;
 }
 
 // Create an alias for backward compatibility

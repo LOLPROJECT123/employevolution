@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,16 +5,14 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Loader2, Send, Search, Mail, FileText, Pencil, Check, User } from "lucide-react";
+import { Loader2, Send, Search, Pencil, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Recruiter {
   id: string;
@@ -46,8 +43,8 @@ const RecruiterFinder = () => {
   const [editingMessage, setEditingMessage] = useState(false);
   const [grammarSuggestions, setGrammarSuggestions] = useState<{text: string, suggestion: string}[]>([]);
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
-  // Load user profile or resume data
   useEffect(() => {
     try {
       const userResume = localStorage.getItem('userResume');
@@ -59,14 +56,12 @@ const RecruiterFinder = () => {
     }
   }, []);
 
-  // Example message templates
   const messageTemplates = {
     referral: "Hello [Name],\n\nI hope this message finds you well. I noticed you work at [Company] and I'm very interested in opportunities there. Would you be open to providing a referral for the [Position] role?\n\nI've attached my resume for your review. I'd be happy to discuss how my experience aligns with the position.\n\nThank you for your time and consideration.\n\nBest regards,\n[Your Name]",
     advice: "Hello [Name],\n\nI hope this message finds you well. I noticed you're working at [Company] as a [Position]. I'm very interested in this field and would love to get your insights on how to stand out in the application process.\n\nWould you be open to sharing any advice on skills or experiences that would be valuable for someone looking to enter this field?\n\nThank you for your time.\n\nBest regards,\n[Your Name]",
     opportunity: "Hello [Name],\n\nI hope this message finds you well. I've been following [Company] and am impressed by the work your team is doing. I'm particularly interested in [specific aspect of the company].\n\nI'm reaching out to inquire about potential opportunities that might align with my background in [your field]. I've attached my resume for your consideration.\n\nThank you for your time.\n\nBest regards,\n[Your Name]"
   };
 
-  // Function to search for recruiters
   const handleSearch = async () => {
     if (!companyName.trim()) {
       toast.error("Please enter a company name");
@@ -76,10 +71,8 @@ const RecruiterFinder = () => {
     setIsSearching(true);
     
     try {
-      // Simulate API call to search for recruiters
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Mock data - in a real app, this would come from an API
       const mockRecruiters: Recruiter[] = [
         {
           id: "1",
@@ -134,11 +127,9 @@ const RecruiterFinder = () => {
     }
   };
 
-  // Function to select a recruiter and populate message template
   const handleSelectRecruiter = (recruiter: Recruiter) => {
     setSelectedRecruiter(recruiter);
     
-    // Populate message with template
     let template = messageTemplates[messageType];
     template = template.replace("[Name]", recruiter.name.split(" ")[0]);
     template = template.replace("[Company]", recruiter.company);
@@ -146,15 +137,12 @@ const RecruiterFinder = () => {
     
     setMessage(template);
 
-    // Mock grammar check (in a real app this would use an API)
     setTimeout(() => {
       checkGrammar(template);
     }, 1000);
   };
 
-  // Function to check grammar (mock implementation)
   const checkGrammar = (text: string) => {
-    // Mock implementation - would use an API in production
     const mockSuggestions = [
       {
         text: "Would you be open to providing a referral",
@@ -169,14 +157,12 @@ const RecruiterFinder = () => {
     setGrammarSuggestions(mockSuggestions.filter(s => text.includes(s.text)));
   };
 
-  // Apply grammar suggestion
   const applySuggestion = (original: string, suggestion: string) => {
     setMessage(message.replace(original, suggestion));
     setGrammarSuggestions(grammarSuggestions.filter(s => s.text !== original));
     toast.success("Grammar suggestion applied");
   };
 
-  // Function to send the message
   const handleSendMessage = async () => {
     if (!selectedRecruiter) {
       toast.error("Please select a contact first");
@@ -191,14 +177,12 @@ const RecruiterFinder = () => {
     setIsSending(true);
     
     try {
-      // Simulate API call to send message
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       toast.success(`Message sent to ${selectedRecruiter.name} via ${sendVia === 'email' ? 'Email' : 'LinkedIn'}!`, {
         description: resumeAttached ? "Resume was attached to your message" : ""
       });
       
-      // Reset form after successful send
       setSelectedRecruiter(null);
       setMessage("");
       setResumeAttached(false);
@@ -211,17 +195,14 @@ const RecruiterFinder = () => {
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Find & Connect with Recruiters</CardTitle>
-        <CardDescription>
+    <div className="w-full space-y-4">
+      <div className="flex flex-col">
+        <h2 className="text-xl font-semibold mb-2">Find & Connect with Recruiters</h2>
+        <p className="text-muted-foreground mb-4">
           Search for recruiters, hiring managers, or alumni at companies you're interested in
-        </CardDescription>
-      </CardHeader>
-      
-      <CardContent className="space-y-4">
+        </p>
+
         {!selectedRecruiter ? (
-          // Search form
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
               <div className="flex-1">
@@ -251,7 +232,6 @@ const RecruiterFinder = () => {
               </Button>
             </div>
             
-            {/* Search results */}
             {searchResults.length > 0 && (
               <div className="space-y-2">
                 <h3 className="text-sm font-medium">Results for {companyName}</h3>
@@ -285,7 +265,6 @@ const RecruiterFinder = () => {
             )}
           </div>
         ) : (
-          // Message composition form
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <div>
@@ -340,7 +319,6 @@ const RecruiterFinder = () => {
                   onChange={(e) => {
                     setMessage(e.target.value);
                     setEditingMessage(true);
-                    // Re-check grammar as user types (with debounce in real app)
                     if (editingMessage) {
                       setTimeout(() => checkGrammar(e.target.value), 1000);
                     }
@@ -361,7 +339,6 @@ const RecruiterFinder = () => {
                 </Button>
               </div>
               
-              {/* Grammar suggestions */}
               {grammarSuggestions.length > 0 && (
                 <div className="space-y-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-md border border-yellow-200 dark:border-yellow-800">
                   <h4 className="text-sm font-medium">Writing Suggestions</h4>
@@ -425,12 +402,10 @@ const RecruiterFinder = () => {
             </div>
           </div>
         )}
-      </CardContent>
-      
-      <CardFooter>
+        
         {selectedRecruiter ? (
           <Button 
-            className="w-full" 
+            className="w-full mt-4" 
             onClick={handleSendMessage}
             disabled={isSending}
           >
@@ -446,13 +421,13 @@ const RecruiterFinder = () => {
               </>
             )}
           </Button>
-        ) : (
-          <div className="w-full text-center text-sm text-muted-foreground">
+        ) : searchResults.length === 0 ? (
+          <div className="w-full text-center text-sm text-muted-foreground mt-4">
             Search for a company to find recruiters and connections
           </div>
-        )}
-      </CardFooter>
-    </Card>
+        ) : null}
+      </div>
+    </div>
   );
 };
 
