@@ -20,6 +20,39 @@ const NetworkingTools = () => {
           <h1 className="text-2xl md:text-3xl font-bold text-white">
             Find Your Next Opportunity
           </h1>
+          
+          {/* Add top navigation tabs */}
+          <div className="mt-4">
+            <Tabs defaultValue="networking" className="w-full">
+              <TabsList className="bg-blue-700 dark:bg-blue-800 text-white">
+                <TabsTrigger 
+                  value="networking" 
+                  className="data-[state=active]:bg-white data-[state=active]:text-blue-700 text-white"
+                >
+                  Networking
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="referrals" 
+                  className="data-[state=active]:bg-white data-[state=active]:text-blue-700 text-white"
+                  onClick={() => window.location.href = '/referrals'}
+                >
+                  Referrals
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="connections" 
+                  className="data-[state=active]:bg-white data-[state=active]:text-blue-700 text-white"
+                >
+                  Connections
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="communities" 
+                  className="data-[state=active]:bg-white data-[state=active]:text-blue-700 text-white"
+                >
+                  Communities
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
         </div>
       </div>
 
