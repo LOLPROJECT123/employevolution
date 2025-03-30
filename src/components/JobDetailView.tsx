@@ -1,4 +1,3 @@
-
 import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
 import { 
@@ -25,7 +24,7 @@ import {
   Newspaper,
   Percent
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { detectPlatform, startAutomation } from "@/utils/automationUtils";
 import AutomationSettings from "@/components/AutomationSettings";
@@ -39,6 +38,7 @@ interface JobDetailViewProps {
 
 export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
   const [isApplying, setIsApplying] = useState(false);
+  const [activeTab, setActiveTab] = useState("summary");
   const { saveJob, applyToJob, savedJobs, appliedJobs, getApplicationByJobId } = useJobApplications();
   
   const handleSaveJob = onSave || saveJob;
@@ -173,7 +173,8 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
       setIsApplying(true);
       handleApplyToJob(job);
     } catch (error) {
-      toast.error("Failed To Apply", {
+      toast({
+        title: "Failed To Apply",
         description: "There Was An Error Submitting Your Application. Please Try Again."
       });
       console.error("Application error:", error);
@@ -321,7 +322,11 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
       </div>
       
       <div className="flex-1 overflow-hidden flex flex-col">
-        <Tabs defaultValue="summary" className="w-full flex-1 flex flex-col overflow-hidden">
+        <Tabs 
+          value={activeTab} 
+          onValueChange={setActiveTab} 
+          className="w-full flex-1 flex flex-col overflow-hidden"
+        >
           <div className="px-4 mt-4">
             <TabsList className="w-full grid grid-cols-3 mb-4">
               <TabsTrigger value="summary">Summary</TabsTrigger>
@@ -552,16 +557,18 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
               <div>
                 <h3 className="text-lg font-medium mb-3">Responsibilities</h3>
                 <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
-                  {enhancedResponsibilities.map((responsibility, idx) => (
+                  {job.responsibilities?.map((responsibility, idx) => (
                     <li key={idx}>{responsibility}</li>
-                  ))}
+                  )) || (
+                    <li>Responsibilities will be discussed during the interview process.</li>
+                  )}
                 </ul>
               </div>
               
               <div>
                 <h3 className="text-lg font-medium mb-3">Requirements</h3>
                 <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
-                  {enhancedRequirements.map((req, idx) => (
+                  {job.requirements?.map((req, idx) => (
                     <li key={idx}>{req}</li>
                   ))}
                 </ul>
@@ -578,14 +585,16 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
                 </div>
               )}
               
-              <div>
-                <h3 className="text-lg font-medium mb-3">Benefits</h3>
-                <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
-                  {enhancedBenefits.map((benefit, idx) => (
-                    <li key={idx}>{benefit}</li>
-                  ))}
-                </ul>
-              </div>
+              {job.benefits && job.benefits.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-medium mb-3">Benefits</h3>
+                  <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
+                    {job.benefits.map((benefit, idx) => (
+                      <li key={idx}>{benefit}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               
               <div className="flex flex-wrap gap-3">
                 <div className="px-3 py-1 rounded-full bg-secondary text-sm">

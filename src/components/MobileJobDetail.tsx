@@ -16,7 +16,6 @@ import {
   Users,
   Percent
 } from "lucide-react";
-import { CandidateMatchPreferences } from "@/components/CandidateMatchPreferences";
 
 interface MobileJobDetailProps {
   job: Job | null;
@@ -36,6 +35,7 @@ export function MobileJobDetail({
   isApplied = false
 }: MobileJobDetailProps) {
   const [activeTab, setActiveTab] = useState<string>("overview");
+  const [detailTab, setDetailTab] = useState<string>("summary");
   
   if (!job) {
     return (
@@ -250,7 +250,7 @@ export function MobileJobDetail({
               )}
               
               <div className="mt-6 border-t pt-6">
-                <Tabs defaultValue="summary" className="w-full">
+                <Tabs value={detailTab} onValueChange={setDetailTab} className="w-full">
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="summary">Summary</TabsTrigger>
                     <TabsTrigger value="full-posting">Full Job Posting</TabsTrigger>
@@ -334,9 +334,20 @@ export function MobileJobDetail({
                       {job.description && (
                         <div>
                           <h3 className="font-medium mb-2">Description</h3>
-                          <p className="text-gray-700 dark:text-gray-300">
+                          <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">
                             {job.description}
                           </p>
+                        </div>
+                      )}
+                      
+                      {job.benefits && job.benefits.length > 0 && (
+                        <div>
+                          <h3 className="font-medium mb-2">Benefits</h3>
+                          <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300">
+                            {job.benefits.map((benefit, idx) => (
+                              <li key={idx}>{benefit}</li>
+                            ))}
+                          </ul>
                         </div>
                       )}
                     </div>
