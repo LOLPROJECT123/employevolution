@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Settings, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMobile } from "@/hooks/use-mobile";
+import Navbar from "@/components/Navbar";
 
 const NetworkingTools = () => {
   const [activeTab, setActiveTab] = useState("recruiters");
@@ -14,45 +15,15 @@ const NetworkingTools = () => {
 
   return (
     <div className="w-full space-y-6">
+      {/* Add the Navbar component at the top */}
+      <Navbar />
+      
       {/* Header section styled like the Jobs page */}
       <div className="bg-blue-600 dark:bg-blue-900 py-6 px-4 md:px-6">
         <div className="container mx-auto max-w-screen-xl">
           <h1 className="text-2xl md:text-3xl font-bold text-white">
             Find Your Next Opportunity
           </h1>
-          
-          {/* Add top navigation tabs */}
-          <div className="mt-4">
-            <Tabs defaultValue="networking" className="w-full">
-              <TabsList className="bg-blue-700 dark:bg-blue-800 text-white">
-                <TabsTrigger 
-                  value="networking" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-blue-700 text-white"
-                >
-                  Networking
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="referrals" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-blue-700 text-white"
-                  onClick={() => window.location.href = '/referrals'}
-                >
-                  Referrals
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="connections" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-blue-700 text-white"
-                >
-                  Connections
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="communities" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-blue-700 text-white"
-                >
-                  Communities
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
         </div>
       </div>
 
