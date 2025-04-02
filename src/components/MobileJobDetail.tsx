@@ -153,7 +153,7 @@ export function MobileJobDetail({
                 </Badge>
                 
                 {job.matchPercentage && (
-                  <Badge variant="outline" className={`px-3 py-1.5 rounded-full ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)} text-sm font-bold shadow-sm flex items-center gap-1.5 mr-1`}>
+                  <Badge variant="outline" className={`px-3 py-1.5 rounded-full ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)} text-sm font-bold shadow-sm flex items-center gap-1.5`}>
                     <Percent className="w-4 h-4" />
                     {job.matchPercentage}% Match
                   </Badge>
@@ -256,107 +256,105 @@ export function MobileJobDetail({
                     <TabsTrigger value="full-posting">Full Job Posting</TabsTrigger>
                   </TabsList>
                   
-                  <div className="mt-4 overflow-y-auto max-h-[50vh]">
-                    <TabsContent value="summary" className="mt-0">
-                      {job.matchCriteria && (
-                        <div className="mb-6">
-                          <h3 className="font-medium mb-2">
-                            You match the following {job.company}'s candidate preferences
-                          </h3>
+                  <TabsContent value="summary" className="mt-4">
+                    {job.matchCriteria && (
+                      <div className="mb-6">
+                        <h3 className="font-medium mb-2">
+                          You match the following {job.company}'s candidate preferences
+                        </h3>
+                        
+                        <p className="text-sm text-yellow-600 dark:text-yellow-400 mb-3">
+                          ✨ Employers are more likely to interview you if you match these preferences:
+                        </p>
+                        
+                        <div className="grid grid-cols-2 gap-2">
+                          {job.matchCriteria.degree && (
+                            <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                              <CheckCircle className="text-green-500 h-5 w-5" />
+                              <span>Degree</span>
+                            </div>
+                          )}
                           
-                          <p className="text-sm text-yellow-600 dark:text-yellow-400 mb-3">
-                            ✨ Employers are more likely to interview you if you match these preferences:
-                          </p>
+                          {job.matchCriteria.experience && (
+                            <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                              <CheckCircle className="text-green-500 h-5 w-5" />
+                              <span>Experience</span>
+                            </div>
+                          )}
                           
-                          <div className="grid grid-cols-2 gap-2">
-                            {job.matchCriteria.degree && (
-                              <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                                <CheckCircle className="text-green-500 h-5 w-5" />
-                                <span>Degree</span>
-                              </div>
-                            )}
-                            
-                            {job.matchCriteria.experience && (
-                              <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                                <CheckCircle className="text-green-500 h-5 w-5" />
-                                <span>Experience</span>
-                              </div>
-                            )}
-                            
-                            {job.matchCriteria.skills && (
-                              <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                                <CheckCircle className="text-green-500 h-5 w-5" />
-                                <span>Skills</span>
-                              </div>
-                            )}
-                            
-                            {job.matchCriteria.location && (
-                              <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                                <CheckCircle className="text-green-500 h-5 w-5" />
-                                <span>Location</span>
-                              </div>
-                            )}
-                          </div>
+                          {job.matchCriteria.skills && (
+                            <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                              <CheckCircle className="text-green-500 h-5 w-5" />
+                              <span>Skills</span>
+                            </div>
+                          )}
+                          
+                          {job.matchCriteria.location && (
+                            <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                              <CheckCircle className="text-green-500 h-5 w-5" />
+                              <span>Location</span>
+                            </div>
+                          )}
                         </div>
-                      )}
+                      </div>
+                    )}
+                    
+                    <div className="space-y-4">
+                      <h3 className="font-medium">Requirements</h3>
+                      <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300">
+                        {enhancedRequirements.slice(0, 4).map((req, idx) => (
+                          <li key={idx}>{req}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="full-posting" className="mt-4">
+                    <div className="space-y-6">
+                      <div>
+                        <h3 className="font-medium mb-2">About This Role</h3>
+                        <p className="text-gray-700 dark:text-gray-300 mb-4">
+                          {job.description.substring(0, 200)}...
+                        </p>
+                      </div>
                       
-                      <div className="space-y-4">
-                        <h3 className="font-medium">Requirements</h3>
+                      <div>
+                        <h3 className="font-medium mb-2">Requirements</h3>
                         <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300">
-                          {enhancedRequirements.slice(0, 4).map((req, idx) => (
+                          {enhancedRequirements.map((req, idx) => (
                             <li key={idx}>{req}</li>
                           ))}
                         </ul>
                       </div>
-                    </TabsContent>
-                    
-                    <TabsContent value="full-posting" className="mt-0">
-                      <div className="space-y-6">
-                        <div>
-                          <h3 className="font-medium mb-2">About This Role</h3>
-                          <p className="text-gray-700 dark:text-gray-300 mb-4">
-                            {job.description.substring(0, 200)}...
-                          </p>
-                        </div>
-                        
-                        <div>
-                          <h3 className="font-medium mb-2">Requirements</h3>
-                          <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300">
-                            {enhancedRequirements.map((req, idx) => (
-                              <li key={idx}>{req}</li>
-                            ))}
-                          </ul>
-                        </div>
-                        
-                        <div>
-                          <h3 className="font-medium mb-2">Responsibilities</h3>
-                          <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300">
-                            {enhancedResponsibilities.map((resp, idx) => (
-                              <li key={idx}>{resp}</li>
-                            ))}
-                          </ul>
-                        </div>
-                        
-                        {job.benefits && job.benefits.length > 0 && (
-                          <div>
-                            <h3 className="font-medium mb-2">Benefits</h3>
-                            <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300">
-                              {job.benefits.map((benefit, idx) => (
-                                <li key={idx}>{benefit}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
+                      
+                      <div>
+                        <h3 className="font-medium mb-2">Responsibilities</h3>
+                        <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300">
+                          {enhancedResponsibilities.map((resp, idx) => (
+                            <li key={idx}>{resp}</li>
+                          ))}
+                        </ul>
                       </div>
-                    </TabsContent>
-                  </div>
+                      
+                      {job.benefits && job.benefits.length > 0 && (
+                        <div>
+                          <h3 className="font-medium mb-2">Benefits</h3>
+                          <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300">
+                            {job.benefits.map((benefit, idx) => (
+                              <li key={idx}>{benefit}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
                 </Tabs>
               </div>
             </div>
           </TabsContent>
           
           <TabsContent value="company" className="mt-0">
-            <div className="p-4 overflow-y-auto max-h-[80vh]">
+            <div className="p-4">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center">
                   <span className="text-2xl font-bold text-gray-500">{job.company.charAt(0)}</span>

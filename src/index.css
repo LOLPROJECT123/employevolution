@@ -167,11 +167,11 @@
   
   /* ATS Optimization tool tabs spacing */
   .ats-tabs .tabs-list {
-    @apply gap-4 px-4 py-4;
+    @apply gap-3 px-3 py-3;
   }
 
   .ats-tabs .tab-trigger {
-    @apply text-xs sm:text-sm px-4 py-2 rounded-md whitespace-nowrap;
+    @apply text-xs sm:text-sm px-3 py-2 rounded-md whitespace-nowrap;
   }
   
   /* Profile completion styles */
@@ -186,7 +186,7 @@
 
   /* Two-line tabs for mobile */
   .two-line-tabs .tab-trigger {
-    @apply h-auto min-h-[3.5rem] flex flex-col items-center justify-center leading-tight gap-1;
+    @apply h-auto min-h-[3rem] flex flex-col items-center justify-center leading-tight;
   }
 
   /* Mobile header bar */
@@ -201,32 +201,7 @@
   
   /* Job match percentage badge positioning */
   .match-badge {
-    @apply flex-shrink-0 px-1.5 py-0.5 text-xs font-medium mr-8;
-  }
-  
-  /* Mobile menu styling */
-  .mobile-menu {
-    @apply fixed inset-0 bg-black/50 z-[100];
-  }
-  
-  .mobile-menu-content {
-    @apply bg-white dark:bg-slate-950 h-full w-[85%] max-w-[300px] p-4 shadow-lg animate-slide-in-left;
-  }
-  
-  .mobile-menu-header {
-    @apply flex items-center justify-between pb-4 border-b;
-  }
-  
-  .mobile-menu-list {
-    @apply space-y-1 pt-2;
-  }
-  
-  .mobile-menu-item {
-    @apply flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm;
-  }
-  
-  .mobile-menu-item-active {
-    @apply flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/30 rounded text-primary font-medium text-sm;
+    @apply flex-shrink-0 px-1.5 py-0.5 text-xs font-medium mr-4;
   }
 }
 

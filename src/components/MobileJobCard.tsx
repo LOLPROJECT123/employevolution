@@ -119,20 +119,6 @@ export function MobileJobCard({
           <BookmarkIcon className={`h-5 w-5 ${isSaved ? "fill-primary text-primary" : "text-gray-400"}`} />
         </button>
       </div>
-      
-      {/* Add Apply/Save button at the bottom */}
-      <div className="mt-2 flex">
-        <button 
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 text-sm rounded-md flex items-center justify-center"
-          onClick={(e) => {
-            e.stopPropagation();
-            // We'll use the onClick handler for now as we don't have a separate apply handler
-            onClick?.();
-          }}
-        >
-          Apply Now
-        </button>
-      </div>
     </div>
   );
 }
