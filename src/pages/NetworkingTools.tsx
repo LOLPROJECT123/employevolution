@@ -36,7 +36,7 @@ const NetworkingTools = () => {
             variant="ghost" 
             size="icon"
             onClick={toggleMobileMenu}
-            className="flex md:hidden"
+            className="mobile-menu-button flex md:hidden"
             aria-label="Menu"
           >
             <Menu className="h-5 w-5" />
@@ -122,8 +122,8 @@ const NetworkingTools = () => {
         <Card className="shadow-sm">
           <div className="p-0">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <div className="px-4 border-b">
-                <TabsList className="h-12">
+              <div className="px-3 border-b">
+                <TabsList className="h-12 gap-2">
                   <TabsTrigger 
                     value="recruiters" 
                     className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600 text-[13px] md:text-sm"
@@ -139,7 +139,7 @@ const NetworkingTools = () => {
                 </TabsList>
               </div>
               
-              <div className="p-4">
+              <div className="p-3 md:p-4">
                 <TabsContent value="recruiters" className="mt-0">
                   <RecruiterFinder />
                 </TabsContent>

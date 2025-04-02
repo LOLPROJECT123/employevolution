@@ -155,14 +155,33 @@
   }
   
   .job-tabs .tab-trigger {
-    @apply flex-1 rounded-none border-b-2 border-transparent py-3 text-xs sm:text-sm md:text-sm font-medium transition-colors;
+    @apply flex-1 rounded-none border-b-2 border-transparent py-2 sm:py-3 text-xs sm:text-sm font-medium transition-colors;
     @apply hover:text-foreground data-[state=active]:border-primary data-[state=active]:text-foreground;
     @apply focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-transparent;
   }
   
-  /* Mobile tabs text truncation */
+  /* Mobile tabs text truncation and spacing */
   .mobile-tab-text {
     @apply truncate text-xs sm:text-sm;
+  }
+  
+  /* ATS Optimization tool tabs spacing */
+  .ats-tabs .tabs-list {
+    @apply gap-2 px-1 py-1;
+  }
+
+  .ats-tabs .tab-trigger {
+    @apply text-xs sm:text-sm px-2 py-1.5 rounded;
+  }
+  
+  /* Profile completion styles */
+  .profile-completion {
+    @apply relative w-[92%] mx-auto;
+  }
+  
+  /* Mobile menu button positioning */
+  .mobile-menu-button {
+    @apply fixed top-3 left-3 z-50;
   }
 }
 
