@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Job, JobFilters } from "@/types/job";
 import { MobileJobCard } from "@/components/MobileJobCard";
@@ -20,6 +21,7 @@ import {
   Menu
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import { Link } from "react-router-dom";
 
 export default function MobileJobs() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -317,10 +319,10 @@ export default function MobileJobs() {
   return (
     <div className="h-screen flex flex-col bg-white dark:bg-gray-900 overflow-hidden">
       <div className="mobile-header">
-        <div className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2">
           <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline" className="h-6 w-6" />
           <span className="font-bold text-base">Streamline</span>
-        </div>
+        </Link>
         
         <Button 
           variant="ghost" 

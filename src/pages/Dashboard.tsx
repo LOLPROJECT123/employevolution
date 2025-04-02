@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,15 +30,20 @@ import {
   TrendingUpIcon,
   ListIcon,
   PlusIcon,
+  Menu,
+  X
 } from 'lucide-react';
 import { useJobApplications } from '@/contexts/JobApplicationContext';
 import { JobStatus } from '@/types/job';
+import { useMobile } from '@/hooks/use-mobile';
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const isMobile = useMobile();
   const [isLoggedIn, setIsLoggedIn] = useState(true); // Mock authentication
   const [animationReady, setAnimationReady] = useState(false);
   const { applications, appliedJobs } = useJobApplications();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     // In a real app, check if user is authenticated
@@ -129,11 +135,79 @@ const Dashboard = () => {
     },
   ];
 
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-secondary/30">
-      <Navbar />
+      {isMobile && (
+        <div className="mobile-header">
+          <Link to="/" className="flex items-center gap-2">
+            <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline" className="h-6 w-6" />
+            <span className="font-bold text-base">Streamline</span>
+          </Link>
+          
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={toggleMobileMenu}
+            className="static"
+            aria-label="Menu"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+        </div>
+      )}
       
-      <main className="flex-1 pt-20">
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 bg-black/50 z-[100]" onClick={toggleMobileMenu}>
+          <div 
+            className="bg-white dark:bg-slate-950 h-full w-[85%] max-w-[300px] p-4 shadow-lg animate-slide-in-left"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="space-y-4">
+              <div className="flex items-center justify-between pb-4 border-b">
+                <div className="flex items-center gap-2">
+                  <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline" className="h-8 w-8" />
+                  <span className="font-bold text-lg">Streamline</span>
+                </div>
+                <Button variant="ghost" size="icon" onClick={toggleMobileMenu}>
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
+              
+              <div className="space-y-1 pt-2">
+                <a href="/dashboard" className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/30 rounded text-primary font-medium text-sm">
+                  Dashboard
+                </a>
+                <a href="/jobs" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
+                  Jobs
+                </a>
+                <a href="/resume-tools" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
+                  Resume &amp; CV Tools
+                </a>
+                <a href="/interview-practice" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
+                  Interview Practice
+                </a>
+                <a href="/referrals" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
+                  Referrals
+                </a>
+                <a href="/salary-negotiations" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
+                  Salary Negotiations
+                </a>
+                <a href="/networking" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
+                  Networking &amp; Outreach
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {!isMobile && <Navbar />}
+      
+      <main className={`flex-1 ${isMobile ? 'pt-4' : 'pt-20'}`}>
         <div className="container px-4 py-8">
           {/* Dashboard Header */}
           <div className="mb-8">

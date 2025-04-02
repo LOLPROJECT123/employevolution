@@ -75,7 +75,7 @@ export function MobileJobCard({
   
   return (
     <div 
-      className="py-3 px-3 border-b border-gray-100 dark:border-gray-800 active:bg-gray-50 dark:active:bg-gray-800/60"
+      className="py-3 px-4 border-b border-gray-100 dark:border-gray-800 active:bg-gray-50 dark:active:bg-gray-800/60"
       onClick={onClick}
     >
       <div className="flex items-start gap-3 min-w-0">
@@ -110,23 +110,12 @@ export function MobileJobCard({
             </div>
           </div>
         </div>
-        
-        <button 
-          className="flex-shrink-0 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-          onClick={(e) => {
-            e.stopPropagation();
-            onSave?.();
-          }}
-          aria-label={isSaved ? "Unsave job" : "Save job"}
-        >
-          <BookmarkIcon className={`h-5 w-5 ${isSaved ? "fill-primary text-primary" : "text-gray-400"}`} />
-        </button>
       </div>
       
-      {/* Apply Now button */}
-      <div className="mt-3 flex justify-between items-center">
+      {/* Apply Now button and Save button */}
+      <div className="mt-3 flex justify-between items-center gap-2">
         <Button 
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded text-sm flex items-center justify-center gap-1"
+          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded text-sm flex items-center justify-center gap-1"
           onClick={(e) => {
             e.stopPropagation();
             onApply?.(job);
@@ -137,6 +126,17 @@ export function MobileJobCard({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </Button>
+        
+        <button 
+          className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSave?.();
+          }}
+          aria-label={isSaved ? "Unsave job" : "Save job"}
+        >
+          <BookmarkIcon className={`h-5 w-5 ${isSaved ? "fill-primary text-primary" : "text-gray-400"}`} />
+        </button>
       </div>
     </div>
   );
