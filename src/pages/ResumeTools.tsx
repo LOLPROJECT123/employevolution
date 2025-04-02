@@ -30,7 +30,7 @@ const ResumeTools = () => {
             variant="ghost" 
             size="icon"
             onClick={toggleMobileMenu}
-            className="mobile-menu-button flex md:hidden"
+            className="flex md:hidden"
             aria-label="Menu"
           >
             <Menu className="h-5 w-5" />
@@ -99,13 +99,13 @@ const ResumeTools = () => {
           </div>
           
           <Tabs defaultValue="ats-optimizer" className="space-y-4 ats-tabs">
-            <TabsList className="flex flex-wrap gap-1 px-1">
-              <TabsTrigger value="ats-optimizer" className="text-xs md:text-sm px-2 py-1.5">ATS Optimizer</TabsTrigger>
-              <TabsTrigger value="ai-resume-creator" className="text-xs md:text-sm px-2 py-1.5">AI Resume</TabsTrigger>
-              <TabsTrigger value="ai-cv-creator" className="text-xs md:text-sm px-2 py-1.5">AI CV</TabsTrigger>
-              <TabsTrigger value="job-automation" className="text-xs md:text-sm px-2 py-1.5">Job Automation</TabsTrigger>
-              <TabsTrigger value="forum" className="text-xs md:text-sm px-2 py-1.5">Forum</TabsTrigger>
-              <TabsTrigger value="templates" className="text-xs md:text-sm px-2 py-1.5">Templates</TabsTrigger>
+            <TabsList className="flex flex-wrap w-full justify-start gap-2 px-2 py-3">
+              <TabsTrigger value="ats-optimizer" className="text-xs md:text-sm px-3 py-2">ATS Optimizer</TabsTrigger>
+              <TabsTrigger value="ai-resume-creator" className="text-xs md:text-sm px-3 py-2">AI Resume</TabsTrigger>
+              <TabsTrigger value="ai-cv-creator" className="text-xs md:text-sm px-3 py-2">AI CV</TabsTrigger>
+              <TabsTrigger value="job-automation" className="text-xs md:text-sm px-3 py-2">Job Automation</TabsTrigger>
+              <TabsTrigger value="forum" className="text-xs md:text-sm px-3 py-2">Forum</TabsTrigger>
+              <TabsTrigger value="templates" className="text-xs md:text-sm px-3 py-2">Templates</TabsTrigger>
             </TabsList>
             
             <TabsContent value="ats-optimizer">

@@ -83,7 +83,7 @@ export function JobCard({
               <h3 className="text-sm font-medium truncate">{job.title}</h3>
               
               {job.matchPercentage !== undefined && (
-                <Badge variant="outline" className={`ml-2 px-2 py-0.5 text-xs font-bold ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)} flex items-center gap-1`}>
+                <Badge variant="outline" className={`ml-2 px-2 py-0.5 text-xs font-bold ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)} flex items-center gap-1 mr-2`}>
                   <Percent className="w-3 h-3" />
                   {job.matchPercentage}% Match
                 </Badge>
@@ -107,7 +107,7 @@ export function JobCard({
             </div>
           </div>
           
-          <div className="ml-2 flex flex-col items-end gap-2">
+          <div className="ml-1 flex flex-col items-end gap-2">
             {isApplied ? (
               <Badge className="bg-green-100 hover:bg-green-100 text-green-700 border-green-200">
                 <CheckCircle className="mr-1 h-3 w-3" /> Applied
@@ -169,7 +169,7 @@ export function JobCard({
         </div>
         
         {job.matchPercentage !== undefined && (
-          <Badge variant="outline" className={`px-2.5 py-0.5 text-xs font-bold ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)} flex items-center gap-1`}>
+          <Badge variant="outline" className={`px-2.5 py-0.5 text-xs font-bold ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)} flex items-center gap-1 mr-1`}>
             <Percent className="w-3 h-3" />
             {job.matchPercentage}% Match
           </Badge>

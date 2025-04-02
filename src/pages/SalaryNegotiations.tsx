@@ -30,7 +30,7 @@ const SalaryNegotiations = () => {
             variant="ghost" 
             size="icon"
             onClick={toggleMobileMenu}
-            className="mobile-menu-button flex md:hidden"
+            className="flex md:hidden"
             aria-label="Menu"
           >
             <Menu className="h-5 w-5" />
@@ -99,9 +99,9 @@ const SalaryNegotiations = () => {
         
         <Tabs defaultValue="guides" className="w-full">
           <div className="flex justify-center mb-6">
-            <TabsList className="gap-1">
-              <TabsTrigger value="guides" className="text-sm px-4">Guides</TabsTrigger>
-              <TabsTrigger value="forum" className="text-sm px-4">Forum</TabsTrigger>
+            <TabsList className="gap-2">
+              <TabsTrigger value="guides" className="text-sm px-5">Guides</TabsTrigger>
+              <TabsTrigger value="forum" className="text-sm px-5">Forum</TabsTrigger>
             </TabsList>
           </div>
           
