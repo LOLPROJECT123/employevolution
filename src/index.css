@@ -167,11 +167,11 @@
   
   /* ATS Optimization tool tabs spacing */
   .ats-tabs .tabs-list {
-    @apply gap-3 px-2 py-2;
+    @apply gap-3 px-3 py-3;
   }
 
   .ats-tabs .tab-trigger {
-    @apply text-xs sm:text-sm px-3 py-2 rounded whitespace-nowrap;
+    @apply text-xs sm:text-sm px-3 py-2 rounded-md whitespace-nowrap;
   }
   
   /* Profile completion styles */
@@ -181,12 +181,27 @@
   
   /* Mobile menu button positioning */
   .mobile-menu-button {
-    @apply fixed top-3 left-3 z-50;
+    @apply fixed top-3 right-3 z-50;
   }
 
   /* Two-line tabs for mobile */
   .two-line-tabs .tab-trigger {
     @apply h-auto min-h-[3rem] flex flex-col items-center justify-center leading-tight;
+  }
+
+  /* Mobile header bar */
+  .mobile-header {
+    @apply sticky top-0 z-50 bg-white dark:bg-slate-900 border-b p-3 flex items-center justify-between;
+  }
+
+  /* Main content container */
+  .content-container {
+    @apply container mx-auto px-4 max-w-screen-xl md:text-center;
+  }
+  
+  /* Job match percentage badge positioning */
+  .match-badge {
+    @apply flex-shrink-0 px-1.5 py-0.5 text-xs font-medium mr-4;
   }
 }
 

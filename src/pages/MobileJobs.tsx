@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Job, JobFilters } from "@/types/job";
 import { MobileJobCard } from "@/components/MobileJobCard";
@@ -316,21 +317,21 @@ export default function MobileJobs() {
 
   return (
     <div className="h-screen flex flex-col bg-white dark:bg-gray-900 overflow-hidden">
-      <div className="sticky top-0 z-50 bg-white dark:bg-slate-900 border-b p-3 flex items-center justify-between">
-        <Button 
-          variant="ghost" 
-          size="icon"
-          onClick={toggleMobileMenu}
-          className="mobile-menu-button flex md:hidden"
-          aria-label="Menu"
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
-        
+      <div className="mobile-header">
         <div className="flex items-center gap-2">
           <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline" className="h-6 w-6" />
           <span className="font-bold text-base">Streamline</span>
         </div>
+        
+        <Button 
+          variant="ghost" 
+          size="icon"
+          onClick={toggleMobileMenu}
+          className="static"
+          aria-label="Menu"
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
       </div>
       
       <div className="hidden md:block">

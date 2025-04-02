@@ -31,21 +31,21 @@ const NetworkingTools = () => {
       
       {/* Mobile top bar */}
       {isMobile && (
-        <div className="sticky top-0 z-50 bg-white dark:bg-slate-900 border-b p-3 flex items-center justify-between">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={toggleMobileMenu}
-            className="mobile-menu-button flex md:hidden"
-            aria-label="Menu"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-          
+        <div className="mobile-header">
           <div className="flex items-center gap-2">
             <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline" className="h-6 w-6" />
             <span className="font-bold text-base">Streamline</span>
           </div>
+          
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={toggleMobileMenu}
+            className="static"
+            aria-label="Menu"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
         </div>
       )}
       
@@ -123,7 +123,7 @@ const NetworkingTools = () => {
           <div className="p-0">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <div className="px-3 border-b">
-                <TabsList className="h-12 gap-2">
+                <TabsList className="h-12 gap-4">
                   <TabsTrigger 
                     value="recruiters" 
                     className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600 text-[13px] md:text-sm"

@@ -25,21 +25,21 @@ const ResumeTools = () => {
       
       {/* Mobile top bar */}
       {isMobile && (
-        <div className="sticky top-0 z-50 bg-white dark:bg-slate-900 border-b p-3 flex items-center justify-between">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={toggleMobileMenu}
-            className="flex md:hidden"
-            aria-label="Menu"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-          
+        <div className="mobile-header">
           <div className="flex items-center gap-2">
             <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline" className="h-6 w-6" />
             <span className="font-bold text-base">Streamline</span>
           </div>
+          
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={toggleMobileMenu}
+            className="mobile-menu-button static"
+            aria-label="Menu"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
         </div>
       )}
       
@@ -90,7 +90,7 @@ const ResumeTools = () => {
       )}
       
       <main className={`flex-1 ${isMobile ? "pt-4" : "pt-20"}`}>
-        <div className="container px-4 py-4 md:py-8">
+        <div className="container px-4 py-4 md:py-8 text-left md:text-center">
           <div className="mb-6 md:mb-8">
             <h1 className="text-2xl md:text-3xl font-bold">Resume & CV Tools</h1>
             <p className="text-muted-foreground mt-1 text-sm md:text-base">
@@ -99,7 +99,7 @@ const ResumeTools = () => {
           </div>
           
           <Tabs defaultValue="ats-optimizer" className="space-y-4 ats-tabs">
-            <TabsList className="flex flex-wrap w-full justify-start gap-2 px-2 py-3">
+            <TabsList className="flex flex-wrap w-full justify-start gap-3 px-3 py-3">
               <TabsTrigger value="ats-optimizer" className="text-xs md:text-sm px-3 py-2">ATS Optimizer</TabsTrigger>
               <TabsTrigger value="ai-resume-creator" className="text-xs md:text-sm px-3 py-2">AI Resume</TabsTrigger>
               <TabsTrigger value="ai-cv-creator" className="text-xs md:text-sm px-3 py-2">AI CV</TabsTrigger>
