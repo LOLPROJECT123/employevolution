@@ -256,7 +256,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
           </div>
           
           {job.matchPercentage && (
-            <div className="mr-4">
+            <div className="mr-10">
               <Badge variant="outline" className={`px-3 py-1.5 rounded-full ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)} text-sm font-bold shadow-sm flex items-center gap-1.5`}>
                 <Percent className="w-4 h-4" />
                 {job.matchPercentage}% Match
@@ -350,7 +350,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
           </div>
           
           <div className="flex-1 overflow-y-auto">
-            <TabsContent value="summary" className="mt-0 p-4 space-y-6 h-full data-[state=active]:flex-1 data-[state=active]:flex data-[state=active]:flex-col">
+            <TabsContent value="summary" className="mt-0 p-4 space-y-6 h-full data-[state=active]:flex-1 data-[state=active]:flex data-[state=active]:flex-col overflow-y-auto">
               {job.matchPercentage && (
                 <div className={`p-4 rounded-lg ${getMatchBgColor(job.matchPercentage)} mb-4`}>
                   <div className="flex items-center gap-2">
@@ -428,7 +428,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
               </div>
             </TabsContent>
             
-            <TabsContent value="company" className="mt-0 p-4 space-y-6 h-full data-[state=active]:flex-1 data-[state=active]:flex data-[state=active]:flex-col">
+            <TabsContent value="company" className="mt-0 p-4 space-y-6 h-full data-[state=active]:flex-1 data-[state=active]:flex data-[state=active]:flex-col overflow-y-auto">
               <div className="bg-gray-50 dark:bg-gray-900/50 p-5 rounded-lg">
                 <h3 className="text-lg font-semibold mb-4">About {job.company}</h3>
                 
@@ -511,7 +511,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
               </div>
             </TabsContent>
             
-            <TabsContent value="full-posting" className="mt-0 p-4 space-y-6 h-full data-[state=active]:block data-[state=active]:pb-8">
+            <TabsContent value="full-posting" className="mt-0 p-4 space-y-6 h-full data-[state=active]:block data-[state=active]:pb-8 overflow-y-auto">
               <div>
                 <h3 className="text-lg font-semibold mb-4">Job Description</h3>
                 <p className="text-muted-foreground whitespace-pre-line leading-relaxed">
