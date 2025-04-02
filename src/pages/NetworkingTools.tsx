@@ -6,12 +6,12 @@ import ResearchOpportunityFinder from "@/components/ResearchOpportunityFinder";
 import { Card, CardContent } from "@/components/ui/card";
 import { Settings, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import Navbar from "@/components/Navbar";
 
 const NetworkingTools = () => {
   const [activeTab, setActiveTab] = useState("recruiters");
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
 
   return (
     <div className="w-full space-y-6">
@@ -19,11 +19,24 @@ const NetworkingTools = () => {
       <Navbar />
       
       {/* Header section styled like the Jobs page */}
-      <div className="bg-blue-600 dark:bg-blue-900 py-6 px-4 md:px-6">
+      <div className="bg-blue-600 dark:bg-blue-900 py-4 px-4 md:px-6">
         <div className="container mx-auto max-w-screen-xl">
-          <h1 className="text-2xl md:text-3xl font-bold text-white">
-            Find Your Next Opportunity
-          </h1>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+            <h1 className="text-xl md:text-3xl font-bold text-white whitespace-nowrap">
+              Networking <br className="md:hidden" />&amp; Outreach Tools
+            </h1>
+            
+            <div className="flex items-center gap-2 mt-2 md:mt-0">
+              <Button variant="outline" size="sm" className="bg-white/10 text-white border-white/20 hover:bg-white/20">
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
+              </Button>
+              <Button variant="default" size="sm" className="bg-blue-500 hover:bg-blue-600 text-white">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh Now
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -31,20 +44,6 @@ const NetworkingTools = () => {
         {/* Main card with tabs */}
         <Card className="shadow-sm">
           <div className="p-0">
-            <div className="flex justify-between items-center p-4 border-b">
-              <h2 className="text-lg font-medium">Networking & Outreach Tools</h2>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Settings
-                </Button>
-                <Button variant="default" size="sm">
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Refresh Now
-                </Button>
-              </div>
-            </div>
-
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <div className="px-4 border-b">
                 <TabsList className="h-12">
