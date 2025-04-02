@@ -155,9 +155,14 @@
   }
   
   .job-tabs .tab-trigger {
-    @apply flex-1 rounded-none border-b-2 border-transparent py-3 text-sm font-medium transition-colors;
+    @apply flex-1 rounded-none border-b-2 border-transparent py-3 text-xs sm:text-sm md:text-sm font-medium transition-colors;
     @apply hover:text-foreground data-[state=active]:border-primary data-[state=active]:text-foreground;
     @apply focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-transparent;
+  }
+  
+  /* Mobile tabs text truncation */
+  .mobile-tab-text {
+    @apply truncate text-xs sm:text-sm;
   }
 }
 

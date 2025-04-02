@@ -126,15 +126,15 @@ const NetworkingTools = () => {
                 <TabsList className="h-12">
                   <TabsTrigger 
                     value="recruiters" 
-                    className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
+                    className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600 text-[13px] md:text-sm"
                   >
-                    Recruiter Finder
+                    {isMobile ? "Recruiters" : "Recruiter Finder"}
                   </TabsTrigger>
                   <TabsTrigger 
                     value="research" 
-                    className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
+                    className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600 text-[13px] md:text-sm"
                   >
-                    Research Opportunities
+                    {isMobile ? "Research" : "Research Opportunities"}
                   </TabsTrigger>
                 </TabsList>
               </div>
