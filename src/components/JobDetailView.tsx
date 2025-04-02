@@ -350,7 +350,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
           </div>
           
           <div className="flex-1 overflow-y-auto">
-            <TabsContent value="summary" className="mt-0 p-4 space-y-6 h-full data-[state=active]:flex-1 data-[state=active]:flex data-[state=active]:flex-col">
+            <TabsContent value="summary" className="mt-0 p-4 space-y-6 h-full overflow-y-auto">
               {job.matchPercentage && (
                 <div className={`p-4 rounded-lg ${getMatchBgColor(job.matchPercentage)} mb-4`}>
                   <div className="flex items-center gap-2">
@@ -428,7 +428,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
               </div>
             </TabsContent>
             
-            <TabsContent value="company" className="mt-0 p-4 space-y-6 h-full data-[state=active]:flex-1 data-[state=active]:flex data-[state=active]:flex-col">
+            <TabsContent value="company" className="mt-0 p-4 space-y-6 h-full overflow-y-auto">
               <div className="bg-gray-50 dark:bg-gray-900/50 p-5 rounded-lg">
                 <h3 className="text-lg font-semibold mb-4">About {job.company}</h3>
                 
@@ -511,7 +511,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
               </div>
             </TabsContent>
             
-            <TabsContent value="full-posting" className="mt-0 p-4 space-y-6 h-full data-[state=active]:block data-[state=active]:pb-8">
+            <TabsContent value="full-posting" className="mt-0 p-4 space-y-6 h-full overflow-y-auto">
               <div>
                 <h3 className="text-lg font-semibold mb-4">Job Description</h3>
                 <p className="text-muted-foreground whitespace-pre-line leading-relaxed">

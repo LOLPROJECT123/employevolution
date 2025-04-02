@@ -1,6 +1,6 @@
 
 import { Job } from "@/types/job";
-import { BookmarkIcon, MapPin, DollarSign } from "lucide-react";
+import { BookmarkIcon, MapPin, DollarSign, Percent } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -55,8 +55,8 @@ export function MobileJobCard({
   };
   
   const formattedSalary = job.level === 'intern' 
-    ? `$ $ ${job.salary.min.toLocaleString()} /hr` 
-    : `$ $ ${job.salary.min.toLocaleString()}`;
+    ? `$${job.salary.min.toLocaleString()}/hr` 
+    : `$${job.salary.min.toLocaleString()} - $${job.salary.max.toLocaleString()}`;
 
   // Get match color based on percentage
   const getMatchColor = (percentage?: number) => {
@@ -89,7 +89,8 @@ export function MobileJobCard({
             <h3 className="text-base font-bold leading-tight truncate max-w-[70%]">{job.title}</h3>
             
             {job.matchPercentage !== undefined && (
-              <Badge variant="outline" className={`match-badge ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)}`}>
+              <Badge variant="outline" className={`match-badge ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)} flex items-center gap-1`}>
+                <Percent className="w-3 h-3" />
                 {job.matchPercentage}%
               </Badge>
             )}
