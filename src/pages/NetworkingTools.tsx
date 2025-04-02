@@ -4,10 +4,16 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import RecruiterFinder from "@/components/RecruiterFinder";
 import ResearchOpportunityFinder from "@/components/ResearchOpportunityFinder";
 import { Card, CardContent } from "@/components/ui/card";
-import { Settings, RefreshCw, Menu } from "lucide-react";
+import { Settings, RefreshCw, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import Navbar from "@/components/Navbar";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerTrigger,
+  DrawerClose,
+} from "@/components/ui/drawer";
 
 const NetworkingTools = () => {
   const [activeTab, setActiveTab] = useState("recruiters");
@@ -19,7 +25,7 @@ const NetworkingTools = () => {
   };
 
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full space-y-4 pb-20">
       {/* Only show Navbar on desktop */}
       {!isMobile && <Navbar />}
       
@@ -31,6 +37,7 @@ const NetworkingTools = () => {
             size="icon"
             onClick={toggleMobileMenu}
             className="flex md:hidden"
+            aria-label="Menu"
           >
             <Menu className="h-5 w-5" />
           </Button>
@@ -45,8 +52,8 @@ const NetworkingTools = () => {
       {/* Header section styled like the Jobs page */}
       <div className="bg-blue-600 dark:bg-blue-900 py-4 px-4 md:px-6">
         <div className="container mx-auto max-w-screen-xl">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
-            <h1 className="text-xl md:text-3xl font-bold text-white whitespace-nowrap">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+            <h1 className="text-xl md:text-3xl font-bold text-white">
               Networking <br className="md:hidden" />&amp; Outreach Tools
             </h1>
             
@@ -64,41 +71,46 @@ const NetworkingTools = () => {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 max-w-screen-xl space-y-6">
+      <div className="container mx-auto px-4 max-w-screen-xl space-y-4">
         {/* Mobile menu overlay */}
         {isMobile && mobileMenuOpen && (
-          <div className="fixed inset-0 bg-black/50 z-50" onClick={toggleMobileMenu}>
+          <div className="fixed inset-0 bg-black/50 z-[100]" onClick={toggleMobileMenu}>
             <div 
-              className="bg-white dark:bg-slate-900 h-full w-2/3 p-4 shadow-lg"
+              className="bg-white dark:bg-slate-950 h-full w-[85%] max-w-[300px] p-4 shadow-lg animate-slide-in-left"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="space-y-4">
-                <div className="flex items-center gap-2 pb-4 border-b">
-                  <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline" className="h-8 w-8" />
-                  <span className="font-bold text-lg">Streamline</span>
+                <div className="flex items-center justify-between pb-4 border-b">
+                  <div className="flex items-center gap-2">
+                    <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline" className="h-8 w-8" />
+                    <span className="font-bold text-lg">Streamline</span>
+                  </div>
+                  <Button variant="ghost" size="icon" onClick={toggleMobileMenu}>
+                    <X className="h-5 w-5" />
+                  </Button>
                 </div>
                 
-                <div className="space-y-2 pt-2">
-                  <a href="/dashboard" className="block p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded">
+                <div className="space-y-1 pt-2">
+                  <a href="/dashboard" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
                     Dashboard
                   </a>
-                  <a href="/jobs" className="block p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded">
+                  <a href="/jobs" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
                     Jobs
                   </a>
-                  <a href="/resume-tools" className="block p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded">
-                    Resume
+                  <a href="/resume-tools" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
+                    Resume &amp; CV Tools
                   </a>
-                  <a href="/interview-practice" className="block p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded">
-                    Interview Prep
+                  <a href="/interview-practice" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
+                    Interview Practice
                   </a>
-                  <a href="/referrals" className="block p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded">
+                  <a href="/referrals" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
                     Referrals
                   </a>
-                  <a href="/salary-negotiations" className="block p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded">
-                    Salary
+                  <a href="/salary-negotiations" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
+                    Salary Negotiations
                   </a>
-                  <a href="/networking" className="block p-2 bg-gray-100 dark:bg-gray-800 rounded text-primary">
-                    Networking
+                  <a href="/networking" className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/30 rounded text-primary font-medium text-sm">
+                    Networking &amp; Outreach
                   </a>
                 </div>
               </div>
