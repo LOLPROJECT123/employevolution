@@ -3,6 +3,7 @@ import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   MapPin, 
   Building2, 
@@ -143,7 +144,7 @@ export function MobileJobDetail({
         <div className="w-5"></div>
       </header>
       
-      <div className="flex-1 overflow-y-auto">
+      <ScrollArea className="flex-1">
         <Tabs value={activeTab} className="w-full">
           <TabsContent value="overview" className="mt-0">
             <div className="p-4">
@@ -242,7 +243,7 @@ export function MobileJobDetail({
                     <div className={`text-xl font-bold ${getMatchColor(job.matchPercentage)}`}>{job.matchPercentage}%</div>
                     <div className={`font-semibold ${getMatchColor(job.matchPercentage)}`}>
                       {job.matchPercentage >= 70 ? "GOOD MATCH" : 
-                       job.matchPercentage >= 50 ? "FAIR MATCH" : "WEAK MATCH"}
+                      job.matchPercentage >= 50 ? "FAIR MATCH" : "WEAK MATCH"}
                     </div>
                   </div>
                   <p className="text-sm mt-1">Based on your profile, skills, and experience</p>
@@ -378,86 +379,84 @@ export function MobileJobDetail({
                 </div>
               </div>
               
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-sm text-gray-500">Company Size</h3>
-                  <p className="mt-1 font-medium">
-                    {companyDetails.size}
-                  </p>
-                </div>
+              <div>
+                <h3 className="text-sm text-gray-500">Company Size</h3>
+                <p className="mt-1 font-medium">
+                  {companyDetails.size}
+                </p>
+              </div>
+              
+              <div>
+                <h3 className="text-sm text-gray-500">Company Stage</h3>
+                <p className="mt-1 font-medium">
+                  {companyDetails.stage}
+                </p>
+              </div>
+              
+              <div>
+                <h3 className="text-sm text-gray-500">Headquarters</h3>
+                <p className="mt-1 font-medium">
+                  {companyDetails.headquarters}
+                </p>
+              </div>
+              
+              <div>
+                <h3 className="text-sm text-gray-500">Founded</h3>
+                <p className="mt-1 font-medium">
+                  {companyDetails.founded}
+                </p>
+              </div>
+              
+              <div className="pt-4 border-t">
+                <h3 className="text-lg font-medium mb-4">Company News</h3>
                 
-                <div>
-                  <h3 className="text-sm text-gray-500">Company Stage</h3>
-                  <p className="mt-1 font-medium">
-                    {companyDetails.stage}
-                  </p>
-                </div>
-                
-                <div>
-                  <h3 className="text-sm text-gray-500">Headquarters</h3>
-                  <p className="mt-1 font-medium">
-                    {companyDetails.headquarters}
-                  </p>
-                </div>
-                
-                <div>
-                  <h3 className="text-sm text-gray-500">Founded</h3>
-                  <p className="mt-1 font-medium">
-                    {companyDetails.founded}
-                  </p>
-                </div>
-                
-                <div className="pt-4 border-t">
-                  <h3 className="text-lg font-medium mb-4">Company News</h3>
-                  
-                  <div className="space-y-6">
-                    {companyNews.map((news, index) => (
-                      <div key={index} className="pb-4 border-b">
-                        <div className="flex justify-between items-start mb-1">
-                          <span className="text-sm text-gray-500">{news.source}</span>
-                          <span className="text-sm text-gray-500">{news.date}</span>
-                        </div>
-                        <h4 className="text-primary font-medium">
-                          {news.title}
-                        </h4>
-                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                          {news.snippet}
-                        </p>
+                <div className="space-y-6">
+                  {companyNews.map((news, index) => (
+                    <div key={index} className="pb-4 border-b">
+                      <div className="flex justify-between items-start mb-1">
+                        <span className="text-sm text-gray-500">{news.source}</span>
+                        <span className="text-sm text-gray-500">{news.date}</span>
                       </div>
-                    ))}
-                  </div>
+                      <h4 className="text-primary font-medium">
+                        {news.title}
+                      </h4>
+                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                        {news.snippet}
+                      </p>
+                    </div>
+                  ))}
                 </div>
+              </div>
+              
+              <div className="pt-4 border-t">
+                <h3 className="text-lg font-medium mb-4">What makes {job.company} unique</h3>
                 
-                <div className="pt-4 border-t">
-                  <h3 className="text-lg font-medium mb-4">What makes {job.company} unique</h3>
-                  
-                  <div className="space-y-3">
-                    {companyUniquePoints.map((point, index) => (
-                      <div key={index} className="flex items-start gap-2">
-                        <span className="mt-1">•</span>
-                        <p>{point}</p>
-                      </div>
-                    ))}
-                  </div>
+                <div className="space-y-3">
+                  {companyUniquePoints.map((point, index) => (
+                    <div key={index} className="flex items-start gap-2">
+                      <span className="mt-1">•</span>
+                      <p>{point}</p>
+                    </div>
+                  ))}
                 </div>
+              </div>
+              
+              <div className="pt-4 border-t">
+                <h3 className="text-lg font-medium mb-4">Benefits</h3>
                 
-                <div className="pt-4 border-t">
-                  <h3 className="text-lg font-medium mb-4">Benefits</h3>
-                  
-                  <div className="space-y-3">
-                    {enhancedBenefits.map((benefit, idx) => (
-                      <div key={idx} className="flex items-center gap-2">
-                        <CheckCircle className="h-5 w-5 text-teal-500" />
-                        <span>{benefit}</span>
-                      </div>
-                    ))}
-                  </div>
+                <div className="space-y-3">
+                  {enhancedBenefits.map((benefit, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5 text-teal-500" />
+                      <span>{benefit}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
           </TabsContent>
         </Tabs>
-      </div>
+      </ScrollArea>
       
       <div className="p-3 border-t flex items-center justify-between bg-white dark:bg-gray-900 sticky bottom-0">
         <button 

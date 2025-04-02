@@ -2,31 +2,34 @@
 import { Job } from "@/types/job";
 import { BookmarkIcon, MapPin, DollarSign } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 interface MobileJobCardProps {
   job: Job;
   isSaved?: boolean;
   onSave?: () => void;
   onClick?: () => void;
+  onApply?: (job: Job) => void;
 }
 
 export function MobileJobCard({
   job,
   isSaved = false,
   onSave,
-  onClick
+  onClick,
+  onApply
 }: MobileJobCardProps) {
   // Generate a colored initial badge for the company
   const getInitialBadgeColor = () => {
     const companyInitial = job.company.charAt(0).toUpperCase();
     const colors: Record<string, string> = {
-      'A': 'bg-green-100 text-green-600',
+      'A': 'bg-red-100 text-red-600',
       'B': 'bg-blue-100 text-blue-600',
       'C': 'bg-yellow-100 text-yellow-600',
       'D': 'bg-orange-100 text-orange-600',
       'E': 'bg-purple-100 text-purple-600',
       'F': 'bg-indigo-100 text-indigo-600',
-      'G': 'bg-red-100 text-red-600',
+      'G': 'bg-pink-100 text-pink-600',
       'H': 'bg-emerald-100 text-emerald-600',
       'I': 'bg-cyan-100 text-cyan-600',
       'J': 'bg-violet-100 text-violet-600',
@@ -118,6 +121,22 @@ export function MobileJobCard({
         >
           <BookmarkIcon className={`h-5 w-5 ${isSaved ? "fill-primary text-primary" : "text-gray-400"}`} />
         </button>
+      </div>
+      
+      {/* Apply Now button */}
+      <div className="mt-3 flex justify-between items-center">
+        <Button 
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded text-sm flex items-center justify-center gap-1"
+          onClick={(e) => {
+            e.stopPropagation();
+            onApply?.(job);
+          }}
+        >
+          Apply Now
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </Button>
       </div>
     </div>
   );

@@ -140,7 +140,7 @@ export function JobCard({
           </div>
         </div>
         
-        <div className="mt-2">
+        <div className="mt-2 flex items-center justify-between">
           <Button 
             size="sm" 
             className="w-full justify-between text-xs bg-blue-600 hover:bg-blue-700"

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Job, JobFilters } from "@/types/job";
 import { MobileJobCard } from "@/components/MobileJobCard";
@@ -338,7 +337,7 @@ export default function MobileJobs() {
         <Navbar />
       </div>
       
-      {isMobile && mobileMenuOpen && (
+      {mobileMenuOpen && (
         <div className="fixed inset-0 bg-black/50 z-[100]" onClick={toggleMobileMenu}>
           <div 
             className="bg-white dark:bg-slate-950 h-full w-[85%] max-w-[300px] p-4 shadow-lg animate-slide-in-left"
@@ -417,6 +416,7 @@ export default function MobileJobs() {
                   isSaved={savedJobIds.includes(job.id)}
                   onSave={() => handleSaveJob(job)}
                   onClick={() => handleSelectJob(job)}
+                  onApply={() => handleApplyJob(job)}
                 />
               ))}
               

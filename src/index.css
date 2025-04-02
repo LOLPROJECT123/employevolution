@@ -189,7 +189,7 @@
     @apply h-auto min-h-[3rem] flex flex-col items-center justify-center leading-tight;
   }
 
-  /* Mobile header bar */
+  /* Mobile header */
   .mobile-header {
     @apply sticky top-0 z-50 bg-white dark:bg-slate-900 border-b p-3 flex items-center justify-between;
   }
@@ -201,7 +201,22 @@
   
   /* Job match percentage badge positioning */
   .match-badge {
-    @apply flex-shrink-0 px-1.5 py-0.5 text-xs font-medium mr-4;
+    @apply flex-shrink-0 px-1.5 py-0.5 text-xs font-medium mr-2;
+  }
+
+  /* Job detail scrollable areas */
+  .job-detail-content {
+    @apply overflow-y-auto max-h-[calc(100vh-200px)] md:max-h-[calc(100vh-160px)] pr-2;
+  }
+
+  /* Save job button styling */
+  .save-job-button {
+    @apply flex items-center justify-center p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors;
+  }
+
+  /* Apply button */
+  .apply-button {
+    @apply bg-blue-600 hover:bg-blue-700 text-white rounded flex items-center justify-center gap-2;
   }
 }
 
@@ -240,4 +255,18 @@
   opacity: 0;
   transform: translateY(-20px);
   transition: opacity 500ms, transform 500ms;
+}
+
+/* Job detail scroll area for mobile and desktop */
+.job-detail-scroll {
+  @apply overflow-y-auto;
+  max-height: calc(100vh - 200px);
+  scrollbar-width: thin;
+}
+
+/* Tab content scroll areas */
+.tab-content-scroll {
+  @apply overflow-y-auto;
+  max-height: 60vh;
+  scrollbar-width: thin;
 }
