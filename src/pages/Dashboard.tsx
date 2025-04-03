@@ -139,6 +139,19 @@ const Dashboard = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
+  // Navigate to specific tab handlers
+  const navigateToResumeCreator = () => {
+    navigate('/resume-tools?tab=ai-resume-creator');
+  };
+
+  const navigateToCoverLetter = () => {
+    navigate('/resume-tools?tab=ai-cv-creator');
+  };
+
+  const navigateToAIAssistant = () => {
+    navigate('/resume-tools?tab=ats-optimizer');
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-secondary/30">
       {isMobile && (
@@ -316,7 +329,7 @@ const Dashboard = () => {
                 <Button 
                   variant="secondary" 
                   className="w-full justify-start text-left button-hover"
-                  onClick={() => console.log("Generate resume")}
+                  onClick={navigateToResumeCreator}
                 >
                   <FileTextIcon className="w-4 h-4 mr-2" />
                   <div className="flex flex-col items-start">
@@ -327,7 +340,7 @@ const Dashboard = () => {
                 <Button 
                   variant="secondary" 
                   className="w-full justify-start text-left button-hover"
-                  onClick={() => console.log("Generate cover letter")}
+                  onClick={navigateToCoverLetter}
                 >
                   <FileTextIcon className="w-4 h-4 mr-2" />
                   <div className="flex flex-col items-start">
@@ -338,7 +351,7 @@ const Dashboard = () => {
                 <Button 
                   variant="secondary" 
                   className="w-full justify-start text-left button-hover"
-                  onClick={() => console.log("Ask AI assistant")}
+                  onClick={navigateToAIAssistant}
                 >
                   <MessageSquareIcon className="w-4 h-4 mr-2" />
                   <div className="flex flex-col items-start">

@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navbar from "@/components/Navbar";
 import ATSOptimizer from "@/components/ATSOptimizer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,11 +8,23 @@ import AICVCreator from "@/components/resume/AICVCreator";
 import JobApplicationAutomation from "@/components/resume/JobApplicationAutomation";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MobileHeader, MobileSidebar } from "@/components/MobileHeader";
-import { Button } from "@/components/ui/button";
+import { useLocation } from 'react-router-dom';
 
 const ResumeTools = () => {
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState("ats-optimizer");
+
+  useEffect(() => {
+    // Get tab from URL search params if available
+    const searchParams = new URLSearchParams(location.search);
+    const tabParam = searchParams.get('tab');
+    
+    if (tabParam && ['ats-optimizer', 'ai-resume-creator', 'ai-cv-creator', 'job-automation', 'forum', 'templates'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [location]);
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -39,7 +51,7 @@ const ResumeTools = () => {
             </p>
           </div>
           
-          <Tabs defaultValue="ats-optimizer" className="space-y-4 ats-tabs">
+          <Tabs value={activeTab} defaultValue="ats-optimizer" className="space-y-4 ats-tabs" onValueChange={setActiveTab}>
             <TabsList className="flex flex-wrap w-full justify-start gap-3 px-3 py-3">
               <TabsTrigger value="ats-optimizer" className="text-xs md:text-sm px-3 py-2">ATS Optimizer</TabsTrigger>
               <TabsTrigger value="ai-resume-creator" className="text-xs md:text-sm px-3 py-2">AI Resume</TabsTrigger>
