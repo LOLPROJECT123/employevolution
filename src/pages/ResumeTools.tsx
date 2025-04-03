@@ -7,8 +7,8 @@ import AIResumeCreator from "@/components/resume/AIResumeCreator";
 import AICVCreator from "@/components/resume/AICVCreator";
 import JobApplicationAutomation from "@/components/resume/JobApplicationAutomation";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { MobileHeader, MobileSidebar } from "@/components/MobileHeader";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
 
 const ResumeTools = () => {
   const isMobile = useIsMobile();
@@ -21,72 +21,13 @@ const ResumeTools = () => {
   return (
     <div className="min-h-screen flex flex-col bg-secondary/30">
       {/* Only show Navbar on desktop */}
-      {!isMobile && <Navbar />}
-      
-      {/* Mobile top bar */}
-      {isMobile && (
-        <div className="mobile-header">
-          <div className="flex items-center gap-2">
-            <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline" className="h-6 w-6" />
-            <span className="font-bold text-base">Streamline</span>
-          </div>
-          
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={toggleMobileMenu}
-            className="mobile-menu-button static"
-            aria-label="Menu"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-        </div>
-      )}
-      
-      {/* Mobile menu overlay */}
-      {isMobile && mobileMenuOpen && (
-        <div className="fixed inset-0 bg-black/50 z-[100]" onClick={toggleMobileMenu}>
-          <div 
-            className="bg-white dark:bg-slate-950 h-full w-[85%] max-w-[300px] p-4 shadow-lg animate-slide-in-left"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="space-y-4">
-              <div className="flex items-center justify-between pb-4 border-b">
-                <div className="flex items-center gap-2">
-                  <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline" className="h-8 w-8" />
-                  <span className="font-bold text-lg">Streamline</span>
-                </div>
-                <Button variant="ghost" size="icon" onClick={toggleMobileMenu}>
-                  <X className="h-5 w-5" />
-                </Button>
-              </div>
-              
-              <div className="space-y-1 pt-2">
-                <a href="/dashboard" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
-                  Dashboard
-                </a>
-                <a href="/jobs" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
-                  Jobs
-                </a>
-                <a href="/resume-tools" className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/30 rounded text-primary font-medium text-sm">
-                  Resume &amp; CV Tools
-                </a>
-                <a href="/interview-practice" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
-                  Interview Practice
-                </a>
-                <a href="/referrals" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
-                  Referrals
-                </a>
-                <a href="/salary-negotiations" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
-                  Salary Negotiations
-                </a>
-                <a href="/networking" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
-                  Networking &amp; Outreach
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
+      {isMobile ? (
+        <>
+          <MobileHeader onMenuToggle={toggleMobileMenu} />
+          <MobileSidebar isOpen={mobileMenuOpen} onClose={toggleMobileMenu} />
+        </>
+      ) : (
+        <Navbar />
       )}
       
       <main className={`flex-1 ${isMobile ? "pt-4" : "pt-20"}`}>
