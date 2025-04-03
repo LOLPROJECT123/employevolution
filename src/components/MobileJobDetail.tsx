@@ -128,7 +128,7 @@ export function MobileJobDetail({
 
   return (
     <div className="flex flex-col h-full">
-      <header className="flex items-center justify-between p-4 border-b">
+      <header className="flex items-center justify-between p-4 border-b sticky top-0 bg-white dark:bg-gray-900 z-10">
         <button onClick={onBack} className="p-1">
           <ArrowLeft className="h-5 w-5" />
         </button>
@@ -136,8 +136,8 @@ export function MobileJobDetail({
         <div className="flex space-x-2">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-[200px] grid-cols-2">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="company">Company</TabsTrigger>
+              <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
+              <TabsTrigger value="company" className="text-xs sm:text-sm">Company</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
@@ -304,11 +304,22 @@ export function MobileJobDetail({
                     <div className="space-y-4">
                       <h3 className="font-medium">Requirements</h3>
                       <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300">
-                        {enhancedRequirements.slice(0, 4).map((req, idx) => (
+                        {(job.requirements?.length ? job.requirements : enhancedRequirements).slice(0, 4).map((req, idx) => (
                           <li key={idx}>{req}</li>
                         ))}
                       </ul>
                     </div>
+                    
+                    {(job.benefits?.length > 0 || enhancedResponsibilities.length > 0) && (
+                      <div className="mt-6 space-y-4">
+                        <h3 className="font-medium">Benefits</h3>
+                        <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300">
+                          {(job.benefits?.length ? job.benefits : enhancedResponsibilities).slice(0, 3).map((benefit, idx) => (
+                            <li key={idx}>{benefit}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </TabsContent>
                   
                   <TabsContent value="full-posting" className="mt-4">
@@ -323,7 +334,7 @@ export function MobileJobDetail({
                       <div>
                         <h3 className="font-medium mb-2">Requirements</h3>
                         <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300">
-                          {enhancedRequirements.map((req, idx) => (
+                          {(job.requirements?.length ? job.requirements : enhancedRequirements).map((req, idx) => (
                             <li key={idx}>{req}</li>
                           ))}
                         </ul>
@@ -444,7 +455,7 @@ export function MobileJobDetail({
                 </div>
               </div>
               
-              <div className="pt-4 border-t">
+              <div className="pt-4 border-t pb-20">
                 <h3 className="text-lg font-medium mb-4">Benefits</h3>
                 
                 <div className="space-y-3">

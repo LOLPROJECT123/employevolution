@@ -328,7 +328,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
           onValueChange={setActiveTab} 
           className="w-full flex-1 flex flex-col overflow-hidden"
         >
-          <div className="border-b">
+          <div className="border-b sticky top-0 bg-white dark:bg-gray-900 z-10">
             <TabsList className="w-full h-auto p-0 bg-transparent space-x-0">
               <TabsTrigger 
                 value="summary" 
@@ -351,8 +351,8 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
             </TabsList>
           </div>
           
-          <ScrollArea className="flex-1 h-[calc(100vh-310px)]">
-            <TabsContent value="summary" className="mt-0 p-4 space-y-6">
+          <ScrollArea className="flex-1 overflow-y-auto h-full">
+            <TabsContent value="summary" className="mt-0 p-4 space-y-6 pb-20">
               {job.matchPercentage && (
                 <div className={`p-4 rounded-lg ${getMatchBgColor(job.matchPercentage)} mb-4`}>
                   <div className="flex items-center gap-2">
@@ -430,7 +430,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
               </div>
             </TabsContent>
             
-            <TabsContent value="company" className="mt-0 p-4 space-y-6">
+            <TabsContent value="company" className="mt-0 p-4 space-y-6 pb-20">
               <div className="bg-gray-50 dark:bg-gray-900/50 p-5 rounded-lg">
                 <h3 className="text-lg font-semibold mb-4">About {job.company}</h3>
                 
@@ -513,7 +513,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
               </div>
             </TabsContent>
             
-            <TabsContent value="full-posting" className="mt-0 p-4 space-y-6">
+            <TabsContent value="full-posting" className="mt-0 p-4 space-y-6 pb-20">
               <div>
                 <h3 className="text-lg font-semibold mb-4">Job Description</h3>
                 <p className="text-muted-foreground whitespace-pre-line leading-relaxed">
@@ -597,7 +597,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
         </Tabs>
       </div>
       
-      <div className="border-t p-4">
+      <div className="border-t p-4 sticky bottom-0 bg-white dark:bg-gray-900">
         <div className="flex gap-3">
           <Button
             variant={isSaved ? "default" : "outline"}
