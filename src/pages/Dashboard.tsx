@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Navbar from "@/components/Navbar";
@@ -146,10 +145,6 @@ const Dashboard = () => {
 
   const navigateToCoverLetter = () => {
     navigate('/resume-tools?tab=ai-cv-creator');
-  };
-
-  const navigateToAIAssistant = () => {
-    navigate('/resume-tools?tab=ats-optimizer');
   };
 
   return (
@@ -346,17 +341,6 @@ const Dashboard = () => {
                   <div className="flex flex-col items-start">
                     <span>Cover Letter</span>
                     <span className="text-xs text-muted-foreground">Craft a personalized letter</span>
-                  </div>
-                </Button>
-                <Button 
-                  variant="secondary" 
-                  className="w-full justify-start text-left button-hover"
-                  onClick={navigateToAIAssistant}
-                >
-                  <MessageSquareIcon className="w-4 h-4 mr-2" />
-                  <div className="flex flex-col items-start">
-                    <span>AI Assistant</span>
-                    <span className="text-xs text-muted-foreground">Get career advice</span>
                   </div>
                 </Button>
                 <Button 
