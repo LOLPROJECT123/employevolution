@@ -986,18 +986,417 @@ export function ProfileEditForm() {
     );
   };
   
-  // Job preferences form
-  const JobPreferencesForm = () => (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-medium mb-2">Job Preferences</h3>
-        <p className="text-sm text-muted-foreground">
-          Set your preferences to find the right job opportunities.
-        </p>
+  // Job preferences form 
+  const JobPreferencesForm = () => {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-lg font-medium mb-2">Job Preferences</h3>
+          <p className="text-sm text-muted-foreground">
+            Set your preferences to find the right job opportunities.
+          </p>
+        </div>
+        
+        <div className="space-y-4">
+          <FormItem>
+            <FormLabel>Preferred Roles</FormLabel>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {profile.jobPreferences.roles.map((role: string, index: number) => (
+                <Badge key={index} variant="outline">{role}</Badge>
+              ))}
+            </div>
+            <FormControl>
+              <Input 
+                placeholder="Add a role (e.g. Frontend Developer)" 
+              />
+            </FormControl>
+          </FormItem>
+          
+          <FormItem>
+            <FormLabel>Preferred Industries</FormLabel>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {profile.jobPreferences.industries.map((industry: string, index: number) => (
+                <Badge key={index} variant="outline">{industry}</Badge>
+              ))}
+            </div>
+            <FormControl>
+              <Input 
+                placeholder="Add an industry (e.g. Technology, Finance)" 
+              />
+            </FormControl>
+          </FormItem>
+          
+          <FormItem>
+            <FormLabel>Target Companies</FormLabel>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {profile.jobPreferences.companies.map((company: string, index: number) => (
+                <Badge key={index} variant="outline">{company}</Badge>
+              ))}
+            </div>
+            <FormControl>
+              <Input 
+                placeholder="Add a company (e.g. Google, Amazon)" 
+              />
+            </FormControl>
+          </FormItem>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <FormItem>
+              <FormLabel>Minimum Compensation</FormLabel>
+              <FormControl>
+                <Input 
+                  type="number"
+                  value={profile.jobPreferences.compensation.minimum}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value);
+                    setProfile({
+                      ...profile,
+                      jobPreferences: {
+                        ...profile.jobPreferences,
+                        compensation: {
+                          ...profile.jobPreferences.compensation,
+                          minimum: isNaN(value) ? 0 : value
+                        }
+                      }
+                    });
+                  }}
+                />
+              </FormControl>
+            </FormItem>
+            
+            <FormItem>
+              <FormLabel>Preferred Compensation</FormLabel>
+              <FormControl>
+                <Input 
+                  type="number"
+                  value={profile.jobPreferences.compensation.preferred}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value);
+                    setProfile({
+                      ...profile,
+                      jobPreferences: {
+                        ...profile.jobPreferences,
+                        compensation: {
+                          ...profile.jobPreferences.compensation,
+                          preferred: isNaN(value) ? 0 : value
+                        }
+                      }
+                    });
+                  }}
+                />
+              </FormControl>
+            </FormItem>
+          </div>
+          
+          <FormItem>
+            <FormLabel>Location</FormLabel>
+            <FormControl>
+              <Input 
+                value={profile.jobPreferences.location}
+                onChange={(e) => handleJobPreferenceChange('location', e.target.value)}
+                placeholder="e.g. San Francisco, CA"
+              />
+            </FormControl>
+          </FormItem>
+          
+          <FormItem>
+            <FormLabel>Work Model</FormLabel>
+            <Select 
+              value={profile.jobPreferences.workModel}
+              onValueChange={(value) => handleJobPreferenceChange('workModel', value)}
+            >
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select work model" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="remote">Remote</SelectItem>
+                <SelectItem value="onsite">On-site</SelectItem>
+                <SelectItem value="hybrid">Hybrid</SelectItem>
+              </SelectContent>
+            </Select>
+          </FormItem>
+          
+          <FormItem>
+            <FormLabel>Job Types</FormLabel>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {profile.jobPreferences.jobTypes.map((type: string, index: number) => (
+                <Badge key={index} variant="outline">
+                  {type === 'full-time' ? 'Full-time' : 
+                   type === 'part-time' ? 'Part-time' : 
+                   type === 'contract' ? 'Contract' : 
+                   type === 'internship' ? 'Internship' : type}
+                </Badge>
+              ))}
+            </div>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center space-x-2">
+                <input 
+                  type="checkbox" 
+                  id="job-type-full-time"
+                  checked={profile.jobPreferences.jobTypes.includes('full-time')}
+                  onChange={(e) => {
+                    const newJobTypes = e.target.checked 
+                      ? [...profile.jobPreferences.jobTypes, 'full-time'] 
+                      : profile.jobPreferences.jobTypes.filter(t => t !== 'full-time');
+                    handleJobPreferenceChange('jobTypes', newJobTypes);
+                  }}
+                />
+                <Label htmlFor="job-type-full-time">Full-time</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input 
+                  type="checkbox" 
+                  id="job-type-part-time"
+                  checked={profile.jobPreferences.jobTypes.includes('part-time')}
+                  onChange={(e) => {
+                    const newJobTypes = e.target.checked 
+                      ? [...profile.jobPreferences.jobTypes, 'part-time'] 
+                      : profile.jobPreferences.jobTypes.filter(t => t !== 'part-time');
+                    handleJobPreferenceChange('jobTypes', newJobTypes);
+                  }}
+                />
+                <Label htmlFor="job-type-part-time">Part-time</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input 
+                  type="checkbox" 
+                  id="job-type-contract"
+                  checked={profile.jobPreferences.jobTypes.includes('contract')}
+                  onChange={(e) => {
+                    const newJobTypes = e.target.checked 
+                      ? [...profile.jobPreferences.jobTypes, 'contract'] 
+                      : profile.jobPreferences.jobTypes.filter(t => t !== 'contract');
+                    handleJobPreferenceChange('jobTypes', newJobTypes);
+                  }}
+                />
+                <Label htmlFor="job-type-contract">Contract</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input 
+                  type="checkbox" 
+                  id="job-type-internship"
+                  checked={profile.jobPreferences.jobTypes.includes('internship')}
+                  onChange={(e) => {
+                    const newJobTypes = e.target.checked 
+                      ? [...profile.jobPreferences.jobTypes, 'internship'] 
+                      : profile.jobPreferences.jobTypes.filter(t => t !== 'internship');
+                    handleJobPreferenceChange('jobTypes', newJobTypes);
+                  }}
+                />
+                <Label htmlFor="job-type-internship">Internship</Label>
+              </div>
+            </div>
+          </FormItem>
+          
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <FormLabel>Open to Relocation</FormLabel>
+              <FormDescription>
+                Are you willing to relocate for the right opportunity?
+              </FormDescription>
+            </div>
+            <Switch
+              checked={profile.jobPreferences.openToRelocation}
+              onCheckedChange={(checked) => handleJobPreferenceChange('openToRelocation', checked)}
+            />
+          </div>
+        </div>
       </div>
+    );
+  };
+  
+  // Render the component
+  return (
+    <div>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="text-muted-foreground"
+        onClick={() => setOpen(true)}
+      >
+        <PenLine className="h-4 w-4 mr-2" />
+        Edit
+      </Button>
       
-      <div className="space-y-4">
-        <FormItem>
-          <FormLabel>Preferred Roles</FormLabel>
-          <div className="flex flex-wrap gap-2 mb-2">
-            {profile.jobPreferences.roles.map((role: string, index: number) => (
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent className="sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle>Edit Profile</SheetTitle>
+            <SheetDescription>
+              Update your profile information to help recruiters find you.
+            </SheetDescription>
+          </SheetHeader>
+          
+          <div className="grid gap-2 py-4">
+            <div className="flex items-center justify-between mb-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-medium">Profile Completion</h3>
+                  <Badge variant="outline">{profileCompletion}%</Badge>
+                </div>
+                <Progress value={profileCompletion} className="h-2" />
+              </div>
+            </div>
+            
+            <Separator className="my-4" />
+            
+            <div className="flex overflow-x-auto pb-2 mb-4 snap-x">
+              {["basic", "contact", "workExperience", "education", "projects", "social", "skills", "jobPreferences", "workAuthorization", "demographics"].map((section) => (
+                <Button
+                  key={section}
+                  variant={activeSection === section ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setActiveSection(section as ProfileSection)}
+                  className="mr-2 whitespace-nowrap snap-start"
+                >
+                  {section === "basic" && "Basic Info"}
+                  {section === "contact" && "Contact"}
+                  {section === "workExperience" && "Work Experience"}
+                  {section === "education" && "Education"}
+                  {section === "projects" && "Projects"}
+                  {section === "social" && "Social Links"}
+                  {section === "skills" && "Skills"}
+                  {section === "jobPreferences" && "Job Preferences"}
+                  {section === "workAuthorization" && "Work Authorization"}
+                  {section === "demographics" && "Demographics"}
+                </Button>
+              ))}
+            </div>
+            
+            <div className="mt-2 overflow-y-auto max-h-[calc(100vh-250px)]">
+              {activeSection === "basic" && <BasicInfoForm />}
+              {activeSection === "contact" && <ContactInfoForm />}
+              {activeSection === "workExperience" && <WorkExperienceForm />}
+              {activeSection === "education" && <EducationForm />}
+              {activeSection === "projects" && <ProjectsForm />}
+              {activeSection === "social" && <SocialLinksForm />}
+              {activeSection === "skills" && <SkillsForm />}
+              {activeSection === "jobPreferences" && <JobPreferencesForm />}
+              {activeSection === "workAuthorization" && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Work Authorization</h3>
+                  <FormItem>
+                    <FormLabel>Work Authorization Status</FormLabel>
+                    <Select 
+                      value={profile.workAuthorization.status}
+                      onValueChange={(value) => handleWorkAuthChange('status', value)}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="us-citizen">US Citizen</SelectItem>
+                        <SelectItem value="permanent-resident">Permanent Resident (Green Card)</SelectItem>
+                        <SelectItem value="h1b">H-1B Visa</SelectItem>
+                        <SelectItem value="opt">OPT/EAD</SelectItem>
+                        <SelectItem value="other">Other Visa</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <FormLabel>Need Sponsorship</FormLabel>
+                      <FormDescription>
+                        Do you require visa sponsorship?
+                      </FormDescription>
+                    </div>
+                    <Switch
+                      checked={profile.workAuthorization.requireSponsorship}
+                      onCheckedChange={(checked) => handleWorkAuthChange('requireSponsorship', checked)}
+                    />
+                  </div>
+                </div>
+              )}
+              {activeSection === "demographics" && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Demographics</h3>
+                  <p className="text-sm text-muted-foreground">
+                    This information is optional and used only for diversity and inclusion reporting.
+                  </p>
+                  
+                  <FormItem>
+                    <FormLabel>Gender</FormLabel>
+                    <Select 
+                      value={profile.demographics.gender}
+                      onValueChange={(value) => handleDemographicChange('gender', value)}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select gender" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="male">Male</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
+                        <SelectItem value="non-binary">Non-binary</SelectItem>
+                        <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                  
+                  <FormItem>
+                    <FormLabel>Ethnicity</FormLabel>
+                    <Select 
+                      value={profile.demographics.ethnicity}
+                      onValueChange={(value) => handleDemographicChange('ethnicity', value)}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select ethnicity" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="asian">Asian</SelectItem>
+                        <SelectItem value="black">Black or African American</SelectItem>
+                        <SelectItem value="hispanic">Hispanic or Latino</SelectItem>
+                        <SelectItem value="native-american">Native American</SelectItem>
+                        <SelectItem value="pacific-islander">Pacific Islander</SelectItem>
+                        <SelectItem value="white">White</SelectItem>
+                        <SelectItem value="multiple">Two or More Races</SelectItem>
+                        <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                  
+                  <FormItem>
+                    <FormLabel>Veteran Status</FormLabel>
+                    <Select 
+                      value={profile.demographics.veteranStatus}
+                      onValueChange={(value) => handleDemographicChange('veteranStatus', value)}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select veteran status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="protected-veteran">Protected Veteran</SelectItem>
+                        <SelectItem value="not-a-veteran">Not a Veteran</SelectItem>
+                        <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <SheetFooter>
+            <SheetClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </SheetClose>
+            <Button onClick={handleSave}>
+              <Save className="h-4 w-4 mr-2" />
+              Save Changes
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+    </div>
+  );
+}
