@@ -1,3 +1,4 @@
+
 import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
 import { 
@@ -7,6 +8,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   MapPin, 
   Building2, 
@@ -349,8 +351,8 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
             </TabsList>
           </div>
           
-          <div className="flex-1 overflow-y-auto">
-            <TabsContent value="summary" className="mt-0 p-4 space-y-6 h-full overflow-y-auto">
+          <ScrollArea className="flex-1 h-[calc(100vh-310px)]">
+            <TabsContent value="summary" className="mt-0 p-4 space-y-6">
               {job.matchPercentage && (
                 <div className={`p-4 rounded-lg ${getMatchBgColor(job.matchPercentage)} mb-4`}>
                   <div className="flex items-center gap-2">
@@ -428,7 +430,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
               </div>
             </TabsContent>
             
-            <TabsContent value="company" className="mt-0 p-4 space-y-6 h-full overflow-y-auto">
+            <TabsContent value="company" className="mt-0 p-4 space-y-6">
               <div className="bg-gray-50 dark:bg-gray-900/50 p-5 rounded-lg">
                 <h3 className="text-lg font-semibold mb-4">About {job.company}</h3>
                 
@@ -511,7 +513,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
               </div>
             </TabsContent>
             
-            <TabsContent value="full-posting" className="mt-0 p-4 space-y-6 h-full overflow-y-auto">
+            <TabsContent value="full-posting" className="mt-0 p-4 space-y-6">
               <div>
                 <h3 className="text-lg font-semibold mb-4">Job Description</h3>
                 <p className="text-muted-foreground whitespace-pre-line leading-relaxed">
@@ -591,7 +593,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
                 </div>
               )}
             </TabsContent>
-          </div>
+          </ScrollArea>
         </Tabs>
       </div>
       

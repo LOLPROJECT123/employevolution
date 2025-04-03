@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
@@ -144,7 +145,7 @@ export function MobileJobDetail({
         <div className="w-5"></div>
       </header>
       
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 h-[calc(100vh-125px)]">
         <Tabs value={activeTab} className="w-full">
           <TabsContent value="overview" className="mt-0">
             <div className="p-4">
@@ -315,7 +316,7 @@ export function MobileJobDetail({
                       <div>
                         <h3 className="font-medium mb-2">About This Role</h3>
                         <p className="text-gray-700 dark:text-gray-300 mb-4">
-                          {job.description.substring(0, 200)}...
+                          {job.description}
                         </p>
                       </div>
                       
@@ -379,35 +380,37 @@ export function MobileJobDetail({
                 </div>
               </div>
               
-              <div>
-                <h3 className="text-sm text-gray-500">Company Size</h3>
-                <p className="mt-1 font-medium">
-                  {companyDetails.size}
-                </p>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-sm text-gray-500">Company Size</h3>
+                  <p className="mt-1 font-medium">
+                    {companyDetails.size}
+                  </p>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm text-gray-500">Company Stage</h3>
+                  <p className="mt-1 font-medium">
+                    {companyDetails.stage}
+                  </p>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm text-gray-500">Headquarters</h3>
+                  <p className="mt-1 font-medium">
+                    {companyDetails.headquarters}
+                  </p>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm text-gray-500">Founded</h3>
+                  <p className="mt-1 font-medium">
+                    {companyDetails.founded}
+                  </p>
+                </div>
               </div>
               
-              <div>
-                <h3 className="text-sm text-gray-500">Company Stage</h3>
-                <p className="mt-1 font-medium">
-                  {companyDetails.stage}
-                </p>
-              </div>
-              
-              <div>
-                <h3 className="text-sm text-gray-500">Headquarters</h3>
-                <p className="mt-1 font-medium">
-                  {companyDetails.headquarters}
-                </p>
-              </div>
-              
-              <div>
-                <h3 className="text-sm text-gray-500">Founded</h3>
-                <p className="mt-1 font-medium">
-                  {companyDetails.founded}
-                </p>
-              </div>
-              
-              <div className="pt-4 border-t">
+              <div className="pt-4 border-t mt-4">
                 <h3 className="text-lg font-medium mb-4">Company News</h3>
                 
                 <div className="space-y-6">

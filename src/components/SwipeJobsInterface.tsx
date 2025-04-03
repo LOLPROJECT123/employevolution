@@ -8,6 +8,7 @@ import { motion, PanInfo } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { formatRelativeTime } from "@/utils/dateUtils";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface SwipeJobsInterfaceProps {
   jobs: Job[];
@@ -181,28 +182,50 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
               </div>
             </div>
             
-            <div className="space-y-4 mb-4">
-              <div>
-                <h3 className="text-lg font-medium mb-2">About This Role</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {currentJob.description}
-                </p>
-              </div>
-              
-              <div>
-                <h3 className="text-lg font-medium mb-2">Skills</h3>
-                <div className="flex flex-wrap gap-2">
-                  {currentJob.skills.slice(0, 5).map((skill, index) => (
-                    <span 
-                      key={index} 
-                      className="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-sm capitalize"
-                    >
-                      {skill}
-                    </span>
-                  ))}
+            <ScrollArea className="h-[250px] pr-2 -mr-2 mb-4">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-medium mb-2">About This Role</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {currentJob.description}
+                  </p>
                 </div>
+                
+                <div>
+                  <h3 className="text-lg font-medium mb-2">Requirements</h3>
+                  <ul className="list-disc pl-5 space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                    {currentJob.requirements && currentJob.requirements.slice(0, 3).map((req, index) => (
+                      <li key={index}>{req}</li>
+                    ))}
+                  </ul>
+                </div>
+                
+                <div>
+                  <h3 className="text-lg font-medium mb-2">Skills</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {currentJob.skills.slice(0, 5).map((skill, index) => (
+                      <span 
+                        key={index} 
+                        className="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-sm capitalize"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                
+                {currentJob.benefits && currentJob.benefits.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Benefits</h3>
+                    <ul className="list-disc pl-5 space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                      {currentJob.benefits.slice(0, 3).map((benefit, index) => (
+                        <li key={index}>{benefit}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
-            </div>
+            </ScrollArea>
             
             {/* Apply button */}
             <Button 
