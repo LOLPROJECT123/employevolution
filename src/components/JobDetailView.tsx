@@ -1,4 +1,3 @@
-
 import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
 import { 
@@ -260,7 +259,6 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
           {job.matchPercentage && (
             <div className="mr-4">
               <Badge variant="outline" className={`px-3 py-1.5 rounded-full ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)} text-sm font-bold shadow-sm flex items-center gap-1.5`}>
-                <Percent className="w-4 h-4" />
                 {job.matchPercentage}% Match
               </Badge>
             </div>

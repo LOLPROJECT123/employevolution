@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Job } from "@/types/job";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -145,7 +144,6 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
                 {/* Match Percentage Badge - Always visible */}
                 {currentJob.matchPercentage !== undefined && (
                   <Badge variant="outline" className={`flex items-center px-3 py-1.5 ${getMatchBgColor(currentJob.matchPercentage)} ${getMatchColor(currentJob.matchPercentage)} text-base font-medium rounded-md`}>
-                    <Percent className="w-4 h-4 mr-1.5" />
                     {currentJob.matchPercentage}% Match
                   </Badge>
                 )}
