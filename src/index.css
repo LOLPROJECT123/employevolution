@@ -203,20 +203,27 @@
     @apply flex-shrink-0 px-1.5 py-0.5 text-xs font-medium mr-2 flex items-center;
   }
 
-  /* Job detail scrollable areas */
+  /* Job detail scrollable areas - improved for desktop */
   .job-detail-content {
     @apply overflow-y-auto pr-2;
     max-height: calc(100vh - 160px);
   }
 
-  /* Save job button styling */
-  .save-job-button {
-    @apply flex items-center justify-center p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors;
+  /* Job detail scroll area for mobile and desktop - improved height */
+  .job-detail-scroll {
+    @apply overflow-y-auto;
+    max-height: calc(100vh - 170px);
+    scrollbar-width: thin;
   }
 
-  /* Apply button */
-  .apply-button {
-    @apply bg-blue-600 hover:bg-blue-700 text-white rounded flex items-center justify-center gap-2;
+  /* Add match percentage badge styling for better visibility */
+  .match-badge-prominent {
+    @apply flex items-center px-3 py-1.5 rounded-md text-base font-medium;
+  }
+
+  /* Job card match percentage styling for consistent display */
+  .job-card-match {
+    @apply absolute right-2 top-2 rounded-md px-2 py-1 text-sm font-medium flex items-center gap-1;
   }
 }
 
@@ -287,13 +294,14 @@
   animation: slide-in-left 0.3s ease-out forwards;
 }
 
-/* Enhanced scrolling for tab content */
+/* Enhanced scrolling for tab content - specifically improve job details */
 .tabs-content {
   @apply overflow-y-auto;
-  max-height: calc(100vh - 350px);
+  max-height: calc(100vh - 330px);
 }
 
 .TabsContent {
   overflow-y: auto;
   height: 100%;
+  max-height: calc(100vh - 330px); /* Ensure content fits */
 }

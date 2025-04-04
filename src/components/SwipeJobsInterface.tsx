@@ -139,7 +139,17 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
         <Card className="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl overflow-hidden">
           <CardContent className="p-4">
             <div className="mb-4">
-              <h2 className="text-2xl font-bold">{currentJob.title}</h2>
+              <div className="flex items-start justify-between">
+                <h2 className="text-2xl font-bold">{currentJob.title}</h2>
+                
+                {/* Match Percentage Badge - Always visible */}
+                {currentJob.matchPercentage !== undefined && (
+                  <Badge variant="outline" className={`flex items-center px-3 py-1.5 ${getMatchBgColor(currentJob.matchPercentage)} ${getMatchColor(currentJob.matchPercentage)} text-base font-medium rounded-md`}>
+                    <Percent className="w-4 h-4 mr-1.5" />
+                    {currentJob.matchPercentage}% Match
+                  </Badge>
+                )}
+              </div>
               
               <div className="flex items-start justify-between mt-3">
                 {/* Company Info with flex-col */}
@@ -169,20 +179,10 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
                     <span className="text-sm">Posted {timeAgo}</span>
                   </div>
                 </div>
-                
-                {/* Match Percentage Badge - Positioned to the right of company info */}
-                {currentJob.matchPercentage !== undefined && (
-                  <div className="ml-2 flex-shrink-0">
-                    <Badge variant="outline" className={`flex items-center px-3 py-2 ${getMatchBgColor(currentJob.matchPercentage)} ${getMatchColor(currentJob.matchPercentage)} text-base font-medium rounded-md`}>
-                      <Percent className="w-4 h-4 mr-1.5" />
-                      {currentJob.matchPercentage}% Match
-                    </Badge>
-                  </div>
-                )}
               </div>
             </div>
             
-            <ScrollArea className="h-[250px] pr-2 -mr-2 mb-4">
+            <ScrollArea className="h-[280px] pr-2 -mr-2 mb-4">
               <div className="space-y-4">
                 <div>
                   <h3 className="text-lg font-medium mb-2">About This Role</h3>
