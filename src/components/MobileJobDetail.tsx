@@ -145,7 +145,8 @@ export function MobileJobDetail({
         <div className="w-5"></div>
       </header>
       
-      <ScrollArea className="flex-1 h-[calc(100vh-125px)]">
+      {/* Fixed the ScrollArea to ensure it takes proper height and bottom content is visible */}
+      <ScrollArea className="flex-1 overflow-auto pb-20" style={{ maxHeight: "calc(100vh - 125px)" }}>
         <Tabs value={activeTab} className="w-full">
           <TabsContent value="overview" className="mt-0">
             <div className="p-4">
@@ -310,16 +311,15 @@ export function MobileJobDetail({
                       </ul>
                     </div>
                     
-                    {(job.benefits?.length > 0 || enhancedResponsibilities.length > 0) && (
-                      <div className="mt-6 space-y-4">
-                        <h3 className="font-medium">Benefits</h3>
-                        <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300">
-                          {(job.benefits?.length ? job.benefits : enhancedResponsibilities).slice(0, 3).map((benefit, idx) => (
-                            <li key={idx}>{benefit}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                    {/* Benefits section */}
+                    <div className="mt-6 space-y-4">
+                      <h3 className="font-medium">Benefits</h3>
+                      <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300">
+                        {(job.benefits?.length ? job.benefits : enhancedBenefits).slice(0, 5).map((benefit, idx) => (
+                          <li key={idx}>{benefit}</li>
+                        ))}
+                      </ul>
+                    </div>
                   </TabsContent>
                   
                   <TabsContent value="full-posting" className="mt-4">
@@ -349,16 +349,15 @@ export function MobileJobDetail({
                         </ul>
                       </div>
                       
-                      {job.benefits && job.benefits.length > 0 && (
-                        <div>
-                          <h3 className="font-medium mb-2">Benefits</h3>
-                          <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300">
-                            {job.benefits.map((benefit, idx) => (
-                              <li key={idx}>{benefit}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
+                      {/* Benefits section in full posting */}
+                      <div className="mb-20"> {/* Added bottom margin to ensure visibility */}
+                        <h3 className="font-medium mb-2">Benefits</h3>
+                        <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300">
+                          {(job.benefits?.length ? job.benefits : enhancedBenefits).map((benefit, idx) => (
+                            <li key={idx}>{benefit}</li>
+                          ))}
+                        </ul>
+                      </div>
                     </div>
                   </TabsContent>
                 </Tabs>
@@ -442,7 +441,7 @@ export function MobileJobDetail({
                 </div>
               </div>
               
-              <div className="pt-4 border-t">
+              <div className="pt-4 border-t mt-4">
                 <h3 className="text-lg font-medium mb-4">What makes {job.company} unique</h3>
                 
                 <div className="space-y-3">
@@ -455,10 +454,11 @@ export function MobileJobDetail({
                 </div>
               </div>
               
-              <div className="pt-4 border-t pb-20">
+              {/* Benefits section in company tab - added more bottom padding */}
+              <div className="pt-4 border-t mt-4 mb-24">
                 <h3 className="text-lg font-medium mb-4">Benefits</h3>
                 
-                <div className="space-y-3">
+                <div className="space-y-3 pb-4">
                   {enhancedBenefits.map((benefit, idx) => (
                     <div key={idx} className="flex items-center gap-2">
                       <CheckCircle className="h-5 w-5 text-teal-500" />
@@ -472,7 +472,8 @@ export function MobileJobDetail({
         </Tabs>
       </ScrollArea>
       
-      <div className="p-3 border-t flex items-center justify-between bg-white dark:bg-gray-900 sticky bottom-0">
+      {/* Fixed footer position and z-index */}
+      <div className="p-3 border-t flex items-center justify-between bg-white dark:bg-gray-900 sticky bottom-0 z-10">
         <button 
           className="text-primary text-sm"
           onClick={() => {}}
@@ -512,3 +513,4 @@ export function MobileJobDetail({
     </div>
   );
 }
+
