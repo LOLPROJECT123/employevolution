@@ -1,3 +1,4 @@
+
 import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
 import { 
@@ -322,6 +323,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
       
       <div className="flex-1 overflow-hidden flex flex-col">
         <Tabs 
+          defaultValue="summary" 
           value={activeTab} 
           onValueChange={setActiveTab} 
           className="w-full flex-1 flex flex-col overflow-hidden"
