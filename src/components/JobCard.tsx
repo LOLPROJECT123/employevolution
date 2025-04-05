@@ -104,7 +104,7 @@ export function JobCard({
                 <div className="mt-1 mb-1 space-y-1">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">Match</span>
-                    <span className="font-medium">{job.matchPercentage}%</span>
+                    <span className={`font-medium ${getMatchColor(job.matchPercentage)}`}>{job.matchPercentage}%</span>
                   </div>
                   <Progress value={job.matchPercentage} className="h-1.5" />
                 </div>
@@ -175,7 +175,7 @@ export function JobCard({
           <div className="mt-2 mb-2 space-y-1">
             <div className="flex items-center justify-between text-xs">
               <span className="text-muted-foreground">Match</span>
-              <span className="font-medium">{job.matchPercentage}%</span>
+              <span className={`font-medium ${getMatchColor(job.matchPercentage)}`}>{job.matchPercentage}%</span>
             </div>
             <Progress value={job.matchPercentage} className="h-1.5" />
           </div>
