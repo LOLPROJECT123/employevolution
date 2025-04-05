@@ -1,7 +1,7 @@
 
 import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
-import { BookmarkIcon, Building2, MapPin, Clock, CheckCircle, ArrowRight, Zap, Percent } from "lucide-react";
+import { BookmarkIcon, Building2, MapPin, Clock, CheckCircle, ArrowRight, Zap, BadgePercent } from "lucide-react";
 import { formatRelativeTime } from "@/utils/dateUtils";
 import { Badge } from "./ui/badge";
 import { Progress } from "./ui/progress";
@@ -113,7 +113,9 @@ export function JobCard({
               {job.matchPercentage !== undefined && (
                 <div className="mt-1 mb-1 space-y-1">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Match</span>
+                    <span className="text-muted-foreground flex items-center gap-1">
+                      <BadgePercent className="h-3 w-3" /> Match
+                    </span>
                     <span className={`font-medium ${getMatchColor(job.matchPercentage)}`}>{job.matchPercentage}%</span>
                   </div>
                   <Progress value={job.matchPercentage} className="h-1.5" />
@@ -122,7 +124,7 @@ export function JobCard({
             </div>
           </div>
           
-          {/* Match percentage circular indicator like in the example */}
+          {/* Match percentage circular indicator */}
           {job.matchPercentage !== undefined && (
             <div className="ml-2 flex flex-col items-center">
               <div className="relative w-14 h-14">
@@ -236,7 +238,9 @@ export function JobCard({
         {job.matchPercentage !== undefined && (
           <div className="mt-2 mb-2 space-y-1">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">Match</span>
+              <span className="text-muted-foreground flex items-center gap-1">
+                <BadgePercent className="h-3 w-3" /> Match
+              </span>
               <span className={`font-medium ${getMatchColor(job.matchPercentage)}`}>{job.matchPercentage}%</span>
             </div>
             <Progress value={job.matchPercentage} className="h-1.5" />
