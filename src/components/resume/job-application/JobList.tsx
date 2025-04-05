@@ -2,6 +2,8 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrapedJob } from "./types";
+import { BookmarkIcon, Percent } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 interface JobListProps {
   jobs: ScrapedJob[];
@@ -24,11 +26,22 @@ const JobList = ({ jobs, onSelectJob }: JobListProps) => {
             onClick={() => onSelectJob(job)}
           >
             <div className="flex justify-between items-start">
-              <div>
+              <div className="flex-1">
                 <div className="font-medium">{job.title}</div>
                 <div className="text-sm text-muted-foreground">{job.company}</div>
                 <div className="text-sm text-muted-foreground">{job.location}</div>
-                <div className="flex items-center mt-1 space-x-2">
+                
+                {job.matchPercentage && (
+                  <div className="mt-2 space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Match</span>
+                      <span className="font-medium">{job.matchPercentage}%</span>
+                    </div>
+                    <Progress value={job.matchPercentage} className="h-1.5" />
+                  </div>
+                )}
+                
+                <div className="flex items-center mt-2 space-x-2">
                   <Badge variant="outline" className="text-xs">
                     {job.source}
                   </Badge>
@@ -39,7 +52,15 @@ const JobList = ({ jobs, onSelectJob }: JobListProps) => {
                   )}
                 </div>
               </div>
-              <Button variant="ghost" size="sm">
+              <div className="flex flex-col items-end space-y-16">
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <BookmarkIcon className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            
+            <div className="mt-2">
+              <Button variant="default" size="sm" className="w-full mt-2">
                 Apply
               </Button>
             </div>

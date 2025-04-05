@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { BookmarkIcon, Building2, MapPin, Clock, CheckCircle, ArrowRight, Zap, Percent } from "lucide-react";
 import { formatRelativeTime } from "@/utils/dateUtils";
 import { Badge } from "./ui/badge";
+import { Progress } from "./ui/progress";
 
 interface JobCardProps {
   job: Job;
@@ -81,12 +82,6 @@ export function JobCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium truncate">{job.title}</h3>
-              
-              {job.matchPercentage !== undefined && (
-                <Badge variant="outline" className={`ml-2 px-2 py-0.5 text-xs font-bold ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)} flex items-center gap-1 mr-2`}>
-                  {job.matchPercentage}% Match
-                </Badge>
-              )}
             </div>
             
             <div className="flex flex-col gap-1 mt-1.5">
@@ -103,39 +98,18 @@ export function JobCard({
               <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                 <Clock className="w-3 h-3" /> {timeAgo}
               </p>
+              
+              {/* Match percentage with Progress bar */}
+              {job.matchPercentage !== undefined && (
+                <div className="mt-1 mb-1 space-y-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">Match</span>
+                    <span className="font-medium">{job.matchPercentage}%</span>
+                  </div>
+                  <Progress value={job.matchPercentage} className="h-1.5" />
+                </div>
+              )}
             </div>
-          </div>
-          
-          <div className="ml-1 flex flex-col items-end gap-2">
-            {isApplied ? (
-              <Badge className="bg-green-100 hover:bg-green-100 text-green-700 border-green-200">
-                <CheckCircle className="mr-1 h-3 w-3" /> Applied
-              </Badge>
-            ) : isSaved ? (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-primary"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSave?.();
-                }}
-              >
-                <BookmarkIcon className="h-4 w-4 fill-current" />
-              </Button>
-            ) : (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSave?.();
-                }}
-              >
-                <BookmarkIcon className="h-4 w-4" />
-              </Button>
-            )}
           </div>
         </div>
         
@@ -149,6 +123,19 @@ export function JobCard({
             }}
           >
             Apply Now <ArrowRight className="h-3 w-3 ml-1" />
+          </Button>
+          
+          {/* Bookmark button moved down next to Apply Now button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`ml-2 ${isSaved ? "text-primary" : ""}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSave?.();
+            }}
+          >
+            <BookmarkIcon className={`h-4 w-4 ${isSaved ? "fill-current" : ""}`} />
           </Button>
         </div>
       </div>
@@ -166,12 +153,6 @@ export function JobCard({
         <div className={`w-12 h-12 flex-shrink-0 rounded-lg flex items-center justify-center ${getCompanyColor()}`}>
           {getCompanyInitial()}
         </div>
-        
-        {job.matchPercentage !== undefined && (
-          <Badge variant="outline" className={`px-2.5 py-0.5 text-xs font-bold ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)} flex items-center gap-1 mr-1`}>
-            {job.matchPercentage}% Match
-          </Badge>
-        )}
       </div>
       
       <h3 className="font-medium mt-1">{job.title}</h3>
@@ -188,6 +169,17 @@ export function JobCard({
         <p className="text-xs text-muted-foreground flex items-center gap-1.5">
           <Clock className="w-3 h-3" /> {timeAgo}
         </p>
+        
+        {/* Match percentage with Progress bar */}
+        {job.matchPercentage !== undefined && (
+          <div className="mt-2 mb-2 space-y-1">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Match</span>
+              <span className="font-medium">{job.matchPercentage}%</span>
+            </div>
+            <Progress value={job.matchPercentage} className="h-1.5" />
+          </div>
+        )}
       </div>
       
       <div className="flex items-center justify-between mt-4">
