@@ -19,16 +19,7 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 
-type JobSourceCategory = 'job-board' | 'company' | 'tech' | 'custom-company';
-
-interface JobSource {
-  id: string;
-  name: string;
-  isActive: boolean;
-  category: JobSourceCategory;
-}
-
-const jobSources: JobSource[] = [
+const jobSources = [
   // Job boards
   { id: 'linkedin', name: 'LinkedIn', isActive: true, category: 'job-board' },
   { id: 'github', name: 'GitHub Jobs', isActive: true, category: 'job-board' },
@@ -38,9 +29,9 @@ const jobSources: JobSource[] = [
   { id: 'levelsFyi', name: 'Levels.fyi', isActive: true, category: 'job-board' },
   { id: 'offerPilot', name: 'OfferPilot.ai', isActive: true, category: 'job-board' },
   { id: 'jobRight', name: 'JobRight.ai', isActive: true, category: 'job-board' },
-  { id: 'wellfound', name: 'Wellfound', isActive: true, category: 'job-board' },
-  { id: 'remoteco', name: 'Remote.co', isActive: true, category: 'job-board' },
-  { id: 'weworkremotely', name: 'We Work Remotely', isActive: true, category: 'job-board' },
+  { id: 'wellfound', name: 'Wellfound', isActive: false, category: 'job-board' },
+  { id: 'remoteco', name: 'Remote.co', isActive: false, category: 'job-board' },
+  { id: 'weworkremotely', name: 'We Work Remotely', isActive: false, category: 'job-board' },
   { id: 'monster', name: 'Monster', isActive: false, category: 'job-board' },
   { id: 'glassdoor', name: 'Glassdoor', isActive: false, category: 'job-board' },
   { id: 'dice', name: 'Dice', isActive: false, category: 'job-board' },
@@ -68,17 +59,17 @@ const jobSources: JobSource[] = [
 ];
 
 export interface JobScraperConfigProps {
-  onConfigUpdate: (sources: JobSource[]) => void;
+  onConfigUpdate: (sources: {id: string, name: string, isActive: boolean}[]) => void;
 }
 
 export const JobScraperConfig = ({ onConfigUpdate }: JobScraperConfigProps) => {
-  const [sources, setSources] = useState<JobSource[]>(jobSources);
+  const [sources, setSources] = useState(jobSources);
   const [refreshInterval, setRefreshInterval] = useState<number>(24);
-  const [open, setOpen] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<string>('all');
-  const [customCompanyUrl, setCustomCompanyUrl] = useState<string>('');
-  const [customCompanyName, setCustomCompanyName] = useState<string>('');
-  const [autoApplyEnabled, setAutoApplyEnabled] = useState<boolean>(false);
+  const [open, setOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('all');
+  const [customCompanyUrl, setCustomCompanyUrl] = useState('');
+  const [customCompanyName, setCustomCompanyName] = useState('');
+  const [autoApplyEnabled, setAutoApplyEnabled] = useState(false);
 
   const handleSourceToggle = (sourceId: string) => {
     const updatedSources = sources.map(source => 
@@ -90,29 +81,9 @@ export const JobScraperConfig = ({ onConfigUpdate }: JobScraperConfigProps) => {
   };
 
   const handleSave = () => {
-    // Ensure more than 4 sources are active before saving
-    const activeSourcesCount = sources.filter(source => source.isActive).length;
-    
-    // If less than 6 sources are active, activate more to ensure at least 6
-    let updatedSources = [...sources];
-    if (activeSourcesCount < 6) {
-      const inactiveSources = sources.filter(source => !source.isActive);
-      const additionalSourcesToActivate = inactiveSources.slice(0, 6 - activeSourcesCount);
-      
-      updatedSources = sources.map(source => {
-        if (additionalSourcesToActivate.some(s => s.id === source.id)) {
-          return { ...source, isActive: true };
-        }
-        return source;
-      });
-      
-      setSources(updatedSources);
-    }
-    
-    onConfigUpdate(updatedSources);
-    
-    toast.success("Job search configuration updated", {
-      description: `Searching across ${Math.max(activeSourcesCount, 6)} job platforms`
+    onConfigUpdate(sources);
+    toast.success("Job sources updated", {
+      description: `${sources.filter(s => s.isActive).length} sources enabled for job search`
     });
     setOpen(false);
   };
@@ -149,7 +120,7 @@ export const JobScraperConfig = ({ onConfigUpdate }: JobScraperConfigProps) => {
       return;
     }
     
-    const newCompany: JobSource = {
+    const newCompany = {
       id: customCompanyId,
       name: customCompanyName,
       isActive: true,
@@ -165,30 +136,95 @@ export const JobScraperConfig = ({ onConfigUpdate }: JobScraperConfigProps) => {
     });
   };
 
-  const handleSliderChange = (values: number[]) => {
-    if (values.length > 0) {
-      setRefreshInterval(values[0]);
-    }
-  };
+  const filteredSources = activeTab === 'all' 
+    ? sources 
+    : sources.filter(source => source.category === activeTab);
 
-  // Hide individual sources from UI by showing only global settings
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="flex items-center">
           <Settings2Icon className="w-4 h-4 mr-2" />
-          Settings
+          Configure Job Sources
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>Job Search Settings</DialogTitle>
+          <DialogTitle>Job Search Sources</DialogTitle>
           <DialogDescription>
-            Configure how often to refresh job listings and advanced automation options.
+            Configure which platforms to search for opportunities and how often to refresh listings.
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-4 mt-4">          
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
+          <TabsList className="w-full">
+            <TabsTrigger value="all" className="flex-1">All Sources</TabsTrigger>
+            <TabsTrigger value="job-board" className="flex-1">Job Boards</TabsTrigger>
+            <TabsTrigger value="company" className="flex-1">Companies</TabsTrigger>
+            <TabsTrigger value="tech" className="flex-1">Tech</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value={activeTab} className="mt-4">
+            <div className="max-h-[40vh] overflow-y-auto rounded-md border p-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {filteredSources.map((source) => (
+                  <div key={source.id} className="flex items-center space-x-2 hover:bg-secondary/50 p-1.5 rounded-md">
+                    <Checkbox 
+                      id={source.id}
+                      checked={source.isActive}
+                      onCheckedChange={() => handleSourceToggle(source.id)}
+                    />
+                    <Label 
+                      htmlFor={source.id} 
+                      className="text-sm cursor-pointer overflow-hidden text-ellipsis"
+                    >
+                      {source.name}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+        
+        <div className="space-y-4 mt-4">
+          <div className="bg-secondary/20 p-4 rounded-md">
+            <h3 className="text-sm font-medium mb-2 flex items-center">
+              <Building className="w-4 h-4 mr-2" />
+              Add Custom Company Career Page
+            </h3>
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <div>
+                <Label htmlFor="company-name" className="text-xs">Company Name</Label>
+                <Input 
+                  id="company-name" 
+                  value={customCompanyName}
+                  onChange={(e) => setCustomCompanyName(e.target.value)}
+                  placeholder="Company Name"
+                  size="sm"
+                />
+              </div>
+              <div>
+                <Label htmlFor="company-url" className="text-xs">Careers Page URL</Label>
+                <Input 
+                  id="company-url" 
+                  value={customCompanyUrl}
+                  onChange={(e) => setCustomCompanyUrl(e.target.value)}
+                  placeholder="https://company.com/careers"
+                  size="sm"
+                />
+              </div>
+            </div>
+            <Button 
+              size="sm" 
+              variant="secondary" 
+              onClick={handleAddCustomCompany}
+              className="w-full text-xs"
+            >
+              Add Company
+            </Button>
+          </div>
+          
           <div className="space-y-2 pt-4 border-t">
             <div className="flex justify-between items-center">
               <Label htmlFor="refresh-interval">Refresh Interval</Label>
@@ -197,7 +233,7 @@ export const JobScraperConfig = ({ onConfigUpdate }: JobScraperConfigProps) => {
             <Slider
               id="refresh-interval"
               value={[refreshInterval]}
-              onValueChange={handleSliderChange}
+              onValueChange={(values) => setRefreshInterval(Number(values[0]))}
               min={1}
               max={72}
               step={1}
@@ -243,7 +279,7 @@ export const JobScraperConfig = ({ onConfigUpdate }: JobScraperConfigProps) => {
                 Cancel
               </Button>
               <Button onClick={handleSave} size="sm">
-                Save Settings
+                Save Configuration
               </Button>
             </div>
           </div>

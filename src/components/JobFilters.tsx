@@ -1,14 +1,41 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Input } from "@/components/ui/input";
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import {
-  Card,
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Slider } from "@/components/ui/slider";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { 
+  Card, 
   CardContent,
-  CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { 
+  Heart, 
+  SlidersHorizontal, 
+  X, 
+  Check, 
+  ChevronRight, 
+  Info, 
+  Search, 
+  Plus, 
+  XCircle,
+  Filter
+} from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { JobFilters } from "@/types/job";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -16,836 +43,1001 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Checkbox } from "@/components/ui/checkbox";
-import { X, Plus, Search, Filter, Info, Check, ChevronDown } from "lucide-react";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { toast } from "sonner";
-import { JobFilters } from "@/types/job";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-
-type JobFunctionType = string;
-type SkillType = string;
-type CompanyType = string;
-type JobTitleType = string;
 
 interface JobFiltersSectionProps {
-  onApplyFilters?: (filters: JobFilters) => void;
+  filters?: JobFilters;
+  onFiltersChange?: (filters: JobFilters) => void;
+  onSaveSearch?: (name: string) => void;
+  onResetFilters?: () => void;
 }
 
-// Storage key for persisting filters
-const FILTER_STORAGE_KEY = 'jobSearchFilters';
+export function JobFiltersSection({ 
+  filters = {
+    search: '',
+    location: '',
+    jobType: [],
+    remote: false,
+    experienceLevels: [],
+    education: [],
+    salaryRange: [0, 400],
+    skills: [],
+    companyTypes: [],
+    companySize: [],
+    benefits: []
+  }, 
+  onFiltersChange = () => {}, 
+  onSaveSearch = () => {},
+  onResetFilters = () => {} 
+}: JobFiltersSectionProps) {
+  const { toast } = useToast();
+  const [showAllFilters, setShowAllFilters] = useState(false);
+  const [searchName, setSearchName] = useState("");
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [selectedExperienceYears, setSelectedExperienceYears] = useState<[number, number]>([0, 11]);
+  const [customSalary, setCustomSalary] = useState("");
 
-// Helper function to load filters from localStorage
-const loadSavedFilters = (): JobFilters | null => {
-  try {
-    const savedFilters = localStorage.getItem(FILTER_STORAGE_KEY);
-    if (savedFilters) {
-      return JSON.parse(savedFilters);
-    }
-  } catch (error) {
-    console.error('Error loading saved filters:', error);
-  }
-  return null;
-};
-
-// Helper function to save filters to localStorage
-const saveFilters = (filters: JobFilters) => {
-  try {
-    localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(filters));
-  } catch (error) {
-    console.error('Error saving filters:', error);
-  }
-};
-
-export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) => {
-  const savedFilters = loadSavedFilters();
-  
-  // State for all filters - initialize from localStorage if available
-  const [jobFunctions, setJobFunctions] = useState<JobFunctionType[]>(
-    savedFilters?.jobFunction || []
-  );
-  const [skills, setSkills] = useState<SkillType[]>(
-    savedFilters?.skills || []
-  );
-  const [companies, setCompanies] = useState<CompanyType[]>(
-    savedFilters?.companies || []
-  );
-  const [jobTitles, setJobTitles] = useState<JobTitleType[]>(
-    savedFilters?.title || []
-  );
-  const [salaryRange, setSalaryRange] = useState<[number, number]>(
-    savedFilters?.salaryRange || [50000, 150000]
-  );
-  const [location, setLocation] = useState(
-    savedFilters?.location || ""
-  );
-  const [remote, setRemote] = useState(
-    savedFilters?.remote || false
-  );
-  
-  // Initialize job types from saved filters or defaults
-  const initJobTypes = () => {
-    const defaultTypes = {
-      "full-time": false,
-      "part-time": false,
-      "contract": false,
-      "internship": false,
-      "temporary": false
-    };
-    
-    if (savedFilters?.jobType?.length) {
-      const savedTypes = { ...defaultTypes };
-      savedFilters.jobType.forEach(type => {
-        if (type in savedTypes) {
-          savedTypes[type] = true;
-        }
+  const handleSaveSearch = () => {
+    if (!searchName.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a name for your search",
+        variant: "destructive"
       });
-      return savedTypes;
+      return;
     }
-    
-    return defaultTypes;
-  };
-  
-  // Initialize experience levels from saved filters or defaults
-  const initExperienceLevels = () => {
-    const defaultLevels = {
-      "entry": false,
-      "mid": false,
-      "senior": false,
-      "lead": false,
-      "manager": false,
-      "director": false,
-      "executive": false
-    };
-    
-    if (savedFilters?.experienceLevels?.length) {
-      const savedLevels = { ...defaultLevels };
-      savedFilters.experienceLevels.forEach(level => {
-        if (level in savedLevels) {
-          savedLevels[level] = true;
-        }
-      });
-      return savedLevels;
-    }
-    
-    return defaultLevels;
-  };
-  
-  const [jobTypes, setJobTypes] = useState<{[key: string]: boolean}>(initJobTypes());
-  const [experienceLevels, setExperienceLevels] = useState<{[key: string]: boolean}>(initExperienceLevels());
-  
-  // Input refs for the add functionality
-  const jobFunctionInputRef = useRef<HTMLInputElement>(null);
-  const skillInputRef = useRef<HTMLInputElement>(null);
-  const companyInputRef = useRef<HTMLInputElement>(null);
-  const jobTitleInputRef = useRef<HTMLInputElement>(null);
-  
-  // State for showing modals
-  const [showAddJobFunctionModal, setShowAddJobFunctionModal] = useState(false);
-  const [showAddSkillModal, setShowAddSkillModal] = useState(false);
-  const [showAddCompanyModal, setShowAddCompanyModal] = useState(false);
-  const [showAddJobTitleModal, setShowAddJobTitleModal] = useState(false);
-  
-  // New input values
-  const [newJobFunction, setNewJobFunction] = useState("");
-  const [newSkill, setNewSkill] = useState("");
-  const [newCompany, setNewCompany] = useState("");
-  const [newJobTitle, setNewJobTitle] = useState("");
 
-  // Flag to track if filters have been applied
-  const [filtersApplied, setFiltersApplied] = useState(!!savedFilters);
+    onSaveSearch(searchName);
+    setSearchName("");
+    setShowSaveDialog(false);
+    
+    toast({
+      title: "Search Saved",
+      description: `Your search "${searchName}" has been saved.`
+    });
+  };
 
-  // State to track if the filters section is open
-  const [isFiltersOpen, setIsFiltersOpen] = useState(true);
+  const toggleJobType = (type: string) => {
+    const jobType = filters.jobType.includes(type)
+      ? filters.jobType.filter(t => t !== type)
+      : [...filters.jobType, type];
+    onFiltersChange({ ...filters, jobType });
+  };
 
-  // Apply saved filters on component mount
-  useEffect(() => {
-    if (savedFilters && onApplyFilters) {
-      onApplyFilters(savedFilters);
-      setFiltersApplied(true);
-    }
-  }, [onApplyFilters]);
+  const toggleExperienceLevel = (level: string) => {
+    const experienceLevels = filters.experienceLevels.includes(level)
+      ? filters.experienceLevels.filter(l => l !== level)
+      : [...filters.experienceLevels, level];
+    onFiltersChange({ ...filters, experienceLevels });
+  };
 
-  // Handle applying filters
-  const handleApplyFilters = () => {
-    // Create a filters object based on current state
-    const selectedJobTypes = Object.entries(jobTypes)
-      .filter(([_, selected]) => selected)
-      .map(([type]) => type);
-      
-    const selectedExperienceLevels = Object.entries(experienceLevels)
-      .filter(([_, selected]) => selected)
-      .map(([level]) => level);
-    
-    const filters: JobFilters = {
-      search: "",
-      location: location,
-      jobType: selectedJobTypes,
-      remote: remote,
-      experienceLevels: selectedExperienceLevels,
-      education: [],
-      salaryRange: salaryRange,
-      skills: skills,
-      companyTypes: [],
-      companySize: [],
-      benefits: [],
-      jobFunction: jobFunctions,
-      companies: companies,
-      title: jobTitles,
-    };
-    
-    // Save filters to localStorage
-    saveFilters(filters);
-    
-    // Call the callback function with the filters
-    if (onApplyFilters) {
-      onApplyFilters(filters);
+  const toggleEducation = (education: string) => {
+    const updatedEducation = filters.education.includes(education)
+      ? filters.education.filter(e => e !== education)
+      : [...filters.education, education];
+    onFiltersChange({ ...filters, education: updatedEducation });
+  };
+
+  const toggleCompanyType = (type: string) => {
+    const companyTypes = filters.companyTypes.includes(type)
+      ? filters.companyTypes.filter(t => t !== type)
+      : [...filters.companyTypes, type];
+    onFiltersChange({ ...filters, companyTypes });
+  };
+
+  const toggleCompanySize = (size: string) => {
+    const companySizes = filters.companySize.includes(size)
+      ? filters.companySize.filter(s => s !== size)
+      : [...filters.companySize, size];
+    onFiltersChange({ ...filters, companySize: companySizes });
+  };
+
+  const toggleBenefit = (benefit: string) => {
+    const benefits = filters.benefits.includes(benefit)
+      ? filters.benefits.filter(b => b !== benefit)
+      : [...filters.benefits, benefit];
+    onFiltersChange({ ...filters, benefits });
+  };
+
+  const toggleWorkModel = (model: string) => {
+    const workModel = filters.workModel?.includes(model)
+      ? filters.workModel.filter(m => m !== model)
+      : [...(filters.workModel || []), model];
+    onFiltersChange({ ...filters, workModel });
+  };
+
+  const toggleJobFunction = (func: string) => {
+    const jobFunction = filters.jobFunction?.includes(func)
+      ? filters.jobFunction.filter(f => f !== func)
+      : [...(filters.jobFunction || []), func];
+    onFiltersChange({ ...filters, jobFunction });
+  };
+
+  const toggleCompanyStage = (stage: string) => {
+    const companyStage = filters.companyStage?.includes(stage)
+      ? filters.companyStage.filter(s => s !== stage)
+      : [...(filters.companyStage || []), stage];
+    onFiltersChange({ ...filters, companyStage });
+  };
+
+  const toggleRoleType = (type: string) => {
+    const roleType = filters.roleType?.includes(type)
+      ? filters.roleType.filter(t => t !== type)
+      : [...(filters.roleType || []), type];
+    onFiltersChange({ ...filters, roleType });
+  };
+
+  const toggleCategory = (category: string) => {
+    const categories = filters.categories?.includes(category)
+      ? filters.categories.filter(c => c !== category)
+      : [...(filters.categories || []), category];
+    onFiltersChange({ ...filters, categories });
+  };
+
+  const toggleTitle = (title: string) => {
+    const titles = filters.title?.includes(title)
+      ? filters.title.filter(t => t !== title)
+      : [...(filters.title || []), title];
+    onFiltersChange({ ...filters, title: titles });
+  };
+
+  const toggleCompany = (company: string) => {
+    const companies = filters.companies?.includes(company)
+      ? filters.companies.filter(c => c !== company)
+      : [...(filters.companies || []), company];
+    onFiltersChange({ ...filters, companies });
+  };
+
+  const handleExperienceYearsChange = (value: number[]) => {
+    setSelectedExperienceYears(value as [number, number]);
+    onFiltersChange({ ...filters, experienceYears: value as [number, number] });
+  };
+
+  const handleDatePostedChange = (value: string) => {
+    onFiltersChange({ ...filters, datePosted: value });
+  };
+
+  const handleSalaryMinimumChange = (value: string) => {
+    if (value === "custom") {
+      // Handle custom salary input
+      return;
     }
     
-    setFiltersApplied(true);
-    
-    toast.success("Filters applied", {
-      description: "Your job search filters have been applied and saved."
+    // Extract numeric value from string like "$80,000+"
+    const numericValue = parseInt(value.replace(/\D/g, ''));
+    const currentMax = filters.salaryRange[1];
+    onFiltersChange({ 
+      ...filters, 
+      salaryRange: [numericValue, currentMax > numericValue ? currentMax : numericValue + 50000] 
     });
   };
-  
-  // Handle adding new items
-  const handleAddJobFunction = () => {
-    if (newJobFunction.trim() !== "" && !jobFunctions.includes(newJobFunction)) {
-      setJobFunctions([...jobFunctions, newJobFunction]);
-      setNewJobFunction("");
-      setShowAddJobFunctionModal(false);
-    }
-  };
-  
-  const handleAddSkill = () => {
-    if (newSkill.trim() !== "" && !skills.includes(newSkill)) {
-      setSkills([...skills, newSkill]);
-      setNewSkill("");
-      setShowAddSkillModal(false);
-    }
-  };
-  
-  const handleAddCompany = () => {
-    if (newCompany.trim() !== "" && !companies.includes(newCompany)) {
-      setCompanies([...companies, newCompany]);
-      setNewCompany("");
-      setShowAddCompanyModal(false);
-    }
-  };
-  
-  const handleAddJobTitle = () => {
-    if (newJobTitle.trim() !== "" && !jobTitles.includes(newJobTitle)) {
-      setJobTitles([...jobTitles, newJobTitle]);
-      setNewJobTitle("");
-      setShowAddJobTitleModal(false);
-    }
-  };
-  
-  // Handle remove item
-  const handleRemoveJobFunction = (jobFunction: string) => {
-    setJobFunctions(jobFunctions.filter(item => item !== jobFunction));
-  };
-  
-  const handleRemoveSkill = (skill: string) => {
-    setSkills(skills.filter(item => item !== skill));
-  };
-  
-  const handleRemoveCompany = (company: string) => {
-    setCompanies(companies.filter(item => item !== company));
-  };
-  
-  const handleRemoveJobTitle = (jobTitle: string) => {
-    setJobTitles(jobTitles.filter(item => item !== jobTitle));
-  };
-  
-  // Handle job type toggle
-  const handleJobTypeToggle = (type: string) => {
-    setJobTypes({
-      ...jobTypes,
-      [type]: !jobTypes[type]
-    });
-  };
-  
-  // Handle experience level toggle
-  const handleExperienceLevelToggle = (level: string) => {
-    setExperienceLevels({
-      ...experienceLevels,
-      [level]: !experienceLevels[level]
-    });
-  };
-  
-  // Handle reset all filters
-  const handleResetFilters = () => {
-    // Clear localStorage
-    localStorage.removeItem(FILTER_STORAGE_KEY);
-    
-    setJobFunctions([]);
-    setSkills([]);
-    setCompanies([]);
-    setJobTitles([]);
-    setSalaryRange([50000, 150000]);
-    setLocation("");
-    setRemote(false);
-    setJobTypes({
-      "full-time": false,
-      "part-time": false,
-      "contract": false,
-      "internship": false,
-      "temporary": false
-    });
-    setExperienceLevels({
-      "entry": false,
-      "mid": false,
-      "senior": false,
-      "lead": false,
-      "manager": false,
-      "director": false,
-      "executive": false
-    });
-    setFiltersApplied(false);
-    
-    // Apply reset filters if callback exists
-    if (onApplyFilters) {
-      onApplyFilters({
-        search: "",
-        location: "",
-        jobType: [],
-        remote: false,
-        experienceLevels: [],
-        education: [],
-        salaryRange: [0, 300000],
-        skills: [],
-        companyTypes: [],
-        companySize: [],
-        benefits: []
+
+  const handleCustomSalaryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCustomSalary(e.target.value);
+    const numericValue = parseInt(e.target.value.replace(/\D/g, ''));
+    if (!isNaN(numericValue)) {
+      const currentMax = filters.salaryRange[1];
+      onFiltersChange({ 
+        ...filters, 
+        salaryRange: [numericValue, currentMax > numericValue ? currentMax : numericValue + 50000] 
       });
     }
-    
-    toast.success("Filters reset", {
-      description: "All job search filters have been reset."
-    });
-  };
-  
-  // Format salary display
-  const formatSalary = (value: number) => {
-    if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(1)}M`;
-    } else if (value >= 1000) {
-      return `$${(value / 1000).toFixed(0)}K`;
-    }
-    return `$${value}`;
   };
 
-  // Count active filters
-  const getActiveFilterCount = () => {
-    let count = 0;
-    
-    if (location) count++;
-    if (remote) count++;
-    
-    // Count selected job types
-    Object.values(jobTypes).forEach(selected => {
-      if (selected) count++;
-    });
-    
-    // Count selected experience levels
-    Object.values(experienceLevels).forEach(selected => {
-      if (selected) count++;
-    });
-    
-    // Add other filter categories
-    count += jobFunctions.length;
-    count += skills.length;
-    count += companies.length;
-    count += jobTitles.length;
-    
-    // Add salary if it's not the default
-    if (salaryRange[0] !== 50000 || salaryRange[1] !== 150000) {
-      count++;
-    }
-    
-    return count;
-  };
-  
-  const activeFilterCount = getActiveFilterCount();
-  
   return (
-    <Card className="border border-border bg-background shadow-md rounded-lg overflow-hidden">
-      <CardContent className="p-0">
-        <Collapsible
-          open={isFiltersOpen}
-          onOpenChange={setIsFiltersOpen}
-          className="w-full"
-        >
-          <div className="p-4 border-b flex items-center justify-between bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
-            <CollapsibleTrigger className="flex items-center justify-between w-full text-left">
-              <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4 text-blue-500" />
-                <h3 className="text-lg font-medium">All Filters</h3>
-                {activeFilterCount > 0 && (
-                  <Badge variant="secondary" className="ml-2 bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
-                    {activeFilterCount}
-                  </Badge>
-                )}
-              </div>
-              <ChevronDown className={`h-5 w-5 transition-transform duration-200 text-gray-500 ${isFiltersOpen ? 'rotate-180' : ''}`} />
-            </CollapsibleTrigger>
+    <div className="space-y-4">
+      {!showAllFilters ? (
+        <div className="flex items-center justify-between">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex items-center gap-2"
+            onClick={() => setShowAllFilters(true)}
+          >
+            <Filter className="w-4 h-4" />
+            All Filters
+          </Button>
+          
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+              onClick={() => setShowSaveDialog(true)}
+            >
+              <Heart className="w-4 h-4 text-blue-500" />
+              Save Search
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onResetFilters}
+            >
+              Clear All Filters
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <Card className="border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-xl flex items-center gap-2">
+              <Filter className="w-5 h-5" />
+              Filters
+            </CardTitle>
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={handleResetFilters}
-              className="text-xs h-8 ml-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50"
+              className="text-muted-foreground"
+              onClick={() => setShowAllFilters(false)}
             >
-              Reset All
+              <X className="w-4 h-4" />
             </Button>
-          </div>
-          
-          <CollapsibleContent className="transition-all duration-300 ease-in-out">
-            <div className="p-4 md:p-6 space-y-4">
-              <Accordion type="single" collapsible className="w-full divide-y">
-                {/* Location Section */}
-                <AccordionItem value="location" className="border-0 py-2">
-                  <AccordionTrigger className="py-2 text-base font-medium hover:bg-gray-50 dark:hover:bg-gray-800 px-2 rounded-md transition-colors">
-                    <span className="flex items-center gap-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-                      Location
-                    </span>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-2">
-                    <div className="space-y-4">
-                      <div className="flex flex-col space-y-2">
-                        <Label htmlFor="location" className="text-sm font-medium text-gray-700 dark:text-gray-300">City, State, or Zip</Label>
-                        <div className="relative">
-                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                          <Input 
-                            id="location" 
-                            placeholder="e.g. San Francisco, CA" 
-                            value={location} 
-                            onChange={(e) => setLocation(e.target.value)}
-                            className="pl-9 border-gray-200 dark:border-gray-700 rounded-md"
-                          />
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="md:col-span-1 space-y-6">
+                <div className="space-y-2">
+                  <h3 className="font-medium text-base">Basic Job Criteria</h3>
+                  <p className="text-xs text-muted-foreground">Job Function / Job Type / Work Model</p>
+                </div>
+                
+                <div className="space-y-2">
+                  <h3 className="font-medium text-base">Compensation & Sponsorship</h3>
+                  <p className="text-xs text-muted-foreground">Annual Salary / H1B Sponsorship</p>
+                </div>
+                
+                <div className="space-y-2">
+                  <h3 className="font-medium text-base">Areas of Interest</h3>
+                  <p className="text-xs text-muted-foreground">Industry / Skill / Role (IC/Manager)</p>
+                </div>
+                
+                <div className="space-y-2">
+                  <h3 className="font-medium text-base">Company Insights</h3>
+                  <p className="text-xs text-muted-foreground">Company Search / Exclude Staffing Agency</p>
+                </div>
+                
+                <div className="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg border border-green-100 dark:border-green-800">
+                  <div className="flex items-start gap-2">
+                    <span className="text-yellow-500 text-sm mt-0.5">⭐</span>
+                    <div>
+                      <h4 className="font-medium text-sm text-green-800 dark:text-green-300">Applying for specific companies?</h4>
+                      <p className="text-xs text-green-700 dark:text-green-400 mt-1">
+                        Use filters in the Company Insights section to find your target companies.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="md:col-span-2 space-y-6">
+                <Accordion type="multiple" defaultValue={["basic-job-criteria"]}>
+                  <AccordionItem value="basic-job-criteria" className="border rounded-lg p-2">
+                    <AccordionTrigger className="hover:no-underline px-2">
+                      <div className="flex justify-between w-full">
+                        <span className="font-medium">Basic Job Criteria</span>
+                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-4 px-2 pb-2 space-y-6">
+                      {/* Job Function */}
+                      <div>
+                        <div className="flex items-center">
+                          <span className="text-red-500 mr-1">*</span>
+                          <span className="font-medium">Job Function</span>
+                          <span className="text-xs text-muted-foreground ml-2">(select from drop-down for best results)</span>
                         </div>
+                        <Input 
+                          placeholder="Please select/enter your expected job function" 
+                          className="mt-2"
+                        />
+                        <p className="text-red-500 text-sm mt-1">Please select at least one job function</p>
                       </div>
                       
-                      <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800 p-3 rounded-md">
-                        <Switch 
-                          id="remote" 
-                          checked={remote} 
-                          onCheckedChange={setRemote}
-                          className="data-[state=checked]:bg-blue-500"
-                        />
-                        <Label htmlFor="remote" className="cursor-pointer text-sm font-medium">Remote only</Label>
+                      {/* Excluded Title */}
+                      <div>
+                        <div className="flex justify-between">
+                          <span className="font-medium">Excluded Title</span>
+                          <ChevronRight className="h-4 w-4" />
+                        </div>
                       </div>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-                
-                {/* Salary Range Section */}
-                <AccordionItem value="salary" className="border-0 py-2">
-                  <AccordionTrigger className="py-2 text-base font-medium hover:bg-gray-50 dark:hover:bg-gray-800 px-2 rounded-md transition-colors">
-                    <span className="flex items-center gap-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
-                      Salary Range
-                    </span>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-2">
-                    <div className="space-y-4 pt-2 pb-4">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{formatSalary(salaryRange[0])}</span>
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{formatSalary(salaryRange[1])}</span>
+
+                      {/* Job Type */}
+                      <div>
+                        <div className="flex items-center">
+                          <span className="text-red-500 mr-1">*</span>
+                          <span className="font-medium">Job Type</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 mt-2">
+                          {["Full-time", "Part-time", "Contract", "Internship"].map((type) => (
+                            <div key={type} className="flex items-center space-x-2">
+                              <Checkbox 
+                                id={`job-type-${type}`} 
+                                checked={filters.jobType.includes(type)}
+                                onCheckedChange={() => toggleJobType(type)}
+                              />
+                              <Label htmlFor={`job-type-${type}`} className="text-sm cursor-pointer">
+                                {type}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-red-500 text-sm mt-1">Please select at least one job type.</p>
                       </div>
-                      <Slider
-                        defaultValue={[50000, 150000]}
-                        min={0}
-                        max={300000}
-                        step={5000}
-                        value={salaryRange}
-                        onValueChange={(value) => setSalaryRange(value as [number, number])}
-                        className="[&>span[data-state=dragging]]:bg-blue-600 [&>span]:h-5 [&>span]:w-5 [&>span]:bg-blue-500"
-                      />
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-                
-                {/* Job Type Section */}
-                <AccordionItem value="job-type" className="border-0 py-2">
-                  <AccordionTrigger className="py-2 text-base font-medium hover:bg-gray-50 dark:hover:bg-gray-800 px-2 rounded-md transition-colors">
-                    <span className="flex items-center gap-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-500"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-                      Job Type
-                    </span>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-2">
-                    <div className="grid grid-cols-2 gap-3 pt-2 pb-1">
-                      {Object.entries(jobTypes).map(([type, isChecked]) => (
-                        <div 
-                          key={type} 
-                          className={`flex items-center space-x-2 p-2 rounded-md cursor-pointer border ${isChecked ? 'border-blue-300 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/30' : 'border-gray-200 dark:border-gray-700'}`}
-                          onClick={() => handleJobTypeToggle(type)}
-                        >
-                          <Checkbox 
-                            id={`job-type-${type}`} 
-                            checked={isChecked} 
-                            onCheckedChange={() => handleJobTypeToggle(type)}
-                            className="data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+
+                      {/* Work Model */}
+                      <div>
+                        <div className="flex items-center">
+                          <span className="text-red-500 mr-1">*</span>
+                          <span className="font-medium">Work Model</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 mt-2">
+                          {[
+                            { id: "onsite", label: "Onsite" },
+                            { id: "remote", label: "Remote" },
+                            { id: "hybrid", label: "Hybrid" }
+                          ].map((model) => (
+                            <div key={model.id} className="flex items-center space-x-2">
+                              <Checkbox 
+                                id={`work-model-${model.id}`} 
+                                checked={filters.workModel?.includes(model.id)}
+                                onCheckedChange={() => toggleWorkModel(model.id)}
+                              />
+                              <Label htmlFor={`work-model-${model.id}`} className="text-sm cursor-pointer">
+                                {model.label}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-red-500 text-sm mt-1">Please select at least one work model.</p>
+                      </div>
+
+                      {/* Location */}
+                      <div>
+                        <div className="font-medium mb-2">Location</div>
+                        <div className="flex items-center gap-2">
+                          <Input defaultValue="Within US" className="flex-grow" />
+                          <Select defaultValue="50">
+                            <SelectTrigger className="w-24">
+                              <SelectValue placeholder="Miles" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="10">10mi</SelectItem>
+                              <SelectItem value="25">25mi</SelectItem>
+                              <SelectItem value="50">50mi</SelectItem>
+                              <SelectItem value="100">100mi</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex justify-end mt-2">
+                          <Button size="sm" variant="outline" className="flex items-center gap-1">
+                            <Plus className="h-3 w-3" /> Add
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Experience Level */}
+                      <div>
+                        <div className="flex items-center">
+                          <span className="text-red-500 mr-1">*</span>
+                          <span className="font-medium">Experience Level</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 mt-2">
+                          {[
+                            { id: "intern", label: "Intern/New Grad", info: true },
+                            { id: "entry", label: "Entry Level", info: true },
+                            { id: "mid", label: "Mid Level", info: true },
+                            { id: "senior", label: "Senior Level", info: true },
+                            { id: "lead", label: "Lead/Staff", info: true },
+                            { id: "director", label: "Director/Executive", info: true }
+                          ].map((level) => (
+                            <div key={level.id} className="flex items-center space-x-2">
+                              <Checkbox 
+                                id={`exp-level-${level.id}`} 
+                                checked={filters.experienceLevels.includes(level.id)}
+                                onCheckedChange={() => toggleExperienceLevel(level.id)}
+                              />
+                              <Label htmlFor={`exp-level-${level.id}`} className="text-sm cursor-pointer">
+                                {level.label}
+                              </Label>
+                              {level.info && <Info className="h-4 w-4 text-muted-foreground" />}
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-red-500 text-sm mt-1">Please select at least one experience level.</p>
+                      </div>
+
+                      {/* Required Experience Years */}
+                      <div>
+                        <div className="flex justify-between">
+                          <span className="font-medium">Required Experience 0-11 Years</span>
+                          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">Clear All</Button>
+                        </div>
+                        <div className="py-4 px-2">
+                          <Slider
+                            value={selectedExperienceYears}
+                            min={0}
+                            max={11}
+                            step={1}
+                            onValueChange={handleExperienceYearsChange}
                           />
-                          <Label 
-                            htmlFor={`job-type-${type}`} 
-                            className="cursor-pointer text-sm capitalize"
+                        </div>
+                      </div>
+
+                      {/* Date Posted */}
+                      <div>
+                        <div className="flex justify-between">
+                          <span className="font-medium">Date Posted</span>
+                          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">Clear All</Button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 mt-2">
+                          {[
+                            { id: "24h", label: "Past 24 hours" },
+                            { id: "3d", label: "Past 3 days" },
+                            { id: "7d", label: "Past week" },
+                            { id: "30d", label: "Past month" }
+                          ].map((option) => (
+                            <Button 
+                              key={option.id}
+                              variant={filters.datePosted === option.id ? "default" : "outline"} 
+                              size="sm" 
+                              className="justify-start h-9"
+                              onClick={() => handleDatePostedChange(option.id)}
+                            >
+                              {option.label}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="compensation" className="border rounded-lg p-2 mt-3">
+                    <AccordionTrigger className="hover:no-underline px-2">
+                      <div className="flex justify-between w-full">
+                        <span className="font-medium">Compensation & Sponsorship</span>
+                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-4 px-2 pb-2 space-y-6">
+                      {/* Minimum Annual Salary */}
+                      <div>
+                        <div className="flex justify-between">
+                          <span className="font-medium">Minimum Annual Salary $0k/yr</span>
+                          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">Clear All</Button>
+                        </div>
+                        <div className="py-4 px-2">
+                          <Slider
+                            value={[filters.salaryRange[0], filters.salaryRange[0]]}
+                            min={0}
+                            max={400}
+                            step={10}
+                            onValueChange={(values) => onFiltersChange({
+                              ...filters,
+                              salaryRange: [values[0], filters.salaryRange[1]]
+                            })}
+                          />
+                        </div>
+                        
+                        <div className="mt-4">
+                          <RadioGroup 
+                            value={`$${filters.salaryRange[0]}000+`}
+                            onValueChange={handleSalaryMinimumChange}
                           >
-                            {type.replace('-', ' ')}
+                            <div className="space-y-2">
+                              {["$40,000+", "$80,000+", "$100,000+", "$200,000+", "$300,000+", "$400,000+"].map((amount) => (
+                                <div key={amount} className="flex items-center space-x-2">
+                                  <RadioGroupItem value={amount} id={`salary-${amount}`} />
+                                  <label htmlFor={`salary-${amount}`} className="text-sm cursor-pointer">
+                                    {amount}
+                                  </label>
+                                </div>
+                              ))}
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="custom" id="salary-custom" />
+                                <Input 
+                                  placeholder="Custom" 
+                                  value={customSalary}
+                                  onChange={handleCustomSalaryChange}
+                                  className="h-7 text-sm"
+                                />
+                              </div>
+                            </div>
+                          </RadioGroup>
+                        </div>
+                      </div>
+
+                      {/* Work Authorization */}
+                      <div>
+                        <div className="flex items-center gap-1">
+                          <span className="font-medium">Work Authorization</span>
+                          <Info className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <div className="flex items-center space-x-2 mt-2">
+                          <Checkbox 
+                            id="h1b-sponsorship"
+                            checked={filters.sponsorH1b}
+                            onCheckedChange={() => onFiltersChange({ ...filters, sponsorH1b: !filters.sponsorH1b })}
+                          />
+                          <Label htmlFor="h1b-sponsorship" className="text-sm cursor-pointer">
+                            H1B sponsorship
                           </Label>
                         </div>
-                      ))}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-                
-                {/* Experience Level Section */}
-                <AccordionItem value="experience" className="border-0 py-2">
-                  <AccordionTrigger className="py-2 text-base font-medium hover:bg-gray-50 dark:hover:bg-gray-800 px-2 rounded-md transition-colors">
-                    <span className="flex items-center gap-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-orange-500"><path d="M20 7h-3a2 2 0 0 1-2-2V2"/><path d="M9 18a2 2 0 0 1-2-2v-2a2 2 0 0 0-2-2H2"/><path d="M12 12V2h7a2 2 0 0 1 2 2v7"/><path d="M12 12h4a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-9a2 2 0 0 1-2-2v-3"/></svg>
-                      Experience Level
-                    </span>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-2">
-                    <div className="space-y-2 pt-2 pb-1">
-                      <div className="grid grid-cols-2 gap-2">
-                        {Object.entries(experienceLevels).map(([level, isChecked]) => (
-                          <div 
-                            key={level} 
-                            className={`flex items-center space-x-2 p-2 rounded-md cursor-pointer border ${isChecked ? 'border-blue-300 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/30' : 'border-gray-200 dark:border-gray-700'}`}
-                            onClick={() => handleExperienceLevelToggle(level)}
+                        <p className="text-xs text-muted-foreground mt-2">
+                          This filter helps you find jobs that either explicitly share H1B support
+                          ("H1B Sponsored") or come from companies with a recent history of 
+                          sponsoring H1B visas for similar roles ("H1B Sponsor Likely").
+                        </p>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="areas-of-interest" className="border rounded-lg p-2 mt-3">
+                    <AccordionTrigger className="hover:no-underline px-2">
+                      <div className="flex justify-between w-full">
+                        <span className="font-medium">Areas of Interest</span>
+                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-4 px-2 pb-2 space-y-6">
+                      {/* Industry */}
+                      <div>
+                        <div className="flex justify-between">
+                          <span className="font-medium">Industry</span>
+                          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">Clear All</Button>
+                        </div>
+                        <div className="mt-2 space-y-2">
+                          {[
+                            { id: "it", label: "Information Technology", selected: true },
+                            { id: "ai", label: "Artificial Intelligence (AI)", selected: true },
+                            { id: "financial", label: "Financial Services", selected: true },
+                            { id: "consulting", label: "Consulting", selected: true },
+                            { id: "software", label: "Software", selected: true }
+                          ].map((industry) => (
+                            <div key={industry.id} className="flex items-center justify-between bg-secondary/30 rounded-md px-3 py-1.5">
+                              <span className="text-sm">{industry.label}</span>
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                className="h-6 w-6 p-0"
+                                onClick={() => toggleCategory(industry.id)}
+                              >
+                                <XCircle className="h-4 w-4 text-muted-foreground" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="flex justify-end mt-2">
+                          <Button size="sm" variant="outline" className="flex items-center gap-1">
+                            <Plus className="h-3 w-3" /> Add
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Skills */}
+                      <div>
+                        <div className="flex justify-between">
+                          <span className="font-medium">Skills</span>
+                          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">Clear All</Button>
+                        </div>
+                        <div className="mt-2 space-y-2">
+                          {[
+                            { id: "python", label: "Python", selected: true },
+                            { id: "matlab", label: "Matlab", selected: true },
+                            { id: "java", label: "Java", selected: true },
+                            { id: "cpp", label: "C++", selected: true },
+                            { id: "linux", label: "Linux", selected: true }
+                          ].map((skill) => (
+                            <div key={skill.id} className="flex items-center justify-between bg-secondary/30 rounded-md px-3 py-1.5">
+                              <span className="text-sm">{skill.label}</span>
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                className="h-6 w-6 p-0"
+                                onClick={() => {
+                                  const skills = filters.skills.includes(skill.id)
+                                    ? filters.skills.filter(s => s !== skill.id)
+                                    : [...filters.skills, skill.id];
+                                  onFiltersChange({ ...filters, skills });
+                                }}
+                              >
+                                <XCircle className="h-4 w-4 text-muted-foreground" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="flex justify-end mt-2">
+                          <Button size="sm" variant="outline" className="flex items-center gap-1">
+                            <Plus className="h-3 w-3" /> Add
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Excluded Skill */}
+                      <div>
+                        <div className="flex justify-between">
+                          <span className="font-medium">Excluded Skill</span>
+                          <ChevronRight className="h-4 w-4" />
+                        </div>
+                      </div>
+
+                      {/* Role Type */}
+                      <div>
+                        <div className="font-medium mb-2">Role Type</div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <Button 
+                            variant={filters.roleType?.includes("IC") ? "default" : "outline"} 
+                            size="sm" 
+                            className="justify-center"
+                            onClick={() => toggleRoleType("IC")}
                           >
+                            IC
+                          </Button>
+                          <Button 
+                            variant={filters.roleType?.includes("Manager") ? "default" : "outline"} 
+                            size="sm" 
+                            className="justify-center"
+                            onClick={() => toggleRoleType("Manager")}
+                          >
+                            Manager
+                          </Button>
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="company-insights" className="border rounded-lg p-2 mt-3">
+                    <AccordionTrigger className="hover:no-underline px-2">
+                      <div className="flex justify-between w-full">
+                        <span className="font-medium">Company Insights</span>
+                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-4 px-2 pb-2 space-y-6">
+                      {/* Company */}
+                      <div>
+                        <div className="flex items-center gap-1">
+                          <span className="font-medium">Company</span>
+                          <Info className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <div className="flex justify-between">
+                          <div></div>
+                          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">Clear All</Button>
+                        </div>
+                        <div className="mt-2">
+                          <div className="flex justify-end">
+                            <Button size="sm" variant="outline" className="flex items-center gap-1">
+                              <Plus className="h-3 w-3" /> Add
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Company Stage */}
+                      <div>
+                        <div className="flex items-center gap-1">
+                          <span className="font-medium">Company Stage</span>
+                          <Info className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <div className="flex justify-between">
+                          <div></div>
+                          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">Clear All</Button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 mt-2">
+                          {[
+                            { id: "early", label: "Early Stage" },
+                            { id: "growth", label: "Growth Stage" },
+                            { id: "late", label: "Late Stage" },
+                            { id: "public", label: "Public Company" }
+                          ].map((stage) => (
+                            <div key={stage.id} className="flex items-center space-x-2">
+                              <Checkbox 
+                                id={`stage-${stage.id}`}
+                                checked={filters.companyStage?.includes(stage.id)}
+                                onCheckedChange={() => toggleCompanyStage(stage.id)}
+                              />
+                              <Label htmlFor={`stage-${stage.id}`} className="text-sm cursor-pointer">
+                                {stage.label}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Job Source */}
+                      <div>
+                        <div className="flex items-center gap-1">
+                          <span className="font-medium">Job Source</span>
+                          <Info className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <div className="flex items-center space-x-2 mt-2">
+                          <Checkbox 
+                            id="exclude-staffing"
+                            checked={filters.excludeStaffingAgency}
+                            onCheckedChange={() => onFiltersChange({ 
+                              ...filters, 
+                              excludeStaffingAgency: !filters.excludeStaffingAgency
+                            })}
+                          />
+                          <Label htmlFor="exclude-staffing" className="text-sm cursor-pointer">
+                            Exclude Staffing Agency
+                          </Label>
+                        </div>
+                      </div>
+
+                      {/* Company Type */}
+                      <div>
+                        <h4 className="font-medium mb-3">Company Type</h4>
+                        <div className="space-y-2">
+                          {["Private", "Public", "Nonprofit", "Education"].map((type) => (
+                            <div key={type} className="flex items-center space-x-2">
+                              <Checkbox 
+                                id={`company-type-${type}`} 
+                                checked={filters.companyTypes.includes(type)}
+                                onCheckedChange={() => toggleCompanyType(type)}
+                              />
+                              <Label htmlFor={`company-type-${type}`} className="text-sm cursor-pointer">
+                                {type}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Company Size */}
+                      <div>
+                        <h4 className="font-medium mb-3">Company Size</h4>
+                        <div className="space-y-2">
+                          {[
+                            { id: "seed", label: "Seed, 1-10" },
+                            { id: "early", label: "Early, 11-100" },
+                            { id: "mid-size", label: "Mid-size, 101-1,000" },
+                            { id: "large", label: "Large, 1,001-10,000" },
+                            { id: "enterprise", label: "Enterprise, 10,001+" }
+                          ].map((size) => (
+                            <div key={size.id} className="flex items-center space-x-2">
+                              <Checkbox 
+                                id={`company-size-${size.id}`} 
+                                checked={filters.companySize.includes(size.id)}
+                                onCheckedChange={() => toggleCompanySize(size.id)}
+                              />
+                              <Label htmlFor={`company-size-${size.id}`} className="text-sm cursor-pointer">
+                                {size.label}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="education" className="border rounded-lg p-2 mt-3">
+                    <AccordionTrigger className="hover:no-underline px-2">
+                      <div className="flex justify-between w-full">
+                        <span className="font-medium">Education</span>
+                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-4 px-2 pb-2">
+                      <p className="text-sm text-muted-foreground mb-3">Filter by education level</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        {["Bachelor's", "Master's", "Associate's", "PhD", "MD", "MBA"].map((education) => (
+                          <div key={education} className="flex items-center space-x-2">
                             <Checkbox 
-                              id={`exp-${level}`} 
-                              checked={isChecked} 
-                              onCheckedChange={() => handleExperienceLevelToggle(level)}
-                              className="data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                              id={`education-${education}`} 
+                              checked={filters.education.includes(education)}
+                              onCheckedChange={() => toggleEducation(education)}
                             />
-                            <Label 
-                              htmlFor={`exp-${level}`} 
-                              className="cursor-pointer text-sm capitalize"
-                            >
-                              {level.replace('-', ' ')}
+                            <Label htmlFor={`education-${education}`} className="text-sm cursor-pointer">
+                              {education}
                             </Label>
                           </div>
                         ))}
                       </div>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-                
-                {/* Job Function Section */}
-                <AccordionItem value="job-function" className="border-0 py-2">
-                  <AccordionTrigger className="py-2 text-base font-medium hover:bg-gray-50 dark:hover:bg-gray-800 px-2 rounded-md transition-colors">
-                    <span className="flex items-center gap-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
-                      Job Function
-                    </span>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-2">
-                    <div className="space-y-4 pt-2">
-                      <div className="flex flex-wrap gap-2">
-                        {jobFunctions.map((jobFunction, index) => (
-                          <Badge 
-                            key={index} 
-                            variant="outline"
-                            className="flex items-center gap-1 py-1 px-2 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700"
-                          >
-                            {jobFunction}
-                            <button 
-                              onClick={() => handleRemoveJobFunction(jobFunction)}
-                              className="ml-1 rounded-full hover:bg-blue-200 dark:hover:bg-blue-800 p-0.5"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </Badge>
-                        ))}
-                        
-                        <Dialog open={showAddJobFunctionModal} onOpenChange={setShowAddJobFunctionModal}>
-                          <DialogTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="h-7 text-xs gap-1 px-2 border-dashed border-blue-300 text-blue-600 dark:border-blue-700 dark:text-blue-400"
-                            >
-                              <Plus className="h-3 w-3" />
-                              Add
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-md">
-                            <DialogHeader>
-                              <DialogTitle>Add Job Function</DialogTitle>
-                              <DialogDescription>
-                                Enter a job function to add to your filters
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="grid gap-4 py-4">
-                              <Input 
-                                placeholder="e.g. Software Development" 
-                                value={newJobFunction}
-                                onChange={(e) => setNewJobFunction(e.target.value)}
-                                ref={jobFunctionInputRef}
-                              />
-                            </div>
-                            <DialogFooter>
-                              <Button variant="outline" onClick={() => setShowAddJobFunctionModal(false)}>Cancel</Button>
-                              <Button onClick={handleAddJobFunction} className="bg-blue-600 hover:bg-blue-700">Add</Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="benefits" className="border rounded-lg p-2 mt-3">
+                    <AccordionTrigger className="hover:no-underline px-2">
+                      <div className="flex justify-between w-full">
+                        <span className="font-medium">Benefits</span>
+                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
                       </div>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-                
-                {/* Skills Section */}
-                <AccordionItem value="skills" className="border-0 py-2">
-                  <AccordionTrigger className="py-2 text-base font-medium hover:bg-gray-50 dark:hover:bg-gray-800 px-2 rounded-md transition-colors">
-                    <span className="flex items-center gap-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><path d="m7 11 4.08 10.35a1 1 0 0 1 1.84 0L17 11"/><path d="M18 6a4 4 0 0 0-2-3.37A4 4 0 0 0 12 6a4 4 0 0 0-2-3.37A4 4 0 0 0 6 6h12Z"/></svg>
-                      Skills
-                    </span>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-2">
-                    <div className="space-y-4 pt-2">
-                      <div className="flex flex-wrap gap-2">
-                        {skills.map((skill, index) => (
-                          <Badge 
-                            key={index} 
-                            variant="outline"
-                            className="flex items-center gap-1 py-1 px-2 bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700"
-                          >
-                            {skill}
-                            <button 
-                              onClick={() => handleRemoveSkill(skill)}
-                              className="ml-1 rounded-full hover:bg-emerald-200 dark:hover:bg-emerald-800 p-0.5"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </Badge>
-                        ))}
-                        
-                        <Dialog open={showAddSkillModal} onOpenChange={setShowAddSkillModal}>
-                          <DialogTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="h-7 text-xs gap-1 px-2 border-dashed border-emerald-300 text-emerald-600 dark:border-emerald-700 dark:text-emerald-400"
-                            >
-                              <Plus className="h-3 w-3" />
-                              Add
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-md">
-                            <DialogHeader>
-                              <DialogTitle>Add Skill</DialogTitle>
-                              <DialogDescription>
-                                Enter a skill to add to your filters
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="grid gap-4 py-4">
-                              <Input 
-                                placeholder="e.g. React" 
-                                value={newSkill}
-                                onChange={(e) => setNewSkill(e.target.value)}
-                                ref={skillInputRef}
-                              />
-                            </div>
-                            <DialogFooter>
-                              <Button variant="outline" onClick={() => setShowAddSkillModal(false)}>Cancel</Button>
-                              <Button onClick={handleAddSkill} className="bg-emerald-600 hover:bg-emerald-700">Add</Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-4 px-2 pb-2">
+                      <p className="text-sm text-muted-foreground mb-3">Filter jobs by benefits a company offers</p>
+                      <div className="mb-4">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                          <Input placeholder="Search all benefits" className="pl-9" />
+                        </div>
                       </div>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-                
-                {/* Companies Section */}
-                <AccordionItem value="companies" className="border-0 py-2">
-                  <AccordionTrigger className="py-2 text-base font-medium hover:bg-gray-50 dark:hover:bg-gray-800 px-2 rounded-md transition-colors">
-                    <span className="flex items-center gap-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-500"><path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"/><path d="M3 9V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4"/><path d="M12 14v3"/><path d="M8 14v1"/><path d="M16 14v1"/></svg>
-                      Companies
-                    </span>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-2">
-                    <div className="space-y-4 pt-2">
-                      <div className="flex flex-wrap gap-2">
-                        {companies.map((company, index) => (
-                          <Badge 
-                            key={index} 
-                            variant="outline"
-                            className="flex items-center gap-1 py-1 px-2 bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-700"
-                          >
-                            {company}
-                            <button 
-                              onClick={() => handleRemoveCompany(company)}
-                              className="ml-1 rounded-full hover:bg-indigo-200 dark:hover:bg-indigo-800 p-0.5"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </Badge>
+                      <p className="text-xs font-medium uppercase text-muted-foreground mb-2">Popular</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          "Remote Work", "401K", "PTO", "Maternity Leave", "Free Lunch", 
+                          "Tuition Reimbursement", "Pet Friendly", "Gym Discount", 
+                          "Health Insurance", "Transport Allowance"
+                        ].map((benefit) => (
+                          <div key={benefit} className="flex items-center space-x-2">
+                            <Checkbox 
+                              id={`benefit-${benefit}`} 
+                              checked={filters.benefits.includes(benefit)}
+                              onCheckedChange={() => toggleBenefit(benefit)}
+                            />
+                            <Label htmlFor={`benefit-${benefit}`} className="text-sm cursor-pointer">
+                              {benefit}
+                            </Label>
+                          </div>
                         ))}
-                        
-                        <Dialog open={showAddCompanyModal} onOpenChange={setShowAddCompanyModal}>
-                          <DialogTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="h-7 text-xs gap-1 px-2 border-dashed border-indigo-300 text-indigo-600 dark:border-indigo-700 dark:text-indigo-400"
-                            >
-                              <Plus className="h-3 w-3" />
-                              Add
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-md">
-                            <DialogHeader>
-                              <DialogTitle>Add Company</DialogTitle>
-                              <DialogDescription>
-                                Enter a company to add to your filters
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="grid gap-4 py-4">
-                              <Input 
-                                placeholder="e.g. Google" 
-                                value={newCompany}
-                                onChange={(e) => setNewCompany(e.target.value)}
-                                ref={companyInputRef}
-                              />
-                            </div>
-                            <DialogFooter>
-                              <Button variant="outline" onClick={() => setShowAddCompanyModal(false)}>Cancel</Button>
-                              <Button onClick={handleAddCompany} className="bg-indigo-600 hover:bg-indigo-700">Add</Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
                       </div>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-                
-                {/* Job Titles Section */}
-                <AccordionItem value="job-titles" className="border-0 py-2">
-                  <AccordionTrigger className="py-2 text-base font-medium hover:bg-gray-50 dark:hover:bg-gray-800 px-2 rounded-md transition-colors">
-                    <span className="flex items-center gap-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500"><path d="M12 12H5a2 2 0 0 0-2 2v5"/><path d="M15 2H8a2 2 0 0 0-2 2v10h8.5"/><path d="M20 14h-5v8h8v-5"/><path d="M20 14h-5V6h8v6c0 1.1-.9 2-2 2Z"/><path d="M3 10h7"/></svg>
-                      Job Titles
-                    </span>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-2">
-                    <div className="space-y-4 pt-2">
-                      <div className="flex flex-wrap gap-2">
-                        {jobTitles.map((jobTitle, index) => (
-                          <Badge 
-                            key={index} 
-                            variant="outline"
-                            className="flex items-center gap-1 py-1 px-2 bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700"
-                          >
-                            {jobTitle}
-                            <button 
-                              onClick={() => handleRemoveJobTitle(jobTitle)}
-                              className="ml-1 rounded-full hover:bg-amber-200 dark:hover:bg-amber-800 p-0.5"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </Badge>
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="category" className="border rounded-lg p-2 mt-3">
+                    <AccordionTrigger className="hover:no-underline px-2">
+                      <div className="flex justify-between w-full">
+                        <span className="font-medium">Category</span>
+                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-4 px-2 pb-2">
+                      <p className="text-sm text-muted-foreground mb-3">Filter by category</p>
+                      <div className="mb-4">
+                        <select className="w-full border border-gray-300 rounded-md p-2 mb-4">
+                          <option>Category</option>
+                        </select>
+                      </div>
+                      <p className="text-xs font-medium uppercase text-muted-foreground mb-2">Popular</p>
+                      <div className="space-y-2">
+                        {[
+                          "Medical, Clinical & Veterinary",
+                          "Software Engineering",
+                          "Sales & Account Management",
+                          "Finance & Banking",
+                          "Nursing & Allied Health Professionals",
+                          "Retail"
+                        ].map((category) => (
+                          <div key={category} className="flex items-center space-x-2">
+                            <Checkbox 
+                              id={`category-${category}`}
+                              checked={filters.categories?.includes(category)}
+                              onCheckedChange={() => toggleCategory(category)}
+                            />
+                            <Label htmlFor={`category-${category}`} className="text-sm cursor-pointer">
+                              {category}
+                            </Label>
+                          </div>
                         ))}
-                        
-                        <Dialog open={showAddJobTitleModal} onOpenChange={setShowAddJobTitleModal}>
-                          <DialogTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="h-7 text-xs gap-1 px-2 border-dashed border-amber-300 text-amber-600 dark:border-amber-700 dark:text-amber-400"
-                            >
-                              <Plus className="h-3 w-3" />
-                              Add
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-md">
-                            <DialogHeader>
-                              <DialogTitle>Add Job Title</DialogTitle>
-                              <DialogDescription>
-                                Enter a job title to add to your filters
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="grid gap-4 py-4">
-                              <Input 
-                                placeholder="e.g. Software Engineer" 
-                                value={newJobTitle}
-                                onChange={(e) => setNewJobTitle(e.target.value)}
-                                ref={jobTitleInputRef}
-                              />
-                            </div>
-                            <DialogFooter>
-                              <Button variant="outline" onClick={() => setShowAddJobTitleModal(false)}>Cancel</Button>
-                              <Button onClick={handleAddJobTitle} className="bg-amber-600 hover:bg-amber-700">Add</Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
                       </div>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="title" className="border rounded-lg p-2 mt-3">
+                    <AccordionTrigger className="hover:no-underline px-2">
+                      <div className="flex justify-between w-full">
+                        <span className="font-medium">Title</span>
+                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-4 px-2 pb-2">
+                      <p className="text-sm text-muted-foreground mb-3">Filter by jobs by specific title(s)</p>
+                      <div className="mb-4">
+                        <Input placeholder="Search by title" className="mb-4" />
+                      </div>
+                      <p className="text-xs font-medium uppercase text-muted-foreground mb-2">Popular</p>
+                      <div className="space-y-2">
+                        {[
+                          { id: "software-engineer", icon: "🖥", label: "Software Engineer" },
+                          { id: "product-manager", icon: "📊", label: "Product Manager" },
+                          { id: "data-scientist", icon: "📈", label: "Data Scientist" },
+                          { id: "engineering-manager", icon: "🛠", label: "Software Engineering Manager" },
+                          { id: "product-designer", icon: "✏️", label: "Product Designer" },
+                          { id: "hardware-engineer", icon: "🔌", label: "Hardware Engineer" },
+                          { id: "business-analyst", icon: "📋", label: "Business Analyst" }
+                        ].map((title) => (
+                          <div key={title.id} className="flex items-center space-x-2">
+                            <Checkbox 
+                              id={`title-${title.id}`}
+                              checked={filters.title?.includes(title.id)}
+                              onCheckedChange={() => toggleTitle(title.id)}
+                            />
+                            <Label htmlFor={`title-${title.id}`} className="text-sm cursor-pointer flex items-center">
+                              <span className="mr-2">{title.icon}</span> {title.label}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="companies" className="border rounded-lg p-2 mt-3">
+                    <AccordionTrigger className="hover:no-underline px-2">
+                      <div className="flex justify-between w-full">
+                        <span className="font-medium">Companies</span>
+                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-4 px-2 pb-2">
+                      <p className="text-sm text-muted-foreground mb-3">Filter by companies</p>
+                      <div className="mb-4">
+                        <Input placeholder="Search by company" className="mb-4" />
+                      </div>
+                      <p className="text-xs font-medium uppercase text-muted-foreground mb-2">Popular</p>
+                      <div className="space-y-2">
+                        {["Amazon", "Microsoft", "Google", "Facebook", "Apple"].map((company) => (
+                          <div key={company} className="flex items-center space-x-2">
+                            <Checkbox 
+                              id={`company-${company}`}
+                              checked={filters.companies?.includes(company)}
+                              onCheckedChange={() => toggleCompany(company)}
+                            />
+                            <Label htmlFor={`company-${company}`} className="text-sm cursor-pointer">
+                              {company}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+                
+                <div className="flex justify-between pt-4 border-t">
+                  <Button 
+                    variant="outline" 
+                    onClick={onResetFilters}
+                  >
+                    Clear All
+                  </Button>
+                  <Button className="bg-green-500 hover:bg-green-600 text-white">
+                    UPDATE
+                  </Button>
+                </div>
+              </div>
             </div>
-          </CollapsibleContent>
-        </Collapsible>
-      </CardContent>
-      <CardFooter className="border-t p-4">
-        <Button 
-          className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm py-2.5" 
-          onClick={handleApplyFilters}
-        >
-          <Check className="h-4 w-4" />
-          Apply Filters
-          {activeFilterCount > 0 && (
-            <Badge variant="secondary" className="ml-1 bg-white/20 text-white">
-              {activeFilterCount}
-            </Badge>
-          )}
-        </Button>
-      </CardFooter>
-    </Card>
+          </CardContent>
+        </Card>
+      )}
+      
+      {showSaveDialog && (
+        <Card className="border shadow-sm">
+          <CardContent className="pt-6">
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="font-medium">Save This Search</h3>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-muted-foreground"
+                  onClick={() => setShowSaveDialog(false)}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              <Input 
+                placeholder="Enter a name for this search"
+                value={searchName}
+                onChange={(e) => setSearchName(e.target.value)}
+              />
+              <div className="flex justify-end space-x-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowSaveDialog(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  size="sm"
+                  onClick={handleSaveSearch}
+                >
+                  Save Search
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
-};
+}
+
+export default JobFiltersSection;

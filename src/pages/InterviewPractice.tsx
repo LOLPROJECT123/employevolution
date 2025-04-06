@@ -1,11 +1,8 @@
-
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import BehavioralInterview from "@/components/interview/BehavioralInterview";
 import CodingInterview from "@/components/interview/CodingInterview";
-import CompanyProblems from "@/components/interview/CompanyProblems";
 import Navbar from "@/components/Navbar";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -183,195 +180,192 @@ const leetcodeProblems = [
   {
     category: "Arrays & Hashing",
     problems: [
-      // Easy (exactly 2)
-      "Two Sum", "Contains Duplicate", 
-      // Medium (exactly 2)
-      "Group Anagrams", "Top K Frequent Elements", 
-      // Hard (exactly 2)
-      "First Missing Positive", "Longest Duplicate Substring"
+      "Two Sum", "Contains Duplicate", "Valid Anagram", "Group Anagrams", 
+      "Top K Frequent Elements", "Product of Array Except Self", "Valid Sudoku",
+      "Encode and Decode Strings", "Longest Consecutive Sequence", "Sort Colors",
+      "Majority Element", "Find All Numbers Disappeared in an Array", "Single Number",
+      "Find All Duplicates in an Array", "Subarray Sum Equals K"
     ]
   },
   {
     category: "Two Pointers",
     problems: [
-      // Easy (exactly 2)
-      "Valid Palindrome", "Merge Sorted Array", 
-      // Medium (exactly 2)
-      "3Sum", "Container With Most Water", 
-      // Hard (exactly 2)
-      "Trapping Rain Water", "Minimum Window Substring"
+      "Valid Palindrome", "Two Sum II", "3Sum", "Container With Most Water", 
+      "Trapping Rain Water", "3Sum Closest", "4Sum", "Remove Duplicates from Sorted Array",
+      "Move Zeroes", "Reverse String", "Sort Colors", "Squares of a Sorted Array",
+      "Backspace String Compare"
     ]
   },
   {
     category: "Sliding Window",
     problems: [
-      // Easy (exactly 2)
-      "Best Time to Buy and Sell Stock", "Maximum Average Subarray I", 
-      // Medium (exactly 2)
-      "Longest Substring Without Repeating Characters", "Permutation in String", 
-      // Hard (exactly 2)
-      "Minimum Window Substring", "Sliding Window Maximum"
+      "Best Time to Buy and Sell Stock", "Longest Substring Without Repeating Characters", 
+      "Longest Repeating Character Replacement", "Permutation in String", 
+      "Minimum Window Substring", "Sliding Window Maximum", "Find All Anagrams in a String",
+      "Maximum Sum Subarray of Size K", "Fruit Into Baskets", "Subarrays with K Different Integers",
+      "Max Consecutive Ones III"
     ]
   },
   {
     category: "Stack",
     problems: [
-      // Easy (exactly 2)
-      "Valid Parentheses", "Min Stack", 
-      // Medium (exactly 2)
-      "Evaluate Reverse Polish Notation", "Daily Temperatures", 
-      // Hard (exactly 2)
-      "Largest Rectangle in Histogram", "Basic Calculator"
+      "Valid Parentheses", "Min Stack", "Evaluate Reverse Polish Notation", 
+      "Generate Parentheses", "Daily Temperatures", "Car Fleet", 
+      "Largest Rectangle in Histogram", "Implement Queue using Stacks", "Asteroid Collision",
+      "Next Greater Element I", "Decode String", "Remove All Adjacent Duplicates in String II",
+      "Basic Calculator II"
     ]
   },
   {
     category: "Binary Search",
     problems: [
-      // Easy (exactly 2)
-      "Binary Search", "Sqrt(x)", 
-      // Medium (exactly 2)
-      "Search in Rotated Sorted Array", "Find First and Last Position of Element in Sorted Array", 
-      // Hard (exactly 2)
-      "Median of Two Sorted Arrays", "Split Array Largest Sum"
+      "Binary Search", "Search a 2D Matrix", "Koko Eating Bananas", 
+      "Find Minimum in Rotated Sorted Array", "Search in Rotated Sorted Array", 
+      "Time Based Key-Value Store", "Median of Two Sorted Arrays", "Capacity To Ship Packages",
+      "Split Array Largest Sum", "Find First and Last Position of Element in Sorted Array",
+      "Peak Index in a Mountain Array", "Search in a Sorted Array of Unknown Size",
+      "Find Peak Element", "Count Complete Tree Nodes"
     ]
   },
   {
     category: "Linked Lists",
     problems: [
-      // Easy (exactly 2)
-      "Reverse Linked List", "Merge Two Sorted Lists", 
-      // Medium (exactly 2)
-      "Remove Nth Node From End of List", "Reorder List", 
-      // Hard (exactly 2)
-      "Merge k Sorted Lists", "Reverse Nodes in k-Group"
+      "Reverse Linked List", "Merge Two Sorted Lists", "Reorder List", 
+      "Remove Nth Node From End of List", "Copy List with Random Pointer", 
+      "Add Two Numbers", "Linked List Cycle", "Find the Duplicate Number", 
+      "LRU Cache", "Merge k Sorted Lists", "Palindrome Linked List", "Remove Linked List Elements",
+      "Swap Nodes in Pairs", "Odd Even Linked List", "Sort List",
+      "Intersection of Two Linked Lists", "Remove Duplicates from Sorted List"
     ]
   },
   {
     category: "Trees",
     problems: [
-      // Easy (exactly 2)
-      "Invert Binary Tree", "Maximum Depth of Binary Tree", 
-      // Medium (exactly 2)
+      "Invert Binary Tree", "Maximum Depth of Binary Tree", "Same Tree", 
+      "Subtree of Another Tree", "Lowest Common Ancestor of a BST", 
       "Binary Tree Level Order Traversal", "Validate Binary Search Tree", 
-      // Hard (exactly 2)
-      "Binary Tree Maximum Path Sum", "Serialize and Deserialize Binary Tree"
+      "Kth Smallest Element in a BST", "Construct Binary Tree from Preorder and Inorder Traversal", 
+      "Binary Tree Maximum Path Sum", "Serialize and Deserialize Binary Tree",
+      "Binary Tree Right Side View", "Path Sum", "Path Sum II", "Diameter of Binary Tree",
+      "Symmetric Tree", "Balanced Binary Tree", "Binary Tree Zigzag Level Order Traversal",
+      "Count Good Nodes in Binary Tree", "All Nodes Distance K in Binary Tree"
     ]
   },
   {
     category: "Tries",
     problems: [
-      // Easy (exactly 2)
       "Implement Trie (Prefix Tree)", "Design Add and Search Words Data Structure", 
-      // Medium (exactly 2)
-      "Replace Words", "Map Sum Pairs", 
-      // Hard (exactly 2)
-      "Word Search II", "Stream of Characters"
+      "Word Search II", "Maximum XOR of Two Numbers in an Array", "Replace Words",
+      "Map Sum Pairs", "Design Search Autocomplete System", "Palindrome Pairs",
+      "Word Squares", "Stream of Characters"
     ]
   },
   {
     category: "Heap / Priority Queue",
     problems: [
-      // Easy (exactly 2)
-      "Kth Largest Element in a Stream", "Last Stone Weight", 
-      // Medium (exactly 2)
-      "K Closest Points to Origin", "Top K Frequent Elements", 
-      // Hard (exactly 2)
-      "Find Median from Data Stream", "Merge K Sorted Lists"
+      "Kth Largest Element in an Array", "Last Stone Weight", "K Closest Points to Origin", 
+      "Task Scheduler", "Design Twitter", "Find Median from Data Stream", "Merge K Sorted Lists",
+      "Top K Frequent Elements", "Sort Characters By Frequency", "Reorganize String",
+      "Furthest Building You Can Reach", "Maximum Frequency Stack", "Single-Threaded CPU",
+      "Seat Reservation Manager"
     ]
   },
   {
     category: "Backtracking",
     problems: [
-      // Easy (exactly 2)
-      "Letter Case Permutation", "Binary Watch", 
-      // Medium (exactly 2)
-      "Subsets", "Permutations", 
-      // Hard (exactly 2)
-      "N-Queens", "Sudoku Solver"
+      "Subsets", "Combination Sum", "Permutations", "Subsets II", 
+      "Combination Sum II", "Word Search", "Palindrome Partitioning", 
+      "Letter Combinations of a Phone Number", "N-Queens", "Generate Parentheses",
+      "Sudoku Solver", "Restore IP Addresses", "Word Break", "Combinations",
+      "Permutations II", "Partition to K Equal Sum Subsets", "Matchsticks to Square",
+      "Combination Sum III"
     ]
   },
   {
     category: "Graphs",
     problems: [
-      // Easy (exactly 2)
-      "Flood Fill", "Find the Town Judge", 
-      // Medium (exactly 2)
-      "Number of Islands", "Course Schedule", 
-      // Hard (exactly 2)
-      "Alien Dictionary", "Word Ladder"
+      "Number of Islands", "Clone Graph", "Pacific Atlantic Water Flow", 
+      "Course Schedule", "Number of Connected Components in an Undirected Graph", 
+      "Graph Valid Tree", "Word Ladder", "Reconstruct Itinerary", "Min Cost to Connect All Points", 
+      "Network Delay Time", "Swim in Rising Water", "Alien Dictionary", 
+      "Cheapest Flights Within K Stops", "Course Schedule II", "Redundant Connection",
+      "Accounts Merge", "Find the Town Judge", "Evaluate Division", "Path with Maximum Probability",
+      "Find Eventual Safe States", "Is Graph Bipartite", "Shortest Path in Binary Matrix",
+      "Surrounded Regions", "Minimum Height Trees"
     ]
   },
   {
     category: "Dynamic Programming",
     problems: [
-      // Easy (exactly 2)
-      "Climbing Stairs", "Min Cost Climbing Stairs", 
-      // Medium (exactly 2)
-      "Unique Paths", "Coin Change", 
-      // Hard (exactly 2)
-      "Regular Expression Matching", "Burst Balloons"
+      "Climbing Stairs", "Min Cost Climbing Stairs", "House Robber", "House Robber II", 
+      "Longest Palindromic Substring", "Palindromic Substrings", "Decode Ways", 
+      "Coin Change", "Maximum Product Subarray", "Word Break", "Longest Increasing Subsequence", 
+      "Partition Equal Subset Sum", "Unique Paths", "Longest Common Subsequence", 
+      "Best Time to Buy and Sell Stock with Cooldown", "Coin Change 2", 
+      "Target Sum", "Interleaving String", "Longest Increasing Path in a Matrix", 
+      "Distinct Subsequences", "Edit Distance", "Burst Balloons", "Regular Expression Matching",
+      "Maximal Square", "Minimum Path Sum", "Triangle", "Arithmetic Slices",
+      "Minimum Cost For Tickets", "Maximum Subarray", "Count Different Palindromic Subsequences",
+      "Best Time to Buy and Sell Stock III", "Best Time to Buy and Sell Stock IV",
+      "Minimum Falling Path Sum", "Delete and Earn", "Jump Game VI"
     ]
   },
   {
     category: "Greedy",
     problems: [
-      // Easy (exactly 2)
-      "Maximum Subarray", "Assign Cookies", 
-      // Medium (exactly 2)
-      "Jump Game", "Gas Station", 
-      // Hard (exactly 2)
-      "Candy", "Jump Game II"
+      "Maximum Subarray", "Jump Game", "Jump Game II", "Gas Station", 
+      "Hand of Straights", "Merge Triplets to Form Target Triplet", "Partition Labels", 
+      "Valid Parenthesis String", "Task Scheduler", "Minimum Number of Arrows to Burst Balloons",
+      "Non-overlapping Intervals", "Minimum Increment to Make Array Unique",
+      "Bag of Tokens", "Maximum Units on a Truck", "Broken Calculator",
+      "Maximize Sum Of Array After K Negations", "Minimum Deletions to Make Character Frequencies Unique"
     ]
   },
   {
     category: "Intervals",
     problems: [
-      // Easy (exactly 2)
-      "Meeting Rooms", "Teemo Attacking", 
-      // Medium (exactly 2)
-      "Merge Intervals", "Non-overlapping Intervals", 
-      // Hard (exactly 2)
-      "Minimum Interval to Include Each Query", "Employee Free Time"
+      "Insert Interval", "Merge Intervals", "Non-overlapping Intervals", 
+      "Meeting Rooms", "Meeting Rooms II", "Minimum Interval to Include Each Query",
+      "Employee Free Time", "Car Pooling", "Remove Covered Intervals",
+      "Data Stream as Disjoint Intervals", "Minimum Number of Arrows to Burst Balloons",
+      "Teemo Attacking", "Range Module", "Divide Intervals Into Minimum Number of Groups"
     ]
   },
   {
     category: "Math & Geometry",
     problems: [
-      // Easy (exactly 2)
-      "Palindrome Number", "Roman to Integer", 
-      // Medium (exactly 2)
-      "Rotate Image", "Spiral Matrix", 
-      // Hard (exactly 2)
-      "Max Points on a Line", "Basic Calculator"
+      "Rotate Image", "Spiral Matrix", "Set Matrix Zeroes", "Happy Number", 
+      "Plus One", "Pow(x, n)", "Multiply Strings", "Detect Squares",
+      "Excel Sheet Column Number", "Factorial Trailing Zeroes", "Roman to Integer",
+      "Integer to Roman", "Max Points on a Line", "Valid Square", "Random Pick with Weight",
+      "Basic Calculator", "Robot Bounded in Circle", "Valid Triangle Number"
     ]
   },
   {
     category: "Bit Manipulation",
     problems: [
-      // Easy (exactly 2)
-      "Number of 1 Bits", "Counting Bits", 
-      // Medium (exactly 2)
-      "Single Number II", "Bitwise AND of Numbers Range", 
-      // Hard (exactly 2)
-      "Maximum XOR of Two Numbers in an Array", "Minimum Number of Flips to Convert Binary Matrix to Zero Matrix"
+      "Single Number", "Number of 1 Bits", "Counting Bits", "Reverse Bits", 
+      "Missing Number", "Sum of Two Integers", "Reverse Integer", "Power of Two",
+      "Bitwise AND of Numbers Range", "Single Number II", "Power of Four",
+      "Convert a Number to Hexadecimal", "UTF-8 Validation", "Hamming Distance",
+      "Total Hamming Distance", "Binary Number with Alternating Bits", "Maximum XOR of Two Numbers in an Array"
     ]
   },
   {
     category: "System Design",
     problems: [
-      // Easy (exactly 2)
-      "Design HashMap", "Design Linked List", 
-      // Medium (exactly 2)
-      "Design Twitter", "LRU Cache", 
-      // Hard (exactly 2)
-      "LFU Cache", "Design Search Autocomplete System"
+      "Design Twitter", "Design TinyURL", "Design Search Autocomplete System", 
+      "LRU Cache", "Time-Based Key-Value Store", "Design In-Memory File System",
+      "Design Browser History", "Design HashMap", "Design Underground System",
+      "Design a Leaderboard", "Design Add and Search Words Data Structure",
+      "Serialize and Deserialize Binary Tree", "Design Snake Game", "Design Bounded Blocking Queue", 
+      "LFU Cache", "Find Median from Data Stream", "Design a Food Rating System"
     ]
   }
 ];
 
 const InterviewPractice = () => {
   const [activeTab, setActiveTab] = useState<string>("behavioral");
-  const isMobile = useIsMobile();
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -386,16 +380,9 @@ const InterviewPractice = () => {
           </p>
           
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid grid-cols-3 w-full max-w-md mx-auto">
-              <TabsTrigger value="behavioral" className="text-[13px] md:text-sm">
-                {isMobile ? "Behavioral" : "Behavioral"}
-              </TabsTrigger>
-              <TabsTrigger value="coding" className="text-[13px] md:text-sm">
-                {isMobile ? "Coding" : "Coding"}
-              </TabsTrigger>
-              <TabsTrigger value="company" className="text-[13px] md:text-sm">
-                {isMobile ? "Company" : "Company-Specific"}
-              </TabsTrigger>
+            <TabsList className="grid grid-cols-2 w-full max-w-md mx-auto">
+              <TabsTrigger value="behavioral">Behavioral Interview</TabsTrigger>
+              <TabsTrigger value="coding">Coding Interview</TabsTrigger>
             </TabsList>
             
             <TabsContent value="behavioral" className="space-y-6">
@@ -578,10 +565,6 @@ const InterviewPractice = () => {
                   </Accordion>
                 </CardContent>
               </Card>
-            </TabsContent>
-            
-            <TabsContent value="company" className="space-y-6">
-              <CompanyProblems />
             </TabsContent>
           </Tabs>
         </div>

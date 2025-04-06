@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,20 +29,83 @@ import {
   TrendingUpIcon,
   ListIcon,
   PlusIcon,
-  Menu,
-  X
 } from 'lucide-react';
-import { useJobApplications } from '@/contexts/JobApplicationContext';
-import { JobStatus } from '@/types/job';
-import { useMobile } from '@/hooks/use-mobile';
+
+// Mock data for recent applications
+const recentApplications = [
+  {
+    id: 1,
+    jobTitle: "Senior Frontend Developer",
+    company: "Tech Innovators Inc.",
+    location: "San Francisco, CA",
+    status: "Applied",
+    date: "2023-11-15",
+    statusColor: "bg-blue-500",
+  },
+  {
+    id: 2,
+    jobTitle: "UX/UI Designer",
+    company: "Creative Solutions Ltd.",
+    location: "Remote",
+    status: "Interview",
+    date: "2023-11-10",
+    statusColor: "bg-amber-500",
+  },
+  {
+    id: 3,
+    jobTitle: "Product Manager",
+    company: "Growth Enterprises",
+    location: "New York, NY",
+    status: "Rejected",
+    date: "2023-11-05",
+    statusColor: "bg-red-500",
+  },
+  {
+    id: 4,
+    jobTitle: "Full Stack Developer",
+    company: "Digital Systems Co.",
+    location: "Austin, TX",
+    status: "Offer",
+    date: "2023-11-01",
+    statusColor: "bg-green-500",
+  },
+];
+
+// Mock data for recommended jobs
+const recommendedJobs = [
+  {
+    id: 101,
+    jobTitle: "Frontend Engineer",
+    company: "Quantum Software Solutions",
+    location: "Boston, MA",
+    salary: "$110K - $140K",
+    posted: "2 days ago",
+    match: 95,
+  },
+  {
+    id: 102,
+    jobTitle: "React Developer",
+    company: "Elevate Digital",
+    location: "Remote",
+    salary: "$95K - $120K",
+    posted: "1 week ago",
+    match: 90,
+  },
+  {
+    id: 103,
+    jobTitle: "UI/UX Developer",
+    company: "DesignFirst Studios",
+    location: "Seattle, WA",
+    salary: "$105K - $135K",
+    posted: "3 days ago",
+    match: 85,
+  },
+];
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const isMobile = useMobile();
   const [isLoggedIn, setIsLoggedIn] = useState(true); // Mock authentication
   const [animationReady, setAnimationReady] = useState(false);
-  const { applications, appliedJobs } = useJobApplications();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     // In a real app, check if user is authenticated
@@ -56,166 +119,20 @@ const Dashboard = () => {
     return () => clearTimeout(timer);
   }, [navigate]);
 
-  // Get application stats from our applications data
+  // Application stats
   const stats = {
-    total: applications.length,
-    active: applications.filter(app => app.status === 'applied').length,
-    interviews: applications.filter(app => app.status === 'interviewing').length,
-    offers: applications.filter(app => app.status === 'offered').length,
-    rejected: applications.filter(app => app.status === 'rejected').length,
-    accepted: applications.filter(app => app.status === 'accepted').length,
-  };
-
-  // Get recent applications
-  const recentApplications = applications
-    .sort((a, b) => new Date(b.appliedAt).getTime() - new Date(a.appliedAt).getTime())
-    .slice(0, 4)
-    .map(app => {
-      const job = appliedJobs.find(job => job.id === app.jobId);
-      
-      let statusColor = "";
-      switch(app.status) {
-        case 'applied':
-          statusColor = "bg-blue-500";
-          break;
-        case 'interviewing':
-          statusColor = "bg-amber-500";
-          break;
-        case 'offered':
-          statusColor = "bg-green-500";
-          break;
-        case 'rejected':
-          statusColor = "bg-red-500";
-          break;
-        case 'accepted':
-          statusColor = "bg-green-500";
-          break;
-      }
-      
-      return {
-        id: app.id,
-        jobTitle: job?.title || "Unknown Position",
-        company: job?.company || "Unknown Company",
-        location: job?.location || "Unknown Location",
-        status: app.status.charAt(0).toUpperCase() + app.status.slice(1),
-        date: app.appliedAt,
-        statusColor
-      };
-    });
-
-  // Mock data for recommended jobs
-  const recommendedJobs = [
-    {
-      id: 101,
-      jobTitle: "Frontend Engineer",
-      company: "Quantum Software Solutions",
-      location: "Boston, MA",
-      salary: "$110K - $140K",
-      posted: "2 days ago",
-      match: 95,
-    },
-    {
-      id: 102,
-      jobTitle: "React Developer",
-      company: "Elevate Digital",
-      location: "Remote",
-      salary: "$95K - $120K",
-      posted: "1 week ago",
-      match: 90,
-    },
-    {
-      id: 103,
-      jobTitle: "UI/UX Developer",
-      company: "DesignFirst Studios",
-      location: "Seattle, WA",
-      salary: "$105K - $135K",
-      posted: "3 days ago",
-      match: 85,
-    },
-  ];
-
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
-  };
-
-  // Navigate to specific tab handlers
-  const navigateToResumeCreator = () => {
-    navigate('/resume-tools?tab=ai-resume-creator');
-  };
-
-  const navigateToCoverLetter = () => {
-    navigate('/resume-tools?tab=ai-cv-creator');
+    total: 23,
+    active: 16,
+    interviews: 5,
+    offers: 2,
+    rejected: 5,
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-secondary/30">
-      {isMobile && (
-        <div className="mobile-header">
-          <Link to="/" className="flex items-center gap-2">
-            <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline" className="h-6 w-6" />
-            <span className="font-bold text-base">Streamline</span>
-          </Link>
-          
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={toggleMobileMenu}
-            className="static"
-            aria-label="Menu"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-        </div>
-      )}
+      <Navbar />
       
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 bg-black/50 z-[100]" onClick={toggleMobileMenu}>
-          <div 
-            className="bg-white dark:bg-slate-950 h-full w-[85%] max-w-[300px] p-4 shadow-lg animate-slide-in-left"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="space-y-4">
-              <div className="flex items-center justify-between pb-4 border-b">
-                <div className="flex items-center gap-2">
-                  <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline" className="h-8 w-8" />
-                  <span className="font-bold text-lg">Streamline</span>
-                </div>
-                <Button variant="ghost" size="icon" onClick={toggleMobileMenu}>
-                  <X className="h-5 w-5" />
-                </Button>
-              </div>
-              
-              <div className="space-y-1 pt-2">
-                <a href="/dashboard" className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/30 rounded text-primary font-medium text-sm">
-                  Dashboard
-                </a>
-                <a href="/jobs" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
-                  Jobs
-                </a>
-                <a href="/resume-tools" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
-                  Resume &amp; CV Tools
-                </a>
-                <a href="/interview-practice" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
-                  Interview Practice
-                </a>
-                <a href="/referrals" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
-                  Referrals
-                </a>
-                <a href="/salary-negotiations" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
-                  Salary Negotiations
-                </a>
-                <a href="/networking" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
-                  Networking &amp; Outreach
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {!isMobile && <Navbar />}
-      
-      <main className={`flex-1 ${isMobile ? 'pt-4' : 'pt-20'}`}>
+      <main className="flex-1 pt-20">
         <div className="container px-4 py-8">
           {/* Dashboard Header */}
           <div className="mb-8">
@@ -264,10 +181,10 @@ const Dashboard = () => {
                     <div className="flex justify-between">
                       <span className="text-sm font-medium">Success Rate</span>
                       <span className="text-sm text-muted-foreground">
-                        {stats.total > 0 ? Math.round(((stats.offers + stats.accepted) / stats.total) * 100) : 0}%
+                        {Math.round((stats.offers / stats.total) * 100)}%
                       </span>
                     </div>
-                    <Progress value={stats.total > 0 ? ((stats.offers + stats.accepted) / stats.total) * 100 : 0} className="h-2" />
+                    <Progress value={(stats.offers / stats.total) * 100} className="h-2" />
                   </div>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
@@ -306,7 +223,7 @@ const Dashboard = () => {
                 <Button 
                   variant="outline" 
                   className="w-full button-hover"
-                  onClick={() => navigate('/jobs')}
+                  onClick={() => console.log("View all applications")}
                 >
                   View All Applications
                   <ArrowRightIcon className="w-4 h-4 ml-2" />
@@ -324,7 +241,7 @@ const Dashboard = () => {
                 <Button 
                   variant="secondary" 
                   className="w-full justify-start text-left button-hover"
-                  onClick={navigateToResumeCreator}
+                  onClick={() => console.log("Generate resume")}
                 >
                   <FileTextIcon className="w-4 h-4 mr-2" />
                   <div className="flex flex-col items-start">
@@ -335,12 +252,23 @@ const Dashboard = () => {
                 <Button 
                   variant="secondary" 
                   className="w-full justify-start text-left button-hover"
-                  onClick={navigateToCoverLetter}
+                  onClick={() => console.log("Generate cover letter")}
                 >
                   <FileTextIcon className="w-4 h-4 mr-2" />
                   <div className="flex flex-col items-start">
                     <span>Cover Letter</span>
                     <span className="text-xs text-muted-foreground">Craft a personalized letter</span>
+                  </div>
+                </Button>
+                <Button 
+                  variant="secondary" 
+                  className="w-full justify-start text-left button-hover"
+                  onClick={() => console.log("Ask AI assistant")}
+                >
+                  <MessageSquareIcon className="w-4 h-4 mr-2" />
+                  <div className="flex flex-col items-start">
+                    <span>AI Assistant</span>
+                    <span className="text-xs text-muted-foreground">Get career advice</span>
                   </div>
                 </Button>
                 <Button 
@@ -369,7 +297,7 @@ const Dashboard = () => {
                     size="sm" 
                     variant="outline"
                     className="button-hover"
-                    onClick={() => navigate('/jobs')}
+                    onClick={() => console.log("Add application")}
                   >
                     <PlusIcon className="w-4 h-4 mr-2" />
                     Add New
@@ -378,47 +306,41 @@ const Dashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {recentApplications.length > 0 ? (
-                    recentApplications.map((app) => (
-                      <div 
-                        key={app.id}
-                        className="flex items-center p-3 rounded-lg hover:bg-secondary/70 transition-colors"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start">
-                            <div className="flex-1 min-w-0">
-                              <h4 className="text-sm font-medium truncate">{app.jobTitle}</h4>
-                              <p className="text-xs text-muted-foreground truncate">
-                                {app.company} • {app.location}
-                              </p>
-                            </div>
-                            <div className="ml-4 flex-shrink-0">
-                              <div className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${app.statusColor} bg-opacity-10 text-${app.statusColor.replace('bg-', '')}`}>
-                                {app.status}
-                              </div>
-                            </div>
+                  {recentApplications.map((app, index) => (
+                    <div 
+                      key={app.id}
+                      className="flex items-center p-3 rounded-lg hover:bg-secondary/70 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-sm font-medium truncate">{app.jobTitle}</h4>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {app.company} • {app.location}
+                            </p>
                           </div>
-                          <div className="mt-1 flex items-center text-xs text-muted-foreground">
-                            <CalendarIcon className="w-3 h-3 mr-1" />
-                            <span>
-                              Applied on {new Date(app.date).toLocaleDateString()}
-                            </span>
+                          <div className="ml-4 flex-shrink-0">
+                            <div className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${app.statusColor} bg-opacity-10 text-${app.statusColor.replace('bg-', '')}`}>
+                              {app.status}
+                            </div>
                           </div>
                         </div>
+                        <div className="mt-1 flex items-center text-xs text-muted-foreground">
+                          <CalendarIcon className="w-3 h-3 mr-1" />
+                          <span>
+                            Applied on {new Date(app.date).toLocaleDateString()}
+                          </span>
+                        </div>
                       </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-4">
-                      <p className="text-muted-foreground">No recent applications</p>
                     </div>
-                  )}
+                  ))}
                 </div>
               </CardContent>
               <CardFooter>
                 <Button 
                   variant="outline" 
                   className="w-full button-hover"
-                  onClick={() => navigate('/jobs')}
+                  onClick={() => console.log("View all applications")}
                 >
                   View All Applications
                   <ArrowRightIcon className="w-4 h-4 ml-2" />

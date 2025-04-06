@@ -1,171 +1,131 @@
 
-import { Link, useLocation } from "react-router-dom";
-import { useMobile } from "@/hooks/use-mobile";
-import { ModeToggle } from "@/components/ModeToggle";
-import { Button } from "@/components/ui/button";
 import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { ModeToggle } from "@/components/ModeToggle";
+import { Link } from "react-router-dom";
+import { Menu, UserIcon } from "lucide-react";
+import { 
   NavigationMenu,
   NavigationMenuContent,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-  navigationMenuTriggerStyle,
+  navigationMenuTriggerStyle
 } from "@/components/ui/navigation-menu";
-import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
-import { 
-  User, 
-  BookOpen, 
-  BriefcaseIcon, 
-  DollarSign, 
-  FileText,
-  Users,
-  Network
-} from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const Navbar = () => {
-  const isMobile = useMobile();
-  const location = useLocation();
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  // Handle scroll effect for navbar
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
-    
-    window.addEventListener("scroll", handleScroll);
-    
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
-
-  // If on mobile, don't show the navbar (it's handled in the mobile views)
-  if (isMobile) {
-    return null;
-  }
-
-  // Check if the current path matches
-  const isActive = (path: string) => {
-    return location.pathname === path;
-  };
+  const links = [
+    { href: "/", label: "Home" },
+    { href: "/jobs", label: "Jobs" },
+    { href: "/interview-practice", label: "Interview Practice" },
+    { href: "/referrals", label: "Referrals" },
+    { href: "/resume-tools", label: "Resume/CV Tools" },
+    { href: "/leetcode-patterns", label: "LeetCode Patterns" },
+    { href: "/salary-negotiations", label: "Salary Negotiations" },
+  ];
 
   return (
-    <div className={cn(
-      "sticky top-0 z-50 w-full transition-all duration-200 bg-slate-50 dark:bg-slate-900 border-b",
-      isScrolled ? "shadow-sm" : ""
-    )}>
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-6">
-          <Link to="/">
-            <div className="flex items-center gap-2">
-              <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline" className="h-8 w-8" />
-              <span className="font-bold text-lg">Streamline</span>
-            </div>
-          </Link>
+    <nav className="bg-background border-b sticky top-0 z-50">
+      <div className="container flex items-center justify-between py-4">
+        <Link to="/" className="flex items-center space-x-2 font-bold text-2xl">
+          <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline Logo" className="w-6 h-6" />
+          <span>Streamline</span>
+        </Link>
+
+        <div className="hidden md:flex items-center space-x-6">
+          {links.map((link) => (
+            <Link key={link.href} to={link.href} className="hover:underline">
+              {link.label}
+            </Link>
+          ))}
           
-          <NavigationMenu>
-            <NavigationMenuList className="flex space-x-1">
-              <NavigationMenuItem>
-                <Link to="/dashboard">
-                  <div className={cn(
-                    "flex items-center px-3 py-2 text-sm font-medium transition-colors",
-                    isActive("/dashboard") ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                  )}>
-                    <BriefcaseIcon className="mr-2 h-4 w-4" />
-                    Dashboard
-                  </div>
-                </Link>
-              </NavigationMenuItem>
-              
-              <NavigationMenuItem>
-                <Link to="/jobs">
-                  <div className={cn(
-                    "flex items-center px-3 py-2 text-sm font-medium transition-colors",
-                    isActive("/jobs") ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                  )}>
-                    <BriefcaseIcon className="mr-2 h-4 w-4" />
-                    Jobs
-                  </div>
-                </Link>
-              </NavigationMenuItem>
-              
-              <NavigationMenuItem>
-                <Link to="/resume-tools">
-                  <div className={cn(
-                    "flex items-center px-3 py-2 text-sm font-medium transition-colors",
-                    isActive("/resume-tools") ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                  )}>
-                    <FileText className="mr-2 h-4 w-4" />
-                    Resume
-                  </div>
-                </Link>
-              </NavigationMenuItem>
-              
-              <NavigationMenuItem>
-                <Link to="/interview-practice">
-                  <div className={cn(
-                    "flex items-center px-3 py-2 text-sm font-medium transition-colors",
-                    isActive("/interview-practice") ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                  )}>
-                    <BookOpen className="mr-2 h-4 w-4" />
-                    Interview Prep
-                  </div>
-                </Link>
-              </NavigationMenuItem>
-              
-              <NavigationMenuItem>
-                <Link to="/referrals">
-                  <div className={cn(
-                    "flex items-center px-3 py-2 text-sm font-medium transition-colors",
-                    isActive("/referrals") ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                  )}>
-                    <Users className="mr-2 h-4 w-4" />
-                    Referrals
-                  </div>
-                </Link>
-              </NavigationMenuItem>
-              
-              <NavigationMenuItem>
-                <Link to="/salary-negotiations">
-                  <div className={cn(
-                    "flex items-center px-3 py-2 text-sm font-medium transition-colors",
-                    isActive("/salary-negotiations") ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                  )}>
-                    <DollarSign className="mr-2 h-4 w-4" />
-                    Salary
-                  </div>
-                </Link>
-              </NavigationMenuItem>
-              
-              <NavigationMenuItem>
-                <Link to="/networking">
-                  <div className={cn(
-                    "flex items-center px-3 py-2 text-sm font-medium transition-colors",
-                    isActive("/networking") ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                  )}>
-                    <Users className="mr-2 h-4 w-4" />
-                    Networking
-                  </div>
-                </Link>
-              </NavigationMenuItem>
-            </NavigationMenuList>
-          </NavigationMenu>
+          <div className="flex items-center space-x-3">
+            <NavigationMenu>
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger>
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback>VV</AvatarFallback>
+                    </Avatar>
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <div className="w-48 p-2">
+                      <Link 
+                        to="/profile" 
+                        className="flex items-center gap-2 p-2 rounded-md hover:bg-secondary transition-colors"
+                      >
+                        <UserIcon className="h-4 w-4" />
+                        <span>Profile</span>
+                      </Link>
+                      <Link 
+                        to="/dashboard" 
+                        className="flex items-center gap-2 p-2 rounded-md hover:bg-secondary transition-colors"
+                      >
+                        <UserIcon className="h-4 w-4" />
+                        <span>Dashboard</span>
+                      </Link>
+                      <Separator className="my-1" />
+                      <Link 
+                        to="/auth" 
+                        className="flex items-center gap-2 p-2 rounded-md hover:bg-secondary transition-colors"
+                      >
+                        <UserIcon className="h-4 w-4" />
+                        <span>Sign out</span>
+                      </Link>
+                    </div>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
+            <ModeToggle />
+          </div>
         </div>
-        
-        <div className="flex items-center gap-4">
-          <ModeToggle />
-          <Link to="/profile">
-            <Button variant={isActive("/profile") ? "default" : "outline"} size="sm">
-              <User className="mr-2 h-4 w-4" />
-              Profile
+
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="sm" className="md:hidden">
+              <Menu className="h-5 w-5" />
             </Button>
-          </Link>
-        </div>
+          </SheetTrigger>
+          <SheetContent side="left" className="sm:max-w-sm">
+            <SheetHeader>
+              <SheetTitle>Streamline</SheetTitle>
+              <SheetDescription>
+                Explore the different sections of the app.
+              </SheetDescription>
+            </SheetHeader>
+            <Separator className="my-4" />
+            <div className="grid gap-4 py-4">
+              <Link to="/profile" className="flex items-center gap-2 hover:underline">
+                <UserIcon className="h-4 w-4" />
+                Profile
+              </Link>
+              <Link to="/auth" className="flex items-center gap-2 hover:underline">
+                <UserIcon className="h-4 w-4" />
+                Sign in / Create Account
+              </Link>
+              {links.map((link) => (
+                <Link key={link.href} to={link.href} className="hover:underline">
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+            <Separator className="my-4" />
+            <ModeToggle />
+          </SheetContent>
+        </Sheet>
       </div>
-    </div>
+    </nav>
   );
 };
 
