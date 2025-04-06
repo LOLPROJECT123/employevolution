@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import Navbar from "@/components/Navbar";
 import { Job, JobFilters } from "@/types/job";
@@ -486,16 +485,22 @@ const Jobs = () => {
               <JobSourcesDisplay />
             </div>
 
-            {/* My Jobs Section - Now Moved Above Filters */}
-            <div className="lg:hidden">
-              <SavedAndAppliedJobs
-                savedJobs={savedJobs}
-                appliedJobs={appliedJobs}
-                onApply={handleApplyJob}
-                onSave={handleSaveJob}
-                onSelect={handleJobSelect}
-                selectedJobId={selectedJob?.id || null}
-              />
+            {/* My Jobs Section - Now Above Filters for Desktop Too */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                <h2 className="font-semibold text-lg">My Jobs</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Saved and Applied Positions</p>
+              </div>
+              <div className="p-4">
+                <SavedAndAppliedJobs
+                  savedJobs={savedJobs}
+                  appliedJobs={appliedJobs}
+                  onApply={handleApplyJob}
+                  onSave={handleSaveJob}
+                  onSelect={handleJobSelect}
+                  selectedJobId={selectedJob?.id || null}
+                />
+              </div>
             </div>
             
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -542,20 +547,8 @@ const Jobs = () => {
             />
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
-              {/* Sidebar with saved jobs on the left */}
-              <div className="lg:col-span-3 hidden lg:block">
-                <SavedAndAppliedJobs
-                  savedJobs={savedJobs}
-                  appliedJobs={appliedJobs}
-                  onApply={handleApplyJob}
-                  onSave={handleSaveJob}
-                  onSelect={handleJobSelect}
-                  selectedJobId={selectedJob?.id || null}
-                />
-              </div>
-              
-              {/* Main content area (Browse Jobs and Job Details) */}
-              <div className="lg:col-span-9">
+              {/* Remove the sidebar SavedAndAppliedJobs since we moved it above */}
+              <div className="lg:col-span-12">
                 {viewMode === 'swipe' && isMobile ? (
                   <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden p-4">
                     <SwipeJobsInterface 

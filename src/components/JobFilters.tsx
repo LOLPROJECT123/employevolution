@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -56,6 +55,7 @@ import {
 } from "@/components/ui/popover";
 import { toast } from "sonner";
 import { JobFilters } from "@/types/job";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 type JobFunctionType = string;
 type SkillType = string;
@@ -190,7 +190,7 @@ export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) =>
   const [filtersApplied, setFiltersApplied] = useState(!!savedFilters);
 
   // State to track if the filters section is open
-  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(true);
 
   // Apply saved filters on component mount
   useEffect(() => {
@@ -405,61 +405,71 @@ export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) =>
   const activeFilterCount = getActiveFilterCount();
   
   return (
-    <Card className="border border-border bg-background">
+    <Card className="border border-border bg-background shadow-md rounded-lg overflow-hidden">
       <CardContent className="p-0">
         <Collapsible
           open={isFiltersOpen}
           onOpenChange={setIsFiltersOpen}
           className="w-full"
         >
-          <div className="p-4 border-b flex items-center justify-between">
+          <div className="p-4 border-b flex items-center justify-between bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
             <CollapsibleTrigger className="flex items-center justify-between w-full text-left">
               <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4" />
+                <Filter className="w-4 h-4 text-blue-500" />
                 <h3 className="text-lg font-medium">All Filters</h3>
                 {activeFilterCount > 0 && (
-                  <Badge variant="secondary" className="ml-2">
+                  <Badge variant="secondary" className="ml-2 bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
                     {activeFilterCount}
                   </Badge>
                 )}
               </div>
-              <ChevronDown className={`h-5 w-5 transition-transform ${isFiltersOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`h-5 w-5 transition-transform duration-200 text-gray-500 ${isFiltersOpen ? 'rotate-180' : ''}`} />
             </CollapsibleTrigger>
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={handleResetFilters}
-              className="text-xs h-8 ml-2"
+              className="text-xs h-8 ml-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50"
             >
               Reset All
             </Button>
           </div>
           
-          <CollapsibleContent>
+          <CollapsibleContent className="transition-all duration-300 ease-in-out">
             <div className="p-4 md:p-6 space-y-4">
               <Accordion type="single" collapsible className="w-full divide-y">
                 {/* Location Section */}
                 <AccordionItem value="location" className="border-0 py-2">
-                  <AccordionTrigger className="py-2 text-base font-medium">Location</AccordionTrigger>
-                  <AccordionContent>
+                  <AccordionTrigger className="py-2 text-base font-medium hover:bg-gray-50 dark:hover:bg-gray-800 px-2 rounded-md transition-colors">
+                    <span className="flex items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                      Location
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-2">
                     <div className="space-y-4">
                       <div className="flex flex-col space-y-2">
-                        <Label htmlFor="location">City, State, or Zip</Label>
-                        <Input 
-                          id="location" 
-                          placeholder="e.g. San Francisco, CA" 
-                          value={location} 
-                          onChange={(e) => setLocation(e.target.value)}
-                        />
+                        <Label htmlFor="location" className="text-sm font-medium text-gray-700 dark:text-gray-300">City, State, or Zip</Label>
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <Input 
+                            id="location" 
+                            placeholder="e.g. San Francisco, CA" 
+                            value={location} 
+                            onChange={(e) => setLocation(e.target.value)}
+                            className="pl-9 border-gray-200 dark:border-gray-700 rounded-md"
+                          />
+                        </div>
                       </div>
                       
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-800 p-3 rounded-md">
                         <Switch 
                           id="remote" 
                           checked={remote} 
-                          onCheckedChange={setRemote} 
+                          onCheckedChange={setRemote}
+                          className="data-[state=checked]:bg-blue-500"
                         />
-                        <Label htmlFor="remote">Remote only</Label>
+                        <Label htmlFor="remote" className="cursor-pointer text-sm font-medium">Remote only</Label>
                       </div>
                     </div>
                   </AccordionContent>
@@ -467,12 +477,17 @@ export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) =>
                 
                 {/* Salary Range Section */}
                 <AccordionItem value="salary" className="border-0 py-2">
-                  <AccordionTrigger className="py-2 text-base font-medium">Salary Range</AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">{formatSalary(salaryRange[0])}</span>
-                        <span className="text-sm font-medium">{formatSalary(salaryRange[1])}</span>
+                  <AccordionTrigger className="py-2 text-base font-medium hover:bg-gray-50 dark:hover:bg-gray-800 px-2 rounded-md transition-colors">
+                    <span className="flex items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
+                      Salary Range
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-2">
+                    <div className="space-y-4 pt-2 pb-4">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{formatSalary(salaryRange[0])}</span>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{formatSalary(salaryRange[1])}</span>
                       </div>
                       <Slider
                         defaultValue={[50000, 150000]}
@@ -481,6 +496,7 @@ export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) =>
                         step={5000}
                         value={salaryRange}
                         onValueChange={(value) => setSalaryRange(value as [number, number])}
+                        className="[&>span[data-state=dragging]]:bg-blue-600 [&>span]:h-5 [&>span]:w-5 [&>span]:bg-blue-500"
                       />
                     </div>
                   </AccordionContent>
@@ -488,123 +504,69 @@ export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) =>
                 
                 {/* Job Type Section */}
                 <AccordionItem value="job-type" className="border-0 py-2">
-                  <AccordionTrigger className="py-2 text-base font-medium">Job Type</AccordionTrigger>
-                  <AccordionContent>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="full-time" 
-                          checked={jobTypes["full-time"]} 
-                          onCheckedChange={() => handleJobTypeToggle("full-time")}
-                        />
-                        <Label htmlFor="full-time" className="cursor-pointer">Full-time</Label>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="part-time" 
-                          checked={jobTypes["part-time"]} 
-                          onCheckedChange={() => handleJobTypeToggle("part-time")}
-                        />
-                        <Label htmlFor="part-time" className="cursor-pointer">Part-time</Label>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="contract" 
-                          checked={jobTypes["contract"]} 
-                          onCheckedChange={() => handleJobTypeToggle("contract")}
-                        />
-                        <Label htmlFor="contract" className="cursor-pointer">Contract</Label>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="internship" 
-                          checked={jobTypes["internship"]} 
-                          onCheckedChange={() => handleJobTypeToggle("internship")}
-                        />
-                        <Label htmlFor="internship" className="cursor-pointer">Internship</Label>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="temporary" 
-                          checked={jobTypes["temporary"]} 
-                          onCheckedChange={() => handleJobTypeToggle("temporary")}
-                        />
-                        <Label htmlFor="temporary" className="cursor-pointer">Temporary</Label>
-                      </div>
+                  <AccordionTrigger className="py-2 text-base font-medium hover:bg-gray-50 dark:hover:bg-gray-800 px-2 rounded-md transition-colors">
+                    <span className="flex items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-500"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                      Job Type
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-2">
+                    <div className="grid grid-cols-2 gap-3 pt-2 pb-1">
+                      {Object.entries(jobTypes).map(([type, isChecked]) => (
+                        <div 
+                          key={type} 
+                          className={`flex items-center space-x-2 p-2 rounded-md cursor-pointer border ${isChecked ? 'border-blue-300 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/30' : 'border-gray-200 dark:border-gray-700'}`}
+                          onClick={() => handleJobTypeToggle(type)}
+                        >
+                          <Checkbox 
+                            id={`job-type-${type}`} 
+                            checked={isChecked} 
+                            onCheckedChange={() => handleJobTypeToggle(type)}
+                            className="data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                          />
+                          <Label 
+                            htmlFor={`job-type-${type}`} 
+                            className="cursor-pointer text-sm capitalize"
+                          >
+                            {type.replace('-', ' ')}
+                          </Label>
+                        </div>
+                      ))}
                     </div>
                   </AccordionContent>
                 </AccordionItem>
                 
                 {/* Experience Level Section */}
                 <AccordionItem value="experience" className="border-0 py-2">
-                  <AccordionTrigger className="py-2 text-base font-medium">Experience Level</AccordionTrigger>
-                  <AccordionContent>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="entry" 
-                          checked={experienceLevels["entry"]} 
-                          onCheckedChange={() => handleExperienceLevelToggle("entry")}
-                        />
-                        <Label htmlFor="entry" className="cursor-pointer">Entry Level</Label>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="mid" 
-                          checked={experienceLevels["mid"]} 
-                          onCheckedChange={() => handleExperienceLevelToggle("mid")}
-                        />
-                        <Label htmlFor="mid" className="cursor-pointer">Mid Level</Label>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="senior" 
-                          checked={experienceLevels["senior"]} 
-                          onCheckedChange={() => handleExperienceLevelToggle("senior")}
-                        />
-                        <Label htmlFor="senior" className="cursor-pointer">Senior Level</Label>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="lead" 
-                          checked={experienceLevels["lead"]} 
-                          onCheckedChange={() => handleExperienceLevelToggle("lead")}
-                        />
-                        <Label htmlFor="lead" className="cursor-pointer">Lead</Label>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="manager" 
-                          checked={experienceLevels["manager"]} 
-                          onCheckedChange={() => handleExperienceLevelToggle("manager")}
-                        />
-                        <Label htmlFor="manager" className="cursor-pointer">Manager</Label>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="director" 
-                          checked={experienceLevels["director"]} 
-                          onCheckedChange={() => handleExperienceLevelToggle("director")}
-                        />
-                        <Label htmlFor="director" className="cursor-pointer">Director</Label>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="executive" 
-                          checked={experienceLevels["executive"]} 
-                          onCheckedChange={() => handleExperienceLevelToggle("executive")}
-                        />
-                        <Label htmlFor="executive" className="cursor-pointer">Executive</Label>
+                  <AccordionTrigger className="py-2 text-base font-medium hover:bg-gray-50 dark:hover:bg-gray-800 px-2 rounded-md transition-colors">
+                    <span className="flex items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-orange-500"><path d="M20 7h-3a2 2 0 0 1-2-2V2"/><path d="M9 18a2 2 0 0 1-2-2v-2a2 2 0 0 0-2-2H2"/><path d="M12 12V2h7a2 2 0 0 1 2 2v7"/><path d="M12 12h4a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-9a2 2 0 0 1-2-2v-3"/></svg>
+                      Experience Level
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-2">
+                    <div className="space-y-2 pt-2 pb-1">
+                      <div className="grid grid-cols-2 gap-2">
+                        {Object.entries(experienceLevels).map(([level, isChecked]) => (
+                          <div 
+                            key={level} 
+                            className={`flex items-center space-x-2 p-2 rounded-md cursor-pointer border ${isChecked ? 'border-blue-300 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/30' : 'border-gray-200 dark:border-gray-700'}`}
+                            onClick={() => handleExperienceLevelToggle(level)}
+                          >
+                            <Checkbox 
+                              id={`exp-${level}`} 
+                              checked={isChecked} 
+                              onCheckedChange={() => handleExperienceLevelToggle(level)}
+                              className="data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                            />
+                            <Label 
+                              htmlFor={`exp-${level}`} 
+                              className="cursor-pointer text-sm capitalize"
+                            >
+                              {level.replace('-', ' ')}
+                            </Label>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </AccordionContent>
@@ -612,20 +574,25 @@ export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) =>
                 
                 {/* Job Function Section */}
                 <AccordionItem value="job-function" className="border-0 py-2">
-                  <AccordionTrigger className="py-2 text-base font-medium">Job Function</AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-4">
+                  <AccordionTrigger className="py-2 text-base font-medium hover:bg-gray-50 dark:hover:bg-gray-800 px-2 rounded-md transition-colors">
+                    <span className="flex items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                      Job Function
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-2">
+                    <div className="space-y-4 pt-2">
                       <div className="flex flex-wrap gap-2">
                         {jobFunctions.map((jobFunction, index) => (
                           <Badge 
                             key={index} 
-                            variant="secondary"
-                            className="flex items-center gap-1 py-1"
+                            variant="outline"
+                            className="flex items-center gap-1 py-1 px-2 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700"
                           >
                             {jobFunction}
                             <button 
                               onClick={() => handleRemoveJobFunction(jobFunction)}
-                              className="ml-1 rounded-full hover:bg-muted p-0.5"
+                              className="ml-1 rounded-full hover:bg-blue-200 dark:hover:bg-blue-800 p-0.5"
                             >
                               <X className="h-3 w-3" />
                             </button>
@@ -637,7 +604,7 @@ export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) =>
                             <Button 
                               variant="outline" 
                               size="sm" 
-                              className="h-7 text-xs gap-1 px-2"
+                              className="h-7 text-xs gap-1 px-2 border-dashed border-blue-300 text-blue-600 dark:border-blue-700 dark:text-blue-400"
                             >
                               <Plus className="h-3 w-3" />
                               Add
@@ -660,7 +627,7 @@ export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) =>
                             </div>
                             <DialogFooter>
                               <Button variant="outline" onClick={() => setShowAddJobFunctionModal(false)}>Cancel</Button>
-                              <Button onClick={handleAddJobFunction}>Add</Button>
+                              <Button onClick={handleAddJobFunction} className="bg-blue-600 hover:bg-blue-700">Add</Button>
                             </DialogFooter>
                           </DialogContent>
                         </Dialog>
@@ -671,20 +638,25 @@ export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) =>
                 
                 {/* Skills Section */}
                 <AccordionItem value="skills" className="border-0 py-2">
-                  <AccordionTrigger className="py-2 text-base font-medium">Skills</AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-4">
+                  <AccordionTrigger className="py-2 text-base font-medium hover:bg-gray-50 dark:hover:bg-gray-800 px-2 rounded-md transition-colors">
+                    <span className="flex items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><path d="m7 11 4.08 10.35a1 1 0 0 1 1.84 0L17 11"/><path d="M18 6a4 4 0 0 0-2-3.37A4 4 0 0 0 12 6a4 4 0 0 0-2-3.37A4 4 0 0 0 6 6h12Z"/></svg>
+                      Skills
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-2">
+                    <div className="space-y-4 pt-2">
                       <div className="flex flex-wrap gap-2">
                         {skills.map((skill, index) => (
                           <Badge 
                             key={index} 
-                            variant="secondary"
-                            className="flex items-center gap-1 py-1"
+                            variant="outline"
+                            className="flex items-center gap-1 py-1 px-2 bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700"
                           >
                             {skill}
                             <button 
                               onClick={() => handleRemoveSkill(skill)}
-                              className="ml-1 rounded-full hover:bg-muted p-0.5"
+                              className="ml-1 rounded-full hover:bg-emerald-200 dark:hover:bg-emerald-800 p-0.5"
                             >
                               <X className="h-3 w-3" />
                             </button>
@@ -696,7 +668,7 @@ export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) =>
                             <Button 
                               variant="outline" 
                               size="sm" 
-                              className="h-7 text-xs gap-1 px-2"
+                              className="h-7 text-xs gap-1 px-2 border-dashed border-emerald-300 text-emerald-600 dark:border-emerald-700 dark:text-emerald-400"
                             >
                               <Plus className="h-3 w-3" />
                               Add
@@ -719,7 +691,7 @@ export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) =>
                             </div>
                             <DialogFooter>
                               <Button variant="outline" onClick={() => setShowAddSkillModal(false)}>Cancel</Button>
-                              <Button onClick={handleAddSkill}>Add</Button>
+                              <Button onClick={handleAddSkill} className="bg-emerald-600 hover:bg-emerald-700">Add</Button>
                             </DialogFooter>
                           </DialogContent>
                         </Dialog>
@@ -730,20 +702,25 @@ export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) =>
                 
                 {/* Companies Section */}
                 <AccordionItem value="companies" className="border-0 py-2">
-                  <AccordionTrigger className="py-2 text-base font-medium">Companies</AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-4">
+                  <AccordionTrigger className="py-2 text-base font-medium hover:bg-gray-50 dark:hover:bg-gray-800 px-2 rounded-md transition-colors">
+                    <span className="flex items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-500"><path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"/><path d="M3 9V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4"/><path d="M12 14v3"/><path d="M8 14v1"/><path d="M16 14v1"/></svg>
+                      Companies
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-2">
+                    <div className="space-y-4 pt-2">
                       <div className="flex flex-wrap gap-2">
                         {companies.map((company, index) => (
                           <Badge 
                             key={index} 
-                            variant="secondary"
-                            className="flex items-center gap-1 py-1"
+                            variant="outline"
+                            className="flex items-center gap-1 py-1 px-2 bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-700"
                           >
                             {company}
                             <button 
                               onClick={() => handleRemoveCompany(company)}
-                              className="ml-1 rounded-full hover:bg-muted p-0.5"
+                              className="ml-1 rounded-full hover:bg-indigo-200 dark:hover:bg-indigo-800 p-0.5"
                             >
                               <X className="h-3 w-3" />
                             </button>
@@ -755,7 +732,7 @@ export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) =>
                             <Button 
                               variant="outline" 
                               size="sm" 
-                              className="h-7 text-xs gap-1 px-2"
+                              className="h-7 text-xs gap-1 px-2 border-dashed border-indigo-300 text-indigo-600 dark:border-indigo-700 dark:text-indigo-400"
                             >
                               <Plus className="h-3 w-3" />
                               Add
@@ -778,7 +755,7 @@ export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) =>
                             </div>
                             <DialogFooter>
                               <Button variant="outline" onClick={() => setShowAddCompanyModal(false)}>Cancel</Button>
-                              <Button onClick={handleAddCompany}>Add</Button>
+                              <Button onClick={handleAddCompany} className="bg-indigo-600 hover:bg-indigo-700">Add</Button>
                             </DialogFooter>
                           </DialogContent>
                         </Dialog>
@@ -789,20 +766,25 @@ export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) =>
                 
                 {/* Job Titles Section */}
                 <AccordionItem value="job-titles" className="border-0 py-2">
-                  <AccordionTrigger className="py-2 text-base font-medium">Job Titles</AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-4">
+                  <AccordionTrigger className="py-2 text-base font-medium hover:bg-gray-50 dark:hover:bg-gray-800 px-2 rounded-md transition-colors">
+                    <span className="flex items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500"><path d="M12 12H5a2 2 0 0 0-2 2v5"/><path d="M15 2H8a2 2 0 0 0-2 2v10h8.5"/><path d="M20 14h-5v8h8v-5"/><path d="M20 14h-5V6h8v6c0 1.1-.9 2-2 2Z"/><path d="M3 10h7"/></svg>
+                      Job Titles
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-2">
+                    <div className="space-y-4 pt-2">
                       <div className="flex flex-wrap gap-2">
                         {jobTitles.map((jobTitle, index) => (
                           <Badge 
                             key={index} 
-                            variant="secondary"
-                            className="flex items-center gap-1 py-1"
+                            variant="outline"
+                            className="flex items-center gap-1 py-1 px-2 bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700"
                           >
                             {jobTitle}
                             <button 
                               onClick={() => handleRemoveJobTitle(jobTitle)}
-                              className="ml-1 rounded-full hover:bg-muted p-0.5"
+                              className="ml-1 rounded-full hover:bg-amber-200 dark:hover:bg-amber-800 p-0.5"
                             >
                               <X className="h-3 w-3" />
                             </button>
@@ -814,7 +796,7 @@ export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) =>
                             <Button 
                               variant="outline" 
                               size="sm" 
-                              className="h-7 text-xs gap-1 px-2"
+                              className="h-7 text-xs gap-1 px-2 border-dashed border-amber-300 text-amber-600 dark:border-amber-700 dark:text-amber-400"
                             >
                               <Plus className="h-3 w-3" />
                               Add
@@ -837,7 +819,7 @@ export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) =>
                             </div>
                             <DialogFooter>
                               <Button variant="outline" onClick={() => setShowAddJobTitleModal(false)}>Cancel</Button>
-                              <Button onClick={handleAddJobTitle}>Add</Button>
+                              <Button onClick={handleAddJobTitle} className="bg-amber-600 hover:bg-amber-700">Add</Button>
                             </DialogFooter>
                           </DialogContent>
                         </Dialog>
@@ -852,13 +834,13 @@ export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) =>
       </CardContent>
       <CardFooter className="border-t p-4">
         <Button 
-          className="w-full flex items-center justify-center gap-2" 
+          className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm py-2.5" 
           onClick={handleApplyFilters}
         >
           <Check className="h-4 w-4" />
           Apply Filters
           {activeFilterCount > 0 && (
-            <Badge variant="secondary" className="ml-1">
+            <Badge variant="secondary" className="ml-1 bg-white/20 text-white">
               {activeFilterCount}
             </Badge>
           )}

@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import { JobScraperConfig } from "@/components/JobScraperConfig";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useIsMobile } from '@/hooks/use-mobile';
+import { formatRelativeTime } from '@/utils/dateUtils';
 
 interface JobSource {
   id: string;
@@ -18,7 +20,6 @@ interface JobSource {
 }
 
 export default function JobSourcesDisplay() {
-  // These would come from the backend in a real app
   const [jobSources, setJobSources] = useState<JobSource[]>([]);
   const [lastScraped, setLastScraped] = useState<string | null>(null);
   const [isScrapingNow, setIsScrapingNow] = useState(false);
@@ -28,15 +29,14 @@ export default function JobSourcesDisplay() {
   const [newSourceUrl, setNewSourceUrl] = useState('');
   const [newSourceName, setNewSourceName] = useState('');
   const [openAddDialog, setOpenAddDialog] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
-    // Load job sources from localStorage
     try {
       const savedSources = localStorage.getItem('jobSources');
       if (savedSources) {
         setJobSources(JSON.parse(savedSources));
       } else {
-        // Default to initial sources if nothing saved - now with 6 platforms
         const defaultSources = [
           { id: 'linkedin', name: 'LinkedIn', isActive: true },
           { id: 'github', name: 'GitHub Jobs', isActive: true },
@@ -76,7 +76,6 @@ export default function JobSourcesDisplay() {
       description: "Searching for matching opportunities across all platforms"
     });
     
-    // Simulate scraping progress
     const intervalId = setInterval(() => {
       setScrapingProgress(prev => {
         const newProgress = prev + Math.random() * 10;
@@ -84,7 +83,6 @@ export default function JobSourcesDisplay() {
           clearInterval(intervalId);
           setIsScrapingNow(false);
           
-          // Simulate finding new jobs
           const newJobs = Math.floor(Math.random() * 20) + 5;
           setNewJobsFound(newJobs);
           setTotalJobsFound(prev => prev + newJobs);
@@ -129,13 +127,10 @@ export default function JobSourcesDisplay() {
     }
 
     try {
-      // Validate URL
       new URL(newSourceUrl);
       
-      // Create unique ID from name
       const newId = `custom-${newSourceName.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
       
-      // Check if ID already exists
       if (jobSources.some(source => source.id === newId)) {
         toast.error("A source with this name already exists");
         return;
@@ -152,7 +147,6 @@ export default function JobSourcesDisplay() {
       setJobSources(updatedSources);
       localStorage.setItem('jobSources', JSON.stringify(updatedSources));
       
-      // Reset fields
       setNewSourceName('');
       setNewSourceUrl('');
       setOpenAddDialog(false);
@@ -164,75 +158,106 @@ export default function JobSourcesDisplay() {
       toast.error("Please enter a valid URL");
     }
   };
-  
+
   const activeSourcesCount = jobSources.filter(source => source.isActive).length;
+
+  const AddSourceButton = () => (
+    <Dialog open={openAddDialog} onOpenChange={setOpenAddDialog}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm" className="flex items-center gap-1">
+          <PlusIcon className="h-3.5 w-3.5" />
+          Add Source
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Add Custom Job Source</DialogTitle>
+          <DialogDescription>
+            Add a custom website to search for job opportunities
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <label htmlFor="sourceName" className="text-sm font-medium">
+              Source Name
+            </label>
+            <Input
+              id="sourceName"
+              value={newSourceName}
+              onChange={(e) => setNewSourceName(e.target.value)}
+              placeholder="e.g., Company Careers Page"
+            />
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="sourceUrl" className="text-sm font-medium">
+              Source URL
+            </label>
+            <Input
+              id="sourceUrl"
+              value={newSourceUrl}
+              onChange={(e) => setNewSourceUrl(e.target.value)}
+              placeholder="https://example.com/careers"
+            />
+          </div>
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button variant="outline" onClick={() => setOpenAddDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddCustomSource}>
+              Add Source
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 
   return (
     <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-100 dark:border-blue-900/50">
       <CardHeader className="pb-3">
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle className="text-xl bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 font-bold">
-              Job Search 
-            </CardTitle>
-            <CardTitle className="text-xl bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 font-bold">
-              Engine
-            </CardTitle>
-            <CardDescription className="text-blue-600/70 dark:text-blue-400/70">
-              Searching across {activeSourcesCount} platforms, {totalJobsFound} jobs found
-            </CardDescription>
-          </div>
-          <div className="flex gap-2">
-            <Dialog open={openAddDialog} onOpenChange={setOpenAddDialog}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="flex items-center gap-1">
-                  <PlusIcon className="h-3.5 w-3.5" />
-                  Add Source
+        <div className="flex flex-col">
+          {isMobile && (
+            <>
+              <div>
+                <CardTitle className="text-xl bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 font-bold whitespace-nowrap">
+                  Job Search Engine
+                </CardTitle>
+                <CardDescription className="text-blue-600/70 dark:text-blue-400/70 whitespace-nowrap text-xs md:text-sm">
+                  Searching across {activeSourcesCount} platforms, {totalJobsFound} jobs found
+                </CardDescription>
+              </div>
+              <div className="flex justify-between items-center mt-3">
+                <AddSourceButton />
+                <JobScraperConfig onConfigUpdate={handleSourceUpdate} />
+              </div>
+            </>
+          )}
+          
+          {!isMobile && (
+            <div className="flex justify-between items-start">
+              <div>
+                <CardTitle className="text-xl bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 font-bold whitespace-nowrap">
+                  Job Search Engine
+                </CardTitle>
+                <CardDescription className="text-blue-600/70 dark:text-blue-400/70 whitespace-nowrap text-xs md:text-sm">
+                  Searching across {activeSourcesCount} platforms, {totalJobsFound} jobs found
+                </CardDescription>
+              </div>
+              <div className="flex gap-2">
+                <AddSourceButton />
+                <JobScraperConfig onConfigUpdate={handleSourceUpdate} />
+                <Button 
+                  size="sm" 
+                  onClick={handleStartScraping}
+                  className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
+                  disabled={isScrapingNow}
+                >
+                  <RefreshCwIcon className="h-3.5 w-3.5" />
+                  Refresh Now
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Add Custom Job Source</DialogTitle>
-                  <DialogDescription>
-                    Add a custom website to search for job opportunities
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <label htmlFor="sourceName" className="text-sm font-medium">
-                      Source Name
-                    </label>
-                    <Input
-                      id="sourceName"
-                      value={newSourceName}
-                      onChange={(e) => setNewSourceName(e.target.value)}
-                      placeholder="e.g., Company Careers Page"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label htmlFor="sourceUrl" className="text-sm font-medium">
-                      Source URL
-                    </label>
-                    <Input
-                      id="sourceUrl"
-                      value={newSourceUrl}
-                      onChange={(e) => setNewSourceUrl(e.target.value)}
-                      placeholder="https://example.com/careers"
-                    />
-                  </div>
-                  <div className="flex justify-end space-x-2 pt-4">
-                    <Button variant="outline" onClick={() => setOpenAddDialog(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleAddCustomSource}>
-                      Add Source
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-            <JobScraperConfig onConfigUpdate={handleSourceUpdate} />
-          </div>
+              </div>
+            </div>
+          )}
         </div>
       </CardHeader>
       <CardContent>
@@ -249,23 +274,31 @@ export default function JobSourcesDisplay() {
               />
             </div>
           ) : (
-            <div className="flex justify-between items-center">
-              <div className="text-sm text-blue-600/70 dark:text-blue-400/70">
-                Last updated: {getFormattedLastScraped()}
+            <div className="flex flex-col space-y-3">
+              {/* Information about last update and new jobs */}
+              <div className="flex items-center text-sm text-blue-600/70 dark:text-blue-400/70">
+                <span>Last updated: {getFormattedLastScraped()}</span>
                 {newJobsFound > 0 && (
                   <Badge variant="outline" className="ml-2 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 border-green-300 dark:border-green-700">
                     +{newJobsFound} new
                   </Badge>
                 )}
               </div>
-              <Button 
-                size="sm" 
-                onClick={handleStartScraping}
-                className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                <RefreshCwIcon className="h-3.5 w-3.5" />
-                Refresh Now
-              </Button>
+              
+              {/* Only show Refresh button on mobile since we moved it to the header for desktop */}
+              {isMobile && (
+                <div className="flex justify-end">
+                  <Button 
+                    size="sm" 
+                    onClick={handleStartScraping}
+                    className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
+                    disabled={isScrapingNow}
+                  >
+                    <RefreshCwIcon className="h-3.5 w-3.5" />
+                    Refresh Now
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </div>

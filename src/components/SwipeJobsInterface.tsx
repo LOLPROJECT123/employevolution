@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Job } from "@/types/job";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { X, Check, Building2, MapPin, Briefcase, DollarSign, Clock, Zap } from "lucide-react";
+import { X, Check, Building2, MapPin, Briefcase, DollarSign, Clock, Zap, Percent } from "lucide-react";
 import { motion, PanInfo } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { formatRelativeTime } from "@/utils/dateUtils";
@@ -140,38 +140,44 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
             <div className="mb-4">
               <h2 className="text-2xl font-bold">{currentJob.title}</h2>
               
-              {/* Match Percentage Badge - Moved below the job title */}
-              {currentJob.matchPercentage !== undefined && (
-                <Badge variant="outline" className={`mt-1 px-3 py-1 rounded-full ${getMatchBgColor(currentJob.matchPercentage)} ${getMatchColor(currentJob.matchPercentage)} text-sm font-medium`}>
-                  {currentJob.matchPercentage}% Match
-                </Badge>
-              )}
-              
-              <div className="space-y-2 mt-3">
-                <div className="flex items-center text-gray-600 dark:text-gray-400">
-                  <Building2 className="w-4 h-4 mr-2 flex-shrink-0" />
-                  <span className="text-sm">{currentJob.company}</span>
+              <div className="flex items-start justify-between mt-3">
+                {/* Company Info with flex-col */}
+                <div className="flex flex-col space-y-2">
+                  <div className="flex items-center text-gray-600 dark:text-gray-400">
+                    <Building2 className="w-4 h-4 mr-2 flex-shrink-0" />
+                    <span className="text-sm">{currentJob.company}</span>
+                  </div>
+                  
+                  <div className="flex items-center text-gray-600 dark:text-gray-400">
+                    <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
+                    <span className="text-sm">{currentJob.location}</span>
+                  </div>
+                  
+                  <div className="flex items-center text-gray-600 dark:text-gray-400">
+                    <Briefcase className="w-4 h-4 mr-2 flex-shrink-0" />
+                    <span className="text-sm capitalize">{currentJob.level} • {currentJob.type}</span>
+                  </div>
+                  
+                  <div className="flex items-center text-gray-600 dark:text-gray-400">
+                    <DollarSign className="w-4 h-4 mr-2 flex-shrink-0" />
+                    <span className="text-sm">{formattedSalary}</span>
+                  </div>
+                  
+                  <div className="flex items-center text-gray-600 dark:text-gray-400">
+                    <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
+                    <span className="text-sm">Posted {timeAgo}</span>
+                  </div>
                 </div>
                 
-                <div className="flex items-center text-gray-600 dark:text-gray-400">
-                  <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
-                  <span className="text-sm">{currentJob.location}</span>
-                </div>
-                
-                <div className="flex items-center text-gray-600 dark:text-gray-400">
-                  <Briefcase className="w-4 h-4 mr-2 flex-shrink-0" />
-                  <span className="text-sm capitalize">{currentJob.level} • {currentJob.type}</span>
-                </div>
-                
-                <div className="flex items-center text-gray-600 dark:text-gray-400">
-                  <DollarSign className="w-4 h-4 mr-2 flex-shrink-0" />
-                  <span className="text-sm">{formattedSalary}</span>
-                </div>
-                
-                <div className="flex items-center text-gray-600 dark:text-gray-400">
-                  <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
-                  <span className="text-sm">Posted {timeAgo}</span>
-                </div>
+                {/* Match Percentage Badge - Positioned to the right of company info */}
+                {currentJob.matchPercentage !== undefined && (
+                  <div className="ml-2 flex-shrink-0">
+                    <Badge variant="outline" className={`flex items-center px-3 py-2 ${getMatchBgColor(currentJob.matchPercentage)} ${getMatchColor(currentJob.matchPercentage)} text-base font-medium rounded-md`}>
+                      <Percent className="w-4 h-4 mr-1.5" />
+                      {currentJob.matchPercentage}% Match
+                    </Badge>
+                  </div>
+                )}
               </div>
             </div>
             

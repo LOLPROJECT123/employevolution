@@ -30,82 +30,14 @@ import {
   ListIcon,
   PlusIcon,
 } from 'lucide-react';
-
-// Mock data for recent applications
-const recentApplications = [
-  {
-    id: 1,
-    jobTitle: "Senior Frontend Developer",
-    company: "Tech Innovators Inc.",
-    location: "San Francisco, CA",
-    status: "Applied",
-    date: "2023-11-15",
-    statusColor: "bg-blue-500",
-  },
-  {
-    id: 2,
-    jobTitle: "UX/UI Designer",
-    company: "Creative Solutions Ltd.",
-    location: "Remote",
-    status: "Interview",
-    date: "2023-11-10",
-    statusColor: "bg-amber-500",
-  },
-  {
-    id: 3,
-    jobTitle: "Product Manager",
-    company: "Growth Enterprises",
-    location: "New York, NY",
-    status: "Rejected",
-    date: "2023-11-05",
-    statusColor: "bg-red-500",
-  },
-  {
-    id: 4,
-    jobTitle: "Full Stack Developer",
-    company: "Digital Systems Co.",
-    location: "Austin, TX",
-    status: "Offer",
-    date: "2023-11-01",
-    statusColor: "bg-green-500",
-  },
-];
-
-// Mock data for recommended jobs
-const recommendedJobs = [
-  {
-    id: 101,
-    jobTitle: "Frontend Engineer",
-    company: "Quantum Software Solutions",
-    location: "Boston, MA",
-    salary: "$110K - $140K",
-    posted: "2 days ago",
-    match: 95,
-  },
-  {
-    id: 102,
-    jobTitle: "React Developer",
-    company: "Elevate Digital",
-    location: "Remote",
-    salary: "$95K - $120K",
-    posted: "1 week ago",
-    match: 90,
-  },
-  {
-    id: 103,
-    jobTitle: "UI/UX Developer",
-    company: "DesignFirst Studios",
-    location: "Seattle, WA",
-    salary: "$105K - $135K",
-    posted: "3 days ago",
-    match: 85,
-  },
-];
+import { useJobApplications } from '@/contexts/JobApplicationContext';
+import { JobStatus } from '@/types/job';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(true); // Mock authentication
   const [animationReady, setAnimationReady] = useState(false);
+  const { applications, appliedJobs } = useJobApplications();
 
   useEffect(() => {
     // In a real app, check if user is authenticated
@@ -119,14 +51,83 @@ const Dashboard = () => {
     return () => clearTimeout(timer);
   }, [navigate]);
 
-  // Application stats
+  // Get application stats from our applications data
   const stats = {
-    total: 23,
-    active: 16,
-    interviews: 5,
-    offers: 2,
-    rejected: 5,
+    total: applications.length,
+    active: applications.filter(app => app.status === 'applied').length,
+    interviews: applications.filter(app => app.status === 'interviewing').length,
+    offers: applications.filter(app => app.status === 'offered').length,
+    rejected: applications.filter(app => app.status === 'rejected').length,
+    accepted: applications.filter(app => app.status === 'accepted').length,
   };
+
+  // Get recent applications
+  const recentApplications = applications
+    .sort((a, b) => new Date(b.appliedAt).getTime() - new Date(a.appliedAt).getTime())
+    .slice(0, 4)
+    .map(app => {
+      const job = appliedJobs.find(job => job.id === app.jobId);
+      
+      let statusColor = "";
+      switch(app.status) {
+        case 'applied':
+          statusColor = "bg-blue-500";
+          break;
+        case 'interviewing':
+          statusColor = "bg-amber-500";
+          break;
+        case 'offered':
+          statusColor = "bg-green-500";
+          break;
+        case 'rejected':
+          statusColor = "bg-red-500";
+          break;
+        case 'accepted':
+          statusColor = "bg-green-500";
+          break;
+      }
+      
+      return {
+        id: app.id,
+        jobTitle: job?.title || "Unknown Position",
+        company: job?.company || "Unknown Company",
+        location: job?.location || "Unknown Location",
+        status: app.status.charAt(0).toUpperCase() + app.status.slice(1),
+        date: app.appliedAt,
+        statusColor
+      };
+    });
+
+  // Mock data for recommended jobs
+  const recommendedJobs = [
+    {
+      id: 101,
+      jobTitle: "Frontend Engineer",
+      company: "Quantum Software Solutions",
+      location: "Boston, MA",
+      salary: "$110K - $140K",
+      posted: "2 days ago",
+      match: 95,
+    },
+    {
+      id: 102,
+      jobTitle: "React Developer",
+      company: "Elevate Digital",
+      location: "Remote",
+      salary: "$95K - $120K",
+      posted: "1 week ago",
+      match: 90,
+    },
+    {
+      id: 103,
+      jobTitle: "UI/UX Developer",
+      company: "DesignFirst Studios",
+      location: "Seattle, WA",
+      salary: "$105K - $135K",
+      posted: "3 days ago",
+      match: 85,
+    },
+  ];
 
   return (
     <div className="min-h-screen flex flex-col bg-secondary/30">
@@ -181,10 +182,10 @@ const Dashboard = () => {
                     <div className="flex justify-between">
                       <span className="text-sm font-medium">Success Rate</span>
                       <span className="text-sm text-muted-foreground">
-                        {Math.round((stats.offers / stats.total) * 100)}%
+                        {stats.total > 0 ? Math.round(((stats.offers + stats.accepted) / stats.total) * 100) : 0}%
                       </span>
                     </div>
-                    <Progress value={(stats.offers / stats.total) * 100} className="h-2" />
+                    <Progress value={stats.total > 0 ? ((stats.offers + stats.accepted) / stats.total) * 100 : 0} className="h-2" />
                   </div>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
@@ -223,7 +224,7 @@ const Dashboard = () => {
                 <Button 
                   variant="outline" 
                   className="w-full button-hover"
-                  onClick={() => console.log("View all applications")}
+                  onClick={() => navigate('/jobs')}
                 >
                   View All Applications
                   <ArrowRightIcon className="w-4 h-4 ml-2" />
@@ -297,7 +298,7 @@ const Dashboard = () => {
                     size="sm" 
                     variant="outline"
                     className="button-hover"
-                    onClick={() => console.log("Add application")}
+                    onClick={() => navigate('/jobs')}
                   >
                     <PlusIcon className="w-4 h-4 mr-2" />
                     Add New
@@ -306,41 +307,47 @@ const Dashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {recentApplications.map((app, index) => (
-                    <div 
-                      key={app.id}
-                      className="flex items-center p-3 rounded-lg hover:bg-secondary/70 transition-colors"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start">
-                          <div className="flex-1 min-w-0">
-                            <h4 className="text-sm font-medium truncate">{app.jobTitle}</h4>
-                            <p className="text-xs text-muted-foreground truncate">
-                              {app.company} • {app.location}
-                            </p>
-                          </div>
-                          <div className="ml-4 flex-shrink-0">
-                            <div className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${app.statusColor} bg-opacity-10 text-${app.statusColor.replace('bg-', '')}`}>
-                              {app.status}
+                  {recentApplications.length > 0 ? (
+                    recentApplications.map((app) => (
+                      <div 
+                        key={app.id}
+                        className="flex items-center p-3 rounded-lg hover:bg-secondary/70 transition-colors"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start">
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-sm font-medium truncate">{app.jobTitle}</h4>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {app.company} • {app.location}
+                              </p>
+                            </div>
+                            <div className="ml-4 flex-shrink-0">
+                              <div className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${app.statusColor} bg-opacity-10 text-${app.statusColor.replace('bg-', '')}`}>
+                                {app.status}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        <div className="mt-1 flex items-center text-xs text-muted-foreground">
-                          <CalendarIcon className="w-3 h-3 mr-1" />
-                          <span>
-                            Applied on {new Date(app.date).toLocaleDateString()}
-                          </span>
+                          <div className="mt-1 flex items-center text-xs text-muted-foreground">
+                            <CalendarIcon className="w-3 h-3 mr-1" />
+                            <span>
+                              Applied on {new Date(app.date).toLocaleDateString()}
+                            </span>
+                          </div>
                         </div>
                       </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-4">
+                      <p className="text-muted-foreground">No recent applications</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </CardContent>
               <CardFooter>
                 <Button 
                   variant="outline" 
                   className="w-full button-hover"
-                  onClick={() => console.log("View all applications")}
+                  onClick={() => navigate('/jobs')}
                 >
                   View All Applications
                   <ArrowRightIcon className="w-4 h-4 ml-2" />
