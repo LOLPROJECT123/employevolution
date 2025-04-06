@@ -1,8 +1,10 @@
+
 import { useState } from "react";
 import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   MapPin, 
   Building2, 
@@ -16,7 +18,6 @@ import {
   Users,
   Percent
 } from "lucide-react";
-import { CandidateMatchPreferences } from "@/components/CandidateMatchPreferences";
 
 interface MobileJobDetailProps {
   job: Job | null;
@@ -36,6 +37,7 @@ export function MobileJobDetail({
   isApplied = false
 }: MobileJobDetailProps) {
   const [activeTab, setActiveTab] = useState<string>("overview");
+  const [detailTab, setDetailTab] = useState<string>("summary");
   
   if (!job) {
     return (
@@ -126,7 +128,7 @@ export function MobileJobDetail({
 
   return (
     <div className="flex flex-col h-full">
-      <header className="flex items-center justify-between p-4 border-b">
+      <header className="flex items-center justify-between p-4 border-b sticky top-0 bg-white dark:bg-gray-900 z-10">
         <button onClick={onBack} className="p-1">
           <ArrowLeft className="h-5 w-5" />
         </button>
@@ -134,8 +136,8 @@ export function MobileJobDetail({
         <div className="flex space-x-2">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-[200px] grid-cols-2">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="company">Company</TabsTrigger>
+              <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
+              <TabsTrigger value="company" className="text-xs sm:text-sm">Company</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
@@ -143,7 +145,8 @@ export function MobileJobDetail({
         <div className="w-5"></div>
       </header>
       
-      <div className="flex-1 overflow-y-auto">
+      {/* Fixed the ScrollArea to ensure it takes proper height and bottom content is visible */}
+      <ScrollArea className="flex-1 overflow-auto pb-20" style={{ maxHeight: "calc(100vh - 125px)" }}>
         <Tabs value={activeTab} className="w-full">
           <TabsContent value="overview" className="mt-0">
             <div className="p-4">
@@ -242,7 +245,7 @@ export function MobileJobDetail({
                     <div className={`text-xl font-bold ${getMatchColor(job.matchPercentage)}`}>{job.matchPercentage}%</div>
                     <div className={`font-semibold ${getMatchColor(job.matchPercentage)}`}>
                       {job.matchPercentage >= 70 ? "GOOD MATCH" : 
-                       job.matchPercentage >= 50 ? "FAIR MATCH" : "WEAK MATCH"}
+                      job.matchPercentage >= 50 ? "FAIR MATCH" : "WEAK MATCH"}
                     </div>
                   </div>
                   <p className="text-sm mt-1">Based on your profile, skills, and experience</p>
@@ -250,7 +253,7 @@ export function MobileJobDetail({
               )}
               
               <div className="mt-6 border-t pt-6">
-                <Tabs defaultValue="summary" className="w-full">
+                <Tabs value={detailTab} onValueChange={setDetailTab} className="w-full">
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="summary">Summary</TabsTrigger>
                     <TabsTrigger value="full-posting">Full Job Posting</TabsTrigger>
@@ -302,8 +305,18 @@ export function MobileJobDetail({
                     <div className="space-y-4">
                       <h3 className="font-medium">Requirements</h3>
                       <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300">
-                        {enhancedRequirements.slice(0, 4).map((req, idx) => (
+                        {(job.requirements?.length ? job.requirements : enhancedRequirements).slice(0, 4).map((req, idx) => (
                           <li key={idx}>{req}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    
+                    {/* Benefits section */}
+                    <div className="mt-6 space-y-4">
+                      <h3 className="font-medium">Benefits</h3>
+                      <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300">
+                        {(job.benefits?.length ? job.benefits : enhancedBenefits).slice(0, 5).map((benefit, idx) => (
+                          <li key={idx}>{benefit}</li>
                         ))}
                       </ul>
                     </div>
@@ -312,33 +325,39 @@ export function MobileJobDetail({
                   <TabsContent value="full-posting" className="mt-4">
                     <div className="space-y-6">
                       <div>
+                        <h3 className="font-medium mb-2">About This Role</h3>
+                        <p className="text-gray-700 dark:text-gray-300 mb-4">
+                          {job.description}
+                        </p>
+                      </div>
+                      
+                      <div>
                         <h3 className="font-medium mb-2">Requirements</h3>
                         <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300">
-                          {enhancedRequirements.map((req, idx) => (
+                          {(job.requirements?.length ? job.requirements : enhancedRequirements).map((req, idx) => (
                             <li key={idx}>{req}</li>
                           ))}
                         </ul>
                       </div>
                       
-                      {job.responsibilities && (
-                        <div>
-                          <h3 className="font-medium mb-2">Responsibilities</h3>
-                          <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300">
-                            {job.responsibilities.map((resp, idx) => (
-                              <li key={idx}>{resp}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
+                      <div>
+                        <h3 className="font-medium mb-2">Responsibilities</h3>
+                        <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300">
+                          {enhancedResponsibilities.map((resp, idx) => (
+                            <li key={idx}>{resp}</li>
+                          ))}
+                        </ul>
+                      </div>
                       
-                      {job.description && (
-                        <div>
-                          <h3 className="font-medium mb-2">Description</h3>
-                          <p className="text-gray-700 dark:text-gray-300">
-                            {job.description}
-                          </p>
-                        </div>
-                      )}
+                      {/* Benefits section in full posting */}
+                      <div className="mb-20"> {/* Added bottom margin to ensure visibility */}
+                        <h3 className="font-medium mb-2">Benefits</h3>
+                        <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300">
+                          {(job.benefits?.length ? job.benefits : enhancedBenefits).map((benefit, idx) => (
+                            <li key={idx}>{benefit}</li>
+                          ))}
+                        </ul>
+                      </div>
                     </div>
                   </TabsContent>
                 </Tabs>
@@ -371,7 +390,7 @@ export function MobileJobDetail({
                 </div>
               </div>
               
-              <div className="space-y-6">
+              <div className="space-y-4">
                 <div>
                   <h3 className="text-sm text-gray-500">Company Size</h3>
                   <p className="mt-1 font-medium">
@@ -399,60 +418,62 @@ export function MobileJobDetail({
                     {companyDetails.founded}
                   </p>
                 </div>
+              </div>
+              
+              <div className="pt-4 border-t mt-4">
+                <h3 className="text-lg font-medium mb-4">Company News</h3>
                 
-                <div className="pt-4 border-t">
-                  <h3 className="text-lg font-medium mb-4">Company News</h3>
-                  
-                  <div className="space-y-6">
-                    {companyNews.map((news, index) => (
-                      <div key={index} className="pb-4 border-b">
-                        <div className="flex justify-between items-start mb-1">
-                          <span className="text-sm text-gray-500">{news.source}</span>
-                          <span className="text-sm text-gray-500">{news.date}</span>
-                        </div>
-                        <h4 className="text-primary font-medium">
-                          {news.title}
-                        </h4>
-                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                          {news.snippet}
-                        </p>
+                <div className="space-y-6">
+                  {companyNews.map((news, index) => (
+                    <div key={index} className="pb-4 border-b">
+                      <div className="flex justify-between items-start mb-1">
+                        <span className="text-sm text-gray-500">{news.source}</span>
+                        <span className="text-sm text-gray-500">{news.date}</span>
                       </div>
-                    ))}
-                  </div>
+                      <h4 className="text-primary font-medium">
+                        {news.title}
+                      </h4>
+                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                        {news.snippet}
+                      </p>
+                    </div>
+                  ))}
                 </div>
+              </div>
+              
+              <div className="pt-4 border-t mt-4">
+                <h3 className="text-lg font-medium mb-4">What makes {job.company} unique</h3>
                 
-                <div className="pt-4 border-t">
-                  <h3 className="text-lg font-medium mb-4">What makes {job.company} unique</h3>
-                  
-                  <div className="space-y-3">
-                    {companyUniquePoints.map((point, index) => (
-                      <div key={index} className="flex items-start gap-2">
-                        <span className="mt-1">•</span>
-                        <p>{point}</p>
-                      </div>
-                    ))}
-                  </div>
+                <div className="space-y-3">
+                  {companyUniquePoints.map((point, index) => (
+                    <div key={index} className="flex items-start gap-2">
+                      <span className="mt-1">•</span>
+                      <p>{point}</p>
+                    </div>
+                  ))}
                 </div>
+              </div>
+              
+              {/* Benefits section in company tab - added more bottom padding */}
+              <div className="pt-4 border-t mt-4 mb-24">
+                <h3 className="text-lg font-medium mb-4">Benefits</h3>
                 
-                <div className="pt-4 border-t">
-                  <h3 className="text-lg font-medium mb-4">Benefits</h3>
-                  
-                  <div className="space-y-3">
-                    {enhancedBenefits.map((benefit, idx) => (
-                      <div key={idx} className="flex items-center gap-2">
-                        <CheckCircle className="h-5 w-5 text-teal-500" />
-                        <span>{benefit}</span>
-                      </div>
-                    ))}
-                  </div>
+                <div className="space-y-3 pb-4">
+                  {enhancedBenefits.map((benefit, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5 text-teal-500" />
+                      <span>{benefit}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
           </TabsContent>
         </Tabs>
-      </div>
+      </ScrollArea>
       
-      <div className="p-3 border-t flex items-center justify-between bg-white dark:bg-gray-900 sticky bottom-0">
+      {/* Fixed footer position and z-index */}
+      <div className="p-3 border-t flex items-center justify-between bg-white dark:bg-gray-900 sticky bottom-0 z-10">
         <button 
           className="text-primary text-sm"
           onClick={() => {}}
@@ -492,3 +513,4 @@ export function MobileJobDetail({
     </div>
   );
 }
+

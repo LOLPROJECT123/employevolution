@@ -8,6 +8,7 @@ import { toast } from "@/hooks/use-toast";
 import { MobileJobFilters } from "@/components/MobileJobFilters";
 import { SavedAndAppliedJobs } from "@/components/SavedAndAppliedJobs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { MobileHeader, MobileSidebar } from "@/components/MobileHeader";
 import { 
   Drawer,
   DrawerContent,
@@ -16,9 +17,9 @@ import {
 import { 
   Search,
   X,
-  BookmarkIcon
+  BookmarkIcon,
 } from "lucide-react";
-import Navbar from "@/components/Navbar";
+import { Link } from "react-router-dom";
 
 export default function MobileJobs() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -41,6 +42,8 @@ export default function MobileJobs() {
     companySize: [],
     benefits: []
   });
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -306,10 +309,15 @@ export default function MobileJobs() {
       description: "All job filters have been reset.",
     });
   };
-  
+
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
   return (
     <div className="h-screen flex flex-col bg-white dark:bg-gray-900 overflow-hidden">
-      <Navbar />
+      <MobileHeader onMenuToggle={toggleMobileMenu} />
+      <MobileSidebar isOpen={mobileMenuOpen} onClose={toggleMobileMenu} />
       
       {!showDetailView ? (
         <div className="relative flex-1 overflow-hidden">
@@ -345,6 +353,7 @@ export default function MobileJobs() {
                   isSaved={savedJobIds.includes(job.id)}
                   onSave={() => handleSaveJob(job)}
                   onClick={() => handleSelectJob(job)}
+                  onApply={() => handleApplyJob(job)}
                 />
               ))}
               
