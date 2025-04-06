@@ -116,7 +116,9 @@ export function JobCard({
                     <span className="text-muted-foreground flex items-center gap-1">
                       <BadgePercent className="h-3 w-3" /> Match
                     </span>
-                    <span className={`font-medium ${getMatchColor(job.matchPercentage)}`}>{job.matchPercentage}<span>%</span></span>
+                    <span className={`font-medium ${getMatchColor(job.matchPercentage)}`}>
+                      {job.matchPercentage}<span className="inline-block">%</span>
+                    </span>
                   </div>
                   <Progress value={job.matchPercentage} className="h-1.5" />
                 </div>
@@ -143,7 +145,9 @@ export function JobCard({
                   ></circle>
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className={`text-sm font-medium ${getMatchColor(job.matchPercentage)}`}>{job.matchPercentage}<span>%</span></span>
+                  <span className={`text-sm font-medium ${getMatchColor(job.matchPercentage)}`}>
+                    {job.matchPercentage}<span className="inline-block">%</span>
+                  </span>
                 </div>
               </div>
               <span className="text-xs font-medium text-center mt-1">{getMatchLabel(job.matchPercentage)}</span>
@@ -211,7 +215,9 @@ export function JobCard({
                 ></circle>
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className={`text-sm font-medium ${getMatchColor(job.matchPercentage)}`}>{job.matchPercentage}<span>%</span></span>
+                <span className={`text-sm font-medium ${getMatchColor(job.matchPercentage)}`}>
+                  {job.matchPercentage}<span className="inline-block">%</span>
+                </span>
               </div>
             </div>
             <span className="text-xs font-medium text-center mt-1">{getMatchLabel(job.matchPercentage)}</span>
@@ -241,7 +247,9 @@ export function JobCard({
               <span className="text-muted-foreground flex items-center gap-1">
                 <BadgePercent className="h-3 w-3" /> Match
               </span>
-              <span className={`font-medium ${getMatchColor(job.matchPercentage)}`}>{job.matchPercentage}<span>%</span></span>
+              <span className={`font-medium ${getMatchColor(job.matchPercentage)}`}>
+                {job.matchPercentage}<span className="inline-block">%</span>
+              </span>
             </div>
             <Progress value={job.matchPercentage} className="h-1.5" />
           </div>
