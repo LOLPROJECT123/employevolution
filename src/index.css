@@ -192,6 +192,15 @@
   .mobile-header {
     @apply sticky top-0 z-50 bg-white dark:bg-slate-900 border-b p-3 flex items-center justify-between;
   }
+  
+  /* Mobile tab stacking for profile and other pages */
+  .mobile-tabs {
+    @apply w-full flex-col sm:flex-row;
+  }
+  
+  .mobile-tabs .tab-trigger {
+    @apply flex-1;
+  }
 
   /* Main content container */
   .content-container {

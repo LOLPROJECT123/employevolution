@@ -12,7 +12,7 @@ export function MobileHeader({ onMenuToggle }: MobileHeaderProps) {
   return (
     <div className="mobile-header">
       <Link to="/" className="flex items-center gap-2">
-        <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline" className="h-6 w-6" />
+        <img src="/lovable-uploads/41a0a413-6f28-4d92-b79e-30009cfc65ec.png" alt="Streamline" className="h-6 w-6" />
         <span className="font-bold text-base">Streamline</span>
       </Link>
       
@@ -47,7 +47,7 @@ export function MobileSidebar({
         <div className="space-y-4">
           <div className="flex items-center justify-between pb-4 border-b">
             <div className="flex items-center gap-2">
-              <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline" className="h-8 w-8" />
+              <img src="/lovable-uploads/41a0a413-6f28-4d92-b79e-30009cfc65ec.png" alt="Streamline" className="h-8 w-8" />
               <span className="font-bold text-lg">Streamline</span>
             </div>
             <Button variant="ghost" size="icon" onClick={onClose}>

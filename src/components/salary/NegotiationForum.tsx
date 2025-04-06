@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { MessageSquarePlus, ThumbsUp, MessageCircle, Share2, Filter, PlusCircle } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type ForumPost = {
   id: string;
@@ -27,6 +27,7 @@ type ForumPost = {
 };
 
 const NegotiationForum = () => {
+  const isMobile = useIsMobile();
   const [posts, setPosts] = useState<ForumPost[]>([
     {
       id: "1",
@@ -113,8 +114,8 @@ const NegotiationForum = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold">Salary Negotiation Forum</h2>
+      <div className={`flex ${isMobile ? 'flex-col gap-2' : 'justify-between items-center'}`}>
+        <h2 className="text-xl font-semibold">Salary Negotiation Forum</h2>
         <div className="flex gap-2">
           <Button variant="outline" size="sm">
             <Filter className="h-4 w-4 mr-2" />
