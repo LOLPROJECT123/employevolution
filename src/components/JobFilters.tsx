@@ -22,7 +22,7 @@ import {
   SlidersHorizontal, 
   X, 
   Check, 
-  ChevronRight, 
+  ChevronDown, 
   Info, 
   Search, 
   Plus, 
@@ -75,6 +75,7 @@ export function JobFiltersSection({
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [selectedExperienceYears, setSelectedExperienceYears] = useState<[number, number]>([0, 11]);
   const [customSalary, setCustomSalary] = useState("");
+  const [activeAccordion, setActiveAccordion] = useState<string[]>(["basic-job-criteria"]);
 
   const handleSaveSearch = () => {
     if (!searchName.trim()) {
@@ -226,7 +227,7 @@ export function JobFiltersSection({
   return (
     <div className="space-y-4">
       {!showAllFilters ? (
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap gap-2 justify-between">
           <Button 
             variant="outline" 
             size="sm" 
@@ -237,7 +238,7 @@ export function JobFiltersSection({
             All Filters
           </Button>
           
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -272,9 +273,9 @@ export function JobFiltersSection({
               <X className="w-4 h-4" />
             </Button>
           </CardHeader>
-          <CardContent className="pt-0">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="md:col-span-1 space-y-6">
+          <CardContent className="pt-0 max-h-[70vh] overflow-y-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-1 space-y-6">
                 <div className="space-y-2">
                   <h3 className="font-medium text-base">Basic Job Criteria</h3>
                   <p className="text-xs text-muted-foreground">Job Function / Job Type / Work Model</p>
@@ -308,13 +309,18 @@ export function JobFiltersSection({
                 </div>
               </div>
               
-              <div className="md:col-span-2 space-y-6">
-                <Accordion type="multiple" defaultValue={["basic-job-criteria"]}>
+              <div className="lg:col-span-2 space-y-6">
+                <Accordion 
+                  type="multiple" 
+                  value={activeAccordion}
+                  onValueChange={setActiveAccordion}
+                  className="space-y-3"
+                >
                   <AccordionItem value="basic-job-criteria" className="border rounded-lg p-2">
                     <AccordionTrigger className="hover:no-underline px-2">
                       <div className="flex justify-between w-full">
                         <span className="font-medium">Basic Job Criteria</span>
-                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
+                        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-4 px-2 pb-2 space-y-6">
@@ -336,7 +342,7 @@ export function JobFiltersSection({
                       <div>
                         <div className="flex justify-between">
                           <span className="font-medium">Excluded Title</span>
-                          <ChevronRight className="h-4 w-4" />
+                          <ChevronDown className="h-4 w-4" />
                         </div>
                       </div>
 
@@ -494,7 +500,7 @@ export function JobFiltersSection({
                     <AccordionTrigger className="hover:no-underline px-2">
                       <div className="flex justify-between w-full">
                         <span className="font-medium">Compensation & Sponsorship</span>
-                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
+                        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-4 px-2 pb-2 space-y-6">
@@ -574,7 +580,7 @@ export function JobFiltersSection({
                     <AccordionTrigger className="hover:no-underline px-2">
                       <div className="flex justify-between w-full">
                         <span className="font-medium">Areas of Interest</span>
-                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
+                        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-4 px-2 pb-2 space-y-6">
@@ -655,7 +661,7 @@ export function JobFiltersSection({
                       <div>
                         <div className="flex justify-between">
                           <span className="font-medium">Excluded Skill</span>
-                          <ChevronRight className="h-4 w-4" />
+                          <ChevronDown className="h-4 w-4" />
                         </div>
                       </div>
 
@@ -688,7 +694,7 @@ export function JobFiltersSection({
                     <AccordionTrigger className="hover:no-underline px-2">
                       <div className="flex justify-between w-full">
                         <span className="font-medium">Company Insights</span>
-                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
+                        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-4 px-2 pb-2 space-y-6">
@@ -813,7 +819,7 @@ export function JobFiltersSection({
                     <AccordionTrigger className="hover:no-underline px-2">
                       <div className="flex justify-between w-full">
                         <span className="font-medium">Education</span>
-                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
+                        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-4 px-2 pb-2">
@@ -839,7 +845,7 @@ export function JobFiltersSection({
                     <AccordionTrigger className="hover:no-underline px-2">
                       <div className="flex justify-between w-full">
                         <span className="font-medium">Benefits</span>
-                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
+                        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-4 px-2 pb-2">
@@ -876,7 +882,7 @@ export function JobFiltersSection({
                     <AccordionTrigger className="hover:no-underline px-2">
                       <div className="flex justify-between w-full">
                         <span className="font-medium">Category</span>
-                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
+                        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-4 px-2 pb-2">
@@ -915,7 +921,7 @@ export function JobFiltersSection({
                     <AccordionTrigger className="hover:no-underline px-2">
                       <div className="flex justify-between w-full">
                         <span className="font-medium">Title</span>
-                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
+                        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-4 px-2 pb-2">
@@ -953,7 +959,7 @@ export function JobFiltersSection({
                     <AccordionTrigger className="hover:no-underline px-2">
                       <div className="flex justify-between w-full">
                         <span className="font-medium">Companies</span>
-                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
+                        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-4 px-2 pb-2">
@@ -1041,3 +1047,4 @@ export function JobFiltersSection({
 }
 
 export default JobFiltersSection;
+
