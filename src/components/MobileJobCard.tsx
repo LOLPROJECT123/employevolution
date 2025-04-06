@@ -1,6 +1,6 @@
 
 import { Job } from "@/types/job";
-import { BookmarkIcon, MapPin, DollarSign, BadgePercent } from "lucide-react";
+import { BookmarkIcon, MapPin, DollarSign, Percent } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -108,12 +108,8 @@ export function MobileJobCard({
             {job.matchPercentage !== undefined && (
               <div className="mt-1 mb-1 space-y-1">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground flex items-center gap-1">
-                    <BadgePercent className="h-3 w-3" /> Match
-                  </span>
-                  <span className={`font-medium ${getMatchColor(job.matchPercentage)}`}>
-                    {job.matchPercentage}<span>%</span>
-                  </span>
+                  <span className="text-muted-foreground">Match</span>
+                  <span className="font-medium">{job.matchPercentage}%</span>
                 </div>
                 <Progress value={job.matchPercentage} className="h-1.5" />
               </div>
