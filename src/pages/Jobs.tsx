@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import Navbar from "@/components/Navbar";
 import { Job, JobFilters } from "@/types/job";
@@ -470,8 +469,8 @@ const Jobs = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900/30">
       <Navbar />
-      <main className="flex-1 pt-16">
-        <div className="container px-4 py-6 mx-auto max-w-7xl">
+      <main className="flex-1 pt-20">
+        <div className="container px-4 py-8 mx-auto max-w-7xl">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
               Find Your Next Opportunity
@@ -548,6 +547,7 @@ const Jobs = () => {
             />
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
+              {/* Remove the sidebar SavedAndAppliedJobs since we moved it above */}
               <div className="lg:col-span-12">
                 {viewMode === 'swipe' && isMobile ? (
                   <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden p-4">
@@ -560,8 +560,8 @@ const Jobs = () => {
                 ) : (
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div>
-                      <Card className="overflow-hidden h-full max-h-[calc(100vh-280px)]">
-                        <CardHeader className="py-3 px-4 border-b flex flex-row justify-between items-center sticky top-0 bg-white dark:bg-gray-800 z-10">
+                      <Card className="overflow-hidden h-full max-h-[calc(100vh-250px)]">
+                        <CardHeader className="py-3 px-4 border-b flex flex-row justify-between items-center">
                           <div>
                             <CardTitle className="text-base font-medium">Browse Jobs</CardTitle>
                             <p className="text-xs text-muted-foreground">Showing {filteredJobs.length} of {jobs.length} Jobs</p>
@@ -582,7 +582,7 @@ const Jobs = () => {
                           </div>
                         </CardHeader>
                         
-                        <CardContent className="p-0 divide-y overflow-y-auto max-h-[calc(100vh-330px)]">
+                        <CardContent className="p-0 divide-y overflow-y-auto max-h-[calc(100vh-300px)]">
                           {filteredJobs.map(job => (
                             <JobCard 
                               key={job.id}
@@ -601,7 +601,7 @@ const Jobs = () => {
                     </div>
                     
                     <div>
-                      <Card className="h-full max-h-[calc(100vh-280px)] overflow-hidden">
+                      <Card className="h-full max-h-[calc(100vh-250px)] overflow-hidden">
                         <CardContent className="p-0">
                           <JobDetailView 
                             job={selectedJob} 

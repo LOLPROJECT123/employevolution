@@ -1,64 +1,33 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Navbar from "@/components/Navbar";
 import ATSOptimizer from "@/components/ATSOptimizer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AIResumeCreator from "@/components/resume/AIResumeCreator";
 import AICVCreator from "@/components/resume/AICVCreator";
 import JobApplicationAutomation from "@/components/resume/JobApplicationAutomation";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { MobileHeader, MobileSidebar } from "@/components/MobileHeader";
-import { useLocation } from 'react-router-dom';
 
 const ResumeTools = () => {
-  const isMobile = useIsMobile();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const location = useLocation();
-  const [activeTab, setActiveTab] = useState("ats-optimizer");
-
-  useEffect(() => {
-    // Get tab from URL search params if available
-    const searchParams = new URLSearchParams(location.search);
-    const tabParam = searchParams.get('tab');
-    
-    if (tabParam && ['ats-optimizer', 'ai-resume-creator', 'ai-cv-creator', 'job-automation', 'forum', 'templates'].includes(tabParam)) {
-      setActiveTab(tabParam);
-    }
-  }, [location]);
-
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
-  };
-
   return (
     <div className="min-h-screen flex flex-col bg-secondary/30">
-      {/* Only show Navbar on desktop */}
-      {isMobile ? (
-        <>
-          <MobileHeader onMenuToggle={toggleMobileMenu} />
-          <MobileSidebar isOpen={mobileMenuOpen} onClose={toggleMobileMenu} />
-        </>
-      ) : (
-        <Navbar />
-      )}
-      
-      <main className={`flex-1 ${isMobile ? "pt-4" : "pt-20"}`}>
-        <div className="container px-4 py-4 md:py-8 text-left md:text-center">
-          <div className="mb-6 md:mb-8">
-            <h1 className="text-2xl md:text-3xl font-bold">Resume & CV Tools</h1>
-            <p className="text-muted-foreground mt-1 text-sm md:text-base">
-              Create, optimize, and get feedback on your professional documents
+      <Navbar />
+      <main className="flex-1 pt-20">
+        <div className="container px-4 py-8">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold">Resume & CV Tools</h1>
+            <p className="text-muted-foreground mt-1">
+              Create, optimize, and get feedback on your professional documents to increase your chances of landing interviews
             </p>
           </div>
           
-          <Tabs value={activeTab} defaultValue="ats-optimizer" className="space-y-4 ats-tabs" onValueChange={setActiveTab}>
-            <TabsList className="flex flex-wrap w-full justify-start gap-3 px-3 py-3">
-              <TabsTrigger value="ats-optimizer" className="text-xs md:text-sm px-3 py-2">ATS Optimizer</TabsTrigger>
-              <TabsTrigger value="ai-resume-creator" className="text-xs md:text-sm px-3 py-2">AI Resume</TabsTrigger>
-              <TabsTrigger value="ai-cv-creator" className="text-xs md:text-sm px-3 py-2">AI CV</TabsTrigger>
-              <TabsTrigger value="job-automation" className="text-xs md:text-sm px-3 py-2">Job Automation</TabsTrigger>
-              <TabsTrigger value="forum" className="text-xs md:text-sm px-3 py-2">Forum</TabsTrigger>
-              <TabsTrigger value="templates" className="text-xs md:text-sm px-3 py-2">Templates</TabsTrigger>
+          <Tabs defaultValue="ats-optimizer" className="space-y-6">
+            <TabsList className="flex flex-wrap">
+              <TabsTrigger value="ats-optimizer">ATS Optimizer</TabsTrigger>
+              <TabsTrigger value="ai-resume-creator">AI Resume Creator</TabsTrigger>
+              <TabsTrigger value="ai-cv-creator">AI CV Creator</TabsTrigger>
+              <TabsTrigger value="job-automation">Job Automation</TabsTrigger>
+              <TabsTrigger value="forum">Resume Forum</TabsTrigger>
+              <TabsTrigger value="templates">Templates</TabsTrigger>
             </TabsList>
             
             <TabsContent value="ats-optimizer">
