@@ -1,9 +1,10 @@
-
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { JobCard } from "@/components/JobCard";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { MobileHeader, MobileSidebar } from "@/components/MobileHeader";
 import { 
   BriefcaseIcon, 
   FileTextIcon, 
@@ -101,23 +102,34 @@ const features = [
 const Index = () => {
   const navigate = useNavigate();
   const [animationReady, setAnimationReady] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const timer = setTimeout(() => setAnimationReady(true), 100);
     return () => clearTimeout(timer);
   }, []);
 
-  // Now accepting a Job object instead of a string
   const handleApply = (job: any) => {
     navigate(`/auth?mode=signup&redirect=/jobs/${job.id}`);
   };
 
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
+      {isMobile ? (
+        <>
+          <MobileHeader onMenuToggle={toggleMobileMenu} />
+          <MobileSidebar isOpen={mobileMenuOpen} onClose={toggleMobileMenu} />
+        </>
+      ) : (
+        <Navbar />
+      )}
       
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4 relative overflow-hidden">
+      <section className={`${isMobile ? 'pt-6' : 'pt-32'} pb-20 px-4 relative overflow-hidden`}>
         <div className="absolute inset-0 bg-gradient-to-br from-accent/80 to-transparent z-0"></div>
         <div className="container relative z-10">
           <div className="max-w-4xl mx-auto text-center">
@@ -164,7 +176,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Features Section */}
       <section className="py-20">
         <div className="container px-4">
           <div className="text-center max-w-3xl mx-auto mb-16">
@@ -195,7 +206,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Featured Jobs Section */}
       <section className="py-20 bg-secondary/50">
         <div className="container px-4">
           <div className="text-center max-w-3xl mx-auto mb-12">
@@ -223,7 +233,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Call to Action */}
       <section className="py-20 bg-gradient-to-br from-accent to-background">
         <div className="container px-4">
           <div className="max-w-4xl mx-auto text-center">
@@ -244,7 +253,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="py-8 border-t">
         <div className="container px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
