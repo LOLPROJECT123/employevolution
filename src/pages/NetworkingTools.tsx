@@ -4,131 +4,66 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import RecruiterFinder from "@/components/RecruiterFinder";
 import ResearchOpportunityFinder from "@/components/ResearchOpportunityFinder";
 import { Card, CardContent } from "@/components/ui/card";
-import { Menu, X } from "lucide-react";
+import { Settings, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useMobile } from "@/hooks/use-mobile";
 import Navbar from "@/components/Navbar";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerTrigger,
-  DrawerClose,
-} from "@/components/ui/drawer";
 
 const NetworkingTools = () => {
   const [activeTab, setActiveTab] = useState("recruiters");
-  const isMobile = useIsMobile();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
-  };
+  const isMobile = useMobile();
 
   return (
-    <div className="w-full space-y-4 pb-20">
-      {/* Only show Navbar on desktop */}
-      {!isMobile && <Navbar />}
+    <div className="w-full space-y-6">
+      {/* Add the Navbar component at the top */}
+      <Navbar />
       
-      {/* Mobile top bar */}
-      {isMobile && (
-        <div className="mobile-header">
-          <div className="flex items-center gap-2">
-            <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline" className="h-6 w-6" />
-            <span className="font-bold text-base">Streamline</span>
-          </div>
-          
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={toggleMobileMenu}
-            className="static"
-            aria-label="Menu"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-        </div>
-      )}
-      
-      {/* Header section styled like the Jobs page - removed Settings and Refresh buttons */}
-      <div className="bg-blue-600 dark:bg-blue-900 py-4 px-4 md:px-6">
+      {/* Header section styled like the Jobs page */}
+      <div className="bg-blue-600 dark:bg-blue-900 py-6 px-4 md:px-6">
         <div className="container mx-auto max-w-screen-xl">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-            <h1 className="text-xl md:text-3xl font-bold text-white">
-              Networking <br className="md:hidden" />&amp; Outreach Tools
-            </h1>
-          </div>
+          <h1 className="text-2xl md:text-3xl font-bold text-white">
+            Find Your Next Opportunity
+          </h1>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 max-w-screen-xl space-y-4">
-        {/* Mobile menu overlay */}
-        {isMobile && mobileMenuOpen && (
-          <div className="fixed inset-0 bg-black/50 z-[100]" onClick={toggleMobileMenu}>
-            <div 
-              className="bg-white dark:bg-slate-950 h-full w-[85%] max-w-[300px] p-4 shadow-lg animate-slide-in-left"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="space-y-4">
-                <div className="flex items-center justify-between pb-4 border-b">
-                  <div className="flex items-center gap-2">
-                    <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline" className="h-8 w-8" />
-                    <span className="font-bold text-lg">Streamline</span>
-                  </div>
-                  <Button variant="ghost" size="icon" onClick={toggleMobileMenu}>
-                    <X className="h-5 w-5" />
-                  </Button>
-                </div>
-                
-                <div className="space-y-1 pt-2">
-                  <a href="/dashboard" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
-                    Dashboard
-                  </a>
-                  <a href="/jobs" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
-                    Jobs
-                  </a>
-                  <a href="/resume-tools" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
-                    Resume &amp; CV Tools
-                  </a>
-                  <a href="/interview-practice" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
-                    Interview Practice
-                  </a>
-                  <a href="/referrals" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
-                    Referrals
-                  </a>
-                  <a href="/salary-negotiations" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
-                    Salary Negotiations
-                  </a>
-                  <a href="/networking" className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/30 rounded text-primary font-medium text-sm">
-                    Networking &amp; Outreach
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
+      <div className="container mx-auto px-4 max-w-screen-xl space-y-6">
         {/* Main card with tabs */}
         <Card className="shadow-sm">
           <div className="p-0">
+            <div className="flex justify-between items-center p-4 border-b">
+              <h2 className="text-lg font-medium">Networking & Outreach Tools</h2>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Settings
+                </Button>
+                <Button variant="default" size="sm">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Refresh Now
+                </Button>
+              </div>
+            </div>
+
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <div className="px-3 border-b">
-                <TabsList className="h-12 gap-4">
+              <div className="px-4 border-b">
+                <TabsList className="h-12">
                   <TabsTrigger 
                     value="recruiters" 
-                    className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600 text-[13px] md:text-sm"
+                    className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
                   >
-                    {isMobile ? "Recruiters" : "Recruiter Finder"}
+                    Recruiter Finder
                   </TabsTrigger>
                   <TabsTrigger 
                     value="research" 
-                    className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600 text-[13px] md:text-sm"
+                    className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
                   >
-                    {isMobile ? "Research" : "Research Opportunities"}
+                    Research Opportunities
                   </TabsTrigger>
                 </TabsList>
               </div>
               
-              <div className="p-3 md:p-4">
+              <div className="p-4">
                 <TabsContent value="recruiters" className="mt-0">
                   <RecruiterFinder />
                 </TabsContent>

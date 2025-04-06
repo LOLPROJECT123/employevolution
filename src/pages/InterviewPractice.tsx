@@ -1,11 +1,9 @@
-
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import BehavioralInterview from "@/components/interview/BehavioralInterview";
 import CodingInterview from "@/components/interview/CodingInterview";
 import CompanyProblems from "@/components/interview/CompanyProblems";
 import Navbar from "@/components/Navbar";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -371,7 +369,6 @@ const leetcodeProblems = [
 
 const InterviewPractice = () => {
   const [activeTab, setActiveTab] = useState<string>("behavioral");
-  const isMobile = useIsMobile();
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -387,15 +384,9 @@ const InterviewPractice = () => {
           
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="grid grid-cols-3 w-full max-w-md mx-auto">
-              <TabsTrigger value="behavioral" className="text-[13px] md:text-sm">
-                {isMobile ? "Behavioral" : "Behavioral"}
-              </TabsTrigger>
-              <TabsTrigger value="coding" className="text-[13px] md:text-sm">
-                {isMobile ? "Coding" : "Coding"}
-              </TabsTrigger>
-              <TabsTrigger value="company" className="text-[13px] md:text-sm">
-                {isMobile ? "Company" : "Company-Specific"}
-              </TabsTrigger>
+              <TabsTrigger value="behavioral">Behavioral</TabsTrigger>
+              <TabsTrigger value="coding">Coding</TabsTrigger>
+              <TabsTrigger value="company">Company-Specific</TabsTrigger>
             </TabsList>
             
             <TabsContent value="behavioral" className="space-y-6">
