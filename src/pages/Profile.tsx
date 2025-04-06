@@ -19,7 +19,6 @@ import { ProfileEditForm } from "@/components/ProfileEditForm";
 import { MapPin, Building, Briefcase, GraduationCap, DollarSign, Globe, Bookmark, CheckCircle2, Link as LinkIcon } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { useMobile } from "@/hooks/use-mobile";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Profile = () => {
   const isMobile = useMobile();
@@ -69,10 +68,12 @@ const Profile = () => {
       types: ["Full-time", "Contract"]
     }
   };
-
-  const renderUserProfile = () => {
-    return (
-      <>
+  
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      {!isMobile && <Navbar />}
+      
+      <main className={`flex-1 container max-w-6xl px-4 py-8 ${isMobile ? 'pt-2' : 'pt-20'}`}>
         <Card className="mb-6 overflow-hidden">
           <CardContent className="p-0">
             <div className="bg-gradient-to-r from-blue-500 to-purple-500 h-32"></div>
@@ -293,76 +294,6 @@ const Profile = () => {
             </Card>
           </div>
         </div>
-      </>
-    );
-  };
-  
-  return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {!isMobile && <Navbar />}
-      
-      <main className={`flex-1 container max-w-6xl px-4 py-8 ${isMobile ? 'pt-2' : 'pt-20'}`}>
-        <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="mb-4">
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="resume">Resume</TabsTrigger>
-            <TabsTrigger value="matches">Matches</TabsTrigger>
-            <TabsTrigger value="saved">Saved Jobs</TabsTrigger>
-            <TabsTrigger value="applications">Applications</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="profile">
-            {renderUserProfile()}
-          </TabsContent>
-          
-          <TabsContent value="resume">
-            <Card>
-              <CardHeader>
-                <CardTitle>Resume Management</CardTitle>
-                <CardDescription>Manage your resume versions and optimize for job applications</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p>Resume content will go here</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="matches">
-            <Card>
-              <CardHeader>
-                <CardTitle>Job Matches</CardTitle>
-                <CardDescription>Jobs that match your profile and preferences</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p>Job matches content will go here</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="saved">
-            <Card>
-              <CardHeader>
-                <CardTitle>Saved Jobs</CardTitle>
-                <CardDescription>Jobs you've saved for later</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p>Saved jobs content will go here</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="applications">
-            <Card>
-              <CardHeader>
-                <CardTitle>Job Applications</CardTitle>
-                <CardDescription>Track and manage your job applications</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p>Applications content will go here</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
       </main>
     </div>
   );
