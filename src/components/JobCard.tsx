@@ -84,6 +84,7 @@ export function JobCard({
               
               {job.matchPercentage !== undefined && (
                 <Badge variant="outline" className={`ml-2 px-2 py-0.5 text-xs font-bold ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)} flex items-center gap-1 mr-2`}>
+                  <Percent className="w-3 h-3" />
                   {job.matchPercentage}% Match
                 </Badge>
               )}
@@ -169,6 +170,7 @@ export function JobCard({
         
         {job.matchPercentage !== undefined && (
           <Badge variant="outline" className={`px-2.5 py-0.5 text-xs font-bold ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)} flex items-center gap-1 mr-1`}>
+            <Percent className="w-3 h-3" />
             {job.matchPercentage}% Match
           </Badge>
         )}

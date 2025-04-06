@@ -90,6 +90,7 @@ export function MobileJobCard({
             
             {job.matchPercentage !== undefined && (
               <Badge variant="outline" className={`match-badge ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)} flex items-center gap-1`}>
+                <Percent className="w-3 h-3" />
                 {job.matchPercentage}%
               </Badge>
             )}
