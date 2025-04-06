@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import BehavioralInterview from "@/components/interview/BehavioralInterview";
 import CodingInterview from "@/components/interview/CodingInterview";
+import CompanyProblems from "@/components/interview/CompanyProblems";
 import Navbar from "@/components/Navbar";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -382,9 +383,10 @@ const InterviewPractice = () => {
           </p>
           
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid grid-cols-2 w-full max-w-md mx-auto">
-              <TabsTrigger value="behavioral">Behavioral Interview</TabsTrigger>
-              <TabsTrigger value="coding">Coding Interview</TabsTrigger>
+            <TabsList className="grid grid-cols-3 w-full max-w-md mx-auto">
+              <TabsTrigger value="behavioral">Behavioral</TabsTrigger>
+              <TabsTrigger value="coding">Coding</TabsTrigger>
+              <TabsTrigger value="company">Company-Specific</TabsTrigger>
             </TabsList>
             
             <TabsContent value="behavioral" className="space-y-6">
@@ -567,6 +569,10 @@ const InterviewPractice = () => {
                   </Accordion>
                 </CardContent>
               </Card>
+            </TabsContent>
+            
+            <TabsContent value="company" className="space-y-6">
+              <CompanyProblems />
             </TabsContent>
           </Tabs>
         </div>
