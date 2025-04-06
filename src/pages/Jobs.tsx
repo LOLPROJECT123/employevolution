@@ -17,6 +17,14 @@ import {
   startAutomation 
 } from '@/utils/automationUtils';
 import JobSourcesDisplay from "@/components/JobSourcesDisplay";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const generateSampleJobs = (count: number): Job[] => {
   const jobTypes: Array<'full-time' | 'part-time' | 'contract' | 'internship' | 'temporary' | 'volunteer' | 'other'> = 
@@ -142,6 +150,8 @@ const generateSampleJobs = (count: number): Job[] => {
 
 const sampleJobs: Job[] = generateSampleJobs(100);
 
+type SortOption = 'relevance' | 'date-newest' | 'date-oldest' | 'salary-highest' | 'salary-lowest';
+
 const Jobs = () => {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [jobs, setJobs] = useState<Job[]>(sampleJobs);
@@ -149,6 +159,7 @@ const Jobs = () => {
   const [savedJobIds, setSavedJobIds] = useState<string[]>([]);
   const [appliedJobIds, setAppliedJobIds] = useState<string[]>([]);
   const [showAutomation, setShowAutomation] = useState(false);
+  const [sortOption, setSortOption] = useState<SortOption>('relevance');
   const isMobile = useIsMobile();
   const [viewMode, setViewMode] = useState<'list' | 'swipe'>(isMobile ? 'swipe' : 'list');
   const [showMyJobs, setShowMyJobs] = useState(false);
@@ -178,6 +189,10 @@ const Jobs = () => {
     }
   }, [filteredJobs, selectedJob]);
 
+  useEffect(() => {
+    sortJobs(sortOption);
+  }, [sortOption]);
+
   const savedJobs = jobs.filter(job => savedJobIds.includes(job.id));
   const appliedJobs = jobs.filter(job => appliedJobIds.includes(job.id));
 
@@ -189,13 +204,13 @@ const Jobs = () => {
     if (savedJobIds.includes(job.id)) {
       setSavedJobIds(savedJobIds.filter(id => id !== job.id));
       toast({
-        title: "Job removed from saved jobs",
+        title: "Job Removed From Saved Jobs",
         variant: "default",
       });
     } else {
       setSavedJobIds([...savedJobIds, job.id]);
       toast({
-        title: "Job saved successfully",
+        title: "Job Saved Successfully",
         variant: "default",
       });
     }
@@ -302,6 +317,71 @@ const Jobs = () => {
     setShowMyJobs(!showMyJobs);
   };
 
+  const sortJobs = (option: SortOption) => {
+    let sortedJobs = [...filteredJobs];
+    
+    switch (option) {
+      case 'relevance':
+        sortedJobs.sort((a, b) => {
+          const matchA = a.matchPercentage || 0;
+          const matchB = b.matchPercentage || 0;
+          return matchB - matchA;
+        });
+        break;
+        
+      case 'date-newest':
+        sortedJobs.sort((a, b) => {
+          return new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime();
+        });
+        break;
+        
+      case 'date-oldest':
+        sortedJobs.sort((a, b) => {
+          return new Date(a.postedAt).getTime() - new Date(b.postedAt).getTime();
+        });
+        break;
+        
+      case 'salary-highest':
+        sortedJobs.sort((a, b) => {
+          return b.salary.max - a.salary.max;
+        });
+        break;
+        
+      case 'salary-lowest':
+        sortedJobs.sort((a, b) => {
+          return a.salary.min - b.salary.min;
+        });
+        break;
+    }
+    
+    setFilteredJobs(sortedJobs);
+    
+    if (sortedJobs.length > 0) {
+      setSelectedJob(sortedJobs[0]);
+    }
+  };
+
+  const handleSortChange = (value: string) => {
+    setSortOption(value as SortOption);
+    
+    toast({
+      title: "Jobs Sorted",
+      description: `Jobs Are Now Sorted By ${getSortDescription(value as SortOption)}`,
+      variant: "default",
+    });
+  };
+  
+  const getSortDescription = (option: SortOption): string => {
+    switch (option) {
+      case 'relevance': return 'Relevance';
+      case 'date-newest': return 'Date (Newest First)';
+      case 'date-oldest': return 'Date (Oldest First)';
+      case 'salary-highest': return 'Salary (Highest First)';
+      case 'salary-lowest': return 'Salary (Lowest First)';
+      default: return 'Relevance';
+    }
+  };
+
   const applyFilters = (filters: JobFilters) => {
     setActiveFilters(filters);
     
@@ -405,11 +485,23 @@ const Jobs = () => {
             <div className="w-full">
               <JobSourcesDisplay />
             </div>
+
+            {/* My Jobs Section - Now Moved Above Filters */}
+            <div className="lg:hidden">
+              <SavedAndAppliedJobs
+                savedJobs={savedJobs}
+                appliedJobs={appliedJobs}
+                onApply={handleApplyJob}
+                onSave={handleSaveJob}
+                onSelect={handleJobSelect}
+                selectedJobId={selectedJob?.id || null}
+              />
+            </div>
             
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
               <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                 <h2 className="font-semibold text-lg">Filter Jobs</h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Narrow down your search</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Narrow Down Your Search</p>
               </div>
               <div className="p-4">
                 <JobFiltersSection onApplyFilters={applyFilters} />
@@ -417,172 +509,165 @@ const Jobs = () => {
             </div>
           </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
-            <div className="lg:col-span-3 space-y-6">
-              {isMobile && (
-                <div className="space-y-3 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-                  <button 
-                    onClick={toggleViewMode}
-                    className="w-full py-2.5 px-4 rounded-lg bg-primary text-white font-medium"
-                  >
-                    Switch to {viewMode === 'list' ? 'Swipe' : 'List'} View
-                  </button>
-                  
-                  <button 
-                    onClick={toggleMyJobs}
-                    className="w-full py-2.5 px-4 rounded-lg bg-secondary text-foreground font-medium border"
-                  >
-                    {showMyJobs ? 'Browse Jobs' : 'My Saved & Applied Jobs'}
-                  </button>
-                  
-                  <div className="mt-2">
-                    <AutomationSettings />
-                  </div>
-                </div>
-              )}
+          {isMobile && (
+            <div className="space-y-3 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6 mt-6">
+              <button 
+                onClick={toggleViewMode}
+                className="w-full py-2.5 px-4 rounded-lg bg-primary text-white font-medium"
+              >
+                Switch To {viewMode === 'list' ? 'Swipe' : 'List'} View
+              </button>
               
-              {isMobile && showMyJobs ? (
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                  <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                    <h2 className="font-semibold text-lg">My Jobs</h2>
-                  </div>
-                  <div className="p-4">
-                    <SavedAndAppliedJobs
-                      savedJobs={savedJobs}
-                      appliedJobs={appliedJobs}
+              <button 
+                onClick={toggleMyJobs}
+                className="w-full py-2.5 px-4 rounded-lg bg-secondary text-foreground font-medium border"
+              >
+                {showMyJobs ? 'Browse Jobs' : 'My Saved & Applied Jobs'}
+              </button>
+              
+              <div className="mt-2">
+                <AutomationSettings />
+              </div>
+            </div>
+          )}
+          
+          {isMobile && showMyJobs ? (
+            <SavedAndAppliedJobs
+              savedJobs={savedJobs}
+              appliedJobs={appliedJobs}
+              onApply={handleApplyJob}
+              onSave={handleSaveJob}
+              onSelect={handleJobSelect}
+              selectedJobId={selectedJob?.id || null}
+            />
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
+              {/* Sidebar with saved jobs on the left */}
+              <div className="lg:col-span-3 hidden lg:block">
+                <SavedAndAppliedJobs
+                  savedJobs={savedJobs}
+                  appliedJobs={appliedJobs}
+                  onApply={handleApplyJob}
+                  onSave={handleSaveJob}
+                  onSelect={handleJobSelect}
+                  selectedJobId={selectedJob?.id || null}
+                />
+              </div>
+              
+              {/* Main content area (Browse Jobs and Job Details) */}
+              <div className="lg:col-span-9">
+                {viewMode === 'swipe' && isMobile ? (
+                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden p-4">
+                    <SwipeJobsInterface 
+                      jobs={filteredJobs}
                       onApply={handleApplyJob}
-                      onSave={handleSaveJob}
-                      onSelect={handleJobSelect}
-                      selectedJobId={selectedJob?.id || null}
+                      onSkip={handleSkipJob}
                     />
                   </div>
-                </div>
-              ) : (
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                  {!isMobile && (
-                    <>
-                      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                        <h2 className="font-semibold text-lg">My Jobs</h2>
-                      </div>
-                      <div className="p-4">
-                        <SavedAndAppliedJobs
-                          savedJobs={savedJobs}
-                          appliedJobs={appliedJobs}
-                          onApply={handleApplyJob}
-                          onSave={handleSaveJob}
-                          onSelect={handleJobSelect}
-                          selectedJobId={selectedJob?.id || null}
-                        />
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-            
-            <div className="lg:col-span-9 space-y-6">
-              {(viewMode === 'list' || !isMobile) && (
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                  <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                ) : (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div>
-                      <h2 className="font-semibold text-lg">Browse Jobs</h2>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{filteredJobs.length} opportunities found</p>
+                      <Card className="overflow-hidden h-full max-h-[calc(100vh-250px)]">
+                        <CardHeader className="py-3 px-4 border-b flex flex-row justify-between items-center">
+                          <div>
+                            <CardTitle className="text-base font-medium">Browse Jobs</CardTitle>
+                            <p className="text-xs text-muted-foreground">Showing {filteredJobs.length} of {jobs.length} Jobs</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Select defaultValue={sortOption} onValueChange={handleSortChange}>
+                              <SelectTrigger className="w-[180px] bg-white dark:bg-gray-800 h-8 text-sm">
+                                <SelectValue placeholder="Sort By: Relevance" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="relevance">Sort By: Relevance</SelectItem>
+                                <SelectItem value="date-newest">Date: Newest First</SelectItem>
+                                <SelectItem value="date-oldest">Date: Oldest First</SelectItem>
+                                <SelectItem value="salary-highest">Salary: Highest First</SelectItem>
+                                <SelectItem value="salary-lowest">Salary: Lowest First</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </CardHeader>
+                        
+                        <CardContent className="p-0 divide-y overflow-y-auto max-h-[calc(100vh-300px)]">
+                          {filteredJobs.map(job => (
+                            <JobCard 
+                              key={job.id}
+                              job={job}
+                              onApply={handleApplyJob}
+                              isSelected={selectedJob?.id === job.id}
+                              isSaved={savedJobIds.includes(job.id)}
+                              isApplied={appliedJobIds.includes(job.id)}
+                              onClick={() => handleJobSelect(job)}
+                              onSave={() => handleSaveJob(job)}
+                              variant="list"
+                            />
+                          ))}
+                        </CardContent>
+                      </Card>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <select className="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-transparent">
-                        <option>Sort by: Relevance</option>
-                        <option>Date: Newest first</option>
-                        <option>Salary: Highest first</option>
-                      </select>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
-                    {filteredJobs.map(job => (
-                      <JobCard 
-                        key={job.id}
-                        job={job}
-                        onApply={handleApplyJob}
-                        isSelected={selectedJob?.id === job.id}
-                        isSaved={savedJobIds.includes(job.id)}
-                        isApplied={appliedJobIds.includes(job.id)}
-                        onClick={() => handleJobSelect(job)}
-                        onSave={() => handleSaveJob(job)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-            
-              {viewMode === 'swipe' && isMobile ? (
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden p-4">
-                  <SwipeJobsInterface 
-                    jobs={filteredJobs}
-                    onApply={handleApplyJob}
-                    onSkip={handleSkipJob}
-                  />
-                </div>
-              ) : (
-                <div className="sticky top-24 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                  <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                    <h2 className="font-semibold text-lg">Job Details</h2>
-                  </div>
-                  <div className="p-0">
-                    <JobDetailView 
-                      job={selectedJob} 
-                      onApply={handleApplyJob}
-                      onSave={handleSaveJob}
-                    />
-                  </div>
-                </div>
-              )}
-              
-              {showAutomation && selectedJob && (
-                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl shadow-sm border border-blue-200 dark:border-blue-800 overflow-hidden">
-                  <div className="flex justify-between items-center p-4 border-b border-blue-200 dark:border-blue-800">
-                    <h3 className="font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-2">
-                      <Zap className="h-4 w-4" />
-                      Automated Application
-                    </h3>
-                    <Button 
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowAutomation(false)}
-                    >
-                      Close
-                    </Button>
-                  </div>
-                  
-                  <div className="p-4">
-                    <p className="text-sm mb-3 text-blue-600 dark:text-blue-400">
-                      Use automation to apply to this job at {selectedJob.company} automatically.
-                    </p>
                     
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        onClick={() => handleAutomatedApply(selectedJob)}
-                        className="bg-blue-600 hover:bg-blue-700"
+                    <div>
+                      <Card className="h-full max-h-[calc(100vh-250px)] overflow-hidden">
+                        <CardContent className="p-0">
+                          <JobDetailView 
+                            job={selectedJob} 
+                            onApply={handleApplyJob}
+                            onSave={handleSaveJob}
+                          />
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+                )}
+                
+                {showAutomation && selectedJob && (
+                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl shadow-sm border border-blue-200 dark:border-blue-800 overflow-hidden mt-6">
+                    <div className="flex justify-between items-center p-4 border-b border-blue-200 dark:border-blue-800">
+                      <h3 className="font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                        <Zap className="h-4 w-4" />
+                        Automated Application
+                      </h3>
+                      <Button 
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowAutomation(false)}
                       >
-                        <Zap className="h-4 w-4 mr-2" />
-                        Run Automation Script
+                        Close
                       </Button>
+                    </div>
+                    
+                    <div className="p-4">
+                      <p className="text-sm mb-3 text-blue-600 dark:text-blue-400">
+                        Use Automation To Apply To This Job At {selectedJob.company} Automatically.
+                      </p>
                       
-                      <Button
-                        variant="outline"
-                        onClick={() => window.open(selectedJob.applyUrl, '_blank')}
-                      >
-                        Apply Manually
-                      </Button>
-                      
-                      <div className="ml-auto">
-                        <AutomationSettings />
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          onClick={() => handleAutomatedApply(selectedJob)}
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          <Zap className="h-4 w-4 mr-2" />
+                          Run Automation Script
+                        </Button>
+                        
+                        <Button
+                          variant="outline"
+                          onClick={() => window.open(selectedJob.applyUrl, '_blank')}
+                        >
+                          Apply Manually
+                        </Button>
+                        
+                        <div className="ml-auto">
+                          <AutomationSettings />
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </main>
     </div>
