@@ -38,9 +38,9 @@ const jobSources: JobSource[] = [
   { id: 'levelsFyi', name: 'Levels.fyi', isActive: true, category: 'job-board' },
   { id: 'offerPilot', name: 'OfferPilot.ai', isActive: true, category: 'job-board' },
   { id: 'jobRight', name: 'JobRight.ai', isActive: true, category: 'job-board' },
-  { id: 'wellfound', name: 'Wellfound', isActive: false, category: 'job-board' },
-  { id: 'remoteco', name: 'Remote.co', isActive: false, category: 'job-board' },
-  { id: 'weworkremotely', name: 'We Work Remotely', isActive: false, category: 'job-board' },
+  { id: 'wellfound', name: 'Wellfound', isActive: true, category: 'job-board' },
+  { id: 'remoteco', name: 'Remote.co', isActive: true, category: 'job-board' },
+  { id: 'weworkremotely', name: 'We Work Remotely', isActive: true, category: 'job-board' },
   { id: 'monster', name: 'Monster', isActive: false, category: 'job-board' },
   { id: 'glassdoor', name: 'Glassdoor', isActive: false, category: 'job-board' },
   { id: 'dice', name: 'Dice', isActive: false, category: 'job-board' },
@@ -90,17 +90,29 @@ export const JobScraperConfig = ({ onConfigUpdate }: JobScraperConfigProps) => {
   };
 
   const handleSave = () => {
-    // Ensure all sources are active before saving
-    const allActiveSourcesModified = sources.map(source => ({
-      ...source,
-      isActive: true
-    }));
+    // Ensure more than 4 sources are active before saving
+    const activeSourcesCount = sources.filter(source => source.isActive).length;
     
-    setSources(allActiveSourcesModified);
-    onConfigUpdate(allActiveSourcesModified);
+    // If less than 6 sources are active, activate more to ensure at least 6
+    let updatedSources = [...sources];
+    if (activeSourcesCount < 6) {
+      const inactiveSources = sources.filter(source => !source.isActive);
+      const additionalSourcesToActivate = inactiveSources.slice(0, 6 - activeSourcesCount);
+      
+      updatedSources = sources.map(source => {
+        if (additionalSourcesToActivate.some(s => s.id === source.id)) {
+          return { ...source, isActive: true };
+        }
+        return source;
+      });
+      
+      setSources(updatedSources);
+    }
+    
+    onConfigUpdate(updatedSources);
     
     toast.success("Job search configuration updated", {
-      description: "All available job sources are now enabled for your search"
+      description: `Searching across ${Math.max(activeSourcesCount, 6)} job platforms`
     });
     setOpen(false);
   };
@@ -165,7 +177,7 @@ export const JobScraperConfig = ({ onConfigUpdate }: JobScraperConfigProps) => {
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="flex items-center">
           <Settings2Icon className="w-4 h-4 mr-2" />
-          Advanced Settings
+          Settings
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-xl">
