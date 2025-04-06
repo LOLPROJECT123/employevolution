@@ -1,8 +1,9 @@
 
 import { Job } from "@/types/job";
-import { BookmarkIcon, MapPin, DollarSign } from "lucide-react";
+import { BookmarkIcon, MapPin, DollarSign, BadgePercent } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 
 interface MobileJobCardProps {
   job: Job;
@@ -55,8 +56,8 @@ export function MobileJobCard({
   };
   
   const formattedSalary = job.level === 'intern' 
-    ? `$ $ ${job.salary.min.toLocaleString()} /hr` 
-    : `$ $ ${job.salary.min.toLocaleString()}`;
+    ? `$${job.salary.min.toLocaleString()}/hr` 
+    : `$${job.salary.min.toLocaleString()} - $${job.salary.max.toLocaleString()}`;
 
   // Get match color based on percentage
   const getMatchColor = (percentage?: number) => {
@@ -75,7 +76,7 @@ export function MobileJobCard({
   
   return (
     <div 
-      className="py-3 px-3 border-b border-gray-100 dark:border-gray-800 active:bg-gray-50 dark:active:bg-gray-800/60"
+      className="py-3 px-4 border-b border-gray-100 dark:border-gray-800 active:bg-gray-50 dark:active:bg-gray-800/60"
       onClick={onClick}
     >
       <div className="flex items-start gap-3 min-w-0">
@@ -86,13 +87,7 @@ export function MobileJobCard({
         
         <div className="flex-1 min-w-0 overflow-hidden">
           <div className="flex items-start justify-between gap-2 mb-1">
-            <h3 className="text-base font-bold leading-tight truncate max-w-[70%]">{job.title}</h3>
-            
-            {job.matchPercentage !== undefined && (
-              <Badge variant="outline" className={`match-badge ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)}`}>
-                {job.matchPercentage}%
-              </Badge>
-            )}
+            <h3 className="text-base font-bold leading-tight truncate max-w-[90%]">{job.title}</h3>
           </div>
           
           <div className="flex flex-col gap-0.5">
@@ -108,25 +103,29 @@ export function MobileJobCard({
               <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
               <span className="truncate">{job.location}</span>
             </div>
+            
+            {/* Match percentage with Progress bar */}
+            {job.matchPercentage !== undefined && (
+              <div className="mt-1 mb-1 space-y-1">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground flex items-center gap-1">
+                    <BadgePercent className="h-3 w-3" /> Match
+                  </span>
+                  <span className={`font-medium ${getMatchColor(job.matchPercentage)}`}>
+                    {job.matchPercentage}<span>%</span>
+                  </span>
+                </div>
+                <Progress value={job.matchPercentage} className="h-1.5" />
+              </div>
+            )}
           </div>
         </div>
-        
-        <button 
-          className="flex-shrink-0 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-          onClick={(e) => {
-            e.stopPropagation();
-            onSave?.();
-          }}
-          aria-label={isSaved ? "Unsave job" : "Save job"}
-        >
-          <BookmarkIcon className={`h-5 w-5 ${isSaved ? "fill-primary text-primary" : "text-gray-400"}`} />
-        </button>
       </div>
       
-      {/* Apply Now button */}
-      <div className="mt-3 flex justify-between items-center">
+      {/* Apply Now button and Save button */}
+      <div className="mt-3 flex justify-between items-center gap-2">
         <Button 
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded text-sm flex items-center justify-center gap-1"
+          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded text-sm flex items-center justify-center gap-1"
           onClick={(e) => {
             e.stopPropagation();
             onApply?.(job);
@@ -137,6 +136,17 @@ export function MobileJobCard({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </Button>
+        
+        <button 
+          className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSave?.();
+          }}
+          aria-label={isSaved ? "Unsave job" : "Save job"}
+        >
+          <BookmarkIcon className={`h-5 w-5 ${isSaved ? "fill-primary text-primary" : "text-gray-400"}`} />
+        </button>
       </div>
     </div>
   );

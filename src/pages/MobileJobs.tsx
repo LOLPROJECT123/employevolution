@@ -8,6 +8,7 @@ import { toast } from "@/hooks/use-toast";
 import { MobileJobFilters } from "@/components/MobileJobFilters";
 import { SavedAndAppliedJobs } from "@/components/SavedAndAppliedJobs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { MobileHeader, MobileSidebar } from "@/components/MobileHeader";
 import { 
   Drawer,
   DrawerContent,
@@ -17,9 +18,8 @@ import {
   Search,
   X,
   BookmarkIcon,
-  Menu
 } from "lucide-react";
-import Navbar from "@/components/Navbar";
+import { Link } from "react-router-dom";
 
 export default function MobileJobs() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -316,71 +316,8 @@ export default function MobileJobs() {
 
   return (
     <div className="h-screen flex flex-col bg-white dark:bg-gray-900 overflow-hidden">
-      <div className="mobile-header">
-        <div className="flex items-center gap-2">
-          <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline" className="h-6 w-6" />
-          <span className="font-bold text-base">Streamline</span>
-        </div>
-        
-        <Button 
-          variant="ghost" 
-          size="icon"
-          onClick={toggleMobileMenu}
-          className="static"
-          aria-label="Menu"
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
-      </div>
-      
-      <div className="hidden md:block">
-        <Navbar />
-      </div>
-      
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 bg-black/50 z-[100]" onClick={toggleMobileMenu}>
-          <div 
-            className="bg-white dark:bg-slate-950 h-full w-[85%] max-w-[300px] p-4 shadow-lg animate-slide-in-left"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="space-y-4">
-              <div className="flex items-center justify-between pb-4 border-b">
-                <div className="flex items-center gap-2">
-                  <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline" className="h-8 w-8" />
-                  <span className="font-bold text-lg">Streamline</span>
-                </div>
-                <Button variant="ghost" size="icon" onClick={toggleMobileMenu}>
-                  <X className="h-5 w-5" />
-                </Button>
-              </div>
-              
-              <div className="space-y-1 pt-2">
-                <a href="/dashboard" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
-                  Dashboard
-                </a>
-                <a href="/jobs" className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/30 rounded text-primary font-medium text-sm">
-                  Jobs
-                </a>
-                <a href="/resume-tools" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
-                  Resume &amp; CV Tools
-                </a>
-                <a href="/interview-practice" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
-                  Interview Practice
-                </a>
-                <a href="/referrals" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
-                  Referrals
-                </a>
-                <a href="/salary-negotiations" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
-                  Salary Negotiations
-                </a>
-                <a href="/networking" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
-                  Networking &amp; Outreach
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <MobileHeader onMenuToggle={toggleMobileMenu} />
+      <MobileSidebar isOpen={mobileMenuOpen} onClose={toggleMobileMenu} />
       
       {!showDetailView ? (
         <div className="relative flex-1 overflow-hidden">

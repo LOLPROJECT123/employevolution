@@ -4,16 +4,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import RecruiterFinder from "@/components/RecruiterFinder";
 import ResearchOpportunityFinder from "@/components/ResearchOpportunityFinder";
 import { Card, CardContent } from "@/components/ui/card";
-import { Settings, RefreshCw, Menu, X } from "lucide-react";
+import { MobileHeader, MobileSidebar } from "@/components/MobileHeader";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import Navbar from "@/components/Navbar";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerTrigger,
-  DrawerClose,
-} from "@/components/ui/drawer";
 
 const NetworkingTools = () => {
   const [activeTab, setActiveTab] = useState("recruiters");
@@ -31,39 +25,28 @@ const NetworkingTools = () => {
       
       {/* Mobile top bar */}
       {isMobile && (
-        <div className="mobile-header">
-          <div className="flex items-center gap-2">
-            <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline" className="h-6 w-6" />
-            <span className="font-bold text-base">Streamline</span>
-          </div>
-          
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={toggleMobileMenu}
-            className="static"
-            aria-label="Menu"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-        </div>
+        <MobileHeader onMenuToggle={toggleMobileMenu} />
       )}
       
-      {/* Header section styled like the Jobs page */}
+      {/* Header section styled like the Jobs page - with improved mobile layout */}
       <div className="bg-blue-600 dark:bg-blue-900 py-4 px-4 md:px-6">
         <div className="container mx-auto max-w-screen-xl">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
             <h1 className="text-xl md:text-3xl font-bold text-white">
-              Networking <br className="md:hidden" />&amp; Outreach Tools
+              Find Your Next <br className="md:hidden" />Opportunity
             </h1>
+          </div>
+          
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mt-2">
+            <div className="text-white text-lg font-medium">
+              Networking & Outreach Tools
+            </div>
             
-            <div className="flex items-center gap-2 mt-2 md:mt-0">
+            <div className="flex gap-2 w-full md:w-auto mt-2 md:mt-0">
               <Button variant="outline" size="sm" className="bg-white/10 text-white border-white/20 hover:bg-white/20">
-                <Settings className="h-4 w-4 mr-2" />
                 Settings
               </Button>
-              <Button variant="default" size="sm" className="bg-blue-500 hover:bg-blue-600 text-white">
-                <RefreshCw className="h-4 w-4 mr-2" />
+              <Button variant="outline" size="sm" className="bg-blue-500 text-white border-blue-400 hover:bg-blue-600 flex-1 md:flex-none">
                 Refresh Now
               </Button>
             </div>
@@ -74,48 +57,7 @@ const NetworkingTools = () => {
       <div className="container mx-auto px-4 max-w-screen-xl space-y-4">
         {/* Mobile menu overlay */}
         {isMobile && mobileMenuOpen && (
-          <div className="fixed inset-0 bg-black/50 z-[100]" onClick={toggleMobileMenu}>
-            <div 
-              className="bg-white dark:bg-slate-950 h-full w-[85%] max-w-[300px] p-4 shadow-lg animate-slide-in-left"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="space-y-4">
-                <div className="flex items-center justify-between pb-4 border-b">
-                  <div className="flex items-center gap-2">
-                    <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline" className="h-8 w-8" />
-                    <span className="font-bold text-lg">Streamline</span>
-                  </div>
-                  <Button variant="ghost" size="icon" onClick={toggleMobileMenu}>
-                    <X className="h-5 w-5" />
-                  </Button>
-                </div>
-                
-                <div className="space-y-1 pt-2">
-                  <a href="/dashboard" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
-                    Dashboard
-                  </a>
-                  <a href="/jobs" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
-                    Jobs
-                  </a>
-                  <a href="/resume-tools" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
-                    Resume &amp; CV Tools
-                  </a>
-                  <a href="/interview-practice" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
-                    Interview Practice
-                  </a>
-                  <a href="/referrals" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
-                    Referrals
-                  </a>
-                  <a href="/salary-negotiations" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
-                    Salary Negotiations
-                  </a>
-                  <a href="/networking" className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/30 rounded text-primary font-medium text-sm">
-                    Networking &amp; Outreach
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
+          <MobileSidebar isOpen={mobileMenuOpen} onClose={toggleMobileMenu} />
         )}
 
         {/* Main card with tabs */}

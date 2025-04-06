@@ -1,3 +1,4 @@
+
 import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
 import { 
@@ -7,6 +8,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   MapPin, 
   Building2, 
@@ -258,7 +260,6 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
           {job.matchPercentage && (
             <div className="mr-4">
               <Badge variant="outline" className={`px-3 py-1.5 rounded-full ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)} text-sm font-bold shadow-sm flex items-center gap-1.5`}>
-                <Percent className="w-4 h-4" />
                 {job.matchPercentage}% Match
               </Badge>
             </div>
@@ -322,11 +323,12 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
       
       <div className="flex-1 overflow-hidden flex flex-col">
         <Tabs 
+          defaultValue="summary" 
           value={activeTab} 
           onValueChange={setActiveTab} 
           className="w-full flex-1 flex flex-col overflow-hidden"
         >
-          <div className="border-b">
+          <div className="border-b sticky top-0 bg-white dark:bg-gray-900 z-10">
             <TabsList className="w-full h-auto p-0 bg-transparent space-x-0">
               <TabsTrigger 
                 value="summary" 
@@ -349,8 +351,8 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
             </TabsList>
           </div>
           
-          <div className="flex-1 overflow-y-auto">
-            <TabsContent value="summary" className="mt-0 p-4 space-y-6 h-full data-[state=active]:flex-1 data-[state=active]:flex data-[state=active]:flex-col">
+          <ScrollArea className="flex-1 overflow-y-auto h-full">
+            <TabsContent value="summary" className="mt-0 p-4 space-y-6 pb-20">
               {job.matchPercentage && (
                 <div className={`p-4 rounded-lg ${getMatchBgColor(job.matchPercentage)} mb-4`}>
                   <div className="flex items-center gap-2">
@@ -428,7 +430,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
               </div>
             </TabsContent>
             
-            <TabsContent value="company" className="mt-0 p-4 space-y-6 h-full data-[state=active]:flex-1 data-[state=active]:flex data-[state=active]:flex-col">
+            <TabsContent value="company" className="mt-0 p-4 space-y-6 pb-20">
               <div className="bg-gray-50 dark:bg-gray-900/50 p-5 rounded-lg">
                 <h3 className="text-lg font-semibold mb-4">About {job.company}</h3>
                 
@@ -511,7 +513,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
               </div>
             </TabsContent>
             
-            <TabsContent value="full-posting" className="mt-0 p-4 space-y-6 h-full data-[state=active]:block data-[state=active]:pb-8">
+            <TabsContent value="full-posting" className="mt-0 p-4 space-y-6 pb-20">
               <div>
                 <h3 className="text-lg font-semibold mb-4">Job Description</h3>
                 <p className="text-muted-foreground whitespace-pre-line leading-relaxed">
@@ -591,11 +593,11 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
                 </div>
               )}
             </TabsContent>
-          </div>
+          </ScrollArea>
         </Tabs>
       </div>
       
-      <div className="border-t p-4">
+      <div className="border-t p-4 sticky bottom-0 bg-white dark:bg-gray-900">
         <div className="flex gap-3">
           <Button
             variant={isSaved ? "default" : "outline"}
