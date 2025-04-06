@@ -142,31 +142,32 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="p-4 border-b">
-        <div className="flex justify-between items-start">
+      <div className="p-4 border-b relative">
+        {job.matchPercentage && (
+          <div className="absolute top-4 right-4">
+            <Badge variant="outline" className={`px-3 py-1.5 rounded-full ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)} text-sm font-bold shadow-sm`}>
+              {job.matchPercentage}% Match
+            </Badge>
+          </div>
+        )}
+
+        <div className="flex justify-between items-start pr-24">
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h2 className="text-xl font-bold">{job.title}</h2>
-              {job.matchPercentage && (
-                <div className={`px-3 py-1 rounded-full ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)} text-sm font-semibold`}>
-                  {job.matchPercentage}% Match
-                </div>
-              )}
-              {job.remote && (
-                <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
-                  Remote
-                </Badge>
-              )}
+            <h2 className="text-2xl font-bold">{job.title}</h2>
+            
+            <div className="space-y-2 mt-3">
+              <p className="text-muted-foreground flex items-center gap-2">
+                <Building2 className="w-4 h-4" /> {job.company}
+              </p>
+              
+              <p className="text-muted-foreground flex items-center gap-2">
+                <MapPin className="w-4 h-4" /> {job.location}
+              </p>
+              
+              <p className="text-muted-foreground flex items-center gap-2">
+                <Clock className="w-4 h-4" /> Posted {new Date(job.postedAt).toLocaleDateString()}
+              </p>
             </div>
-            <p className="text-muted-foreground flex items-center gap-2">
-              <Building2 className="w-4 h-4" /> {job.company}
-            </p>
-            <p className="text-muted-foreground flex items-center gap-2 mt-1">
-              <MapPin className="w-4 h-4" /> {job.location}
-            </p>
-            <p className="text-muted-foreground flex items-center gap-2 mt-1">
-              <Clock className="w-4 h-4" /> Posted {new Date(job.postedAt).toLocaleDateString()}
-            </p>
           </div>
           <div className="flex gap-2">
             <Button
@@ -191,10 +192,26 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
         </div>
         
         <div className="flex flex-wrap gap-2 mt-3">
+          {job.remote && (
+            <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+              Remote
+            </Badge>
+          )}
           <Badge variant="secondary" className="capitalize">{job.type}</Badge>
           <Badge variant="secondary" className="capitalize">{job.level}</Badge>
           <Badge variant="outline">{formattedSalary}</Badge>
         </div>
+      </div>
+      
+      <div className="p-4 border-b bg-gray-50 dark:bg-gray-800/50">
+        <Button
+          className="w-full py-6 text-base font-medium shadow-sm rounded-lg"
+          size="lg"
+          onClick={handleApplyClick}
+          disabled={isApplying}
+        >
+          {isApplying ? "Applying..." : "Apply Now"}
+        </Button>
       </div>
       
       <div className="flex-1 overflow-y-auto p-4">
@@ -404,20 +421,22 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
       <div className="border-t p-4">
         <div className="flex gap-3">
           <Button
-            className="flex-1"
-            onClick={handleApplyClick}
-            disabled={isApplying}
-          >
-            {isApplying ? "Applying..." : "Apply Now"}
-          </Button>
-          
-          <Button
             variant="outline"
             className="flex-1"
             onClick={() => onSave(job)}
           >
             Save Job
           </Button>
+          
+          {job.applyUrl && (
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => window.open(job.applyUrl, '_blank')}
+            >
+              Visit Job Page
+            </Button>
+          )}
         </div>
         
         {canAutomate && automationEnabled && (

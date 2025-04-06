@@ -3,10 +3,11 @@ import { useState, useEffect } from 'react';
 import { Job } from "@/types/job";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { X, Check, Building2, MapPin, Briefcase, DollarSign, Clock } from "lucide-react";
+import { X, Check, Building2, MapPin, Briefcase, DollarSign, Clock, Zap } from "lucide-react";
 import { motion, PanInfo } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { formatRelativeTime } from "@/utils/dateUtils";
+import { Badge } from "@/components/ui/badge";
 
 interface SwipeJobsInterfaceProps {
   jobs: Job[];
@@ -102,20 +103,29 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
   const formattedSalary = `${currentJob.salary.currency}${currentJob.salary.min.toLocaleString()} - ${currentJob.salary.currency}${currentJob.salary.max.toLocaleString()}`;
   const timeAgo = formatRelativeTime(currentJob.postedAt);
 
+  // Get match color based on percentage
+  const getMatchColor = (percentage?: number) => {
+    if (!percentage) return "";
+    if (percentage >= 70) return "text-green-500";
+    if (percentage >= 50) return "text-amber-500";
+    return "text-red-500";
+  };
+
+  const getMatchBgColor = (percentage?: number) => {
+    if (!percentage) return "bg-gray-100 dark:bg-gray-800";
+    if (percentage >= 70) return "bg-green-50 dark:bg-green-900/30";
+    if (percentage >= 50) return "bg-amber-50 dark:bg-amber-900/30";
+    return "bg-red-50 dark:bg-red-900/30";
+  };
+
   // Swipe direction animation values
   const xPosition = direction === "left" ? -1000 : direction === "right" ? 1000 : 0;
 
   return (
-    <div className="w-full max-w-md mx-auto pb-8">
-      {/* Job Count Display Section - Added above the swipe instructions */}
-      <div className="mb-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-        <h3 className="text-lg font-semibold">Found {jobs.length} Matching Jobs</h3>
-        <p className="text-sm text-muted-foreground">Displaying Jobs That Match Your Search Criteria.</p>
-      </div>
-      
-      <h3 className="text-xl font-semibold mb-4 text-center">
+    <div className="w-full max-w-md mx-auto">
+      <p className="text-lg font-medium mb-3 text-center">
         Swipe Right To Apply, Left To Skip
-      </h3>
+      </p>
       
       <motion.div
         className="relative"
@@ -125,77 +135,106 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
         animate={{ x: xPosition }}
         transition={{ duration: 0.3 }}
       >
-        <Card className="border-2 h-[calc(100vh-250px)] flex flex-col">
-          <CardContent className="flex-1 p-6">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold mb-1">{currentJob.title}</h2>
-              <div className="flex items-center text-muted-foreground">
-                <Building2 className="w-4 h-4 mr-2" />
-                <span>{currentJob.company}</span>
-              </div>
-              <div className="flex items-center text-muted-foreground mt-1">
-                <MapPin className="w-4 h-4 mr-2" />
-                <span>{currentJob.location}</span>
-              </div>
-              <div className="flex items-center text-muted-foreground mt-1">
-                <Briefcase className="w-4 h-4 mr-2" />
-                <span className="capitalize">{currentJob.level} • {currentJob.type}</span>
-              </div>
-              <div className="flex items-center text-muted-foreground mt-1">
-                <DollarSign className="w-4 h-4 mr-2" />
-                <span>{formattedSalary}</span>
-              </div>
-              <div className="flex items-center text-muted-foreground mt-1">
-                <Clock className="w-4 h-4 mr-2" />
-                <span>Posted {timeAgo}</span>
+        <Card className="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl overflow-hidden">
+          <CardContent className="p-4">
+            <div className="mb-4">
+              <h2 className="text-2xl font-bold">{currentJob.title}</h2>
+              
+              {/* Match Percentage Badge - Moved below the job title */}
+              {currentJob.matchPercentage !== undefined && (
+                <Badge variant="outline" className={`mt-1 px-3 py-1 rounded-full ${getMatchBgColor(currentJob.matchPercentage)} ${getMatchColor(currentJob.matchPercentage)} text-sm font-medium`}>
+                  {currentJob.matchPercentage}% Match
+                </Badge>
+              )}
+              
+              <div className="space-y-2 mt-3">
+                <div className="flex items-center text-gray-600 dark:text-gray-400">
+                  <Building2 className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span className="text-sm">{currentJob.company}</span>
+                </div>
+                
+                <div className="flex items-center text-gray-600 dark:text-gray-400">
+                  <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span className="text-sm">{currentJob.location}</span>
+                </div>
+                
+                <div className="flex items-center text-gray-600 dark:text-gray-400">
+                  <Briefcase className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span className="text-sm capitalize">{currentJob.level} • {currentJob.type}</span>
+                </div>
+                
+                <div className="flex items-center text-gray-600 dark:text-gray-400">
+                  <DollarSign className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span className="text-sm">{formattedSalary}</span>
+                </div>
+                
+                <div className="flex items-center text-gray-600 dark:text-gray-400">
+                  <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span className="text-sm">Posted {timeAgo}</span>
+                </div>
               </div>
             </div>
             
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">About This Role</h3>
-              <p className="text-muted-foreground">
-                {currentJob.description.substring(0, 200)}...
-              </p>
+            <div className="space-y-4 mb-4">
+              <div>
+                <h3 className="text-lg font-medium mb-2">About This Role</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {currentJob.description}
+                </p>
+              </div>
               
               <div>
                 <h3 className="text-lg font-medium mb-2">Skills</h3>
                 <div className="flex flex-wrap gap-2">
                   {currentJob.skills.slice(0, 5).map((skill, index) => (
-                    <div key={index} className="px-3 py-1 rounded-full bg-secondary/70 text-sm capitalize">
+                    <span 
+                      key={index} 
+                      className="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-sm capitalize"
+                    >
                       {skill}
-                    </div>
+                    </span>
                   ))}
                 </div>
               </div>
             </div>
+            
+            {/* Apply button */}
+            <Button 
+              className="w-full py-6 text-base font-medium shadow-md rounded-lg bg-blue-600 hover:bg-blue-700"
+              size="lg"
+              onClick={handleApply}
+            >
+              <Zap className="w-5 h-5 mr-2" />
+              Apply Now
+            </Button>
           </CardContent>
           
-          <CardFooter className="border-t pt-4 pb-4">
-            <div className="flex justify-between w-full">
+          <CardFooter className="border-t pt-3 pb-3 flex justify-center">
+            <div className="flex justify-between w-full max-w-[200px]">
               <Button 
                 variant="outline" 
                 size="lg" 
-                className="rounded-full h-16 w-16 bg-red-100 hover:bg-red-200 border-none"
+                className="rounded-full h-12 w-12 bg-red-50 hover:bg-red-100 border border-red-100 shadow-sm"
                 onClick={() => handleSwipe("left")}
               >
-                <X className="h-8 w-8 text-red-500" />
+                <X className="h-6 w-6 text-red-500" />
               </Button>
               
               <Button 
                 variant="outline" 
                 size="lg" 
-                className="rounded-full h-16 w-16 bg-green-100 hover:bg-green-200 border-none"
+                className="rounded-full h-12 w-12 bg-green-50 hover:bg-green-100 border border-green-100 shadow-sm"
                 onClick={() => handleSwipe("right")}
               >
-                <Check className="h-8 w-8 text-green-500" />
+                <Check className="h-6 w-6 text-green-500" />
               </Button>
             </div>
           </CardFooter>
         </Card>
       </motion.div>
       
-      <div className="text-center mt-4 text-muted-foreground">
-        Job {currentIndex + 1} Of {jobs.length}
+      <div className="text-center mt-4 text-sm text-gray-500">
+        Job {currentIndex + 1} of {jobs.length}
       </div>
     </div>
   );

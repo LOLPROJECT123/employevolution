@@ -1,35 +1,32 @@
-
 import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { MapPin, Building2, Clock, CheckCircle, Bookmark } from "lucide-react";
+import { BookmarkIcon, Building2, MapPin, Clock, CheckCircle, ArrowRight, Zap } from "lucide-react";
 import { formatRelativeTime } from "@/utils/dateUtils";
+import { Badge } from "./ui/badge";
 
 interface JobCardProps {
   job: Job;
-  onApply: (job: Job) => void;
   isSelected?: boolean;
   isSaved?: boolean;
   isApplied?: boolean;
+  onApply?: (job: Job) => void;
   onClick?: () => void;
   onSave?: () => void;
-  variant?: 'card' | 'list';
+  variant?: 'list' | 'grid';
 }
 
-export function JobCard({ 
-  job, 
-  onApply, 
-  isSelected, 
-  isSaved, 
-  isApplied, 
-  onClick, 
+export function JobCard({
+  job,
+  isSelected = false,
+  isSaved = false,
+  isApplied = false,
+  onApply,
+  onClick,
   onSave,
-  variant = 'card'
+  variant = 'list'
 }: JobCardProps) {
-  const formattedSalary = `${job.salary.currency}${job.salary.min.toLocaleString()} - ${job.salary.currency}${job.salary.max.toLocaleString()}`;
   const timeAgo = formatRelativeTime(job.postedAt);
-
+  
   const getMatchColor = (percentage?: number) => {
     if (!percentage) return "";
     if (percentage >= 70) return "text-green-500";
@@ -37,190 +34,191 @@ export function JobCard({
     return "text-red-500";
   };
 
-  const getMatchLabel = (percentage?: number) => {
-    if (!percentage) return "";
-    if (percentage >= 70) return "Good Match";
-    if (percentage >= 50) return "Fair Match";
-    return "Weak Match";
+  const getMatchBgColor = (percentage?: number) => {
+    if (!percentage) return "bg-gray-100 dark:bg-gray-800";
+    if (percentage >= 70) return "bg-green-50 dark:bg-green-900/30";
+    if (percentage >= 50) return "bg-amber-50 dark:bg-amber-900/30";
+    return "bg-red-50 dark:bg-red-900/30";
   };
-
-  const getMatchBorderColor = (percentage?: number) => {
-    if (!percentage) return "border-gray-200";
-    if (percentage >= 70) return "border-green-500";
-    if (percentage >= 50) return "border-amber-500";
-    return "border-red-500";
+  
+  const formattedSalary = `${job.salary.currency}${job.salary.min.toLocaleString()} - ${job.salary.max.toLocaleString()}`;
+  
+  const getCompanyInitial = () => {
+    return job.company.charAt(0).toUpperCase();
   };
-
-  const handleApplyClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onApply(job);
+  
+  const getCompanyColor = () => {
+    const colors = [
+      'bg-blue-100 text-blue-600',
+      'bg-green-100 text-green-600',
+      'bg-purple-100 text-purple-600',
+      'bg-yellow-100 text-yellow-600',
+      'bg-red-100 text-red-600',
+      'bg-indigo-100 text-indigo-600',
+      'bg-pink-100 text-pink-600',
+      'bg-orange-100 text-orange-600',
+    ];
+    
+    const charSum = job.company
+      .split('')
+      .reduce((sum, char) => sum + char.charCodeAt(0), 0);
+    
+    return colors[charSum % colors.length];
   };
-
-  const handleCardClick = () => {
-    if (onClick) {
-      onClick();
-    }
-  };
-
+  
   if (variant === 'list') {
     return (
-      <div 
-        className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors ${isSelected ? 'bg-gray-50 dark:bg-gray-800/50 border-l-4 border-l-primary' : ''}`}
-        onClick={handleCardClick}
+      <div
+        onClick={onClick}
+        className={`px-4 py-3 cursor-pointer transition-colors relative ${isSelected ? 'bg-primary/5 dark:bg-primary/10' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'}`}
       >
-        <div className="flex items-start justify-between">
-          <div className="flex gap-3">
-            {job.company.charAt(0) && (
-              <div className="w-12 h-12 rounded bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
-                {job.company.charAt(0).toUpperCase()}
-              </div>
+        <div className="flex items-center space-x-3">
+          <div className={`w-10 h-10 flex-shrink-0 rounded-md flex items-center justify-center ${getCompanyColor()}`}>
+            {getCompanyInitial()}
+          </div>
+          
+          <div className="flex-1 min-w-0">
+            <h3 className="text-sm font-medium truncate">{job.title}</h3>
+            
+            {job.matchPercentage && (
+              <Badge variant="outline" className={`mt-1 px-2 py-0.5 text-xs font-bold ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)}`}>
+                {job.matchPercentage}% Match
+              </Badge>
             )}
-            <div className="space-y-1">
-              <div className="text-sm text-muted-foreground">
-                {job.company} • {job.type === 'internship' ? 'Internship' : job.type}
-              </div>
-              <h3 className="font-semibold text-base">{job.title}</h3>
-              <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                <div className="flex items-center gap-1">
-                  <span className="text-primary">{job.salary.currency}</span>
-                  <span>{job.salary.min.toLocaleString()}{job.salary.min !== job.salary.max ? `-${job.salary.max.toLocaleString()}` : ''}/hr</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                <MapPin className="w-3 h-3" />
-                <span>{job.location}</span>
-              </div>
+            
+            <div className="flex flex-col gap-1 mt-1.5">
+              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <Building2 className="w-3 h-3" /> {job.company}
+              </p>
+              
+              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <MapPin className="w-3 h-3" /> {job.location}
+              </p>
+              
+              <p className="text-xs text-blue-600 dark:text-blue-400">{formattedSalary}</p>
+              
+              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <Clock className="w-3 h-3" /> {timeAgo}
+              </p>
             </div>
           </div>
+          
+          <div className="ml-2 flex flex-col items-end gap-2">
+            {isApplied ? (
+              <Badge className="bg-green-100 hover:bg-green-100 text-green-700 border-green-200">
+                <CheckCircle className="mr-1 h-3 w-3" /> Applied
+              </Badge>
+            ) : isSaved ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-primary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSave?.();
+                }}
+              >
+                <BookmarkIcon className="h-4 w-4 fill-current" />
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSave?.();
+                }}
+              >
+                <BookmarkIcon className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+        
+        <div className="mt-2">
           <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8"
+            size="sm" 
+            className="w-full justify-between text-xs bg-blue-600 hover:bg-blue-700"
             onClick={(e) => {
               e.stopPropagation();
-              if (onSave) onSave();
+              onApply?.(job);
             }}
           >
-            <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-primary text-primary' : ''}`} />
+            Apply Now <ArrowRight className="h-3 w-3 ml-1" />
           </Button>
         </div>
       </div>
     );
   }
-
-  // Default card variant
+  
   return (
-    <Card 
-      className={`group hover:shadow-md transition-all duration-200 cursor-pointer relative ${isSelected ? 'border-primary' : ''}`}
-      onClick={handleCardClick}
+    <div
+      onClick={onClick}
+      className={`p-4 cursor-pointer transition-all border rounded-lg relative ${
+        isSelected ? 'ring-2 ring-primary border-primary' : 'hover:shadow-md hover:border-primary/30'
+      }`}
     >
-      {job.matchPercentage && (
-        <div className="absolute top-3 right-3 z-10">
-          <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 ${getMatchBorderColor(job.matchPercentage)} bg-white dark:bg-gray-950`}>
-            <span className={`text-sm font-bold ${getMatchColor(job.matchPercentage)}`}>
-              {job.matchPercentage}%
-            </span>
-          </div>
+      <div className="flex justify-between items-start mb-2">
+        <div className={`w-12 h-12 flex-shrink-0 rounded-lg flex items-center justify-center ${getCompanyColor()}`}>
+          {getCompanyInitial()}
         </div>
+      </div>
+      
+      <h3 className="font-medium mt-1">{job.title}</h3>
+      
+      {job.matchPercentage && (
+        <Badge variant="outline" className={`mt-1 px-2.5 py-0.5 text-xs font-bold ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)}`}>
+          {job.matchPercentage}% Match
+        </Badge>
       )}
       
-      <CardHeader className="space-y-2">
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <h3 className="text-lg font-semibold">{job.title}</h3>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Building2 className="w-4 h-4" />
-              <span>{job.company}</span>
-            </div>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <MapPin className="w-4 h-4" />
-              <span>{job.location}</span>
-            </div>
-            <div className="flex items-center gap-2 text-muted-foreground mt-1">
-              <Clock className="w-4 h-4" />
-              <span>Posted {timeAgo}</span>
-            </div>
-          </div>
-        </div>
-
-        {job.matchCriteria && (
-          <div className="mt-3 pt-3 border-t border-dashed border-gray-200 dark:border-gray-700">
-            <div className="text-sm">
-              <div className="flex items-center gap-1 mb-1">
-                <span className="text-xs text-yellow-500">⭐</span>
-                <span className="text-muted-foreground">Employers Are Looking For:</span>
-              </div>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {job.matchCriteria.degree && (
-                  <div className="flex items-center gap-1 bg-secondary/50 rounded-full px-3 py-1">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span>Degree</span>
-                  </div>
-                )}
-                {job.matchCriteria.experience && (
-                  <div className="flex items-center gap-1 bg-secondary/50 rounded-full px-3 py-1">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span>Experience</span>
-                  </div>
-                )}
-                {job.matchCriteria.skills && (
-                  <div className="flex items-center gap-1 bg-secondary/50 rounded-full px-3 py-1">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span>Skills</span>
-                  </div>
-                )}
-                {job.matchCriteria.location && (
-                  <div className="flex items-center gap-1 bg-secondary/50 rounded-full px-3 py-1">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span>Location</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-wrap gap-2 mb-4">
-          <Badge variant="secondary" className="capitalize">{job.type}</Badge>
-          <Badge variant="secondary" className="capitalize">{job.level}</Badge>
-          <Badge variant="outline">{formattedSalary}</Badge>
-          {job.remote && (
-            <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
-              Remote
-            </Badge>
-          )}
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          {job.skills.slice(0, 5).map((skill) => (
-            <Badge key={skill} variant="secondary" className="bg-primary/10 text-primary capitalize">
-              {skill}
-            </Badge>
-          ))}
-        </div>
-      </CardContent>
-      <CardFooter className="flex justify-between">
-        <Button 
-          className={`w-full ${isApplied ? 'bg-green-600 hover:bg-green-700' : ''}`}
-          onClick={handleApplyClick}
-          disabled={isApplied}
+      <p className="text-sm text-muted-foreground mt-2">{job.company}</p>
+      
+      <div className="flex flex-col gap-1.5 mt-3">
+        <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+          <MapPin className="w-3 h-3" /> {job.location}
+        </p>
+        
+        <p className="text-xs text-blue-600 dark:text-blue-400">{formattedSalary}</p>
+        
+        <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+          <Clock className="w-3 h-3" /> {timeAgo}
+        </p>
+      </div>
+      
+      <div className="flex items-center justify-between mt-4">
+        <Button
+          size="sm"
+          className={isApplied ? "text-green-600 border-green-200 bg-green-50 w-full" : "bg-blue-600 hover:bg-blue-700 w-full"}
+          onClick={(e) => {
+            e.stopPropagation();
+            onApply?.(job);
+          }}
         >
-          {isApplied ? 'Applied' : 'Apply Now'}
+          {isApplied ? (
+            <>
+              <CheckCircle className="mr-1 h-3 w-3" /> Applied
+            </>
+          ) : (
+            <>
+              Apply Now <Zap className="ml-1 h-3 w-3" />
+            </>
+          )}
         </Button>
         
-        {onSave && (
-          <Button 
-            variant="outline"
-            className="ml-2"
-            onClick={(e) => {
-              e.stopPropagation();
-              onSave();
-            }}
-          >
-            {isSaved ? 'Saved' : 'Save'}
-          </Button>
-        )}
-      </CardFooter>
-    </Card>
+        <Button
+          variant="ghost"
+          size="icon"
+          className={isSaved ? "text-primary ml-2" : "ml-2"}
+          onClick={(e) => {
+            e.stopPropagation();
+            onSave?.();
+          }}
+        >
+          <BookmarkIcon className={`h-4 w-4 ${isSaved ? "fill-current" : ""}`} />
+        </Button>
+      </div>
+    </div>
   );
 }
