@@ -1,36 +1,32 @@
 
 import { Job } from "@/types/job";
-import { BookmarkIcon, MapPin, DollarSign, BadgePercent } from "lucide-react";
+import { BookmarkIcon, MapPin, DollarSign } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 
 interface MobileJobCardProps {
   job: Job;
   isSaved?: boolean;
   onSave?: () => void;
   onClick?: () => void;
-  onApply?: (job: Job) => void;
 }
 
 export function MobileJobCard({
   job,
   isSaved = false,
   onSave,
-  onClick,
-  onApply
+  onClick
 }: MobileJobCardProps) {
   // Generate a colored initial badge for the company
   const getInitialBadgeColor = () => {
     const companyInitial = job.company.charAt(0).toUpperCase();
     const colors: Record<string, string> = {
-      'A': 'bg-red-100 text-red-600',
+      'A': 'bg-green-100 text-green-600',
       'B': 'bg-blue-100 text-blue-600',
       'C': 'bg-yellow-100 text-yellow-600',
       'D': 'bg-orange-100 text-orange-600',
       'E': 'bg-purple-100 text-purple-600',
       'F': 'bg-indigo-100 text-indigo-600',
-      'G': 'bg-pink-100 text-pink-600',
+      'G': 'bg-red-100 text-red-600',
       'H': 'bg-emerald-100 text-emerald-600',
       'I': 'bg-cyan-100 text-cyan-600',
       'J': 'bg-violet-100 text-violet-600',
@@ -56,8 +52,8 @@ export function MobileJobCard({
   };
   
   const formattedSalary = job.level === 'intern' 
-    ? `$${job.salary.min.toLocaleString()}/hr` 
-    : `$${job.salary.min.toLocaleString()} - $${job.salary.max.toLocaleString()}`;
+    ? `$ $ ${job.salary.min.toLocaleString()} /hr` 
+    : `$ $ ${job.salary.min.toLocaleString()}`;
 
   // Get match color based on percentage
   const getMatchColor = (percentage?: number) => {
@@ -76,7 +72,7 @@ export function MobileJobCard({
   
   return (
     <div 
-      className="py-3 px-4 border-b border-gray-100 dark:border-gray-800 active:bg-gray-50 dark:active:bg-gray-800/60"
+      className="py-3 px-3 border-b border-gray-100 dark:border-gray-800 active:bg-gray-50 dark:active:bg-gray-800/60"
       onClick={onClick}
     >
       <div className="flex items-start gap-3 min-w-0">
@@ -87,7 +83,13 @@ export function MobileJobCard({
         
         <div className="flex-1 min-w-0 overflow-hidden">
           <div className="flex items-start justify-between gap-2 mb-1">
-            <h3 className="text-base font-bold leading-tight truncate max-w-[90%]">{job.title}</h3>
+            <h3 className="text-base font-bold leading-tight truncate max-w-[75%]">{job.title}</h3>
+            
+            {job.matchPercentage !== undefined && (
+              <Badge variant="outline" className={`flex-shrink-0 px-1.5 py-0.5 text-xs font-medium ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)}`}>
+                {job.matchPercentage}%
+              </Badge>
+            )}
           </div>
           
           <div className="flex flex-col gap-0.5">
@@ -103,42 +105,11 @@ export function MobileJobCard({
               <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
               <span className="truncate">{job.location}</span>
             </div>
-            
-            {/* Match percentage with Progress bar */}
-            {job.matchPercentage !== undefined && (
-              <div className="mt-1 mb-1 space-y-1">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground flex items-center gap-1">
-                    <BadgePercent className="h-3 w-3" /> Match
-                  </span>
-                  <span className={`font-medium ${getMatchColor(job.matchPercentage)}`}>
-                    {job.matchPercentage}<span>%</span>
-                  </span>
-                </div>
-                <Progress value={job.matchPercentage} className="h-1.5" />
-              </div>
-            )}
           </div>
         </div>
-      </div>
-      
-      {/* Apply Now button and Save button */}
-      <div className="mt-3 flex justify-between items-center gap-2">
-        <Button 
-          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded text-sm flex items-center justify-center gap-1"
-          onClick={(e) => {
-            e.stopPropagation();
-            onApply?.(job);
-          }}
-        >
-          Apply Now
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </Button>
         
         <button 
-          className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          className="flex-shrink-0 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           onClick={(e) => {
             e.stopPropagation();
             onSave?.();

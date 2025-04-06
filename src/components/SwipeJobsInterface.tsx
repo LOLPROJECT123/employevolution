@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Job } from "@/types/job";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -7,7 +8,6 @@ import { motion, PanInfo } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { formatRelativeTime } from "@/utils/dateUtils";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface SwipeJobsInterfaceProps {
   jobs: Job[];
@@ -138,16 +138,7 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
         <Card className="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl overflow-hidden">
           <CardContent className="p-4">
             <div className="mb-4">
-              <div className="flex items-start justify-between">
-                <h2 className="text-2xl font-bold">{currentJob.title}</h2>
-                
-                {/* Match Percentage Badge - Always visible */}
-                {currentJob.matchPercentage !== undefined && (
-                  <Badge variant="outline" className={`flex items-center px-3 py-1.5 ${getMatchBgColor(currentJob.matchPercentage)} ${getMatchColor(currentJob.matchPercentage)} text-base font-medium rounded-md`}>
-                    {currentJob.matchPercentage}% Match
-                  </Badge>
-                )}
-              </div>
+              <h2 className="text-2xl font-bold">{currentJob.title}</h2>
               
               <div className="flex items-start justify-between mt-3">
                 {/* Company Info with flex-col */}
@@ -177,53 +168,41 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
                     <span className="text-sm">Posted {timeAgo}</span>
                   </div>
                 </div>
-              </div>
-            </div>
-            
-            <ScrollArea className="h-[280px] pr-2 -mr-2 mb-4">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-lg font-medium mb-2">About This Role</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {currentJob.description}
-                  </p>
-                </div>
                 
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Requirements</h3>
-                  <ul className="list-disc pl-5 space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                    {currentJob.requirements && currentJob.requirements.slice(0, 3).map((req, index) => (
-                      <li key={index}>{req}</li>
-                    ))}
-                  </ul>
-                </div>
-                
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Skills</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {currentJob.skills.slice(0, 5).map((skill, index) => (
-                      <span 
-                        key={index} 
-                        className="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-sm capitalize"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                
-                {currentJob.benefits && currentJob.benefits.length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-medium mb-2">Benefits</h3>
-                    <ul className="list-disc pl-5 space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                      {currentJob.benefits.slice(0, 3).map((benefit, index) => (
-                        <li key={index}>{benefit}</li>
-                      ))}
-                    </ul>
+                {/* Match Percentage Badge - Positioned to the right of company info */}
+                {currentJob.matchPercentage !== undefined && (
+                  <div className="ml-2 flex-shrink-0">
+                    <Badge variant="outline" className={`flex items-center px-3 py-2 ${getMatchBgColor(currentJob.matchPercentage)} ${getMatchColor(currentJob.matchPercentage)} text-base font-medium rounded-md`}>
+                      <Percent className="w-4 h-4 mr-1.5" />
+                      {currentJob.matchPercentage}% Match
+                    </Badge>
                   </div>
                 )}
               </div>
-            </ScrollArea>
+            </div>
+            
+            <div className="space-y-4 mb-4">
+              <div>
+                <h3 className="text-lg font-medium mb-2">About This Role</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {currentJob.description}
+                </p>
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-medium mb-2">Skills</h3>
+                <div className="flex flex-wrap gap-2">
+                  {currentJob.skills.slice(0, 5).map((skill, index) => (
+                    <span 
+                      key={index} 
+                      className="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-sm capitalize"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
             
             {/* Apply button */}
             <Button 
