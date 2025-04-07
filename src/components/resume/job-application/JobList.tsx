@@ -1,14 +1,17 @@
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { BookmarkIcon } from "lucide-react";
 import { ScrapedJob } from "./types";
 
 interface JobListProps {
   jobs: ScrapedJob[];
   onSelectJob: (job: ScrapedJob) => void;
+  savedJobs?: string[];
+  onSaveJob?: (job: ScrapedJob) => void;
 }
 
-const JobList = ({ jobs, onSelectJob }: JobListProps) => {
+const JobList = ({ jobs, onSelectJob, savedJobs = [], onSaveJob }: JobListProps) => {
   if (jobs.length === 0) {
     return null;
   }
@@ -39,9 +42,25 @@ const JobList = ({ jobs, onSelectJob }: JobListProps) => {
                   )}
                 </div>
               </div>
-              <Button variant="ghost" size="sm">
-                Apply
-              </Button>
+              
+              <div className="flex space-x-2">
+                {onSaveJob && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSaveJob(job);
+                    }}
+                  >
+                    <BookmarkIcon className={`h-4 w-4 ${savedJobs?.includes(job.id) ? "fill-primary text-primary" : ""}`} />
+                  </Button>
+                )}
+                
+                <Button variant="ghost" size="sm">
+                  Apply
+                </Button>
+              </div>
             </div>
           </div>
         ))}
