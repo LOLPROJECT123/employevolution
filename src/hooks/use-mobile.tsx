@@ -1,5 +1,6 @@
 
 import * as React from "react";
+import { isMobileScreenSize } from "@/utils/mobileUtils";
 
 const MOBILE_BREAKPOINT = 768;
 

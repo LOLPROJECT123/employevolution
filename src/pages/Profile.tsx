@@ -11,8 +11,6 @@ import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import Navbar from "@/components/Navbar";
-import MobileHeader from "@/components/MobileHeader";
-import { useMobile } from "@/hooks/use-mobile";
 import { 
   Upload, 
   Mail, 
@@ -41,7 +39,6 @@ import {
 } from "lucide-react";
 
 const ProfilePage = () => {
-  const isMobile = useMobile();
   const [activeTab, setActiveTab] = useState("contact");
   
   // Profile data states
@@ -178,286 +175,75 @@ const ProfilePage = () => {
     }
   });
 
-  const renderProfileCard = () => (
-    <Card className="mb-6 shadow-none border rounded-lg">
-      <CardContent className="p-6">
-        <div className={`flex ${isMobile ? 'flex-col' : 'items-start gap-6'}`}>
-          <div className="relative mb-4">
-            <div className="h-24 w-24 rounded-full bg-gray-200 flex items-center justify-center text-2xl font-semibold text-gray-500">
-              VV
-            </div>
-          </div>
-          <div className="flex-1 w-full">
-            <div className="flex justify-between">
-              <div>
-                <h1 className="text-2xl font-bold">{name}</h1>
-                <p className="text-sm text-muted-foreground mb-1">Job Search Status</p>
-                <div className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
-                  {jobStatus}
-                </div>
-              </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <PenLine className="h-4 w-4" />
-              </Button>
-            </div>
-
-            <div className="mt-4 grid grid-cols-1 gap-4">
-              <div className="flex items-center border rounded-md p-2">
-                <Zap className="h-4 w-4 mr-2 text-amber-500" />
-                <span className="text-sm">Show Profile to Recruiters</span>
-                <div className="ml-auto flex items-center gap-2">
-                  <Switch 
-                    checked={showToRecruiters} 
-                    onCheckedChange={setShowToRecruiters} 
-                    className="data-[state=checked]:bg-blue-500"
-                  />
-                </div>
-              </div>
-              <div className="flex items-center border rounded-md p-2">
-                <Briefcase className="h-4 w-4 mr-2 text-blue-500" />
-                <span className="text-sm">Job Search Status</span>
-                <div className="ml-auto flex items-center gap-2">
-                  <Switch 
-                    checked={showJobSearchStatus} 
-                    onCheckedChange={setShowJobSearchStatus} 
-                    className="data-[state=checked]:bg-blue-500"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4 text-sm text-muted-foreground">
-              <p>Get discovered by companies</p>
-              <p>Your current employer can't see you</p>
-            </div>
-            
-            {/* Profile Completion Progress */}
-            <div className="mt-4">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium">Profile Completion</span>
-                <span className="text-sm font-medium">{profileCompletionPercentage}%</span>
-              </div>
-              <Progress value={profileCompletionPercentage} className="h-2" />
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  const renderContactContent = () => (
-    <Card className="shadow-none border rounded-lg">
-      <CardHeader className="flex flex-row items-center justify-between p-6">
-        <CardTitle>Contact</CardTitle>
-        <Button variant="ghost" size="icon">
-          <PenLine className="h-4 w-4" />
-        </Button>
-      </CardHeader>
-      <CardContent className="p-6 pt-0 space-y-4">
-        <div className="flex items-center gap-3">
-          <Mail className="h-5 w-5 text-muted-foreground" />
-          <span>{email}</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <Phone className="h-5 w-5 text-muted-foreground" />
-          <span>{phone}</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <Calendar className="h-5 w-5 text-muted-foreground" />
-          <span>{dateOfBirth}</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <MapPin className="h-5 w-5 text-muted-foreground" />
-          <span>{location}</span>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  const renderResumeContent = () => (
-    <>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Resume</h2>
-        <Button variant="outline">
-          <Upload className="h-4 w-4 mr-2" />
-          Upload Resume
-        </Button>
-      </div>
-      <div className="border-2 border-dashed rounded-lg p-12 flex flex-col items-center justify-center mb-6">
-        <Upload className="h-12 w-12 text-muted-foreground mb-4" />
-        <p className="text-center mb-1">Drag & drop your resume here</p>
-        <p className="text-sm text-muted-foreground text-center mb-4">Supports PDF, DOC, DOCX formats</p>
-        <Button variant="outline" size="sm">Browse Files</Button>
-      </div>
-      
-      <div className="flex justify-between items-center mt-8 mb-4">
-        <h2 className="text-xl font-bold">Work Experience</h2>
-        <Button variant="outline">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Experience
-        </Button>
-      </div>
-      
-      <div className="space-y-6 mb-8">
-        {workExperiences.map((experience) => (
-          <div key={experience.id} className="bg-card rounded-lg border p-4">
-            <div className="flex">
-              <div className="bg-blue-100 p-2 rounded-md mr-4">
-                <Briefcase className="h-5 w-5 text-blue-500" />
-              </div>
-              <div className="flex-1">
-                <div className="flex justify-between">
-                  <h3 className="text-lg font-semibold">{experience.role}</h3>
-                  <Button variant="ghost" size="icon">
-                    <PenLine className="h-4 w-4" />
-                  </Button>
-                </div>
-                <p className="text-muted-foreground font-medium">{experience.company}</p>
-                <p className="text-muted-foreground text-sm">{experience.location}</p>
-                <p className="text-muted-foreground text-sm">{experience.startDate} - {experience.endDate}</p>
-                <div className="mt-3 space-y-2">
-                  {experience.description.map((item, index) => (
-                    <p key={index} className="text-sm">{item}</p>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-      
-      <div className="flex justify-between items-center mt-8 mb-4">
-        <h2 className="text-xl font-bold">Education</h2>
-        <Button variant="outline">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Education
-        </Button>
-      </div>
-      
-      <div className="space-y-6 mb-8">
-        {education.map((edu) => (
-          <div key={edu.id} className="bg-card rounded-lg border p-4">
-            <div className="flex">
-              <div className="bg-blue-100 p-2 rounded-md mr-4">
-                <GraduationCap className="h-5 w-5 text-blue-500" />
-              </div>
-              <div className="flex-1">
-                <div className="flex justify-between">
-                  <h3 className="text-lg font-semibold">{edu.school}</h3>
-                  <Button variant="ghost" size="icon">
-                    <PenLine className="h-4 w-4" />
-                  </Button>
-                </div>
-                <p className="text-muted-foreground">{edu.degree}</p>
-                <p className="text-muted-foreground text-sm">{edu.startDate} - {edu.endDate}</p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-      
-      <div className="flex justify-between items-center mt-8 mb-4">
-        <h2 className="text-xl font-bold">Projects</h2>
-        <Button variant="outline">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Project
-        </Button>
-      </div>
-      
-      <div className="space-y-6 mb-8">
-        {projects.map((project) => (
-          <div key={project.id} className="bg-card rounded-lg border p-4">
-            <div className="flex">
-              <div className="bg-blue-100 p-2 rounded-md mr-4">
-                <Wrench className="h-5 w-5 text-blue-500" />
-              </div>
-              <div className="flex-1">
-                <div className="flex justify-between">
-                  <h3 className="text-lg font-semibold">{project.name}</h3>
-                  <Button variant="ghost" size="icon">
-                    <PenLine className="h-4 w-4" />
-                  </Button>
-                </div>
-                <p className="text-muted-foreground text-sm">{project.startDate} - {project.endDate}</p>
-                <div className="mt-3 space-y-2">
-                  {project.description.map((item, index) => (
-                    <p key={index} className="text-sm">{item}</p>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-      
-      <div className="mt-8 mb-4">
-        <h2 className="text-xl font-bold">Social Links</h2>
-      </div>
-      
-      <div className="space-y-4 mb-6">
-        <div className="flex items-center">
-          <div className="h-10 w-10 bg-blue-500 rounded-full flex items-center justify-center mr-3">
-            <Linkedin className="h-5 w-5 text-white" />
-          </div>
-          <div className="flex-1">
-            <p className="font-medium">LinkedIn URL</p>
-            <p className="text-sm text-muted-foreground">{socialLinks.linkedin || "Not provided"}</p>
-          </div>
-          <Button variant="ghost" size="icon">
-            <PenLine className="h-4 w-4" />
-          </Button>
-        </div>
-        
-        <div className="flex items-center">
-          <div className="h-10 w-10 bg-black rounded-full flex items-center justify-center mr-3">
-            <Github className="h-5 w-5 text-white" />
-          </div>
-          <div className="flex-1">
-            <p className="font-medium">GitHub URL</p>
-            <p className="text-sm text-muted-foreground">{socialLinks.github || "Not provided"}</p>
-          </div>
-          <Button variant="ghost" size="icon">
-            <PenLine className="h-4 w-4" />
-          </Button>
-        </div>
-        
-        <div className="flex items-center">
-          <div className="h-10 w-10 bg-pink-500 rounded-full flex items-center justify-center mr-3">
-            <Globe className="h-5 w-5 text-white" />
-          </div>
-          <div className="flex-1">
-            <p className="font-medium">Portfolio URL</p>
-            <p className="text-sm text-muted-foreground">{socialLinks.portfolio || "Not provided"}</p>
-          </div>
-          <Button variant="ghost" size="icon">
-            <PenLine className="h-4 w-4" />
-          </Button>
-        </div>
-        
-        <div className="flex items-center">
-          <div className="h-10 w-10 bg-blue-500 rounded-full flex items-center justify-center mr-3">
-            <LinkIcon className="h-5 w-5 text-white" />
-          </div>
-          <div className="flex-1">
-            <p className="font-medium">Other URL</p>
-            <p className="text-sm text-muted-foreground">{socialLinks.other || "Not provided"}</p>
-          </div>
-          <Button variant="ghost" size="icon">
-            <PenLine className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-    </>
-  );
-
   return (
     <>
-      {!isMobile && <Navbar />}
-      {isMobile && <MobileHeader />}
-      
-      <div className={`container mx-auto ${isMobile ? 'px-4 pt-16' : 'py-8 px-4'} max-w-5xl`}>
+      <Navbar />
+      <div className="container mx-auto py-8 px-4 max-w-5xl">
         {/* Profile Header */}
-        {renderProfileCard()}
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <div className="flex items-start gap-6">
+              <div className="relative">
+                <div className="h-24 w-24 rounded-full bg-gray-200 flex items-center justify-center text-2xl font-semibold text-gray-500">
+                  VV
+                </div>
+              </div>
+              <div className="flex-1">
+                <div className="flex justify-between">
+                  <div>
+                    <h1 className="text-2xl font-bold">{name}</h1>
+                    <p className="text-sm text-muted-foreground mb-1">Job Search Status</p>
+                    <div className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
+                      {jobStatus}
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <PenLine className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center border rounded-md p-2">
+                    <Zap className="h-4 w-4 mr-2 text-amber-500" />
+                    <span className="text-sm">Show Profile to Recruiters</span>
+                    <div className="ml-auto flex items-center gap-2">
+                      <Switch 
+                        checked={showToRecruiters} 
+                        onCheckedChange={setShowToRecruiters} 
+                        className="data-[state=checked]:bg-blue-500"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center border rounded-md p-2">
+                    <Briefcase className="h-4 w-4 mr-2 text-blue-500" />
+                    <span className="text-sm">Job Search Status</span>
+                    <div className="ml-auto flex items-center gap-2">
+                      <Switch 
+                        checked={showJobSearchStatus} 
+                        onCheckedChange={setShowJobSearchStatus} 
+                        className="data-[state=checked]:bg-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 text-sm text-muted-foreground">
+                  <p>Get discovered by companies</p>
+                  <p>Your current employer can't see you</p>
+                </div>
+                
+                {/* Profile Completion Progress */}
+                <div className="mt-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium">Profile Completion</span>
+                    <span className="text-sm font-medium">{profileCompletionPercentage}%</span>
+                  </div>
+                  <Progress value={profileCompletionPercentage} className="h-2" />
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Profile Tabs */}
         <Tabs 
@@ -466,37 +252,240 @@ const ProfilePage = () => {
           onValueChange={setActiveTab}
           className="w-full"
         >
-          <div className="overflow-x-auto">
-            <TabsList className={`${isMobile ? 'flex w-full' : 'w-full bg-muted/50 rounded-none'} mb-6`}>
-              <TabsTrigger value="contact" className="flex-1 data-[state=active]:bg-background">
-                Contact
-              </TabsTrigger>
-              <TabsTrigger value="resume" className="flex-1 data-[state=active]:bg-background">
-                Resume
-              </TabsTrigger>
-              <TabsTrigger value="jobPreferences" className="flex-1 data-[state=active]:bg-background">
-                Job Preferences
-              </TabsTrigger>
-              <TabsTrigger value="equalEmployment" className="flex-1 data-[state=active]:bg-background">
-                Equal Employment
-              </TabsTrigger>
-              <TabsTrigger value="settings" className="flex-1 data-[state=active]:bg-background">
-                Settings
-              </TabsTrigger>
-            </TabsList>
-          </div>
+          <TabsList className="w-full bg-muted/50 rounded-none mb-6">
+            <TabsTrigger value="contact" className="flex-1 data-[state=active]:bg-background">
+              Contact
+            </TabsTrigger>
+            <TabsTrigger value="resume" className="flex-1 data-[state=active]:bg-background">
+              Resume
+            </TabsTrigger>
+            <TabsTrigger value="jobPreferences" className="flex-1 data-[state=active]:bg-background">
+              Job Preferences
+            </TabsTrigger>
+            <TabsTrigger value="equalEmployment" className="flex-1 data-[state=active]:bg-background">
+              Equal Employment
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex-1 data-[state=active]:bg-background">
+              Settings
+            </TabsTrigger>
+          </TabsList>
 
           {/* Contact Tab */}
           <TabsContent value="contact" className="mt-0">
-            {renderContactContent()}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between p-6">
+                <CardTitle>Contact</CardTitle>
+                <Button variant="ghost" size="icon">
+                  <PenLine className="h-4 w-4" />
+                </Button>
+              </CardHeader>
+              <CardContent className="p-6 pt-0 space-y-4">
+                <div className="flex items-center gap-3">
+                  <Mail className="h-5 w-5 text-muted-foreground" />
+                  <span>{email}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Phone className="h-5 w-5 text-muted-foreground" />
+                  <span>{phone}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Calendar className="h-5 w-5 text-muted-foreground" />
+                  <span>{dateOfBirth}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <MapPin className="h-5 w-5 text-muted-foreground" />
+                  <span>{location}</span>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Resume Tab */}
           <TabsContent value="resume" className="mt-0">
-            {renderResumeContent()}
+            <Card className="mb-6">
+              <CardHeader className="flex flex-row items-center justify-between p-6">
+                <CardTitle>Resume</CardTitle>
+                <Button variant="outline">
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload Resume
+                </Button>
+              </CardHeader>
+              <CardContent className="p-6 pt-0">
+                <div className="border-2 border-dashed rounded-lg p-12 flex flex-col items-center justify-center">
+                  <Upload className="h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-center mb-1">Drag & drop your resume here</p>
+                  <p className="text-sm text-muted-foreground text-center mb-4">Supports PDF, DOC, DOCX formats</p>
+                  <Button variant="outline" size="sm">Browse Files</Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Work Experience */}
+            <Card className="mb-6">
+              <CardHeader className="flex flex-row items-center justify-between p-6">
+                <CardTitle>Work Experience</CardTitle>
+                <Button variant="outline">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Experience
+                </Button>
+              </CardHeader>
+              <CardContent className="p-6 pt-0 space-y-6">
+                {workExperiences.map((experience) => (
+                  <div key={experience.id} className="pb-6 border-b last:border-b-0 last:pb-0">
+                    <div className="flex">
+                      <div className="bg-blue-100 p-2 rounded-md mr-4">
+                        <Briefcase className="h-5 w-5 text-blue-500" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex justify-between">
+                          <h3 className="text-xl font-semibold">{experience.role}</h3>
+                          <Button variant="ghost" size="icon">
+                            <PenLine className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <p className="text-muted-foreground font-medium">{experience.company}</p>
+                        <p className="text-muted-foreground text-sm">{experience.location}</p>
+                        <p className="text-muted-foreground text-sm">{experience.startDate} - {experience.endDate}</p>
+                        <div className="mt-3 space-y-2">
+                          {experience.description.map((item, index) => (
+                            <p key={index} className="text-sm">{item}</p>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            {/* Education */}
+            <Card className="mb-6">
+              <CardHeader className="flex flex-row items-center justify-between p-6">
+                <CardTitle>Education</CardTitle>
+                <Button variant="outline">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Education
+                </Button>
+              </CardHeader>
+              <CardContent className="p-6 pt-0 space-y-6">
+                {education.map((edu) => (
+                  <div key={edu.id} className="flex">
+                    <div className="bg-blue-100 p-2 rounded-md mr-4">
+                      <GraduationCap className="h-5 w-5 text-blue-500" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between">
+                        <h3 className="text-xl font-semibold">{edu.school}</h3>
+                        <Button variant="ghost" size="icon">
+                          <PenLine className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <p className="text-muted-foreground">{edu.degree}</p>
+                      <p className="text-muted-foreground text-sm">{edu.startDate} - {edu.endDate}</p>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            {/* Projects */}
+            <Card className="mb-6">
+              <CardHeader className="flex flex-row items-center justify-between p-6">
+                <CardTitle>Projects</CardTitle>
+                <Button variant="outline">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Project
+                </Button>
+              </CardHeader>
+              <CardContent className="p-6 pt-0 space-y-6">
+                {projects.map((project) => (
+                  <div key={project.id} className="pb-6 border-b last:border-b-0 last:pb-0">
+                    <div className="flex">
+                      <div className="bg-blue-100 p-2 rounded-md mr-4">
+                        <Wrench className="h-5 w-5 text-blue-500" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex justify-between">
+                          <h3 className="text-xl font-semibold">{project.name}</h3>
+                          <Button variant="ghost" size="icon">
+                            <PenLine className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <p className="text-muted-foreground text-sm">{project.startDate} - {project.endDate}</p>
+                        <div className="mt-3 space-y-2">
+                          {project.description.map((item, index) => (
+                            <p key={index} className="text-sm">{item}</p>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            {/* Social Links */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between p-6">
+                <CardTitle>Social Links</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 pt-0 space-y-4">
+                <div className="flex items-center">
+                  <div className="h-10 w-10 bg-blue-500 rounded-full flex items-center justify-center mr-3">
+                    <Linkedin className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium">LinkedIn URL</p>
+                    <p className="text-sm text-muted-foreground">{socialLinks.linkedin || "Not provided"}</p>
+                  </div>
+                  <Button variant="ghost" size="icon">
+                    <PenLine className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <div className="flex items-center">
+                  <div className="h-10 w-10 bg-black rounded-full flex items-center justify-center mr-3">
+                    <Github className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium">GitHub URL</p>
+                    <p className="text-sm text-muted-foreground">{socialLinks.github || "Not provided"}</p>
+                  </div>
+                  <Button variant="ghost" size="icon">
+                    <PenLine className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <div className="flex items-center">
+                  <div className="h-10 w-10 bg-pink-500 rounded-full flex items-center justify-center mr-3">
+                    <Globe className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium">Portfolio URL</p>
+                    <p className="text-sm text-muted-foreground">{socialLinks.portfolio || "Not provided"}</p>
+                  </div>
+                  <Button variant="ghost" size="icon">
+                    <PenLine className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <div className="flex items-center">
+                  <div className="h-10 w-10 bg-blue-500 rounded-full flex items-center justify-center mr-3">
+                    <LinkIcon className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium">Other URL</p>
+                    <p className="text-sm text-muted-foreground">{socialLinks.other || "Not provided"}</p>
+                  </div>
+                  <Button variant="ghost" size="icon">
+                    <PenLine className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
-          {/* Other tabs content stays the same */}
+          {/* Job Preferences Tab */}
           <TabsContent value="jobPreferences" className="mt-0">
             <Card className="mb-6">
               <CardHeader className="p-6">
@@ -731,7 +720,7 @@ const ProfilePage = () => {
                       </div>
                       
                       <div>
-                        <p className="text-sm text-muted-foreground">Need sponsorship for work authorization</p>
+                        <p className="text-sm text-muted-foreground">Need sponsorship</p>
                         <p className="mt-2">{jobPreferences.workAuthorization.needSponsorship ? "Yes" : "No"}</p>
                       </div>
                     </div>
@@ -745,6 +734,7 @@ const ProfilePage = () => {
             </Card>
           </TabsContent>
 
+          {/* Equal Employment Tab */}
           <TabsContent value="equalEmployment" className="mt-0">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between p-6">
@@ -875,6 +865,7 @@ const ProfilePage = () => {
             </Card>
           </TabsContent>
 
+          {/* Settings Tab */}
           <TabsContent value="settings" className="mt-0">
             <Card className="mb-6">
               <CardHeader className="p-6">
