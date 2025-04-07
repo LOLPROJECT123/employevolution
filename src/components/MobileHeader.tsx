@@ -1,96 +1,85 @@
 
-import React from "react";
-import { Menu } from "lucide-react";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Menu, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface MobileHeaderProps {
-  title?: string;
+  onMenuToggle?: () => void;
 }
 
-const MobileHeader: React.FC<MobileHeaderProps> = ({ title }) => {
+export function MobileHeader({ onMenuToggle }: MobileHeaderProps) {
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between bg-white dark:bg-slate-900 border-b px-4 h-14">
-      <div className="flex items-center gap-2">
-        <Link to="/" className="flex items-center">
-          <img src="/lovable-uploads/eb6dc581-947e-4bee-96e7-13931078afd9.png" alt="Streamline" className="h-7 w-7" />
-          <span className="font-bold text-lg ml-2">Streamline</span>
-        </Link>
-      </div>
+    <div className="mobile-header">
+      <Link to="/" className="flex items-center gap-2">
+        <img src="/lovable-uploads/41a0a413-6f28-4d92-b79e-30009cfc65ec.png" alt="Streamline" className="h-6 w-6" />
+        <span className="font-bold text-base">Streamline</span>
+      </Link>
       
-      <Sheet>
-        <SheetTrigger asChild>
-          <Button variant="ghost" size="icon">
-            <Menu className="h-5 w-5" />
-            <span className="sr-only">Open menu</span>
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="right" className="w-[250px] p-0">
-          <div className="flex flex-col h-full">
-            <div className="border-b p-4">
-              <Link to="/profile" className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold text-gray-500">
-                  VV
-                </div>
-                <div>
-                  <div className="font-medium">Varun Veluri</div>
-                  <div className="text-xs text-muted-foreground">View Profile</div>
-                </div>
-              </Link>
-            </div>
-            
-            <nav className="flex-1 p-4">
-              <ul className="space-y-2">
-                <li>
-                  <Link to="/dashboard" className="flex items-center gap-3 p-2 rounded-md hover:bg-accent">
-                    <span className="text-sm">Dashboard</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/jobs" className="flex items-center gap-3 p-2 rounded-md hover:bg-accent">
-                    <span className="text-sm">Jobs</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/resume-tools" className="flex items-center gap-3 p-2 rounded-md hover:bg-accent">
-                    <span className="text-sm">Resume</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/interview-practice" className="flex items-center gap-3 p-2 rounded-md hover:bg-accent">
-                    <span className="text-sm">Interview Prep</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/referrals" className="flex items-center gap-3 p-2 rounded-md hover:bg-accent">
-                    <span className="text-sm">Referrals</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/salary-negotiations" className="flex items-center gap-3 p-2 rounded-md hover:bg-accent">
-                    <span className="text-sm">Salary</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/networking" className="flex items-center gap-3 p-2 rounded-md hover:bg-accent">
-                    <span className="text-sm">Networking</span>
-                  </Link>
-                </li>
-              </ul>
-            </nav>
-            
-            <div className="border-t p-4">
-              <div className="flex items-center justify-between">
-                <Link to="/settings" className="text-sm text-muted-foreground">Settings</Link>
-                <Link to="/logout" className="text-sm text-muted-foreground">Log out</Link>
-              </div>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
+      <Button 
+        variant="ghost" 
+        size="icon"
+        onClick={onMenuToggle}
+        className="static"
+        aria-label="Menu"
+      >
+        <Menu className="h-5 w-5" />
+      </Button>
     </div>
   );
-};
+}
 
-export default MobileHeader;
+export function MobileSidebar({
+  isOpen,
+  onClose
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  if (!isOpen) return null;
+  
+  return (
+    <div className="fixed inset-0 bg-black/50 z-[100]" onClick={onClose}>
+      <div 
+        className="bg-white dark:bg-slate-950 h-full w-[85%] max-w-[300px] p-4 shadow-lg animate-slide-in-left"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="space-y-4">
+          <div className="flex items-center justify-between pb-4 border-b">
+            <div className="flex items-center gap-2">
+              <img src="/lovable-uploads/41a0a413-6f28-4d92-b79e-30009cfc65ec.png" alt="Streamline" className="h-8 w-8" />
+              <span className="font-bold text-lg">Streamline</span>
+            </div>
+            <Button variant="ghost" size="icon" onClick={onClose}>
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+          
+          <div className="space-y-1 pt-2">
+            <Link to="/dashboard" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
+              Dashboard
+            </Link>
+            <Link to="/jobs" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
+              Jobs
+            </Link>
+            <Link to="/resume-tools" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
+              Resume &amp; CV Tools
+            </Link>
+            <Link to="/interview-practice" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
+              Interview Practice
+            </Link>
+            <Link to="/referrals" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
+              Referrals
+            </Link>
+            <Link to="/salary-negotiations" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
+              Salary Negotiations
+            </Link>
+            <Link to="/networking" className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-sm">
+              Networking &amp; Outreach
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
