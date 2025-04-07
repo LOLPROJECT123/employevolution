@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -13,7 +14,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
 
-    --primary: 217 100% 50%; /* Bright blue */
+    --primary: 210 100% 50%; /* Pure blue */
     --primary-foreground: 0 0% 98%;
 
     --secondary: 240 5% 96%;
@@ -22,7 +23,7 @@
     --muted: 240 4.8% 95.9%;
     --muted-foreground: 240 3.8% 46.1%;
 
-    --accent: 217 100% 96%;
+    --accent: 210 100% 96%;
     --accent-foreground: 240 5.9% 10%;
 
     --destructive: 0 84.2% 60.2%;
@@ -41,7 +42,7 @@
     --sidebar-accent: 240 4.8% 95.9%;
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217 100% 50%;
+    --sidebar-ring: 210 100% 50%;
   }
 
   .dark {
@@ -54,7 +55,7 @@
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 217 100% 50%; /* Bright blue */
+    --primary: 210 100% 50%; /* Pure blue */
     --primary-foreground: 0 0% 98%;
 
     --secondary: 240 3.7% 15.9%;
@@ -63,7 +64,7 @@
     --muted: 240 3.7% 15.9%;
     --muted-foreground: 240 5% 64.9%;
 
-    --accent: 217 100% 15%;
+    --accent: 210 100% 15%;
     --accent-foreground: 0 0% 98%;
 
     --destructive: 0 62.8% 30.6%;
@@ -75,12 +76,12 @@
     
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 217 100% 50%;
+    --sidebar-primary: 210 100% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 3.7% 15.9%;
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217 100% 50%;
+    --sidebar-ring: 210 100% 50%;
   }
 }
 
@@ -147,93 +148,6 @@
   .button-hover {
     @apply transition-all duration-300 ease-out-expo hover:shadow-md hover:scale-[1.02] active:scale-[0.98];
   }
-  
-  /* Job tabs styling */
-  .job-tabs .tabs-list {
-    @apply w-full flex border-b bg-transparent p-0;
-  }
-  
-  .job-tabs .tab-trigger {
-    @apply flex-1 rounded-none border-b-2 border-transparent py-2 sm:py-3 text-xs sm:text-sm font-medium transition-colors;
-    @apply hover:text-foreground data-[state=active]:border-primary data-[state=active]:text-foreground;
-    @apply focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-transparent;
-  }
-  
-  /* Mobile tabs text truncation and spacing */
-  .mobile-tab-text {
-    @apply truncate text-xs sm:text-sm;
-  }
-  
-  /* ATS Optimization tool tabs spacing */
-  .ats-tabs .tabs-list {
-    @apply gap-3 px-3 py-3;
-  }
-
-  .ats-tabs .tab-trigger {
-    @apply text-xs sm:text-sm px-3 py-2 rounded-md whitespace-nowrap;
-  }
-  
-  /* Profile completion styles */
-  .profile-completion {
-    @apply relative w-[92%] mx-auto;
-  }
-  
-  /* Mobile menu button positioning */
-  .mobile-menu-button {
-    @apply fixed top-3 right-3 z-50;
-  }
-
-  /* Two-line tabs for mobile */
-  .two-line-tabs .tab-trigger {
-    @apply h-auto min-h-[3rem] flex flex-col items-center justify-center leading-tight;
-  }
-
-  /* Mobile header */
-  .mobile-header {
-    @apply sticky top-0 z-50 bg-white dark:bg-slate-900 border-b p-3 flex items-center justify-between;
-  }
-  
-  /* Mobile tab stacking for profile and other pages */
-  .mobile-tabs {
-    @apply w-full flex-col sm:flex-row;
-  }
-  
-  .mobile-tabs .tab-trigger {
-    @apply flex-1;
-  }
-
-  /* Main content container */
-  .content-container {
-    @apply container mx-auto px-4 max-w-screen-xl md:text-center;
-  }
-  
-  /* Job match percentage badge positioning */
-  .match-badge {
-    @apply flex-shrink-0 px-1.5 py-0.5 text-xs font-medium mr-2 flex items-center;
-  }
-
-  /* Job detail scrollable areas - improved for desktop */
-  .job-detail-content {
-    @apply overflow-y-auto pr-2;
-    max-height: calc(100vh - 160px);
-  }
-
-  /* Job detail scroll area for mobile and desktop - improved height */
-  .job-detail-scroll {
-    @apply overflow-y-auto;
-    max-height: calc(100vh - 170px);
-    scrollbar-width: thin;
-  }
-
-  /* Add match percentage badge styling for better visibility */
-  .match-badge-prominent {
-    @apply flex items-center px-3 py-1.5 rounded-md text-base font-medium;
-  }
-
-  /* Job card match percentage styling for consistent display */
-  .job-card-match {
-    @apply absolute right-2 top-2 rounded-md px-2 py-1 text-sm font-medium flex items-center gap-1;
-  }
 }
 
 /* Custom scrollbar */
@@ -271,46 +185,4 @@
   opacity: 0;
   transform: translateY(-20px);
   transition: opacity 500ms, transform 500ms;
-}
-
-/* Job detail scroll area for mobile and desktop */
-.job-detail-scroll {
-  @apply overflow-y-auto;
-  max-height: calc(100vh - 200px);
-  scrollbar-width: thin;
-}
-
-/* Tab content scroll areas */
-.tab-content-scroll {
-  @apply overflow-y-auto;
-  max-height: 60vh;
-  scrollbar-width: thin;
-}
-
-/* Mobile menu animation */
-@keyframes slide-in-left {
-  from {
-    transform: translateX(-100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-.animate-slide-in-left {
-  animation: slide-in-left 0.3s ease-out forwards;
-}
-
-/* Enhanced scrolling for tab content - specifically improve job details */
-.tabs-content {
-  @apply overflow-y-auto;
-  max-height: calc(100vh - 330px);
-}
-
-.TabsContent {
-  overflow-y: auto;
-  height: 100%;
-  max-height: calc(100vh - 330px); /* Ensure content fits */
 }
