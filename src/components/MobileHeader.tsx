@@ -14,7 +14,7 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({ title }) => {
     <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between bg-white dark:bg-slate-900 border-b px-4 h-14">
       <div className="flex items-center gap-2">
         <Link to="/" className="flex items-center">
-          <img src="/lovable-uploads/2ba65bd9-bfb5-4f5c-9496-a7d5a9a45549.png" alt="Streamline" className="h-8 w-8" />
+          <img src="/lovable-uploads/f3c6fbd8-96c4-4634-9d74-649139e933f5.png" alt="Streamline" className="h-8 w-8" />
           <span className="font-bold text-lg ml-2">Streamline</span>
         </Link>
       </div>

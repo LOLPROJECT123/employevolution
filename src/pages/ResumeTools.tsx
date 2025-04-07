@@ -6,12 +6,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AIResumeCreator from "@/components/resume/AIResumeCreator";
 import AICVCreator from "@/components/resume/AICVCreator";
 import JobApplicationAutomation from "@/components/resume/JobApplicationAutomation";
+import { useMobile } from "@/hooks/use-mobile";
+import MobileHeader from "@/components/MobileHeader";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const ResumeTools = () => {
+  const isMobile = useMobile();
+
   return (
     <div className="min-h-screen flex flex-col bg-secondary/30">
-      <Navbar />
-      <main className="flex-1 pt-20">
+      {!isMobile && <Navbar />}
+      {isMobile && <MobileHeader />}
+      
+      <main className={`flex-1 ${isMobile ? 'pt-16' : 'pt-20'}`}>
         <div className="container px-4 py-8">
           <div className="mb-8">
             <h1 className="text-3xl font-bold">Resume & CV Tools</h1>
@@ -21,14 +28,27 @@ const ResumeTools = () => {
           </div>
           
           <Tabs defaultValue="ats-optimizer" className="space-y-6">
-            <TabsList className="flex flex-wrap">
-              <TabsTrigger value="ats-optimizer">ATS Optimizer</TabsTrigger>
-              <TabsTrigger value="ai-resume-creator">AI Resume Creator</TabsTrigger>
-              <TabsTrigger value="ai-cv-creator">AI CV Creator</TabsTrigger>
-              <TabsTrigger value="job-automation">Job Automation</TabsTrigger>
-              <TabsTrigger value="forum">Resume Forum</TabsTrigger>
-              <TabsTrigger value="templates">Templates</TabsTrigger>
-            </TabsList>
+            {isMobile ? (
+              <ScrollArea className="w-full pb-4">
+                <TabsList className="flex w-max px-1 py-1.5 space-x-2">
+                  <TabsTrigger value="ats-optimizer" className="px-4 py-2">ATS Optimizer</TabsTrigger>
+                  <TabsTrigger value="ai-resume-creator" className="px-4 py-2">AI Resume Creator</TabsTrigger>
+                  <TabsTrigger value="ai-cv-creator" className="px-4 py-2">AI CV Creator</TabsTrigger>
+                  <TabsTrigger value="job-automation" className="px-4 py-2">Job Automation</TabsTrigger>
+                  <TabsTrigger value="forum" className="px-4 py-2">Resume Forum</TabsTrigger>
+                  <TabsTrigger value="templates" className="px-4 py-2">Templates</TabsTrigger>
+                </TabsList>
+              </ScrollArea>
+            ) : (
+              <TabsList className="flex flex-wrap">
+                <TabsTrigger value="ats-optimizer">ATS Optimizer</TabsTrigger>
+                <TabsTrigger value="ai-resume-creator">AI Resume Creator</TabsTrigger>
+                <TabsTrigger value="ai-cv-creator">AI CV Creator</TabsTrigger>
+                <TabsTrigger value="job-automation">Job Automation</TabsTrigger>
+                <TabsTrigger value="forum">Resume Forum</TabsTrigger>
+                <TabsTrigger value="templates">Templates</TabsTrigger>
+              </TabsList>
+            )}
             
             <TabsContent value="ats-optimizer">
               <ATSOptimizer />
