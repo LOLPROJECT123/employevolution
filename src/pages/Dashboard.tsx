@@ -1,7 +1,10 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from "react";
 import Navbar from "@/components/Navbar";
-import { Button } from "@/components/ui/button";
+import MobileHeader from "@/components/MobileHeader";
+import { useMobile } from "@/hooks/use-mobile";
+import { useNavigate } from 'react-router-dom';
+import { useJobApplications } from '@/contexts/JobApplicationContext';
+import { JobStatus } from '@/types/job';
 import {
   Card,
   CardContent,
@@ -30,11 +33,10 @@ import {
   ListIcon,
   PlusIcon,
 } from 'lucide-react';
-import { useJobApplications } from '@/contexts/JobApplicationContext';
-import { JobStatus } from '@/types/job';
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const isMobile = useMobile();
   const [isLoggedIn, setIsLoggedIn] = useState(true); // Mock authentication
   const [animationReady, setAnimationReady] = useState(false);
   const { applications, appliedJobs } = useJobApplications();
@@ -130,8 +132,9 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-secondary/30">
-      <Navbar />
+    <div className="min-h-screen bg-background">
+      {!isMobile && <Navbar />}
+      {isMobile && <MobileHeader />}
       
       <main className="flex-1 pt-20">
         <div className="container px-4 py-8">

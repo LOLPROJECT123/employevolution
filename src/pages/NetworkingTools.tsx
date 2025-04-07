@@ -1,24 +1,22 @@
-
-import { useState } from "react";
+import React from "react";
+import Navbar from "@/components/Navbar";
+import MobileHeader from "@/components/MobileHeader";
+import { useMobile } from "@/hooks/use-mobile";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import RecruiterFinder from "@/components/RecruiterFinder";
 import ResearchOpportunityFinder from "@/components/ResearchOpportunityFinder";
 import { Card, CardContent } from "@/components/ui/card";
 import { Settings, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useMobile } from "@/hooks/use-mobile";
-import Navbar from "@/components/Navbar";
 
 const NetworkingTools = () => {
-  const [activeTab, setActiveTab] = useState("recruiters");
   const isMobile = useMobile();
 
   return (
-    <div className="w-full space-y-6">
-      {/* Add the Navbar component at the top */}
-      <Navbar />
+    <div className="min-h-screen bg-background">
+      {!isMobile && <Navbar />}
+      {isMobile && <MobileHeader />}
       
-      {/* Header section styled like the Jobs page */}
       <div className="bg-blue-600 dark:bg-blue-900 py-6 px-4 md:px-6">
         <div className="container mx-auto max-w-screen-xl">
           <h1 className="text-2xl md:text-3xl font-bold text-white">
@@ -28,7 +26,6 @@ const NetworkingTools = () => {
       </div>
 
       <div className="container mx-auto px-4 max-w-screen-xl space-y-6">
-        {/* Main card with tabs */}
         <Card className="shadow-sm">
           <div className="p-0">
             <div className="flex justify-between items-center p-4 border-b">

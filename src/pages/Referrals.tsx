@@ -2,16 +2,21 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navbar from "@/components/Navbar";
+import MobileHeader from "@/components/MobileHeader";
+import { useMobile } from "@/hooks/use-mobile";
 import RequestReferral from "@/components/referrals/RequestReferral";
 import ManageReferrals from "@/components/referrals/ManageReferrals";
 
 const Referrals = () => {
   const [activeTab, setActiveTab] = useState<string>("request");
+  const isMobile = useMobile();
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <div className="container mx-auto px-4 pt-24 pb-12 flex-1">
+      {!isMobile && <Navbar />}
+      {isMobile && <MobileHeader />}
+      
+      <div className={`container mx-auto px-4 ${isMobile ? 'pt-16' : 'pt-24'} pb-12 flex-1`}>
         <div className="max-w-5xl mx-auto">
           <h1 className="text-3xl font-bold mb-6 text-center">Employee Referrals</h1>
           
@@ -20,7 +25,7 @@ const Referrals = () => {
           </p>
           
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid grid-cols-2 w-full max-w-md mx-auto">
+            <TabsList className={`${isMobile ? 'grid grid-cols-1 gap-2' : 'grid grid-cols-2'} w-full max-w-md mx-auto`}>
               <TabsTrigger value="request">Request a Referral</TabsTrigger>
               <TabsTrigger value="manage">Manage Referrals</TabsTrigger>
             </TabsList>

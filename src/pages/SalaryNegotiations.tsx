@@ -26,7 +26,7 @@ const SalaryNegotiations = () => {
         
         <Tabs defaultValue="guides" className="w-full">
           <div className={`${isMobile ? 'overflow-x-auto' : 'flex justify-center'} mb-6`}>
-            <TabsList className={isMobile ? 'w-full flex' : ''}>
+            <TabsList className={isMobile ? 'w-full grid grid-cols-2 gap-2' : ''}>
               <TabsTrigger value="guides" className={isMobile ? 'flex-1' : ''}>Negotiation Guides</TabsTrigger>
               <TabsTrigger value="forum" className={isMobile ? 'flex-1' : ''}>Discussion Forum</TabsTrigger>
             </TabsList>
