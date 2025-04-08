@@ -17,7 +17,7 @@ const NetworkingTools = () => {
   return (
     <div className="min-h-screen bg-background">
       {!isMobile && <Navbar />}
-      {isMobile && <MobileHeader />}
+      {isMobile && <MobileHeader title="Networking" />}
       
       <div className="bg-blue-600 dark:bg-blue-900 py-6 px-4 md:px-6">
         <div className="container mx-auto max-w-screen-xl">
@@ -31,7 +31,7 @@ const NetworkingTools = () => {
         <Card className="shadow-sm">
           <div className="p-0">
             <div className="p-4 border-b">
-              <h2 className="text-lg font-medium mb-2">Networking & Outreach Tools</h2>
+              <h2 className="text-lg font-medium mb-4">Networking & Outreach Tools</h2>
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm">
                   <Settings className="h-4 w-4 mr-2" />

@@ -113,7 +113,7 @@ const NegotiationForum = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="space-y-4">
         <h2 className="text-2xl font-semibold">Salary Negotiation Forum</h2>
         <div className="flex gap-2">
           <Button variant="outline" size="sm">

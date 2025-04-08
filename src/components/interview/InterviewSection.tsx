@@ -16,26 +16,26 @@ const InterviewSection = () => {
       <div className="max-w-3xl mx-auto text-center">
         <h1 className="text-3xl font-bold mb-6">Interview Practice</h1>
         
-        <p className="text-muted-foreground mb-8 mx-auto max-w-2xl">
+        <p className="text-muted-foreground mb-12 mx-auto max-w-2xl">
           Prepare for your interviews with our comprehensive practice tools.
         </p>
         
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
           <TabsList className={`${isMobile ? 'grid grid-cols-2 gap-2' : ''} w-full max-w-md mx-auto`}>
-            <TabsTrigger value="behavioral">Behavioral</TabsTrigger>
-            <TabsTrigger value="coding">Coding</TabsTrigger>
-            <TabsTrigger value="company">Company Specific</TabsTrigger>
+            <TabsTrigger value="behavioral" className="px-6">Behavioral</TabsTrigger>
+            <TabsTrigger value="coding" className="px-6">Coding</TabsTrigger>
+            <TabsTrigger value="company" className="px-6">Company Specific</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="behavioral" className="space-y-6 text-left">
+          <TabsContent value="behavioral" className="space-y-8 text-left mt-8">
             <BehavioralInterview />
           </TabsContent>
           
-          <TabsContent value="coding" className="space-y-6 text-left">
+          <TabsContent value="coding" className="space-y-8 text-left mt-8">
             <CodingInterview />
           </TabsContent>
           
-          <TabsContent value="company" className="space-y-6 text-left">
+          <TabsContent value="company" className="space-y-8 text-left mt-8">
             <CompanyProblems />
           </TabsContent>
         </Tabs>

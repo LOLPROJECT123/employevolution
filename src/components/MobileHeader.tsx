@@ -83,7 +83,6 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({ title }) => {
             
             <div className="border-t p-4">
               <div className="flex items-center justify-between">
-                <Link to="/settings" className="text-sm text-muted-foreground">Settings</Link>
                 <Link to="/logout" className="text-sm text-muted-foreground">Log out</Link>
               </div>
             </div>

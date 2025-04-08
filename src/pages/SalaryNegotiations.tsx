@@ -16,7 +16,7 @@ const SalaryNegotiations = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {!isMobile && <Navbar />}
-      {isMobile && <MobileHeader />}
+      {isMobile && <MobileHeader title="Salary Negotiations" />}
       
       <div className={`container mx-auto px-4 ${isMobile ? 'pt-16' : 'pt-20'} pb-12 flex-1`}>
         <Tabs 
@@ -40,18 +40,6 @@ const SalaryNegotiations = () => {
           </div>
           
           <TabsContent value="forum" className="space-y-6">
-            <div className="flex justify-between items-center mb-4">
-              <div className="text-xl font-semibold">Salary Negotiation Forum</div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm">
-                  <FilterIcon className="h-4 w-4 mr-1" /> Filter
-                </Button>
-                <Button className="flex items-center" size="sm">
-                  <PlusSquare className="h-4 w-4 mr-1.5" /> New Post
-                </Button>
-              </div>
-            </div>
-            
             <NegotiationForum />
           </TabsContent>
           
