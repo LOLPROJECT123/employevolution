@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useState } from "react";
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
 import { useMobile } from "@/hooks/use-mobile";
@@ -11,6 +12,7 @@ import { Button } from "@/components/ui/button";
 
 const NetworkingTools = () => {
   const isMobile = useMobile();
+  const [activeTab, setActiveTab] = useState("recruiters");
 
   return (
     <div className="min-h-screen bg-background">
