@@ -14,7 +14,7 @@ const Referrals = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {!isMobile && <Navbar />}
-      {isMobile && <MobileHeader title="Referrals" />}
+      {isMobile && <MobileHeader showLogo={true} />}
       
       <div className={`container mx-auto px-4 ${isMobile ? 'pt-16' : 'pt-24'} pb-12 flex-1`}>
         <div className="max-w-3xl mx-auto text-center">

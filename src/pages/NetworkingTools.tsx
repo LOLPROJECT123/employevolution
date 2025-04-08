@@ -19,9 +19,9 @@ const NetworkingTools = () => {
       {!isMobile && <Navbar />}
       {isMobile && <MobileHeader title="Networking" />}
       
-      <div className="bg-blue-600 dark:bg-blue-900 py-6 px-4 md:px-6">
+      <div className="bg-blue-600 dark:bg-blue-900 py-4 px-4 md:py-6 md:px-6">
         <div className="container mx-auto max-w-screen-xl">
-          <h1 className="text-2xl md:text-3xl font-bold text-white">
+          <h1 className="text-xl md:text-3xl font-bold text-white">
             Find Your Next Opportunity
           </h1>
         </div>
@@ -31,8 +31,8 @@ const NetworkingTools = () => {
         <Card className="shadow-sm">
           <div className="p-0">
             <div className="p-4 border-b">
-              <h2 className="text-lg font-medium mb-4">Networking & Outreach Tools</h2>
-              <div className="flex items-center gap-2">
+              <h2 className="text-lg font-medium">Networking & Outreach Tools</h2>
+              <div className="flex flex-col sm:flex-row gap-2 mt-3">
                 <Button variant="outline" size="sm">
                   <Settings className="h-4 w-4 mr-2" />
                   Settings

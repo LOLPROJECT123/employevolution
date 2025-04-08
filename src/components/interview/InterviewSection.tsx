@@ -20,7 +20,7 @@ const InterviewSection = () => {
           Prepare for your interviews with our comprehensive practice tools.
         </p>
         
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-10">
           <TabsList className={`${isMobile ? 'grid grid-cols-3 gap-2' : ''} w-full max-w-md mx-auto`}>
             <TabsTrigger value="behavioral" className="px-6">Behavioral</TabsTrigger>
             <TabsTrigger value="coding" className="px-6">Coding</TabsTrigger>

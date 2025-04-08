@@ -22,12 +22,12 @@ const ResumeTools = () => {
         <div className="container px-4 py-8">
           <div className="mb-8">
             <h1 className="text-3xl font-bold">Resume & CV Tools</h1>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-muted-foreground mt-1 mb-6">
               Create, optimize, and get feedback on your professional documents to increase your chances of landing interviews
             </p>
           </div>
           
-          <Tabs defaultValue="ats-optimizer" className="space-y-6">
+          <Tabs defaultValue="ats-optimizer" className="space-y-8">
             {isMobile ? (
               <div className="overflow-x-auto pb-4">
                 <TabsList className="w-full grid grid-cols-3 gap-2">
@@ -52,29 +52,29 @@ const ResumeTools = () => {
               </TabsList>
             )}
             
-            <TabsContent value="ats-optimizer">
+            <TabsContent value="ats-optimizer" className="mt-8">
               <ATSOptimizer />
             </TabsContent>
             
-            <TabsContent value="ai-resume-creator">
+            <TabsContent value="ai-resume-creator" className="mt-8">
               <AIResumeCreator />
             </TabsContent>
             
-            <TabsContent value="ai-cv-creator">
+            <TabsContent value="ai-cv-creator" className="mt-8">
               <AICVCreator />
             </TabsContent>
             
-            <TabsContent value="job-automation">
+            <TabsContent value="job-automation" className="mt-8">
               <JobApplicationAutomation />
             </TabsContent>
             
-            <TabsContent value="forum">
+            <TabsContent value="forum" className="mt-8">
               <div className="grid place-items-center p-12">
                 <p className="text-muted-foreground">Forum content will be displayed here</p>
               </div>
             </TabsContent>
             
-            <TabsContent value="templates">
+            <TabsContent value="templates" className="mt-8">
               <div className="grid place-items-center p-12">
                 <p className="text-muted-foreground">Resume and cover letter templates will be displayed here</p>
               </div>

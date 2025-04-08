@@ -1,41 +1,34 @@
-
 import React, { useState } from "react";
-import { 
-  Tabs, 
-  TabsList, 
-  TabsTrigger, 
-  TabsContent 
-} from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Progress } from "@/components/ui/progress";
-import { Input } from "@/components/ui/input";
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
 import { useMobile } from "@/hooks/use-mobile";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
-  Upload, 
-  Mail, 
-  Phone, 
-  Calendar, 
-  MapPin, 
-  Briefcase, 
-  GraduationCap, 
-  Wrench, 
-  Linkedin, 
-  Github, 
-  Globe, 
-  Link as LinkIcon,
-  Zap, 
-  PenLine, 
-  Plus,
-  Search as SearchIcon,
-  UserRound,
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import {
+  AlertOctagon,
+  BarChartBig,
+  BookOpenCheck,
+  BriefcaseBusiness,
   Building2,
-  DollarSign,
-  MapPin as LocationIcon,
-  Clock,
+  Building,
+  Calendar,
+  CheckCircle2,
+  CircleUser,
+  Cog,
+  Edit3,
+  FileText,
   GraduationCap as EducationIcon,
   Users,
   Sparkles
@@ -43,8 +36,8 @@ import {
 
 const ProfilePage = () => {
   const isMobile = useMobile();
-  const [activeTab, setActiveTab] = useState("contact");
-  
+  const [activeTab, setActiveTab] = useState('contact');
+
   // Profile data states
   const [name, setName] = useState("Varun Veluri");
   const [jobStatus, setJobStatus] = useState("Actively looking");
@@ -462,25 +455,44 @@ const ProfilePage = () => {
 
         {/* Profile Tabs */}
         <Tabs 
-          defaultValue="contact" 
           value={activeTab} 
           onValueChange={setActiveTab}
           className="w-full"
         >
           <div className="overflow-auto">
-            <TabsList className={`${isMobile ? 'grid grid-cols-3 w-full mb-2' : 'w-full bg-muted/50 rounded-none'} mb-6`}>
-              <TabsTrigger value="contact" className="text-xs md:text-sm data-[state=active]:bg-background">
-                Contact
-              </TabsTrigger>
-              <TabsTrigger value="resume" className="text-xs md:text-sm data-[state=active]:bg-background">
-                Resume
-              </TabsTrigger>
-              <TabsTrigger value="jobPreferences" className="text-xs md:text-sm data-[state=active]:bg-background">
-                Job Preferences
-              </TabsTrigger>
-            </TabsList>
-            {isMobile && (
-              <TabsList className="grid grid-cols-2 w-full mb-6">
+            {isMobile ? (
+              <>
+                <TabsList className="grid grid-cols-3 w-full mb-2">
+                  <TabsTrigger value="contact" className="text-xs md:text-sm data-[state=active]:bg-background">
+                    Contact
+                  </TabsTrigger>
+                  <TabsTrigger value="resume" className="text-xs md:text-sm data-[state=active]:bg-background">
+                    Resume
+                  </TabsTrigger>
+                  <TabsTrigger value="jobPreferences" className="text-xs md:text-sm data-[state=active]:bg-background">
+                    Job Preferences
+                  </TabsTrigger>
+                </TabsList>
+                <TabsList className="grid grid-cols-2 w-full mb-6">
+                  <TabsTrigger value="equalEmployment" className="text-xs md:text-sm data-[state=active]:bg-background">
+                    Equal Employment
+                  </TabsTrigger>
+                  <TabsTrigger value="settings" className="text-xs md:text-sm data-[state=active]:bg-background">
+                    Settings
+                  </TabsTrigger>
+                </TabsList>
+              </>
+            ) : (
+              <TabsList className="w-full bg-muted/50 rounded-none mb-6">
+                <TabsTrigger value="contact" className="text-xs md:text-sm data-[state=active]:bg-background">
+                  Contact
+                </TabsTrigger>
+                <TabsTrigger value="resume" className="text-xs md:text-sm data-[state=active]:bg-background">
+                  Resume
+                </TabsTrigger>
+                <TabsTrigger value="jobPreferences" className="text-xs md:text-sm data-[state=active]:bg-background">
+                  Job Preferences
+                </TabsTrigger>
                 <TabsTrigger value="equalEmployment" className="text-xs md:text-sm data-[state=active]:bg-background">
                   Equal Employment
                 </TabsTrigger>
@@ -500,7 +512,6 @@ const ProfilePage = () => {
             {renderResumeContent()}
           </TabsContent>
 
-          {/* Other tabs content stays the same */}
           <TabsContent value="jobPreferences" className="mt-0">
             <Card className="mb-6">
               <CardHeader className="p-6">
