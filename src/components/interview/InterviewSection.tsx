@@ -21,21 +21,21 @@ const InterviewSection = () => {
         </p>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-          <TabsList className={`${isMobile ? 'grid grid-cols-2 gap-2' : ''} w-full max-w-md mx-auto`}>
+          <TabsList className={`${isMobile ? 'grid grid-cols-3 gap-2' : ''} w-full max-w-md mx-auto`}>
             <TabsTrigger value="behavioral" className="px-6">Behavioral</TabsTrigger>
             <TabsTrigger value="coding" className="px-6">Coding</TabsTrigger>
             <TabsTrigger value="company" className="px-6">Company Specific</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="behavioral" className="space-y-8 text-left mt-8">
+          <TabsContent value="behavioral" className="space-y-8 text-left mt-12">
             <BehavioralInterview />
           </TabsContent>
           
-          <TabsContent value="coding" className="space-y-8 text-left mt-8">
+          <TabsContent value="coding" className="space-y-8 text-left mt-12">
             <CodingInterview />
           </TabsContent>
           
-          <TabsContent value="company" className="space-y-8 text-left mt-8">
+          <TabsContent value="company" className="space-y-8 text-left mt-12">
             <CompanyProblems />
           </TabsContent>
         </Tabs>

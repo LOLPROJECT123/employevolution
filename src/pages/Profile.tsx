@@ -39,7 +39,7 @@ import {
   GraduationCap as EducationIcon,
   Users,
   Sparkles
-} from "lucide-react";
+} from 'lucide-react';
 
 const ProfilePage = () => {
   const isMobile = useMobile();
@@ -454,7 +454,7 @@ const ProfilePage = () => {
   return (
     <>
       {!isMobile && <Navbar />}
-      {isMobile && <MobileHeader title="Profile" />}
+      {isMobile && <MobileHeader showLogo={true} />}
       
       <div className={`container mx-auto ${isMobile ? 'px-4 pt-16' : 'py-8 px-4'} max-w-5xl`}>
         {/* Profile Header */}
@@ -468,7 +468,7 @@ const ProfilePage = () => {
           className="w-full"
         >
           <div className="overflow-auto">
-            <TabsList className={`${isMobile ? 'grid grid-cols-5 w-full' : 'w-full bg-muted/50 rounded-none'} mb-6`}>
+            <TabsList className={`${isMobile ? 'grid grid-cols-3 w-full mb-2' : 'w-full bg-muted/50 rounded-none'} mb-6`}>
               <TabsTrigger value="contact" className="text-xs md:text-sm data-[state=active]:bg-background">
                 Contact
               </TabsTrigger>
@@ -478,13 +478,17 @@ const ProfilePage = () => {
               <TabsTrigger value="jobPreferences" className="text-xs md:text-sm data-[state=active]:bg-background">
                 Job Preferences
               </TabsTrigger>
-              <TabsTrigger value="equalEmployment" className="text-xs md:text-sm data-[state=active]:bg-background">
-                Equal Employment
-              </TabsTrigger>
-              <TabsTrigger value="settings" className="text-xs md:text-sm data-[state=active]:bg-background">
-                Settings
-              </TabsTrigger>
             </TabsList>
+            {isMobile && (
+              <TabsList className="grid grid-cols-2 w-full mb-6">
+                <TabsTrigger value="equalEmployment" className="text-xs md:text-sm data-[state=active]:bg-background">
+                  Equal Employment
+                </TabsTrigger>
+                <TabsTrigger value="settings" className="text-xs md:text-sm data-[state=active]:bg-background">
+                  Settings
+                </TabsTrigger>
+              </TabsList>
+            )}
           </div>
 
           {/* Contact Tab */}
