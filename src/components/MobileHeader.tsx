@@ -15,7 +15,8 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({ title }) => {
       <div className="flex items-center gap-2">
         <Link to="/" className="flex items-center">
           <img src="/lovable-uploads/f3c6fbd8-96c4-4634-9d74-649139e933f5.png" alt="Streamline" className="h-8 w-8" />
-          <span className="font-bold text-lg ml-2">Streamline</span>
+          {!title && <span className="font-bold text-lg ml-2">Streamline</span>}
+          {title && <span className="font-bold text-lg ml-2">{title}</span>}
         </Link>
       </div>
       

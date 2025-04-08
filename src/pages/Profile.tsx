@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { 
   Tabs, 
@@ -453,7 +454,7 @@ const ProfilePage = () => {
   return (
     <>
       {!isMobile && <Navbar />}
-      {isMobile && <MobileHeader />}
+      {isMobile && <MobileHeader title="Profile" />}
       
       <div className={`container mx-auto ${isMobile ? 'px-4 pt-16' : 'py-8 px-4'} max-w-5xl`}>
         {/* Profile Header */}
@@ -466,21 +467,21 @@ const ProfilePage = () => {
           onValueChange={setActiveTab}
           className="w-full"
         >
-          <div className="overflow-x-auto">
-            <TabsList className={`${isMobile ? 'flex w-full' : 'w-full bg-muted/50 rounded-none'} mb-6`}>
-              <TabsTrigger value="contact" className="flex-1 data-[state=active]:bg-background">
+          <div className="overflow-auto">
+            <TabsList className={`${isMobile ? 'grid grid-cols-5 w-full' : 'w-full bg-muted/50 rounded-none'} mb-6`}>
+              <TabsTrigger value="contact" className="text-xs md:text-sm data-[state=active]:bg-background">
                 Contact
               </TabsTrigger>
-              <TabsTrigger value="resume" className="flex-1 data-[state=active]:bg-background">
+              <TabsTrigger value="resume" className="text-xs md:text-sm data-[state=active]:bg-background">
                 Resume
               </TabsTrigger>
-              <TabsTrigger value="jobPreferences" className="flex-1 data-[state=active]:bg-background">
+              <TabsTrigger value="jobPreferences" className="text-xs md:text-sm data-[state=active]:bg-background">
                 Job Preferences
               </TabsTrigger>
-              <TabsTrigger value="equalEmployment" className="flex-1 data-[state=active]:bg-background">
+              <TabsTrigger value="equalEmployment" className="text-xs md:text-sm data-[state=active]:bg-background">
                 Equal Employment
               </TabsTrigger>
-              <TabsTrigger value="settings" className="flex-1 data-[state=active]:bg-background">
+              <TabsTrigger value="settings" className="text-xs md:text-sm data-[state=active]:bg-background">
                 Settings
               </TabsTrigger>
             </TabsList>
@@ -491,7 +492,6 @@ const ProfilePage = () => {
             {renderContactContent()}
           </TabsContent>
 
-          {/* Resume Tab */}
           <TabsContent value="resume" className="mt-0">
             {renderResumeContent()}
           </TabsContent>

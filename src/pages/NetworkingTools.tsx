@@ -30,8 +30,8 @@ const NetworkingTools = () => {
       <div className="container mx-auto px-4 max-w-screen-xl space-y-6">
         <Card className="shadow-sm">
           <div className="p-0">
-            <div className="flex justify-between items-center p-4 border-b">
-              <h2 className="text-lg font-medium">Networking & Outreach Tools</h2>
+            <div className="p-4 border-b">
+              <h2 className="text-lg font-medium mb-2">Networking & Outreach Tools</h2>
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm">
                   <Settings className="h-4 w-4 mr-2" />
