@@ -1,10 +1,12 @@
-import React from "react";
+
+import React, { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
 import { useMobile } from "@/hooks/use-mobile";
 import { useNavigate } from 'react-router-dom';
 import { useJobApplications } from '@/contexts/JobApplicationContext';
 import { JobStatus } from '@/types/job';
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
