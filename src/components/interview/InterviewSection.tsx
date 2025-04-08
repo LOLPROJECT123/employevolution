@@ -13,10 +13,10 @@ const InterviewSection = () => {
 
   return (
     <div className={`container mx-auto px-4 ${isMobile ? 'pt-16' : 'pt-24'} pb-12 flex-1`}>
-      <div className="max-w-5xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6 text-center">Interview Practice</h1>
+      <div className="max-w-3xl mx-auto text-center">
+        <h1 className="text-3xl font-bold mb-6">Interview Practice</h1>
         
-        <p className="text-muted-foreground mb-8 text-center">
+        <p className="text-muted-foreground mb-8 mx-auto max-w-2xl">
           Prepare for your interviews with our comprehensive practice tools.
         </p>
         
@@ -27,15 +27,15 @@ const InterviewSection = () => {
             <TabsTrigger value="company">Company Specific</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="behavioral" className="space-y-6">
+          <TabsContent value="behavioral" className="space-y-6 text-left">
             <BehavioralInterview />
           </TabsContent>
           
-          <TabsContent value="coding" className="space-y-6">
+          <TabsContent value="coding" className="space-y-6 text-left">
             <CodingInterview />
           </TabsContent>
           
-          <TabsContent value="company" className="space-y-6">
+          <TabsContent value="company" className="space-y-6 text-left">
             <CompanyProblems />
           </TabsContent>
         </Tabs>

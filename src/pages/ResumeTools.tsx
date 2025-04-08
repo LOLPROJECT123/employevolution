@@ -29,8 +29,8 @@ const ResumeTools = () => {
           
           <Tabs defaultValue="ats-optimizer" className="space-y-6">
             {isMobile ? (
-              <ScrollArea className="pb-4">
-                <TabsList className="w-full grid grid-cols-2 gap-3">
+              <div className="overflow-x-auto pb-4">
+                <TabsList className="w-full grid grid-cols-3 gap-2">
                   <TabsTrigger value="ats-optimizer" className="px-3 py-2 text-sm whitespace-normal h-auto">ATS Optimizer</TabsTrigger>
                   <TabsTrigger value="ai-resume-creator" className="px-3 py-2 text-sm whitespace-normal h-auto">AI Resume Creator</TabsTrigger>
                   <TabsTrigger value="ai-cv-creator" className="px-3 py-2 text-sm whitespace-normal h-auto">AI CV Creator</TabsTrigger>
@@ -38,7 +38,7 @@ const ResumeTools = () => {
                   <TabsTrigger value="forum" className="px-3 py-2 text-sm whitespace-normal h-auto">Resume Forum</TabsTrigger>
                   <TabsTrigger value="templates" className="px-3 py-2 text-sm whitespace-normal h-auto">Templates</TabsTrigger>
                 </TabsList>
-              </ScrollArea>
+              </div>
             ) : (
               <TabsList className="flex flex-wrap">
                 <TabsTrigger value="ats-optimizer">ATS Optimizer</TabsTrigger>

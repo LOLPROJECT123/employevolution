@@ -1,5 +1,7 @@
+
 import { useState, useEffect, useRef } from 'react';
 import Navbar from "@/components/Navbar";
+import MobileHeader from "@/components/MobileHeader";
 import { Job, JobFilters } from "@/types/job";
 import { JobDetailView } from "@/components/JobDetailView";
 import { JobFiltersSection } from "@/components/JobFilters";
@@ -468,8 +470,9 @@ const Jobs = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900/30">
-      <Navbar />
-      <main className="flex-1 pt-20">
+      {!isMobile && <Navbar />}
+      {isMobile && <MobileHeader />}
+      <main className={`flex-1 ${isMobile ? 'pt-16' : 'pt-20'}`}>
         <div className="container px-4 py-8 mx-auto max-w-7xl">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
