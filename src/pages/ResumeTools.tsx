@@ -29,7 +29,7 @@ const ResumeTools = () => {
           
           <Tabs defaultValue="ats-optimizer" className="space-y-8">
             {isMobile ? (
-              <div className="pb-10">  {/* Increased padding at bottom */}
+              <div className="pb-16">  {/* Increased padding at bottom from 10 to 16 */}
                 <TabsList className="w-full mb-2 grid grid-cols-2 gap-x-2 gap-y-2">
                   <TabsTrigger value="ats-optimizer" className="p-2 text-sm whitespace-normal h-auto">ATS Optimizer</TabsTrigger>
                   <TabsTrigger value="ai-resume-creator" className="p-2 text-sm whitespace-normal h-auto">AI Resume Creator</TabsTrigger>
@@ -50,29 +50,29 @@ const ResumeTools = () => {
               </TabsList>
             )}
             
-            <TabsContent value="ats-optimizer">
+            <TabsContent value="ats-optimizer" className={isMobile ? "mt-4" : ""}>
               <ATSOptimizer />
             </TabsContent>
             
-            <TabsContent value="ai-resume-creator">
+            <TabsContent value="ai-resume-creator" className={isMobile ? "mt-4" : ""}>
               <AIResumeCreator />
             </TabsContent>
             
-            <TabsContent value="ai-cv-creator">
+            <TabsContent value="ai-cv-creator" className={isMobile ? "mt-4" : ""}>
               <AICVCreator />
             </TabsContent>
             
-            <TabsContent value="job-automation">
+            <TabsContent value="job-automation" className={isMobile ? "mt-4" : ""}>
               <JobApplicationAutomation />
             </TabsContent>
             
-            <TabsContent value="forum">
+            <TabsContent value="forum" className={isMobile ? "mt-4" : ""}>
               <div className="grid place-items-center p-12">
                 <p className="text-muted-foreground">Forum content will be displayed here</p>
               </div>
             </TabsContent>
             
-            <TabsContent value="templates">
+            <TabsContent value="templates" className={isMobile ? "mt-4" : ""}>
               <div className="grid place-items-center p-12">
                 <p className="text-muted-foreground">Resume and cover letter templates will be displayed here</p>
               </div>
