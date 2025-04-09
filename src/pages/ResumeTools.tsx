@@ -50,29 +50,29 @@ const ResumeTools = () => {
               </TabsList>
             )}
             
-            <TabsContent value="ats-optimizer" className="mt-8">
+            <TabsContent value="ats-optimizer" className="mt-12">
               <ATSOptimizer />
             </TabsContent>
             
-            <TabsContent value="ai-resume-creator" className="mt-8">
+            <TabsContent value="ai-resume-creator" className="mt-12">
               <AIResumeCreator />
             </TabsContent>
             
-            <TabsContent value="ai-cv-creator" className="mt-8">
+            <TabsContent value="ai-cv-creator" className="mt-12">
               <AICVCreator />
             </TabsContent>
             
-            <TabsContent value="job-automation" className="mt-8">
+            <TabsContent value="job-automation" className="mt-12">
               <JobApplicationAutomation />
             </TabsContent>
             
-            <TabsContent value="forum" className="mt-8">
+            <TabsContent value="forum" className="mt-12">
               <div className="grid place-items-center p-12">
                 <p className="text-muted-foreground">Forum content will be displayed here</p>
               </div>
             </TabsContent>
             
-            <TabsContent value="templates" className="mt-8">
+            <TabsContent value="templates" className="mt-12">
               <div className="grid place-items-center p-12">
                 <p className="text-muted-foreground">Resume and cover letter templates will be displayed here</p>
               </div>
