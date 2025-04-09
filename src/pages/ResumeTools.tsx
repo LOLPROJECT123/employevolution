@@ -29,7 +29,7 @@ const ResumeTools = () => {
           
           <Tabs defaultValue="ats-optimizer" className="space-y-8">
             {isMobile ? (
-              <div className="pb-4">
+              <div className="pb-10">  {/* Increased padding at bottom */}
                 <TabsList className="w-full mb-2 grid grid-cols-2 gap-x-2 gap-y-2">
                   <TabsTrigger value="ats-optimizer" className="p-2 text-sm whitespace-normal h-auto">ATS Optimizer</TabsTrigger>
                   <TabsTrigger value="ai-resume-creator" className="p-2 text-sm whitespace-normal h-auto">AI Resume Creator</TabsTrigger>
@@ -50,29 +50,29 @@ const ResumeTools = () => {
               </TabsList>
             )}
             
-            <TabsContent value="ats-optimizer" className="mt-12">
+            <TabsContent value="ats-optimizer">
               <ATSOptimizer />
             </TabsContent>
             
-            <TabsContent value="ai-resume-creator" className="mt-12">
+            <TabsContent value="ai-resume-creator">
               <AIResumeCreator />
             </TabsContent>
             
-            <TabsContent value="ai-cv-creator" className="mt-12">
+            <TabsContent value="ai-cv-creator">
               <AICVCreator />
             </TabsContent>
             
-            <TabsContent value="job-automation" className="mt-12">
+            <TabsContent value="job-automation">
               <JobApplicationAutomation />
             </TabsContent>
             
-            <TabsContent value="forum" className="mt-12">
+            <TabsContent value="forum">
               <div className="grid place-items-center p-12">
                 <p className="text-muted-foreground">Forum content will be displayed here</p>
               </div>
             </TabsContent>
             
-            <TabsContent value="templates" className="mt-12">
+            <TabsContent value="templates">
               <div className="grid place-items-center p-12">
                 <p className="text-muted-foreground">Resume and cover letter templates will be displayed here</p>
               </div>
