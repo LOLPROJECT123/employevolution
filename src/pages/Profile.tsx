@@ -16,6 +16,7 @@ import {
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import {
   AlertOctagon,
   BarChartBig,
@@ -26,12 +27,30 @@ import {
   Calendar,
   CheckCircle2,
   CircleUser,
+  Clock,
   Cog,
+  DollarSign,
   Edit3,
   FileText,
-  GraduationCap as EducationIcon,
+  GraduationCap,
+  Github,
+  Globe,
+  Link as LinkIcon,
+  Linkedin,
+  Mail,
+  MapPin,
+  PenLine,
+  Phone,
+  Plus,
+  RefreshCw,
+  Settings,
+  Upload,
+  UserRound,
   Users,
-  Sparkles
+  Sparkles,
+  Wrench,
+  Briefcase,
+  Zap
 } from 'lucide-react';
 
 const ProfilePage = () => {
@@ -512,6 +531,7 @@ const ProfilePage = () => {
             {renderResumeContent()}
           </TabsContent>
 
+          {/* Job Preferences Tab */}
           <TabsContent value="jobPreferences" className="mt-0">
             <Card className="mb-6">
               <CardHeader className="p-6">
@@ -760,6 +780,7 @@ const ProfilePage = () => {
             </Card>
           </TabsContent>
 
+          {/* Equal Employment Tab */}
           <TabsContent value="equalEmployment" className="mt-0">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between p-6">
@@ -890,6 +911,7 @@ const ProfilePage = () => {
             </Card>
           </TabsContent>
 
+          {/* Settings Tab */}
           <TabsContent value="settings" className="mt-0">
             <Card className="mb-6">
               <CardHeader className="p-6">
