@@ -660,7 +660,7 @@ const ProfilePage = () => {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <h3 className="font-medium flex items-center">
-                      <LocationIcon className="mr-2 h-5 w-5 text-blue-500" />
+                      <MapPin className="mr-2 h-5 w-5 text-blue-500" />
                       Location & Work Model
                     </h3>
                     <Button variant="ghost" size="sm">
