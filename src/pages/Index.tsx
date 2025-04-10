@@ -2,6 +2,8 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import Navbar from "@/components/Navbar";
+import MobileHeader from "@/components/MobileHeader";
+import { useMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { JobCard } from "@/components/JobCard";
 import { 
@@ -101,6 +103,7 @@ const features = [
 const Index = () => {
   const navigate = useNavigate();
   const [animationReady, setAnimationReady] = useState(false);
+  const isMobile = useMobile();
 
   useEffect(() => {
     const timer = setTimeout(() => setAnimationReady(true), 100);
@@ -114,10 +117,14 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
+      {isMobile ? (
+        <MobileHeader title="Streamline" />
+      ) : (
+        <Navbar />
+      )}
       
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4 relative overflow-hidden">
+      <section className={`${isMobile ? 'pt-20' : 'pt-32'} pb-20 px-4 relative overflow-hidden`}>
         <div className="absolute inset-0 bg-gradient-to-br from-accent/80 to-transparent z-0"></div>
         <div className="container relative z-10">
           <div className="max-w-4xl mx-auto text-center">
