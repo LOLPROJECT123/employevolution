@@ -1,4 +1,3 @@
-
 import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
 import { 
@@ -7,6 +6,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { 
   MapPin, 
@@ -330,7 +330,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
             </TabsList>
           </div>
           
-          <div className="flex-1 overflow-y-auto px-4 pb-4">
+          <ScrollArea className="flex-1 px-4 pb-4">
             <TabsContent value="summary" className="mt-0 space-y-6 h-full data-[state=active]:flex-1 data-[state=active]:flex data-[state=active]:flex-col">
               {job.matchPercentage && (
                 <div className={`p-4 rounded-lg ${getMatchBgColor(job.matchPercentage)} mb-4`}>
@@ -616,7 +616,7 @@ export function JobDetailView({ job, onApply, onSave }: JobDetailViewProps) {
                 </div>
               )}
             </TabsContent>
-          </div>
+          </ScrollArea>
         </Tabs>
       </div>
       
