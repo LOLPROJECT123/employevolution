@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React, { useState, useRef, ChangeEvent } from "react";
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
 import { useMobile } from "@/hooks/use-mobile";
@@ -7,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
 import { 
   Card, 
   CardContent, 
@@ -18,17 +19,10 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
-  AlertOctagon,
   BarChartBig,
-  BookOpenCheck,
-  BriefcaseBusiness,
   Building2,
-  Building,
   Calendar,
-  CheckCircle2,
-  CircleUser,
   Clock,
-  Cog,
   DollarSign,
   Edit3,
   FileText,
@@ -42,20 +36,52 @@ import {
   PenLine,
   Phone,
   Plus,
-  RefreshCw,
   Settings,
   Upload,
-  UserRound,
   Users,
   Sparkles,
   Wrench,
   Briefcase,
-  Zap
+  Zap,
+  UserRound
 } from 'lucide-react';
+
+// Import edit components
+import EditProfileHeader from "@/components/profile/EditProfileHeader";
+import EditContactInfo from "@/components/profile/EditContactInfo";
+import EditWorkExperience from "@/components/profile/EditWorkExperience";
+import EditEducation from "@/components/profile/EditEducation";
+import EditProject from "@/components/profile/EditProject";
+import EditSocialLinks from "@/components/profile/EditSocialLinks";
+import EditJobPreferences from "@/components/profile/EditJobPreferences";
+import EditEqualEmployment from "@/components/profile/EditEqualEmployment";
+
+// Import resume parser
+import { parseResume, ParsedResume } from "@/utils/resumeParser";
 
 const ProfilePage = () => {
   const isMobile = useMobile();
   const [activeTab, setActiveTab] = useState('contact');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Edit modal states
+  const [profileHeaderModalOpen, setProfileHeaderModalOpen] = useState(false);
+  const [contactModalOpen, setContactModalOpen] = useState(false);
+  const [workExperienceModalOpen, setWorkExperienceModalOpen] = useState(false);
+  const [editingWorkExperience, setEditingWorkExperience] = useState<any>(null);
+  const [educationModalOpen, setEducationModalOpen] = useState(false);
+  const [editingEducation, setEditingEducation] = useState<any>(null);
+  const [projectModalOpen, setProjectModalOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState<any>(null);
+  const [socialLinksModalOpen, setSocialLinksModalOpen] = useState(false);
+  const [roleExperienceModalOpen, setRoleExperienceModalOpen] = useState(false);
+  const [industriesModalOpen, setIndustriesModalOpen] = useState(false);
+  const [compensationModalOpen, setCompensationModalOpen] = useState(false);
+  const [locationModalOpen, setLocationModalOpen] = useState(false);
+  const [jobTypesModalOpen, setJobTypesModalOpen] = useState(false);
+  const [skillsModalOpen, setSkillsModalOpen] = useState(false);
+  const [workAuthModalOpen, setWorkAuthModalOpen] = useState(false);
+  const [equalEmploymentModalOpen, setEqualEmploymentModalOpen] = useState(false);
 
   // Profile data states
   const [name, setName] = useState("Varun Veluri");
@@ -191,13 +217,223 @@ const ProfilePage = () => {
     }
   });
 
+  // Resume upload handling
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      toast.loading("Parsing resume...");
+      const parsedData: ParsedResume = await parseResume(file);
+      
+      // Apply parsed data to the profile
+      if (parsedData.personalInfo.name) setName(parsedData.personalInfo.name);
+      if (parsedData.personalInfo.email) setEmail(parsedData.personalInfo.email);
+      if (parsedData.personalInfo.phone) setPhone(parsedData.personalInfo.phone);
+      if (parsedData.personalInfo.location) setLocation(parsedData.personalInfo.location);
+      
+      if (parsedData.workExperiences.length > 0) {
+        setWorkExperiences(
+          parsedData.workExperiences.map((exp, i) => ({ ...exp, id: i + 1 }))
+        );
+      }
+      
+      if (parsedData.education.length > 0) {
+        setEducation(
+          parsedData.education.map((edu, i) => ({ ...edu, id: i + 1 }))
+        );
+      }
+      
+      if (parsedData.projects.length > 0) {
+        setProjects(
+          parsedData.projects.map((project, i) => ({ ...project, id: i + 1 }))
+        );
+      }
+      
+      if (parsedData.skills.length > 0) {
+        setSettings({
+          ...settings,
+          skills: parsedData.skills
+        });
+      }
+      
+      if (parsedData.languages.length > 0) {
+        setSettings({
+          ...settings,
+          languages: parsedData.languages
+        });
+      }
+      
+      if (parsedData.socialLinks.linkedin) {
+        setSocialLinks({
+          ...socialLinks,
+          ...parsedData.socialLinks
+        });
+      }
+
+      // Update profile completion
+      const newCompletionPercentage = calculateProfileCompletion();
+      setProfileCompletionPercentage(newCompletionPercentage);
+      
+      toast.success("Resume parsed successfully!");
+    } catch (error) {
+      toast.error("Error parsing resume. Please try again or enter information manually.");
+      console.error("Resume parsing error:", error);
+    }
+  };
+
+  // Trigger file input click
+  const handleBrowseFiles = () => {
+    fileInputRef.current?.click();
+  };
+
+  // Calculate profile completion percentage
+  const calculateProfileCompletion = () => {
+    let score = 0;
+    const totalFields = 10;
+    
+    if (name) score++;
+    if (email) score++;
+    if (phone) score++;
+    if (location) score++;
+    if (workExperiences.length > 0) score++;
+    if (education.length > 0) score++;
+    if (projects.length > 0) score++;
+    if (settings.skills.length > 0) score++;
+    if (settings.languages.length > 0) score++;
+    if (socialLinks.linkedin || socialLinks.github || socialLinks.portfolio || socialLinks.other) score++;
+    
+    return Math.round((score / totalFields) * 100);
+  };
+
+  // Handler functions for modals
+  const handleUpdateProfileHeader = (data: { name: string; jobStatus: string }) => {
+    setName(data.name);
+    setJobStatus(data.jobStatus);
+    toast.success("Profile updated successfully!");
+  };
+
+  const handleUpdateContactInfo = (data: { email: string; phone: string; dateOfBirth: string; location: string }) => {
+    setEmail(data.email);
+    setPhone(data.phone);
+    setDateOfBirth(data.dateOfBirth);
+    setLocation(data.location);
+    toast.success("Contact information updated successfully!");
+  };
+
+  const handleAddWorkExperience = () => {
+    setEditingWorkExperience(null);
+    setWorkExperienceModalOpen(true);
+  };
+
+  const handleEditWorkExperience = (experience: any) => {
+    setEditingWorkExperience(experience);
+    setWorkExperienceModalOpen(true);
+  };
+
+  const handleSaveWorkExperience = (experience: any) => {
+    if (editingWorkExperience) {
+      // Update existing experience
+      setWorkExperiences(workExperiences.map(exp => 
+        exp.id === experience.id ? experience : exp
+      ));
+      toast.success("Work experience updated!");
+    } else {
+      // Add new experience
+      setWorkExperiences([...workExperiences, experience]);
+      toast.success("Work experience added!");
+    }
+  };
+
+  const handleDeleteWorkExperience = (id: number) => {
+    setWorkExperiences(workExperiences.filter(exp => exp.id !== id));
+    toast.success("Work experience deleted!");
+  };
+
+  const handleAddEducation = () => {
+    setEditingEducation(null);
+    setEducationModalOpen(true);
+  };
+
+  const handleEditEducation = (edu: any) => {
+    setEditingEducation(edu);
+    setEducationModalOpen(true);
+  };
+
+  const handleSaveEducation = (edu: any) => {
+    if (editingEducation) {
+      // Update existing education
+      setEducation(education.map(item => 
+        item.id === edu.id ? edu : item
+      ));
+      toast.success("Education updated!");
+    } else {
+      // Add new education
+      setEducation([...education, edu]);
+      toast.success("Education added!");
+    }
+  };
+
+  const handleDeleteEducation = (id: number) => {
+    setEducation(education.filter(edu => edu.id !== id));
+    toast.success("Education deleted!");
+  };
+
+  const handleAddProject = () => {
+    setEditingProject(null);
+    setProjectModalOpen(true);
+  };
+
+  const handleEditProject = (project: any) => {
+    setEditingProject(project);
+    setProjectModalOpen(true);
+  };
+
+  const handleSaveProject = (project: any) => {
+    if (editingProject) {
+      // Update existing project
+      setProjects(projects.map(item => 
+        item.id === project.id ? project : item
+      ));
+      toast.success("Project updated!");
+    } else {
+      // Add new project
+      setProjects([...projects, project]);
+      toast.success("Project added!");
+    }
+  };
+
+  const handleDeleteProject = (id: number) => {
+    setProjects(projects.filter(project => project.id !== id));
+    toast.success("Project deleted!");
+  };
+
+  const handleUpdateSocialLinks = (data: any) => {
+    setSocialLinks(data);
+    toast.success("Social links updated!");
+  };
+
+  const handleUpdateJobPreferences = (data: any) => {
+    setJobPreferences({
+      ...jobPreferences,
+      ...data
+    });
+    toast.success("Job preferences updated!");
+  };
+
+  const handleUpdateEqualEmployment = (data: any) => {
+    setEqualEmploymentData(data);
+    toast.success("Equal employment data updated!");
+  };
+
+  // Render profile card
   const renderProfileCard = () => (
     <Card className="mb-6 shadow-none border rounded-lg">
       <CardContent className="p-6">
         <div className={`flex ${isMobile ? 'flex-col' : 'items-start gap-6'}`}>
           <div className="relative mb-4">
             <div className="h-24 w-24 rounded-full bg-gray-200 flex items-center justify-center text-2xl font-semibold text-gray-500">
-              VV
+              {name.split(' ').map(n => n[0]).join('')}
             </div>
           </div>
           <div className="flex-1 w-full">
@@ -209,7 +445,12 @@ const ProfilePage = () => {
                   {jobStatus}
                 </div>
               </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8"
+                onClick={() => setProfileHeaderModalOpen(true)}
+              >
                 <PenLine className="h-4 w-4" />
               </Button>
             </div>
@@ -258,11 +499,16 @@ const ProfilePage = () => {
     </Card>
   );
 
+  // Render contact section
   const renderContactContent = () => (
     <Card className="shadow-none border rounded-lg">
       <CardHeader className="flex flex-row items-center justify-between p-6">
         <CardTitle>Contact</CardTitle>
-        <Button variant="ghost" size="icon">
+        <Button 
+          variant="ghost" 
+          size="icon"
+          onClick={() => setContactModalOpen(true)}
+        >
           <PenLine className="h-4 w-4" />
         </Button>
       </CardHeader>
@@ -287,16 +533,28 @@ const ProfilePage = () => {
     </Card>
   );
 
+  // Render resume section
   const renderResumeContent = () => (
     <>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">Resume</h2>
-        <Button variant="outline">
+        <Button variant="outline" onClick={() => handleBrowseFiles()}>
           <Upload className="h-4 w-4 mr-2" />
           Upload Resume
         </Button>
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          className="hidden"
+          accept=".pdf,.doc,.docx,.txt"
+        />
       </div>
-      <div className="border-2 border-dashed rounded-lg p-12 flex flex-col items-center justify-center mb-6">
+
+      <div 
+        className="border-2 border-dashed rounded-lg p-12 flex flex-col items-center justify-center mb-6 cursor-pointer hover:bg-muted/50 transition-colors"
+        onClick={() => handleBrowseFiles()}
+      >
         <Upload className="h-12 w-12 text-muted-foreground mb-4" />
         <p className="text-center mb-1">Drag & drop your resume here</p>
         <p className="text-sm text-muted-foreground text-center mb-4">Supports PDF, DOC, DOCX formats</p>
@@ -305,7 +563,7 @@ const ProfilePage = () => {
       
       <div className="flex justify-between items-center mt-8 mb-4">
         <h2 className="text-xl font-bold">Work Experience</h2>
-        <Button variant="outline">
+        <Button variant="outline" onClick={handleAddWorkExperience}>
           <Plus className="h-4 w-4 mr-2" />
           Add Experience
         </Button>
@@ -321,7 +579,11 @@ const ProfilePage = () => {
               <div className="flex-1">
                 <div className="flex justify-between">
                   <h3 className="text-lg font-semibold">{experience.role}</h3>
-                  <Button variant="ghost" size="icon">
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={() => handleEditWorkExperience(experience)}
+                  >
                     <PenLine className="h-4 w-4" />
                   </Button>
                 </div>
@@ -341,7 +603,7 @@ const ProfilePage = () => {
       
       <div className="flex justify-between items-center mt-8 mb-4">
         <h2 className="text-xl font-bold">Education</h2>
-        <Button variant="outline">
+        <Button variant="outline" onClick={handleAddEducation}>
           <Plus className="h-4 w-4 mr-2" />
           Add Education
         </Button>
@@ -357,7 +619,11 @@ const ProfilePage = () => {
               <div className="flex-1">
                 <div className="flex justify-between">
                   <h3 className="text-lg font-semibold">{edu.school}</h3>
-                  <Button variant="ghost" size="icon">
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={() => handleEditEducation(edu)}
+                  >
                     <PenLine className="h-4 w-4" />
                   </Button>
                 </div>
@@ -371,7 +637,7 @@ const ProfilePage = () => {
       
       <div className="flex justify-between items-center mt-8 mb-4">
         <h2 className="text-xl font-bold">Projects</h2>
-        <Button variant="outline">
+        <Button variant="outline" onClick={handleAddProject}>
           <Plus className="h-4 w-4 mr-2" />
           Add Project
         </Button>
@@ -387,7 +653,11 @@ const ProfilePage = () => {
               <div className="flex-1">
                 <div className="flex justify-between">
                   <h3 className="text-lg font-semibold">{project.name}</h3>
-                  <Button variant="ghost" size="icon">
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={() => handleEditProject(project)}
+                  >
                     <PenLine className="h-4 w-4" />
                   </Button>
                 </div>
@@ -416,7 +686,11 @@ const ProfilePage = () => {
             <p className="font-medium">LinkedIn URL</p>
             <p className="text-sm text-muted-foreground">{socialLinks.linkedin || "Not provided"}</p>
           </div>
-          <Button variant="ghost" size="icon">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => setSocialLinksModalOpen(true)}
+          >
             <PenLine className="h-4 w-4" />
           </Button>
         </div>
@@ -429,7 +703,11 @@ const ProfilePage = () => {
             <p className="font-medium">GitHub URL</p>
             <p className="text-sm text-muted-foreground">{socialLinks.github || "Not provided"}</p>
           </div>
-          <Button variant="ghost" size="icon">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => setSocialLinksModalOpen(true)}
+          >
             <PenLine className="h-4 w-4" />
           </Button>
         </div>
@@ -442,7 +720,11 @@ const ProfilePage = () => {
             <p className="font-medium">Portfolio URL</p>
             <p className="text-sm text-muted-foreground">{socialLinks.portfolio || "Not provided"}</p>
           </div>
-          <Button variant="ghost" size="icon">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => setSocialLinksModalOpen(true)}
+          >
             <PenLine className="h-4 w-4" />
           </Button>
         </div>
@@ -455,7 +737,11 @@ const ProfilePage = () => {
             <p className="font-medium">Other URL</p>
             <p className="text-sm text-muted-foreground">{socialLinks.other || "Not provided"}</p>
           </div>
-          <Button variant="ghost" size="icon">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => setSocialLinksModalOpen(true)}
+          >
             <PenLine className="h-4 w-4" />
           </Button>
         </div>
@@ -558,7 +844,11 @@ const ProfilePage = () => {
                       <UserRound className="mr-2 h-5 w-5 text-blue-500" />
                       Role & Experience
                     </h3>
-                    <Button variant="ghost" size="sm">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => setRoleExperienceModalOpen(true)}
+                    >
                       <PenLine className="h-4 w-4 mr-1" /> Edit
                     </Button>
                   </div>
@@ -591,7 +881,11 @@ const ProfilePage = () => {
                       <Building2 className="mr-2 h-5 w-5 text-blue-500" />
                       Industries & Companies
                     </h3>
-                    <Button variant="ghost" size="sm">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => setIndustriesModalOpen(true)}
+                    >
                       <PenLine className="h-4 w-4 mr-1" /> Edit
                     </Button>
                   </div>
@@ -630,7 +924,11 @@ const ProfilePage = () => {
                       <DollarSign className="mr-2 h-5 w-5 text-blue-500" />
                       Compensation
                     </h3>
-                    <Button variant="ghost" size="sm">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => setCompensationModalOpen(true)}
+                    >
                       <PenLine className="h-4 w-4 mr-1" /> Edit
                     </Button>
                   </div>
@@ -663,7 +961,11 @@ const ProfilePage = () => {
                       <MapPin className="mr-2 h-5 w-5 text-blue-500" />
                       Location & Work Model
                     </h3>
-                    <Button variant="ghost" size="sm">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => setLocationModalOpen(true)}
+                    >
                       <PenLine className="h-4 w-4 mr-1" /> Edit
                     </Button>
                   </div>
@@ -696,7 +998,11 @@ const ProfilePage = () => {
                       <Clock className="mr-2 h-5 w-5 text-blue-500" />
                       Job Types
                     </h3>
-                    <Button variant="ghost" size="sm">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => setJobTypesModalOpen(true)}
+                    >
                       <PenLine className="h-4 w-4 mr-1" /> Edit
                     </Button>
                   </div>
@@ -719,7 +1025,11 @@ const ProfilePage = () => {
                       <Sparkles className="mr-2 h-5 w-5 text-blue-500" />
                       Skills & Qualifications
                     </h3>
-                    <Button variant="ghost" size="sm">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => setSkillsModalOpen(true)}
+                    >
                       <PenLine className="h-4 w-4 mr-1" /> Edit
                     </Button>
                   </div>
@@ -747,7 +1057,11 @@ const ProfilePage = () => {
                       <Users className="mr-2 h-5 w-5 text-blue-500" />
                       Work Authorization
                     </h3>
-                    <Button variant="ghost" size="sm">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => setWorkAuthModalOpen(true)}
+                    >
                       <PenLine className="h-4 w-4 mr-1" /> Edit
                     </Button>
                   </div>
@@ -785,7 +1099,10 @@ const ProfilePage = () => {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between p-6">
                 <CardTitle>Equal Employment</CardTitle>
-                <Button variant="outline">
+                <Button 
+                  variant="outline"
+                  onClick={() => setEqualEmploymentModalOpen(true)}
+                >
                   <PenLine className="h-4 w-4 mr-2" />
                   Edit Data
                 </Button>
@@ -1148,6 +1465,115 @@ const ProfilePage = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* All edit modals */}
+      <EditProfileHeader
+        open={profileHeaderModalOpen}
+        onClose={() => setProfileHeaderModalOpen(false)}
+        initialData={{ name, jobStatus }}
+        onSave={handleUpdateProfileHeader}
+      />
+
+      <EditContactInfo
+        open={contactModalOpen}
+        onClose={() => setContactModalOpen(false)}
+        initialData={{ email, phone, dateOfBirth, location }}
+        onSave={handleUpdateContactInfo}
+      />
+
+      <EditWorkExperience
+        open={workExperienceModalOpen}
+        onClose={() => setWorkExperienceModalOpen(false)}
+        experience={editingWorkExperience}
+        onSave={handleSaveWorkExperience}
+        onDelete={handleDeleteWorkExperience}
+      />
+
+      <EditEducation
+        open={educationModalOpen}
+        onClose={() => setEducationModalOpen(false)}
+        education={editingEducation}
+        onSave={handleSaveEducation}
+        onDelete={handleDeleteEducation}
+      />
+
+      <EditProject
+        open={projectModalOpen}
+        onClose={() => setProjectModalOpen(false)}
+        project={editingProject}
+        onSave={handleSaveProject}
+        onDelete={handleDeleteProject}
+      />
+
+      <EditSocialLinks
+        open={socialLinksModalOpen}
+        onClose={() => setSocialLinksModalOpen(false)}
+        initialData={socialLinks}
+        onSave={handleUpdateSocialLinks}
+      />
+
+      <EditJobPreferences
+        open={roleExperienceModalOpen}
+        onClose={() => setRoleExperienceModalOpen(false)}
+        section="roles"
+        initialData={jobPreferences}
+        onSave={handleUpdateJobPreferences}
+      />
+
+      <EditJobPreferences
+        open={industriesModalOpen}
+        onClose={() => setIndustriesModalOpen(false)}
+        section="industries"
+        initialData={jobPreferences}
+        onSave={handleUpdateJobPreferences}
+      />
+
+      <EditJobPreferences
+        open={compensationModalOpen}
+        onClose={() => setCompensationModalOpen(false)}
+        section="compensation"
+        initialData={jobPreferences}
+        onSave={handleUpdateJobPreferences}
+      />
+
+      <EditJobPreferences
+        open={locationModalOpen}
+        onClose={() => setLocationModalOpen(false)}
+        section="location"
+        initialData={jobPreferences}
+        onSave={handleUpdateJobPreferences}
+      />
+
+      <EditJobPreferences
+        open={jobTypesModalOpen}
+        onClose={() => setJobTypesModalOpen(false)}
+        section="jobTypes"
+        initialData={jobPreferences}
+        onSave={handleUpdateJobPreferences}
+      />
+
+      <EditJobPreferences
+        open={skillsModalOpen}
+        onClose={() => setSkillsModalOpen(false)}
+        section="skills"
+        initialData={jobPreferences}
+        onSave={handleUpdateJobPreferences}
+      />
+
+      <EditJobPreferences
+        open={workAuthModalOpen}
+        onClose={() => setWorkAuthModalOpen(false)}
+        section="workAuth"
+        initialData={jobPreferences}
+        onSave={handleUpdateJobPreferences}
+      />
+
+      <EditEqualEmployment
+        open={equalEmploymentModalOpen}
+        onClose={() => setEqualEmploymentModalOpen(false)}
+        initialData={equalEmploymentData}
+        onSave={handleUpdateEqualEmployment}
+      />
     </>
   );
 };
