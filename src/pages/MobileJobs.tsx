@@ -8,6 +8,7 @@ import { toast } from "@/hooks/use-toast";
 import { MobileJobFilters } from "@/components/MobileJobFilters";
 import { SavedAndAppliedJobs } from "@/components/SavedAndAppliedJobs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import MobileHeader from "@/components/MobileHeader";
 import { 
   Drawer,
   DrawerContent,
@@ -18,7 +19,6 @@ import {
   X,
   BookmarkIcon
 } from "lucide-react";
-import Navbar from "@/components/Navbar";
 
 export default function MobileJobs() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -309,10 +309,10 @@ export default function MobileJobs() {
   
   return (
     <div className="h-screen flex flex-col bg-white dark:bg-gray-900 overflow-hidden">
-      <Navbar />
+      <MobileHeader title="Jobs" />
       
       {!showDetailView ? (
-        <div className="relative flex-1 overflow-hidden">
+        <div className="relative flex-1 overflow-hidden pt-14">
           <div className="p-3 border-b">
             <div className="relative mb-0">
               <div className="relative">
