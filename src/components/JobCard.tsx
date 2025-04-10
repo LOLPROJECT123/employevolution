@@ -81,13 +81,6 @@ export function JobCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium truncate">{job.title}</h3>
-              
-              {job.matchPercentage !== undefined && (
-                <Badge variant="outline" className={`ml-2 px-2 py-0.5 text-xs font-bold ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)} flex items-center gap-1`}>
-                  <Percent className="w-3 h-3" />
-                  {job.matchPercentage}% Match
-                </Badge>
-              )}
             </div>
             
             <div className="flex flex-col gap-1 mt-1.5">
@@ -108,6 +101,13 @@ export function JobCard({
           </div>
           
           <div className="ml-2 flex flex-col items-end gap-2">
+            {job.matchPercentage !== undefined && (
+              <Badge className={`text-xs px-2 py-1 ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)} flex items-center gap-1 mb-1`}>
+                <Percent className="w-3 h-3" />
+                {job.matchPercentage}% Match
+              </Badge>
+            )}
+          
             {isApplied ? (
               <Badge className="bg-green-100 hover:bg-green-100 text-green-700 border-green-200">
                 <CheckCircle className="mr-1 h-3 w-3" /> Applied

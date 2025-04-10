@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BookmarkIcon } from "lucide-react";
+import { BookmarkIcon, Percent } from "lucide-react";
 import { ScrapedJob } from "./types";
 
 interface JobListProps {
@@ -15,6 +15,20 @@ const JobList = ({ jobs, onSelectJob, savedJobs = [], onSaveJob }: JobListProps)
   if (jobs.length === 0) {
     return null;
   }
+
+  const getMatchColor = (percentage?: number) => {
+    if (!percentage) return "";
+    if (percentage >= 70) return "text-green-500";
+    if (percentage >= 50) return "text-amber-500";
+    return "text-red-500";
+  };
+
+  const getMatchBgColor = (percentage?: number) => {
+    if (!percentage) return "bg-gray-100 dark:bg-gray-800";
+    if (percentage >= 70) return "bg-green-50 dark:bg-green-900/30";
+    if (percentage >= 50) return "bg-amber-50 dark:bg-amber-900/30";
+    return "bg-red-50 dark:bg-red-900/30";
+  };
 
   return (
     <div className="space-y-2 mt-4">
@@ -43,23 +57,32 @@ const JobList = ({ jobs, onSelectJob, savedJobs = [], onSaveJob }: JobListProps)
                 </div>
               </div>
               
-              <div className="flex space-x-2">
-                {onSaveJob && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSaveJob(job);
-                    }}
-                  >
-                    <BookmarkIcon className={`h-4 w-4 ${savedJobs?.includes(job.id) ? "fill-primary text-primary" : ""}`} />
-                  </Button>
+              <div className="flex flex-col space-y-2 items-end">
+                {job.matchPercentage !== undefined && (
+                  <Badge className={`text-xs px-2 py-1 ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)} flex items-center gap-1`}>
+                    <Percent className="w-3 h-3" />
+                    {job.matchPercentage}% Match
+                  </Badge>
                 )}
                 
-                <Button variant="ghost" size="sm">
-                  Apply
-                </Button>
+                <div className="flex space-x-2">
+                  {onSaveJob && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSaveJob(job);
+                      }}
+                    >
+                      <BookmarkIcon className={`h-4 w-4 ${savedJobs?.includes(job.id) ? "fill-primary text-primary" : ""}`} />
+                    </Button>
+                  )}
+                  
+                  <Button variant="ghost" size="sm">
+                    Apply
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
