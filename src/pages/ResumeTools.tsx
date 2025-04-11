@@ -6,6 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AIResumeCreator from "@/components/resume/AIResumeCreator";
 import AICVCreator from "@/components/resume/AICVCreator";
 import JobApplicationAutomation from "@/components/resume/JobApplicationAutomation";
+import ResumeForum from "@/components/resume/ResumeForum";
+import ResumeTemplates from "@/components/resume/ResumeTemplates";
 import { useMobile } from "@/hooks/use-mobile";
 import MobileHeader from "@/components/MobileHeader";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -67,15 +69,11 @@ const ResumeTools = () => {
             </TabsContent>
             
             <TabsContent value="forum" className={isMobile ? "mt-4" : ""}>
-              <div className="grid place-items-center p-12">
-                <p className="text-muted-foreground">Forum content will be displayed here</p>
-              </div>
+              <ResumeForum />
             </TabsContent>
             
             <TabsContent value="templates" className={isMobile ? "mt-4" : ""}>
-              <div className="grid place-items-center p-12">
-                <p className="text-muted-foreground">Resume and cover letter templates will be displayed here</p>
-              </div>
+              <ResumeTemplates />
             </TabsContent>
           </Tabs>
         </div>
