@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
@@ -13,8 +14,7 @@ import {
   Share2,
   Flag,
   CheckCircle,
-  Users,
-  Percent
+  Users
 } from "lucide-react";
 import { CandidateMatchPreferences } from "@/components/CandidateMatchPreferences";
 
@@ -154,7 +154,6 @@ export function MobileJobDetail({
                 
                 {job.matchPercentage && (
                   <Badge variant="outline" className={`px-3 py-1.5 rounded-full ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)} text-sm font-bold shadow-sm flex items-center gap-1.5`}>
-                    <Percent className="w-4 h-4" />
                     {job.matchPercentage}% Match
                   </Badge>
                 )}
@@ -246,6 +245,9 @@ export function MobileJobDetail({
                     </div>
                   </div>
                   <p className="text-sm mt-1">Based on your profile, skills, and experience</p>
+                  <div className="text-xs mt-2 text-gray-600">
+                    Match percentage is calculated by comparing your resume keywords with job requirements
+                  </div>
                 </div>
               )}
               

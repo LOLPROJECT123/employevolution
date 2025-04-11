@@ -13,6 +13,7 @@ export interface ScrapedJob {
   applyUrl: string;
   verified?: boolean;
   matchPercentage?: number;
+  matchKeywords?: string[];
 }
 
 export interface ResumeTemplate {
