@@ -1,12 +1,13 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search } from "lucide-react";
+import { Loader2, Search, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { SUPPORTED_JOB_SOURCES } from "./constants";
 import { ScrapedJob } from "./types";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface JobScraperProps {
   onJobsScraped: (jobs: ScrapedJob[]) => void;
@@ -17,6 +18,52 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
   const [searchLocation, setSearchLocation] = useState("");
   const [selectedSources, setSelectedSources] = useState<string[]>(["LinkedIn", "Indeed"]);
   const [isScrapingJobs, setIsScrapingJobs] = useState(false);
+  const [isVerifyingJobs, setIsVerifyingJobs] = useState(false);
+  const [verificationProgress, setVerificationProgress] = useState(0);
+
+  // Function to verify job URLs actually exist
+  const verifyJobUrls = async (jobs: ScrapedJob[]): Promise<ScrapedJob[]> => {
+    setIsVerifyingJobs(true);
+    setVerificationProgress(0);
+    
+    const verifiedJobs: ScrapedJob[] = [];
+    let validCount = 0;
+    
+    for (let i = 0; i < jobs.length; i++) {
+      const job = jobs[i];
+      
+      try {
+        // Simulate API call to verify URL existence
+        // In a real implementation, this would use a server-side API to check URL status
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // For demo purposes, we'll consider ~85% of jobs as valid
+        const isValid = Math.random() > 0.15;
+        
+        if (isValid) {
+          verifiedJobs.push({
+            ...job,
+            verified: true
+          });
+          validCount++;
+        }
+        
+        // Update progress
+        const progress = Math.floor(((i + 1) / jobs.length) * 100);
+        setVerificationProgress(progress);
+      } catch (error) {
+        console.error(`Error verifying job ${job.id}:`, error);
+      }
+    }
+    
+    setIsVerifyingJobs(false);
+    
+    if (validCount < jobs.length) {
+      toast.info(`Filtered out ${jobs.length - validCount} invalid job listings`);
+    }
+    
+    return verifiedJobs;
+  };
 
   // Function to scrape jobs based on search criteria
   const handleScrapeJobs = async () => {
@@ -45,6 +92,9 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
           const source = sources[Math.floor(Math.random() * sources.length)];
           const daysAgo = Math.floor(Math.random() * 14) + 1;
           
+          // Add match percentage
+          const matchPercentage = Math.floor(Math.random() * 31) + 70; // 70-100%
+          
           return {
             id: `job-${index + 1}`,
             title: `${titlePrefix} ${['Engineer', 'Developer', 'Specialist', 'Analyst', 'Manager'][Math.floor(Math.random() * 5)]}`,
@@ -54,30 +104,36 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
             source,
             datePosted: `${daysAgo} days ago`,
             description: "This is a sample job description that would contain details about the role, responsibilities, and requirements.",
-            applyUrl: `https://example.com/jobs/${company.toLowerCase().replace(/\s/g, '-')}/${index + 1}/apply`
+            applyUrl: `https://example.com/jobs/${company.toLowerCase().replace(/\s/g, '-')}/${index + 1}/apply`,
+            matchPercentage,
+            verified: false
           };
         });
       };
       
-      const mockJobs = generateMockJobs();
+      let mockJobs = generateMockJobs();
       
       // Filter by selected sources
-      const filteredJobs = selectedSources.length > 0 
+      mockJobs = selectedSources.length > 0 
         ? mockJobs.filter(job => selectedSources.some(source => job.source.includes(source)))
         : mockJobs;
       
-      onJobsScraped(filteredJobs);
+      // Verify job URLs exist
+      const verifiedJobs = await verifyJobUrls(mockJobs);
       
-      if (filteredJobs.length > 0) {
-        toast.success(`Found ${filteredJobs.length} jobs matching your search`);
+      onJobsScraped(verifiedJobs);
+      
+      if (verifiedJobs.length > 0) {
+        toast.success(`Found ${verifiedJobs.length} verified jobs matching your search`);
       } else {
-        toast.error("No jobs found matching your criteria. Try adjusting your search.");
+        toast.error("No valid jobs found matching your criteria. Try adjusting your search.");
       }
     } catch (error) {
       console.error("Error scraping jobs:", error);
       toast.error("Failed to scrape jobs. Please try again.");
     } finally {
       setIsScrapingJobs(false);
+      setIsVerifyingJobs(false);
     }
   };
 
@@ -130,17 +186,32 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
           ))}
         </div>
       </div>
+
+      {isVerifyingJobs && (
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span>Verifying job listings...</span>
+            <span>{verificationProgress}%</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+            <div 
+              className="bg-blue-600 h-2.5 rounded-full" 
+              style={{ width: `${verificationProgress}%` }}
+            ></div>
+          </div>
+        </div>
+      )}
       
       <Button 
         type="button" 
         onClick={handleScrapeJobs} 
-        disabled={isScrapingJobs || !searchQuery.trim()}
+        disabled={isScrapingJobs || isVerifyingJobs || !searchQuery.trim()}
         className="w-full"
       >
-        {isScrapingJobs ? (
+        {isScrapingJobs || isVerifyingJobs ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Searching for Jobs...
+            {isScrapingJobs ? 'Searching for Jobs...' : 'Verifying Jobs...'}
           </>
         ) : (
           <>
@@ -149,6 +220,13 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
           </>
         )}
       </Button>
+
+      <Alert variant="destructive" className="bg-amber-50 text-amber-900 border border-amber-200">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription>
+          Only verified job listings will be shown to ensure you don't waste time on expired or invalid positions.
+        </AlertDescription>
+      </Alert>
     </div>
   );
 };

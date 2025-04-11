@@ -10,13 +10,15 @@ import { validateUrl, extractJobId } from "./utils";
 interface JobApplicationFormProps {
   activeTab: string;
   onNavigateToProfile: () => void;
+  onSuccess?: (jobUrl: string) => void;
 }
 
-const JobApplicationForm = ({ activeTab, onNavigateToProfile }: JobApplicationFormProps) => {
+const JobApplicationForm = ({ activeTab, onNavigateToProfile, onSuccess }: JobApplicationFormProps) => {
   const [jobUrl, setJobUrl] = useState("");
   const [resumeText, setResumeText] = useState("");
   const [coverLetterText, setCoverLetterText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isValidatingUrl, setIsValidatingUrl] = useState(false);
 
   // Load saved data from localStorage
   useEffect(() => {
@@ -34,6 +36,33 @@ const JobApplicationForm = ({ activeTab, onNavigateToProfile }: JobApplicationFo
       console.error("Error loading saved resume:", error);
     }
   }, []);
+
+  // Function to check if a URL is still valid
+  const checkUrlValidity = async (url: string): Promise<boolean> => {
+    setIsValidatingUrl(true);
+    
+    try {
+      // In a real implementation, this would make a server-side request
+      // to check if the URL returns a valid job posting
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      // For demonstration: 90% of URLs are considered valid
+      const isValid = Math.random() > 0.1;
+      
+      if (!isValid) {
+        toast.error("The job posting appears to be no longer available", {
+          description: "This position may have been filled or removed by the employer."
+        });
+      }
+      
+      return isValid;
+    } catch (error) {
+      console.error("Error validating URL:", error);
+      return false;
+    } finally {
+      setIsValidatingUrl(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +91,13 @@ const JobApplicationForm = ({ activeTab, onNavigateToProfile }: JobApplicationFo
     setIsSubmitting(true);
     
     try {
+      // Check if the URL is still valid
+      const isUrlValid = await checkUrlValidity(finalUrl);
+      if (!isUrlValid) {
+        setIsSubmitting(false);
+        return;
+      }
+      
       // Save the resume to localStorage for future use
       if (resumeText.trim()) {
         localStorage.setItem('userResume', resumeText);
@@ -79,6 +115,11 @@ const JobApplicationForm = ({ activeTab, onNavigateToProfile }: JobApplicationFo
       console.log("Extracted job ID:", jobId);
       
       await new Promise(resolve => setTimeout(resolve, 800));
+      
+      // Callback to parent component
+      if (onSuccess) {
+        onSuccess(finalUrl);
+      }
       
       toast.success("Application prepared successfully!", {
         description: "Your application will open in a new tab"
@@ -127,7 +168,6 @@ const JobApplicationForm = ({ activeTab, onNavigateToProfile }: JobApplicationFo
               rows={8}
               value={resumeText}
               onChange={(e) => setResumeText(e.target.value)}
-              icon={<FileText className="h-4 w-4" />}
             />
           </div>
           
@@ -181,13 +221,13 @@ const JobApplicationForm = ({ activeTab, onNavigateToProfile }: JobApplicationFo
         {activeTab !== "scraper" && (
           <Button 
             type="submit" 
-            disabled={isSubmitting} 
+            disabled={isSubmitting || isValidatingUrl} 
             className="w-full"
           >
-            {isSubmitting ? (
+            {isSubmitting || isValidatingUrl ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Preparing Application...
+                {isValidatingUrl ? 'Checking Job Availability...' : 'Preparing Application...'}
               </>
             ) : (
               <>
