@@ -25,8 +25,20 @@ export interface ResumeTemplate {
   downloadUrl: string;
   company: string;
   role: string;
-  roleType?: string; // Added roleType to indicate full-time, intern, contract, etc.
+  roleType?: string;
   rating: number;
   downloads: number;
   tags: string[];
+  source?: string;
+  attribution?: string;
+  licenseType?: 'free' | 'premium' | 'attribution-required';
+}
+
+export interface TemplateSource {
+  id: string;
+  name: string;
+  url: string;
+  apiKey?: string;
+  isActive: boolean;
+  attribution: string;
 }
