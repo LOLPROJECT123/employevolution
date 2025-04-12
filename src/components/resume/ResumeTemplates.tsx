@@ -98,9 +98,9 @@ const ResumeTemplates = () => {
           id: "1",
           title: "Google SWE Template",
           description: "Clean, ATS-optimized template used by a successful Google software engineer. Focuses on technical projects and quantifiable achievements.",
-          imageUrl: "https://resumegenius.com/wp-content/uploads/software-engineer-resume-example-classic.png",
-          previewUrl: "https://resumegenius.com/wp-content/uploads/software-engineer-resume-example-classic.png",
-          downloadUrl: "https://resumegenius.com/wp-content/uploads/software-engineer-resume-example-classic.png",
+          imageUrl: "/placeholder.svg",
+          previewUrl: "/placeholder.svg",
+          downloadUrl: "/placeholder.svg",
           company: "Google",
           role: "Software Engineer",
           roleType: "Full-time",
@@ -115,9 +115,9 @@ const ResumeTemplates = () => {
           id: "2",
           title: "Amazon PM Resume",
           description: "Template used by a Senior Product Manager at Amazon. Highlights leadership, product metrics and business impact.",
-          imageUrl: "https://www.resumeviking.com/wp-content/uploads/2021/08/Sample-Resume-Product-Manager.png",
-          previewUrl: "https://www.resumeviking.com/wp-content/uploads/2021/08/Sample-Resume-Product-Manager.png",
-          downloadUrl: "https://www.resumeviking.com/wp-content/uploads/2021/08/Sample-Resume-Product-Manager.png",
+          imageUrl: "/placeholder.svg",
+          previewUrl: "/placeholder.svg",
+          downloadUrl: "/placeholder.svg",
           company: "Amazon",
           role: "Product Manager",
           roleType: "Full-time",
@@ -132,9 +132,9 @@ const ResumeTemplates = () => {
           id: "3",
           title: "Meta UI/UX Designer",
           description: "Visually appealing template for design roles that helped land a position at Meta. Includes portfolio links and project showcases.",
-          imageUrl: "https://cdn-images.zety.com/pages/graphic_designer_resume_example_6.png",
-          previewUrl: "https://cdn-images.zety.com/pages/graphic_designer_resume_example_6.png",
-          downloadUrl: "https://cdn-images.zety.com/pages/graphic_designer_resume_example_6.png",
+          imageUrl: "/placeholder.svg",
+          previewUrl: "/placeholder.svg",
+          downloadUrl: "/placeholder.svg",
           company: "Meta",
           role: "UI/UX Designer",
           roleType: "Full-time",
@@ -149,9 +149,9 @@ const ResumeTemplates = () => {
           id: "4",
           title: "Microsoft Data Scientist",
           description: "Template for data science roles with sections for ML projects, technical skills, and business outcomes. Helped secure a role at Microsoft.",
-          imageUrl: "https://www.livecareer.com/wp-content/uploads/2021/12/data-scientist-resume-examples-2022.png",
-          previewUrl: "https://www.livecareer.com/wp-content/uploads/2021/12/data-scientist-resume-examples-2022.png",
-          downloadUrl: "https://www.livecareer.com/wp-content/uploads/2021/12/data-scientist-resume-examples-2022.png",
+          imageUrl: "/placeholder.svg",
+          previewUrl: "/placeholder.svg",
+          downloadUrl: "/placeholder.svg",
           company: "Microsoft",
           role: "Data Scientist",
           roleType: "Intern",
@@ -166,9 +166,9 @@ const ResumeTemplates = () => {
           id: "5",
           title: "Apple iOS Developer",
           description: "iOS developer template with a focus on App Store launches and technical achievements. ATS-friendly format that helped land a role at Apple.",
-          imageUrl: "https://www.beamjobs.com/hs-fs/hubfs/iOS%20Developer%20Resume.png",
-          previewUrl: "https://www.beamjobs.com/hs-fs/hubfs/iOS%20Developer%20Resume.png",
-          downloadUrl: "https://www.beamjobs.com/hs-fs/hubfs/iOS%20Developer%20Resume.png",
+          imageUrl: "/placeholder.svg",
+          previewUrl: "/placeholder.svg",
+          downloadUrl: "/placeholder.svg",
           company: "Apple",
           role: "iOS Developer",
           roleType: "Contract",
@@ -183,9 +183,9 @@ const ResumeTemplates = () => {
           id: "6",
           title: "Netflix SRE Resume",
           description: "Site Reliability Engineer template with emphasis on system performance, monitoring and incident response. Successfully used for Netflix SRE role.",
-          imageUrl: "https://www.beamjobs.com/hs-fs/hubfs/Copy%20of%20DevOps%20Resume%20Template.png",
-          previewUrl: "https://www.beamjobs.com/hs-fs/hubfs/Copy%20of%20DevOps%20Resume%20Template.png",
-          downloadUrl: "https://www.beamjobs.com/hs-fs/hubfs/Copy%20of%20DevOps%20Resume%20Template.png",
+          imageUrl: "/placeholder.svg",
+          previewUrl: "/placeholder.svg", 
+          downloadUrl: "/placeholder.svg",
           company: "Netflix",
           role: "Site Reliability Engineer",
           roleType: "Intern",
@@ -279,11 +279,11 @@ const ResumeTemplates = () => {
     // In a real app, this would handle the actual download
     console.log(`Downloading template: ${template.title}`);
     
-    // Create a simulated download by opening the URL in a new tab
-    window.open(template.downloadUrl, "_blank");
+    // Instead of opening the URL in a new tab, we'll simulate the download
+    // Since the URLs are placeholders, we'll just show a success message
     
     toast({
-      title: "Resume Downloaded",
+      title: "Resume Template Downloaded",
       description: `${template.title} has been downloaded successfully. ${template.attribution}`,
     });
   };
@@ -656,3 +656,4 @@ const ResumeTemplates = () => {
 };
 
 export default ResumeTemplates;
+
