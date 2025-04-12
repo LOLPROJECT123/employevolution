@@ -145,23 +145,6 @@ const ResumeTemplates = () => {
           licenseType: "free"
         },
         {
-          id: "4",
-          title: "Microsoft Data Scientist",
-          description: "Template for data science roles with sections for ML projects, technical skills, and business outcomes. Helped secure a role at Microsoft.",
-          imageUrl: "/placeholder.svg",
-          previewUrl: "/placeholder.svg",
-          downloadUrl: "/placeholder.svg",
-          company: "Microsoft",
-          role: "Data Scientist",
-          roleType: "Intern",
-          rating: 4.6,
-          downloads: 7654,
-          tags: ["Data Science", "Technical", "Analytics"],
-          source: "Resume.io",
-          attribution: "Resume template by Resume.io",
-          licenseType: "premium"
-        },
-        {
           id: "5",
           title: "Apple iOS Developer",
           description: "iOS developer template with a focus on App Store launches and technical achievements. ATS-friendly format that helped land a role at Apple.",
@@ -177,23 +160,6 @@ const ResumeTemplates = () => {
           source: "ResumeGenius",
           attribution: "Template provided by ResumeGenius",
           licenseType: "attribution-required"
-        },
-        {
-          id: "6",
-          title: "Netflix SRE Resume",
-          description: "Site Reliability Engineer template with emphasis on system performance, monitoring and incident response. Successfully used for Netflix SRE role.",
-          imageUrl: "/placeholder.svg",
-          previewUrl: "/placeholder.svg", 
-          downloadUrl: "/placeholder.svg",
-          company: "Netflix",
-          role: "Site Reliability Engineer",
-          roleType: "Intern",
-          rating: 4.7,
-          downloads: 6543,
-          tags: ["SRE", "DevOps", "Technical"],
-          source: "Resume.io",
-          attribution: "Resume template by Resume.io",
-          licenseType: "premium"
         }
       ];
       
@@ -230,6 +196,9 @@ const ResumeTemplates = () => {
   // Apply filters and search
   const getFilteredTemplates = () => {
     return templates.filter(template => {
+      // Skip premium templates
+      if (template.licenseType === 'premium') return false;
+      
       // Search filter
       const matchesSearch = !searchTerm || 
         template.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -517,14 +486,9 @@ const ResumeTemplates = () => {
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-start">
                       <CardTitle className="text-lg">{template.title}</CardTitle>
-                      <div className="flex gap-1">
-                        {template.licenseType === 'premium' && (
-                          <Badge className="bg-amber-500">Premium</Badge>
-                        )}
-                        <Badge variant="secondary" className="ml-2">
-                          {template.company}
-                        </Badge>
-                      </div>
+                      <Badge variant="secondary" className="ml-2">
+                        {template.company}
+                      </Badge>
                     </div>
                     <div className="flex justify-between items-center">
                       <p className="text-sm text-muted-foreground mt-1">{template.role}</p>
@@ -576,24 +540,15 @@ const ResumeTemplates = () => {
                                 <Button 
                                   variant="outline" 
                                   onClick={() => handleUseTemplate(template)}
-                                  disabled={template.licenseType === 'premium'}
                                 >
                                   <FileText className="h-4 w-4 mr-2" />
                                   Use This Template
                                 </Button>
-                                <Button 
-                                  onClick={() => handleDownload(template)}
-                                  disabled={template.licenseType === 'premium'}
-                                >
+                                <Button onClick={() => handleDownload(template)}>
                                   <Download className="h-4 w-4 mr-2" />
                                   Download
                                 </Button>
                               </div>
-                              {template.licenseType === 'premium' && (
-                                <p className="text-xs text-center text-muted-foreground mt-2">
-                                  This is a premium template. Upgrade to access.
-                                </p>
-                              )}
                             </DialogContent>
                           </Dialog>
                         </div>
@@ -617,20 +572,11 @@ const ResumeTemplates = () => {
                       {template.downloads.toLocaleString()}
                     </div>
                     <div className="flex gap-2">
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => handleUseTemplate(template)}
-                        disabled={template.licenseType === 'premium'}
-                      >
+                      <Button size="sm" variant="outline" onClick={() => handleUseTemplate(template)}>
                         <FileText className="h-4 w-4 mr-2" />
                         Use
                       </Button>
-                      <Button 
-                        size="sm" 
-                        onClick={() => handleDownload(template)}
-                        disabled={template.licenseType === 'premium'}
-                      >
+                      <Button size="sm" onClick={() => handleDownload(template)}>
                         <Download className="h-4 w-4 mr-2" />
                         Download
                       </Button>

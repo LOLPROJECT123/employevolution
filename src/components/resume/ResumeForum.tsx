@@ -12,6 +12,21 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { MessageSquarePlus, ThumbsUp, MessageCircle, Send, PlusCircle, Filter, SortDesc, SortAsc } from "lucide-react";
 import { ResumePost, ResumeComment } from "@/types/resumePost";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const ResumeForum = () => {
   const { toast } = useToast();
@@ -55,7 +70,9 @@ const ResumeForum = () => {
         }
       ],
       createdAt: "3 days ago",
-      tags: ["Software Engineering", "Google", "Full Stack", "Resume Review"]
+      tags: ["Software Engineering", "Google", "Full Stack", "Resume Review"],
+      company: "Google",
+      role: "Software Engineer"
     },
     {
       id: "2",
@@ -82,7 +99,9 @@ const ResumeForum = () => {
         }
       ],
       createdAt: "2 days ago",
-      tags: ["Data Science", "Meta", "Success Story", "Machine Learning"]
+      tags: ["Data Science", "Meta", "Success Story", "Machine Learning"],
+      company: "Meta",
+      role: "Data Scientist"
     }
   ]);
 
@@ -93,11 +112,55 @@ const ResumeForum = () => {
     content: "",
     tags: "",
     isAnonymous: false,
-    resumeFile: null as File | null
+    resumeFile: null as File | null,
+    company: "",
+    role: ""
   });
   
   const [isReplyDialogOpen, setIsReplyDialogOpen] = useState(false);
   const [isNewPostDialogOpen, setIsNewPostDialogOpen] = useState(false);
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const [activeFilters, setActiveFilters] = useState<{
+    company: string | null;
+    role: string | null;
+  }>({
+    company: null,
+    role: null,
+  });
+
+  // Get unique companies and roles from posts
+  const getFilterOptions = () => {
+    return {
+      companies: [...new Set(posts.map(p => p.company).filter(Boolean))],
+      roles: [...new Set(posts.map(p => p.role).filter(Boolean))]
+    };
+  };
+
+  const filterOptions = getFilterOptions();
+
+  // Apply filters and sorting
+  const getFilteredPosts = () => {
+    // First filter posts
+    const filtered = posts.filter(post => {
+      const matchesCompany = !activeFilters.company || post.company === activeFilters.company;
+      const matchesRole = !activeFilters.role || post.role === activeFilters.role;
+      return matchesCompany && matchesRole;
+    });
+
+    // Then sort posts
+    return filtered.sort((a, b) => {
+      // Simple sort by assumed date in createdAt string
+      // In a real app, you'd parse actual dates
+      if (sortOrder === 'newest') {
+        return a.createdAt.includes('3 days') ? 1 : -1;
+      } else {
+        return a.createdAt.includes('3 days') ? -1 : 1;
+      }
+    });
+  };
+
+  const filteredPosts = getFilteredPosts();
+  const activeFilterCount = Object.values(activeFilters).filter(Boolean).length;
 
   const handleSubmitPost = () => {
     const tagsArray = newPost.tags.split(',').map(tag => tag.trim()).filter(Boolean);
@@ -115,7 +178,9 @@ const ResumeForum = () => {
       downvotes: 0,
       comments: [],
       createdAt: "Just now",
-      tags: tagsArray
+      tags: tagsArray,
+      company: newPost.company,
+      role: newPost.role
     };
     
     setPosts([post, ...posts]);
@@ -124,7 +189,9 @@ const ResumeForum = () => {
       content: "",
       tags: "",
       isAnonymous: false,
-      resumeFile: null
+      resumeFile: null,
+      company: "",
+      role: ""
     });
     
     setIsNewPostDialogOpen(false);
@@ -186,19 +253,114 @@ const ResumeForum = () => {
     }
   };
 
+  const handleFilterChange = (filterType: 'company' | 'role', value: string | null) => {
+    setActiveFilters(prev => ({
+      ...prev,
+      [filterType]: value
+    }));
+  };
+
+  const clearAllFilters = () => {
+    setActiveFilters({
+      company: null,
+      role: null
+    });
+  };
+
+  const toggleSortOrder = () => {
+    setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest');
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
         <h2 className="text-2xl font-semibold">Resume Forum</h2>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" className="flex items-center">
-            <Filter className="h-4 w-4 mr-2" />
-            Filter
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="flex items-center">
+                <Filter className="h-4 w-4 mr-2" />
+                Filter
+                {activeFilterCount > 0 && (
+                  <Badge variant="secondary" className="ml-2 rounded-full h-5 w-5 p-0 flex items-center justify-center">
+                    {activeFilterCount}
+                  </Badge>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56">
+              <DropdownMenuLabel>Filter Posts</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              
+              <DropdownMenuGroup>
+                <DropdownMenuLabel className="text-xs font-medium">Company</DropdownMenuLabel>
+                <Select 
+                  value={activeFilters.company || "all"} 
+                  onValueChange={(value) => handleFilterChange('company', value === "all" ? null : value)}
+                >
+                  <SelectTrigger className="h-8 w-full">
+                    <SelectValue placeholder="All Companies" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Companies</SelectItem>
+                    {filterOptions.companies.map(company => (
+                      <SelectItem key={company} value={company}>{company}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </DropdownMenuGroup>
+              
+              <DropdownMenuSeparator />
+              
+              <DropdownMenuGroup>
+                <DropdownMenuLabel className="text-xs font-medium">Role</DropdownMenuLabel>
+                <Select 
+                  value={activeFilters.role || "all"} 
+                  onValueChange={(value) => handleFilterChange('role', value === "all" ? null : value)}
+                >
+                  <SelectTrigger className="h-8 w-full">
+                    <SelectValue placeholder="All Roles" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Roles</SelectItem>
+                    {filterOptions.roles.map(role => (
+                      <SelectItem key={role} value={role}>{role}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </DropdownMenuGroup>
+              
+              <DropdownMenuSeparator />
+              
+              {activeFilterCount > 0 && (
+                <div className="p-2">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="w-full text-xs h-8"
+                    onClick={clearAllFilters}
+                  >
+                    Clear All Filters
+                  </Button>
+                </div>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex items-center"
+            onClick={toggleSortOrder}
+          >
+            {sortOrder === 'newest' ? (
+              <SortDesc className="h-4 w-4 mr-2" />
+            ) : (
+              <SortAsc className="h-4 w-4 mr-2" />
+            )}
+            {sortOrder === 'newest' ? 'Newest' : 'Oldest'} First
           </Button>
-          <Button variant="outline" size="sm" className="flex items-center">
-            <SortDesc className="h-4 w-4 mr-2" />
-            Sort
-          </Button>
+          
           <Dialog open={isNewPostDialogOpen} onOpenChange={setIsNewPostDialogOpen}>
             <DialogTrigger asChild>
               <Button className="flex items-center">
@@ -232,6 +394,26 @@ const ResumeForum = () => {
                     value={newPost.content}
                     onChange={e => setNewPost({ ...newPost, content: e.target.value })}
                   />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="post-company" className="text-sm font-medium mb-1 block">Company</label>
+                    <Input
+                      id="post-company"
+                      placeholder="E.g., Google, Apple, etc."
+                      value={newPost.company}
+                      onChange={e => setNewPost({ ...newPost, company: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="post-role" className="text-sm font-medium mb-1 block">Role</label>
+                    <Input
+                      id="post-role"
+                      placeholder="E.g., Software Engineer, PM, etc."
+                      value={newPost.role}
+                      onChange={e => setNewPost({ ...newPost, role: e.target.value })}
+                    />
+                  </div>
                 </div>
                 <div>
                   <label htmlFor="post-tags" className="text-sm font-medium mb-1 block">Tags (comma-separated)</label>
@@ -283,119 +465,182 @@ const ResumeForum = () => {
         </div>
       </div>
 
+      {activeFilterCount > 0 && (
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-sm text-muted-foreground">Active filters:</span>
+          <div className="flex flex-wrap gap-1">
+            {activeFilters.company && (
+              <Badge variant="outline" className="flex items-center gap-1">
+                Company: {activeFilters.company}
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-4 w-4 p-0 hover:bg-transparent"
+                  onClick={() => handleFilterChange('company', null)}
+                >
+                  <span className="sr-only">Remove filter</span>
+                  ✕
+                </Button>
+              </Badge>
+            )}
+            {activeFilters.role && (
+              <Badge variant="outline" className="flex items-center gap-1">
+                Role: {activeFilters.role}
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-4 w-4 p-0 hover:bg-transparent"
+                  onClick={() => handleFilterChange('role', null)}
+                >
+                  <span className="sr-only">Remove filter</span>
+                  ✕
+                </Button>
+              </Badge>
+            )}
+            {activeFilterCount > 1 && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-6 px-2 text-xs"
+                onClick={clearAllFilters}
+              >
+                Clear All
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
       <ScrollArea className="h-[calc(100vh-250px)]">
         <div className="space-y-6 pr-4">
-          {posts.map(post => (
-            <Card key={post.id} className="overflow-hidden">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Avatar>
-                      {post.author.avatar && <AvatarImage src={post.author.avatar} />}
-                      <AvatarFallback>{post.author.name.slice(0, 2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="font-medium">{post.author.name}</div>
-                      <div className="text-xs text-muted-foreground">{post.createdAt}</div>
+          {filteredPosts.length > 0 ? (
+            filteredPosts.map(post => (
+              <Card key={post.id} className="overflow-hidden">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Avatar>
+                        {post.author.avatar && <AvatarImage src={post.author.avatar} />}
+                        <AvatarFallback>{post.author.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="font-medium">{post.author.name}</div>
+                        <div className="text-xs text-muted-foreground">{post.createdAt}</div>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {post.tags.map((tag, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
                     </div>
                   </div>
-                  <div className="flex flex-wrap gap-1">
-                    {post.tags.map((tag, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-                <CardTitle className="text-lg mt-2">{post.title}</CardTitle>
-              </CardHeader>
+                  <CardTitle className="text-lg mt-2">
+                    {post.title}
+                    {post.company && post.role && (
+                      <div className="flex gap-2 mt-1">
+                        <Badge variant="secondary" className="text-xs">{post.company}</Badge>
+                        <Badge variant="outline" className="text-xs">{post.role}</Badge>
+                      </div>
+                    )}
+                  </CardTitle>
+                </CardHeader>
 
-              <CardContent>
-                <p className="text-sm whitespace-pre-line">{post.content}</p>
-                {post.resumeUrl && (
-                  <div className="mt-4">
-                    <Button variant="outline" size="sm" className="text-sm" asChild>
-                      <a href={post.resumeUrl} target="_blank" rel="noopener noreferrer">
-                        View Resume
-                      </a>
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-
-              <CardFooter className="border-t pt-3 flex justify-between">
-                <div className="flex gap-4">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="flex gap-1 text-muted-foreground"
-                    onClick={() => handleUpvote(post.id)}
-                  >
-                    <ThumbsUp className="h-4 w-4" />
-                    {post.upvotes}
-                  </Button>
-                  <Dialog open={selectedPost?.id === post.id && isReplyDialogOpen} onOpenChange={(open) => {
-                    setIsReplyDialogOpen(open);
-                    if (open) setSelectedPost(post);
-                  }}>
-                    <DialogTrigger asChild>
-                      <Button variant="ghost" size="sm" className="flex gap-1 text-muted-foreground">
-                        <MessageCircle className="h-4 w-4" />
-                        {post.comments.length}
+                <CardContent>
+                  <p className="text-sm whitespace-pre-line">{post.content}</p>
+                  {post.resumeUrl && (
+                    <div className="mt-4">
+                      <Button variant="outline" size="sm" className="text-sm" asChild>
+                        <a href={post.resumeUrl} target="_blank" rel="noopener noreferrer">
+                          View Resume
+                        </a>
                       </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[600px]">
-                      <DialogHeader>
-                        <DialogTitle>Replies to: {post.title}</DialogTitle>
-                      </DialogHeader>
-                      <div className="max-h-[400px] overflow-y-auto py-4">
-                        {post.comments.length === 0 ? (
-                          <p className="text-muted-foreground text-center py-8">No replies yet. Be the first to respond!</p>
-                        ) : (
-                          post.comments.map((comment) => (
-                            <div key={comment.id} className="mb-4 border-b pb-4 last:border-0">
-                              <div className="flex items-center space-x-2 mb-2">
-                                <Avatar className="h-6 w-6">
-                                  {comment.author.avatar && <AvatarImage src={comment.author.avatar} />}
-                                  <AvatarFallback>{comment.author.name.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                  <div className="text-sm font-medium">{comment.author.name}</div>
-                                  <div className="text-xs text-muted-foreground">{comment.createdAt}</div>
+                    </div>
+                  )}
+                </CardContent>
+
+                <CardFooter className="border-t pt-3 flex justify-between">
+                  <div className="flex gap-4">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="flex gap-1 text-muted-foreground"
+                      onClick={() => handleUpvote(post.id)}
+                    >
+                      <ThumbsUp className="h-4 w-4" />
+                      {post.upvotes}
+                    </Button>
+                    <Dialog open={selectedPost?.id === post.id && isReplyDialogOpen} onOpenChange={(open) => {
+                      setIsReplyDialogOpen(open);
+                      if (open) setSelectedPost(post);
+                    }}>
+                      <DialogTrigger asChild>
+                        <Button variant="ghost" size="sm" className="flex gap-1 text-muted-foreground">
+                          <MessageCircle className="h-4 w-4" />
+                          {post.comments.length}
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[600px]">
+                        <DialogHeader>
+                          <DialogTitle>Replies to: {post.title}</DialogTitle>
+                        </DialogHeader>
+                        <div className="max-h-[400px] overflow-y-auto py-4">
+                          {post.comments.length === 0 ? (
+                            <p className="text-muted-foreground text-center py-8">No replies yet. Be the first to respond!</p>
+                          ) : (
+                            post.comments.map((comment) => (
+                              <div key={comment.id} className="mb-4 border-b pb-4 last:border-0">
+                                <div className="flex items-center space-x-2 mb-2">
+                                  <Avatar className="h-6 w-6">
+                                    {comment.author.avatar && <AvatarImage src={comment.author.avatar} />}
+                                    <AvatarFallback>{comment.author.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                  </Avatar>
+                                  <div>
+                                    <div className="text-sm font-medium">{comment.author.name}</div>
+                                    <div className="text-xs text-muted-foreground">{comment.createdAt}</div>
+                                  </div>
+                                </div>
+                                <p className="text-sm pl-8">{comment.content}</p>
+                                <div className="flex gap-2 mt-2 pl-8">
+                                  <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
+                                    <ThumbsUp className="h-3 w-3 mr-1" />
+                                    {comment.upvotes}
+                                  </Button>
                                 </div>
                               </div>
-                              <p className="text-sm pl-8">{comment.content}</p>
-                              <div className="flex gap-2 mt-2 pl-8">
-                                <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
-                                  <ThumbsUp className="h-3 w-3 mr-1" />
-                                  {comment.upvotes}
-                                </Button>
-                              </div>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 mt-2">
-                        <Textarea
-                          placeholder="Write your reply..."
-                          value={newComment}
-                          onChange={(e) => setNewComment(e.target.value)}
-                          className="flex-1"
-                        />
-                        <Button 
-                          size="icon" 
-                          onClick={handleSubmitComment}
-                          disabled={!newComment.trim()}
-                        >
-                          <Send className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-              </CardFooter>
-            </Card>
-          ))}
+                            ))
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 mt-2">
+                          <Textarea
+                            placeholder="Write your reply..."
+                            value={newComment}
+                            onChange={(e) => setNewComment(e.target.value)}
+                            className="flex-1"
+                          />
+                          <Button 
+                            size="icon" 
+                            onClick={handleSubmitComment}
+                            disabled={!newComment.trim()}
+                          >
+                            <Send className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </CardFooter>
+              </Card>
+            ))
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">No posts found matching your criteria</p>
+              {activeFilterCount > 0 && (
+                <Button variant="link" onClick={clearAllFilters}>Clear filters</Button>
+              )}
+            </div>
+          )}
         </div>
       </ScrollArea>
 

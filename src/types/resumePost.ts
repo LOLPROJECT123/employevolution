@@ -1,12 +1,23 @@
 
+export interface ResumePostAuthor {
+  id: string;
+  name: string;
+  avatar?: string;
+}
+
+export interface ResumeComment {
+  id: string;
+  author: ResumePostAuthor;
+  content: string;
+  upvotes: number;
+  downvotes: number;
+  createdAt: string;
+}
+
 export interface ResumePost {
   id: string;
   title: string;
-  author: {
-    id: string;
-    name: string;
-    avatar?: string;
-  };
+  author: ResumePostAuthor;
   content: string;
   resumeUrl?: string;
   upvotes: number;
@@ -14,18 +25,6 @@ export interface ResumePost {
   comments: ResumeComment[];
   createdAt: string;
   tags: string[];
-  matchPercentage?: number;
-}
-
-export interface ResumeComment {
-  id: string;
-  author: {
-    id: string;
-    name: string;
-    avatar?: string;
-  };
-  content: string;
-  upvotes: number;
-  downvotes: number;
-  createdAt: string;
+  company?: string;
+  role?: string;
 }
