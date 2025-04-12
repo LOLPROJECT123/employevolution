@@ -21,10 +21,11 @@ export interface ResumeTemplate {
   title: string;
   description: string;
   imageUrl: string;
-  previewUrl: string; // Added previewUrl for actual resume preview
+  previewUrl: string;
   downloadUrl: string;
   company: string;
   role: string;
+  roleType?: string; // Added roleType to indicate full-time, intern, contract, etc.
   rating: number;
   downloads: number;
   tags: string[];

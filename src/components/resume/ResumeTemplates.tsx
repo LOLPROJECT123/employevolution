@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Download, Search, Filter, Star, Eye, ThumbsUp, FileText } from "lucide-react";
+import { Download, Search, Filter, Star, Eye, ThumbsUp, FileText, X } from "lucide-react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { 
   Dialog,
@@ -15,12 +15,44 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { ResumeTemplate } from "./job-application/types";
+
+// Filter types
+type FilterOptions = {
+  companies: string[];
+  roleTypes: string[];
+  positions: string[];
+};
 
 const ResumeTemplates = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [previewTemplate, setPreviewTemplate] = useState<ResumeTemplate | null>(null);
+  const [activeFilters, setActiveFilters] = useState<{
+    company: string | null;
+    roleType: string | null;
+    position: string | null;
+  }>({
+    company: null,
+    roleType: null,
+    position: null,
+  });
 
   const templates: ResumeTemplate[] = [
     {
@@ -32,6 +64,7 @@ const ResumeTemplates = () => {
       downloadUrl: "#",
       company: "Google",
       role: "Software Engineer",
+      roleType: "Full-time",
       rating: 4.9,
       downloads: 12483,
       tags: ["Technical", "Software Engineering", "ATS-Optimized"]
@@ -45,6 +78,7 @@ const ResumeTemplates = () => {
       downloadUrl: "#",
       company: "Amazon",
       role: "Product Manager",
+      roleType: "Full-time",
       rating: 4.7,
       downloads: 8976,
       tags: ["Product", "Leadership", "Business-Impact"]
@@ -58,6 +92,7 @@ const ResumeTemplates = () => {
       downloadUrl: "#",
       company: "Meta",
       role: "UI/UX Designer",
+      roleType: "Full-time",
       rating: 4.8,
       downloads: 9254,
       tags: ["Design", "Portfolio", "Creative"]
@@ -71,6 +106,7 @@ const ResumeTemplates = () => {
       downloadUrl: "#",
       company: "Microsoft",
       role: "Data Scientist",
+      roleType: "Intern",
       rating: 4.6,
       downloads: 7654,
       tags: ["Data Science", "Technical", "Analytics"]
@@ -84,6 +120,7 @@ const ResumeTemplates = () => {
       downloadUrl: "#",
       company: "Apple",
       role: "iOS Developer",
+      roleType: "Contract",
       rating: 4.8,
       downloads: 10245,
       tags: ["Mobile", "iOS", "Developer"]
@@ -97,33 +134,64 @@ const ResumeTemplates = () => {
       downloadUrl: "#",
       company: "Netflix",
       role: "Site Reliability Engineer",
+      roleType: "Intern",
       rating: 4.7,
       downloads: 6543,
       tags: ["SRE", "DevOps", "Technical"]
     }
   ];
 
-  const [filteredTemplates, setFilteredTemplates] = useState(templates);
+  // Extract unique filter options
+  const filterOptions: FilterOptions = {
+    companies: [...new Set(templates.map(t => t.company))],
+    roleTypes: [...new Set(templates.map(t => t.roleType || ""))].filter(Boolean),
+    positions: [...new Set(templates.map(t => t.role))]
+  };
+
+  // Apply filters and search
+  const getFilteredTemplates = () => {
+    return templates.filter(template => {
+      // Search filter
+      const matchesSearch = !searchTerm || 
+        template.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        template.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        template.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        template.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        template.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+      // Dropdown filters
+      const matchesCompany = !activeFilters.company || template.company === activeFilters.company;
+      const matchesRoleType = !activeFilters.roleType || template.roleType === activeFilters.roleType;
+      const matchesPosition = !activeFilters.position || template.role === activeFilters.position;
+      
+      return matchesSearch && matchesCompany && matchesRoleType && matchesPosition;
+    });
+  };
+
+  const filteredTemplates = getFilteredTemplates();
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const term = e.target.value.toLowerCase();
     setSearchTerm(term);
-    
-    if (!term) {
-      setFilteredTemplates(templates);
-      return;
-    }
-
-    const filtered = templates.filter(template => 
-      template.title.toLowerCase().includes(term) ||
-      template.description.toLowerCase().includes(term) ||
-      template.company.toLowerCase().includes(term) ||
-      template.role.toLowerCase().includes(term) ||
-      template.tags.some(tag => tag.toLowerCase().includes(term))
-    );
-    
-    setFilteredTemplates(filtered);
   };
+
+  const handleFilterChange = (filterType: 'company' | 'roleType' | 'position', value: string | null) => {
+    setActiveFilters(prev => ({
+      ...prev,
+      [filterType]: value
+    }));
+  };
+
+  const clearAllFilters = () => {
+    setActiveFilters({
+      company: null,
+      roleType: null,
+      position: null
+    });
+    setSearchTerm("");
+  };
+
+  const activeFilterCount = Object.values(activeFilters).filter(Boolean).length + (searchTerm ? 1 : 0);
 
   const handleDownload = (template: ResumeTemplate) => {
     // In a real app, this would download the template
@@ -156,12 +224,151 @@ const ResumeTemplates = () => {
               onChange={handleSearch}
             />
           </div>
-          <Button variant="outline" size="sm" className="flex items-center">
-            <Filter className="h-4 w-4 mr-2" />
-            Filter
-          </Button>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="flex items-center">
+                <Filter className="h-4 w-4 mr-2" />
+                Filter
+                {activeFilterCount > 0 && (
+                  <Badge variant="secondary" className="ml-2 rounded-full h-5 w-5 p-0 flex items-center justify-center">
+                    {activeFilterCount}
+                  </Badge>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56">
+              <DropdownMenuLabel>Filter Templates</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              
+              <DropdownMenuGroup>
+                <DropdownMenuLabel className="text-xs font-medium">Company</DropdownMenuLabel>
+                <Select 
+                  value={activeFilters.company || ""} 
+                  onValueChange={(value) => handleFilterChange('company', value || null)}
+                >
+                  <SelectTrigger className="h-8 w-full">
+                    <SelectValue placeholder="All Companies" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All Companies</SelectItem>
+                    {filterOptions.companies.map(company => (
+                      <SelectItem key={company} value={company}>{company}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </DropdownMenuGroup>
+              
+              <DropdownMenuSeparator />
+              
+              <DropdownMenuGroup>
+                <DropdownMenuLabel className="text-xs font-medium">Role Type</DropdownMenuLabel>
+                <Select 
+                  value={activeFilters.roleType || ""} 
+                  onValueChange={(value) => handleFilterChange('roleType', value || null)}
+                >
+                  <SelectTrigger className="h-8 w-full">
+                    <SelectValue placeholder="All Role Types" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All Role Types</SelectItem>
+                    {filterOptions.roleTypes.map(roleType => (
+                      <SelectItem key={roleType} value={roleType}>{roleType}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </DropdownMenuGroup>
+              
+              <DropdownMenuSeparator />
+              
+              <DropdownMenuGroup>
+                <DropdownMenuLabel className="text-xs font-medium">Position</DropdownMenuLabel>
+                <Select 
+                  value={activeFilters.position || ""} 
+                  onValueChange={(value) => handleFilterChange('position', value || null)}
+                >
+                  <SelectTrigger className="h-8 w-full">
+                    <SelectValue placeholder="All Positions" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All Positions</SelectItem>
+                    {filterOptions.positions.map(position => (
+                      <SelectItem key={position} value={position}>{position}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </DropdownMenuGroup>
+              
+              <DropdownMenuSeparator />
+              
+              <div className="p-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="w-full text-xs h-8"
+                  onClick={clearAllFilters}
+                >
+                  <X className="h-4 w-4 mr-2" /> Clear All Filters
+                </Button>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
+
+      {activeFilterCount > 0 && (
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-sm text-muted-foreground">Active filters:</span>
+          <div className="flex flex-wrap gap-1">
+            {activeFilters.company && (
+              <Badge variant="outline" className="flex items-center gap-1">
+                Company: {activeFilters.company}
+                <X 
+                  className="h-3 w-3 cursor-pointer" 
+                  onClick={() => handleFilterChange('company', null)}
+                />
+              </Badge>
+            )}
+            {activeFilters.roleType && (
+              <Badge variant="outline" className="flex items-center gap-1">
+                Role Type: {activeFilters.roleType}
+                <X 
+                  className="h-3 w-3 cursor-pointer" 
+                  onClick={() => handleFilterChange('roleType', null)}
+                />
+              </Badge>
+            )}
+            {activeFilters.position && (
+              <Badge variant="outline" className="flex items-center gap-1">
+                Position: {activeFilters.position}
+                <X 
+                  className="h-3 w-3 cursor-pointer" 
+                  onClick={() => handleFilterChange('position', null)}
+                />
+              </Badge>
+            )}
+            {searchTerm && (
+              <Badge variant="outline" className="flex items-center gap-1">
+                Search: {searchTerm}
+                <X 
+                  className="h-3 w-3 cursor-pointer" 
+                  onClick={() => setSearchTerm("")}
+                />
+              </Badge>
+            )}
+            {activeFilterCount > 1 && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-6 px-2 text-xs"
+                onClick={clearAllFilters}
+              >
+                Clear All
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
 
       <ScrollArea className="h-[calc(100vh-250px)]">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pr-4">
@@ -267,8 +474,8 @@ const ResumeTemplates = () => {
             ))
           ) : (
             <div className="col-span-full text-center py-12">
-              <p className="text-muted-foreground">No templates found matching "{searchTerm}"</p>
-              <Button variant="link" onClick={() => setSearchTerm("")}>Clear search</Button>
+              <p className="text-muted-foreground">No templates found matching your criteria</p>
+              <Button variant="link" onClick={clearAllFilters}>Clear filters</Button>
             </div>
           )}
         </div>
