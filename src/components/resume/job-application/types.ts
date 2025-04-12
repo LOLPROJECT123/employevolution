@@ -21,6 +21,7 @@ export interface ResumeTemplate {
   title: string;
   description: string;
   imageUrl: string;
+  previewUrl: string; // Added previewUrl for actual resume preview
   downloadUrl: string;
   company: string;
   role: string;

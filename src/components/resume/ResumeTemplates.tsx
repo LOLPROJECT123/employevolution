@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Download, Search, Filter, Star, Eye, ThumbsUp } from "lucide-react";
+import { Download, Search, Filter, Star, Eye, ThumbsUp, FileText } from "lucide-react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { 
   Dialog,
@@ -15,6 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { toast } from "@/hooks/use-toast";
 import { ResumeTemplate } from "./job-application/types";
 
 const ResumeTemplates = () => {
@@ -26,7 +27,8 @@ const ResumeTemplates = () => {
       id: "1",
       title: "Google SWE Template",
       description: "Clean, ATS-optimized template used by a successful Google software engineer. Focuses on technical projects and quantifiable achievements.",
-      imageUrl: "/lovable-uploads/87ed6ecf-b5c7-43e9-ada4-0daed6864418.png",
+      imageUrl: "https://resumegenius.com/wp-content/uploads/software-engineer-resume-example-classic.png",
+      previewUrl: "https://resumegenius.com/wp-content/uploads/software-engineer-resume-example-classic.png",
       downloadUrl: "#",
       company: "Google",
       role: "Software Engineer",
@@ -38,7 +40,8 @@ const ResumeTemplates = () => {
       id: "2",
       title: "Amazon PM Resume",
       description: "Template used by a Senior Product Manager at Amazon. Highlights leadership, product metrics and business impact.",
-      imageUrl: "/lovable-uploads/81cda60f-8675-4248-93bc-1d140295a4f5.png",
+      imageUrl: "https://www.resumeviking.com/wp-content/uploads/2021/08/Sample-Resume-Product-Manager.png",
+      previewUrl: "https://www.resumeviking.com/wp-content/uploads/2021/08/Sample-Resume-Product-Manager.png",
       downloadUrl: "#",
       company: "Amazon",
       role: "Product Manager",
@@ -50,7 +53,8 @@ const ResumeTemplates = () => {
       id: "3",
       title: "Meta UI/UX Designer",
       description: "Visually appealing template for design roles that helped land a position at Meta. Includes portfolio links and project showcases.",
-      imageUrl: "/lovable-uploads/f3c6fbd8-96c4-4634-9d74-649139e933f5.png",
+      imageUrl: "https://cdn-images.zety.com/pages/graphic_designer_resume_example_6.png",
+      previewUrl: "https://cdn-images.zety.com/pages/graphic_designer_resume_example_6.png",
       downloadUrl: "#",
       company: "Meta",
       role: "UI/UX Designer",
@@ -62,7 +66,8 @@ const ResumeTemplates = () => {
       id: "4",
       title: "Microsoft Data Scientist",
       description: "Template for data science roles with sections for ML projects, technical skills, and business outcomes. Helped secure a role at Microsoft.",
-      imageUrl: "/lovable-uploads/8d78f162-7185-4058-b018-02e6724321d1.png",
+      imageUrl: "https://www.livecareer.com/wp-content/uploads/2021/12/data-scientist-resume-examples-2022.png",
+      previewUrl: "https://www.livecareer.com/wp-content/uploads/2021/12/data-scientist-resume-examples-2022.png",
       downloadUrl: "#",
       company: "Microsoft",
       role: "Data Scientist",
@@ -74,7 +79,8 @@ const ResumeTemplates = () => {
       id: "5",
       title: "Apple iOS Developer",
       description: "iOS developer template with a focus on App Store launches and technical achievements. ATS-friendly format that helped land a role at Apple.",
-      imageUrl: "/lovable-uploads/2ba65bd9-bfb5-4f5c-9496-a7d5a9a45549.png",
+      imageUrl: "https://www.beamjobs.com/hs-fs/hubfs/iOS%20Developer%20Resume.png",
+      previewUrl: "https://www.beamjobs.com/hs-fs/hubfs/iOS%20Developer%20Resume.png",
       downloadUrl: "#",
       company: "Apple",
       role: "iOS Developer",
@@ -86,7 +92,8 @@ const ResumeTemplates = () => {
       id: "6",
       title: "Netflix SRE Resume",
       description: "Site Reliability Engineer template with emphasis on system performance, monitoring and incident response. Successfully used for Netflix SRE role.",
-      imageUrl: "/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png",
+      imageUrl: "https://www.beamjobs.com/hs-fs/hubfs/Copy%20of%20DevOps%20Resume%20Template.png",
+      previewUrl: "https://www.beamjobs.com/hs-fs/hubfs/Copy%20of%20DevOps%20Resume%20Template.png",
       downloadUrl: "#",
       company: "Netflix",
       role: "Site Reliability Engineer",
@@ -121,6 +128,18 @@ const ResumeTemplates = () => {
   const handleDownload = (template: ResumeTemplate) => {
     // In a real app, this would download the template
     console.log(`Downloading template: ${template.title}`);
+    toast({
+      title: "Resume Downloaded",
+      description: `${template.title} has been downloaded successfully.`,
+    });
+  };
+  
+  const handleUseTemplate = (template: ResumeTemplate) => {
+    console.log(`Using template: ${template.title}`);
+    toast({
+      title: "Template Selected",
+      description: `You are now using the ${template.title} template.`,
+    });
   };
 
   return (
@@ -188,16 +207,23 @@ const ResumeTemplates = () => {
                             <div className="mt-4">
                               <AspectRatio ratio={3/4} className="overflow-hidden rounded-md border">
                                 <img 
-                                  src={template.imageUrl} 
+                                  src={template.previewUrl} 
                                   alt={template.title}
                                   className="w-full h-full object-contain bg-white"
                                 />
                               </AspectRatio>
                             </div>
-                            <div className="flex justify-end mt-4">
+                            <div className="flex justify-end gap-2 mt-4">
+                              <Button 
+                                variant="outline" 
+                                onClick={() => handleUseTemplate(template)}
+                              >
+                                <FileText className="h-4 w-4 mr-2" />
+                                Use This Template
+                              </Button>
                               <Button onClick={() => handleDownload(template)}>
                                 <Download className="h-4 w-4 mr-2" />
-                                Download Template
+                                Download
                               </Button>
                             </div>
                           </DialogContent>
@@ -222,10 +248,20 @@ const ResumeTemplates = () => {
                     <ThumbsUp className="h-3 w-3 mr-1" />
                     {template.downloads.toLocaleString()}
                   </div>
-                  <Button size="sm" onClick={() => handleDownload(template)}>
-                    <Download className="h-4 w-4 mr-2" />
-                    Download
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => handleUseTemplate(template)}
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Use
+                    </Button>
+                    <Button size="sm" onClick={() => handleDownload(template)}>
+                      <Download className="h-4 w-4 mr-2" />
+                      Download
+                    </Button>
+                  </div>
                 </CardFooter>
               </Card>
             ))
