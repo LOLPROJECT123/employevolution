@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -279,9 +278,6 @@ const ResumeTemplates = () => {
     // In a real app, this would handle the actual download
     console.log(`Downloading template: ${template.title}`);
     
-    // Instead of opening the URL in a new tab, we'll simulate the download
-    // Since the URLs are placeholders, we'll just show a success message
-    
     toast({
       title: "Resume Template Downloaded",
       description: `${template.title} has been downloaded successfully. ${template.attribution}`,
@@ -350,14 +346,14 @@ const ResumeTemplates = () => {
               <DropdownMenuGroup>
                 <DropdownMenuLabel className="text-xs font-medium">Company</DropdownMenuLabel>
                 <Select 
-                  value={activeFilters.company || ""} 
-                  onValueChange={(value) => handleFilterChange('company', value || null)}
+                  value={activeFilters.company || "all"} 
+                  onValueChange={(value) => handleFilterChange('company', value === "all" ? null : value)}
                 >
                   <SelectTrigger className="h-8 w-full">
                     <SelectValue placeholder="All Companies" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Companies</SelectItem>
+                    <SelectItem value="all">All Companies</SelectItem>
                     {filterOptions.companies.map(company => (
                       <SelectItem key={company} value={company}>{company}</SelectItem>
                     ))}
@@ -370,14 +366,14 @@ const ResumeTemplates = () => {
               <DropdownMenuGroup>
                 <DropdownMenuLabel className="text-xs font-medium">Role Type</DropdownMenuLabel>
                 <Select 
-                  value={activeFilters.roleType || ""} 
-                  onValueChange={(value) => handleFilterChange('roleType', value || null)}
+                  value={activeFilters.roleType || "all"} 
+                  onValueChange={(value) => handleFilterChange('roleType', value === "all" ? null : value)}
                 >
                   <SelectTrigger className="h-8 w-full">
                     <SelectValue placeholder="All Role Types" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Role Types</SelectItem>
+                    <SelectItem value="all">All Role Types</SelectItem>
                     {filterOptions.roleTypes.map(roleType => (
                       <SelectItem key={roleType} value={roleType}>{roleType}</SelectItem>
                     ))}
@@ -390,14 +386,14 @@ const ResumeTemplates = () => {
               <DropdownMenuGroup>
                 <DropdownMenuLabel className="text-xs font-medium">Position</DropdownMenuLabel>
                 <Select 
-                  value={activeFilters.position || ""} 
-                  onValueChange={(value) => handleFilterChange('position', value || null)}
+                  value={activeFilters.position || "all"} 
+                  onValueChange={(value) => handleFilterChange('position', value === "all" ? null : value)}
                 >
                   <SelectTrigger className="h-8 w-full">
                     <SelectValue placeholder="All Positions" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Positions</SelectItem>
+                    <SelectItem value="all">All Positions</SelectItem>
                     {filterOptions.positions.map(position => (
                       <SelectItem key={position} value={position}>{position}</SelectItem>
                     ))}
@@ -410,14 +406,14 @@ const ResumeTemplates = () => {
               <DropdownMenuGroup>
                 <DropdownMenuLabel className="text-xs font-medium">Source</DropdownMenuLabel>
                 <Select 
-                  value={activeFilters.source || ""} 
-                  onValueChange={(value) => handleFilterChange('source', value || null)}
+                  value={activeFilters.source || "all"} 
+                  onValueChange={(value) => handleFilterChange('source', value === "all" ? null : value)}
                 >
                   <SelectTrigger className="h-8 w-full">
                     <SelectValue placeholder="All Sources" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Sources</SelectItem>
+                    <SelectItem value="all">All Sources</SelectItem>
                     {filterOptions.sources.map(source => (
                       <SelectItem key={source} value={source}>{source}</SelectItem>
                     ))}
@@ -656,4 +652,3 @@ const ResumeTemplates = () => {
 };
 
 export default ResumeTemplates;
-

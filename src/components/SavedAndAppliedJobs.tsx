@@ -153,7 +153,7 @@ export function SavedAndAppliedJobs({
                             Status: <span className="font-medium">{application?.status.charAt(0).toUpperCase() + application?.status.slice(1)}</span>
                           </span>
                           <Select
-                            value={application?.status}
+                            value={application?.status || "applied"}
                             onValueChange={(value) => handleStatusChange(job.id, value as JobStatus)}
                           >
                             <SelectTrigger className="w-[160px] h-8">

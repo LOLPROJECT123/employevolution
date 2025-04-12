@@ -33,7 +33,7 @@ import {
   GraduationCap,
   DollarSign,
   User,
-  Search as SearchIcon, // Import Search as SearchIcon
+  Search as SearchIcon,
   ChevronDown,
   Plus,
   X,
@@ -73,7 +73,6 @@ export function JobPreferences() {
   };
 
   const savePreferences = () => {
-    // Placeholder for saving preferences
     alert("Preferences Saved!");
   };
 
