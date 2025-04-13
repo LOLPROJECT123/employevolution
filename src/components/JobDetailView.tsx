@@ -28,9 +28,9 @@ const getMatchColor = (percentage?: number) => {
 // Function to get the match label based on percentage
 const getMatchLabel = (percentage?: number) => {
   if (!percentage) return "";
-  if (percentage >= 70) return "GOOD MATCH";
-  if (percentage >= 50) return "FAIR MATCH";
-  return "WEAK MATCH";
+  if (percentage >= 70) return `${percentage}% GOOD MATCH`;
+  if (percentage >= 50) return `${percentage}% FAIR MATCH`;
+  return `${percentage}% WEAK MATCH`;
 };
 
 export const JobDetailView = ({ 
