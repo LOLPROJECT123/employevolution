@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -27,7 +28,64 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const generateSampleJobs = (count: number): Job[] => {
-  // ... keep existing generateSampleJobs function
+  const jobTypes: Job['type'][] = ['full-time', 'part-time', 'contract', 'internship', 'temporary', 'volunteer', 'other'];
+  const experienceLevels: Job['level'][] = ['intern', 'entry', 'mid', 'senior', 'lead', 'executive', 'manager', 'director'];
+  const companies = ['Google', 'Microsoft', 'Apple', 'Amazon', 'Meta', 'Netflix', 'Uber', 'Airbnb', 'Twitter', 'LinkedIn'];
+  const titles = ['Software Engineer', 'Product Manager', 'Data Scientist', 'UX Designer', 'DevOps Engineer', 'Frontend Developer', 'Backend Developer', 'Full Stack Developer', 'Machine Learning Engineer', 'QA Engineer'];
+  const locations = ['San Francisco, CA', 'New York, NY', 'Seattle, WA', 'Austin, TX', 'Boston, MA', 'Chicago, IL', 'Los Angeles, CA', 'Denver, CO', 'Atlanta, GA', 'Remote'];
+  const skills = ['JavaScript', 'Python', 'Java', 'React', 'Angular', 'Vue', 'Node.js', 'Express', 'MongoDB', 'SQL', 'TypeScript', 'AWS', 'Docker', 'Kubernetes', 'Git', 'CI/CD'];
+  
+  const jobs: Job[] = [];
+  
+  for (let i = 0; i < count; i++) {
+    const randomSkillsCount = Math.floor(Math.random() * 8) + 3;
+    const randomSkills: string[] = [];
+    
+    while (randomSkills.length < randomSkillsCount) {
+      const skill = skills[Math.floor(Math.random() * skills.length)];
+      if (!randomSkills.includes(skill)) {
+        randomSkills.push(skill);
+      }
+    }
+    
+    const minSalary = Math.floor(Math.random() * 100000) + 50000;
+    const maxSalary = minSalary + Math.floor(Math.random() * 50000);
+    
+    const dateOffset = Math.floor(Math.random() * 30);
+    const postedDate = new Date();
+    postedDate.setDate(postedDate.getDate() - dateOffset);
+    
+    const requirements = [
+      'Bachelor\'s degree in Computer Science or related field',
+      `3+ years of experience with ${randomSkills[0]} and ${randomSkills[1]}`,
+      'Strong problem-solving skills',
+      'Excellent communication and teamwork abilities',
+      `Experience with ${randomSkills[2]} is preferred`
+    ];
+    
+    jobs.push({
+      id: `job-${i}`,
+      title: titles[Math.floor(Math.random() * titles.length)],
+      company: companies[Math.floor(Math.random() * companies.length)],
+      location: locations[Math.floor(Math.random() * locations.length)],
+      salary: {
+        min: minSalary,
+        max: maxSalary,
+        currency: '$'
+      },
+      type: jobTypes[Math.floor(Math.random() * jobTypes.length)],
+      level: experienceLevels[Math.floor(Math.random() * experienceLevels.length)],
+      description: `We are looking for a talented ${titles[Math.floor(Math.random() * titles.length)]} to join our team. You will be working on exciting projects and making a significant impact on our products. This is a great opportunity to grow your skills and advance your career.`,
+      requirements: requirements,
+      postedAt: postedDate.toISOString(),
+      skills: randomSkills,
+      matchPercentage: Math.floor(Math.random() * 100),
+      remote: Math.random() > 0.5,
+      applyUrl: `https://example.com/apply/${i}`
+    });
+  }
+  
+  return jobs;
 };
 
 const sampleJobs: Job[] = generateSampleJobs(100);
