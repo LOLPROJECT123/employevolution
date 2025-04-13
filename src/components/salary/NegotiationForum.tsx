@@ -24,9 +24,23 @@ type ForumPost = {
   comments: number;
   timestamp: string;
   isAnonymous: boolean;
+  company?: string;
+  role?: string;
+  position?: string;
 };
 
-const NegotiationForum = () => {
+// Define the interface for the filters prop
+interface NegotiationForumProps {
+  filters?: {
+    search?: string;
+    company?: string | null;
+    role?: string | null;
+    position?: string | null;
+    sortOrder?: "newest" | "oldest";
+  };
+}
+
+const NegotiationForum = ({ filters }: NegotiationForumProps) => {
   const [posts, setPosts] = useState<ForumPost[]>([
     {
       id: "1",
@@ -40,7 +54,10 @@ const NegotiationForum = () => {
       likes: 42,
       comments: 18,
       timestamp: "2 days ago",
-      isAnonymous: true
+      isAnonymous: true,
+      company: "Google",
+      role: "Software Engineer",
+      position: "Senior"
     },
     {
       id: "2",
@@ -55,7 +72,10 @@ const NegotiationForum = () => {
       likes: 31,
       comments: 24,
       timestamp: "5 days ago",
-      isAnonymous: false
+      isAnonymous: false,
+      company: "Microsoft",
+      role: "Software Engineer",
+      position: "Entry"
     },
     {
       id: "3",
@@ -70,7 +90,10 @@ const NegotiationForum = () => {
       likes: 57,
       comments: 32,
       timestamp: "1 week ago",
-      isAnonymous: false
+      isAnonymous: false,
+      company: "Amazon",
+      role: "Product Manager",
+      position: "Mid-level"
     }
   ]);
 
@@ -110,6 +133,50 @@ const NegotiationForum = () => {
     });
     setIsDialogOpen(false);
   };
+
+  // Filter posts based on the filters prop
+  const filteredPosts = React.useMemo(() => {
+    if (!filters) return posts;
+    
+    return posts.filter(post => {
+      // Filter by search term
+      if (filters.search && !post.title.toLowerCase().includes(filters.search.toLowerCase()) && 
+          !post.content.toLowerCase().includes(filters.search.toLowerCase())) {
+        return false;
+      }
+      
+      // Filter by company
+      if (filters.company && post.company !== filters.company) {
+        return false;
+      }
+      
+      // Filter by role
+      if (filters.role && post.role !== filters.role) {
+        return false;
+      }
+      
+      // Filter by position
+      if (filters.position && post.position !== filters.position) {
+        return false;
+      }
+      
+      return true;
+    });
+  }, [posts, filters]);
+
+  // Sort posts based on sortOrder
+  const sortedPosts = React.useMemo(() => {
+    if (!filters?.sortOrder || filters.sortOrder === "newest") {
+      return [...filteredPosts].sort((a, b) => {
+        // For simplicity, compare timestamps directly (in a real app, parse dates)
+        return a.timestamp > b.timestamp ? -1 : 1;
+      });
+    } else {
+      return [...filteredPosts].sort((a, b) => {
+        return a.timestamp > b.timestamp ? 1 : -1;
+      });
+    }
+  }, [filteredPosts, filters?.sortOrder]);
 
   return (
     <div className="space-y-6">
@@ -191,51 +258,57 @@ const NegotiationForum = () => {
       </div>
 
       <div className="space-y-4">
-        {posts.map((post) => (
-          <Card key={post.id} className="overflow-hidden">
-            <CardHeader className="pb-3">
-              <div className="flex justify-between">
-                <div className="flex items-center gap-2">
-                  <Avatar>
-                    {post.author.avatar && <AvatarImage src={post.author.avatar} alt={post.author.name} />}
-                    <AvatarFallback>{post.author.initials}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <div className="font-medium">{post.author.name}</div>
-                    <div className="text-xs text-muted-foreground">{post.timestamp}</div>
+        {sortedPosts.length > 0 ? (
+          sortedPosts.map((post) => (
+            <Card key={post.id} className="overflow-hidden">
+              <CardHeader className="pb-3">
+                <div className="flex justify-between">
+                  <div className="flex items-center gap-2">
+                    <Avatar>
+                      {post.author.avatar && <AvatarImage src={post.author.avatar} alt={post.author.name} />}
+                      <AvatarFallback>{post.author.initials}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="font-medium">{post.author.name}</div>
+                      <div className="text-xs text-muted-foreground">{post.timestamp}</div>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {post.tags.map((tag, idx) => (
+                      <Badge key={idx} variant="outline" className="text-xs">
+                        {tag}
+                      </Badge>
+                    ))}
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-1">
-                  {post.tags.map((tag, idx) => (
-                    <Badge key={idx} variant="outline" className="text-xs">
-                      {tag}
-                    </Badge>
-                  ))}
+                <CardTitle className="text-lg mt-2">{post.title}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm">{post.content}</p>
+              </CardContent>
+              <CardFooter className="border-t pt-3 flex justify-between">
+                <div className="flex gap-3">
+                  <Button variant="ghost" size="sm" className="flex gap-1 text-muted-foreground">
+                    <ThumbsUp className="h-4 w-4" />
+                    <span>{post.likes}</span>
+                  </Button>
+                  <Button variant="ghost" size="sm" className="flex gap-1 text-muted-foreground">
+                    <MessageCircle className="h-4 w-4" />
+                    <span>{post.comments}</span>
+                  </Button>
                 </div>
-              </div>
-              <CardTitle className="text-lg mt-2">{post.title}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm">{post.content}</p>
-            </CardContent>
-            <CardFooter className="border-t pt-3 flex justify-between">
-              <div className="flex gap-3">
-                <Button variant="ghost" size="sm" className="flex gap-1 text-muted-foreground">
-                  <ThumbsUp className="h-4 w-4" />
-                  <span>{post.likes}</span>
+                <Button variant="ghost" size="sm" className="text-muted-foreground">
+                  <Share2 className="h-4 w-4 mr-1" />
+                  Share
                 </Button>
-                <Button variant="ghost" size="sm" className="flex gap-1 text-muted-foreground">
-                  <MessageCircle className="h-4 w-4" />
-                  <span>{post.comments}</span>
-                </Button>
-              </div>
-              <Button variant="ghost" size="sm" className="text-muted-foreground">
-                <Share2 className="h-4 w-4 mr-1" />
-                Share
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
+              </CardFooter>
+            </Card>
+          ))
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">No posts match your filters.</p>
+          </div>
+        )}
         
         <div className="flex justify-center py-4">
           <Button variant="outline" className="flex items-center gap-1">

@@ -27,5 +27,5 @@ export interface ResumePost {
   tags: string[];
   company?: string;
   role?: string;
-  position?: string; // Added position field
+  position?: string; // Position field already properly added 
 }
