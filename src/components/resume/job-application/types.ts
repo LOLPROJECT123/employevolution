@@ -14,6 +14,22 @@ export interface ScrapedJob {
   verified?: boolean;
   matchPercentage?: number;
   matchKeywords?: string[];
+  keywordMatch?: {
+    score: number;
+    total: number;
+    found: number;
+    highPriority: {
+      keywords: string[];
+      found: number;
+      total: number;
+    };
+    lowPriority: {
+      keywords: string[];
+      found: number;
+      total: number;
+    };
+  };
+  requirements?: string[];
 }
 
 export interface ResumeTemplate {

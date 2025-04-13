@@ -41,9 +41,13 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
         const isValid = Math.random() > 0.15;
         
         if (isValid) {
+          // Add keyword matching data to the job
+          const keywordMatchData = generateKeywordMatchData();
+          
           verifiedJobs.push({
             ...job,
-            verified: true
+            verified: true,
+            keywordMatch: keywordMatchData
           });
           validCount++;
         }
@@ -63,6 +67,46 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
     }
     
     return verifiedJobs;
+  };
+  
+  // Generate keyword match data for a job
+  const generateKeywordMatchData = () => {
+    // Create mock high priority keywords
+    const highPriorityKeywords = ["Python", "JavaScript", "React", "AWS", "Docker", "Node.js", "TypeScript", "MongoDB", "Git", "CI/CD", "Kubernetes"];
+    const highPriorityCount = Math.floor(Math.random() * 5) + 6; // 6-11 keywords
+    const highPrioritySelected = highPriorityKeywords.slice(0, highPriorityCount);
+    const highPriorityFound = Math.floor(Math.random() * highPriorityCount);
+    
+    // Create mock low priority keywords
+    const lowPriorityKeywords = ["Agile", "Scrum", "REST API", "GraphQL", "Testing", "DevOps", "Linux", "SQL", "NoSQL"];
+    const lowPriorityCount = Math.floor(Math.random() * 5) + 4; // 4-9 keywords
+    const lowPrioritySelected = lowPriorityKeywords.slice(0, lowPriorityCount);
+    const lowPriorityFound = Math.floor(Math.random() * lowPriorityCount);
+    
+    const totalKeywords = highPriorityCount + lowPriorityCount;
+    const foundKeywords = highPriorityFound + lowPriorityFound;
+    
+    // Weight high priority keywords more than low priority
+    const score = Math.round(
+      ((highPriorityFound * 1.5) + (lowPriorityFound * 0.5)) / 
+      ((highPriorityCount * 1.5) + (lowPriorityCount * 0.5)) * 100
+    );
+    
+    return {
+      score,
+      total: totalKeywords,
+      found: foundKeywords,
+      highPriority: {
+        keywords: highPrioritySelected,
+        found: highPriorityFound,
+        total: highPriorityCount
+      },
+      lowPriority: {
+        keywords: lowPrioritySelected,
+        found: lowPriorityFound,
+        total: lowPriorityCount
+      }
+    };
   };
 
   // Function to scrape jobs based on search criteria
@@ -86,6 +130,22 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
         
         const titlePrefix = searchQuery.trim();
         
+        // Generate requirements for jobs
+        const generateRequirements = () => {
+          const commonRequirements = [
+            "Bachelor's degree in Computer Science or related field",
+            "3+ years of experience with web development",
+            "Experience with modern JavaScript frameworks",
+            "Strong understanding of data structures and algorithms",
+            "Experience with cloud platforms (AWS, Azure, GCP)",
+            "Excellent communication and collaboration skills"
+          ];
+          
+          const shuffled = [...commonRequirements].sort(() => 0.5 - Math.random());
+          const count = Math.floor(Math.random() * 3) + 3; // 3-6 requirements
+          return shuffled.slice(0, count);
+        };
+        
         return Array(12).fill(0).map((_, index) => {
           const company = companies[Math.floor(Math.random() * companies.length)];
           const location = searchLocation.trim() || locations[Math.floor(Math.random() * locations.length)];
@@ -106,6 +166,7 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
             description: "This is a sample job description that would contain details about the role, responsibilities, and requirements.",
             applyUrl: `https://example.com/jobs/${company.toLowerCase().replace(/\s/g, '-')}/${index + 1}/apply`,
             matchPercentage,
+            requirements: generateRequirements(),
             verified: false
           };
         });

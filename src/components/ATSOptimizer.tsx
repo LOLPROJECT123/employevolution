@@ -16,11 +16,13 @@ import { Progress } from "@/components/ui/progress";
 import { Upload, FileText, BarChart, Check, AlertCircle, FileType, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
+import KeywordMatch from "./KeywordMatch";
 
 const ATSOptimizer = () => {
   const [activeTab, setActiveTab] = useState<"resume" | "coverLetter">("resume");
   const [jobDescription, setJobDescription] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [resumeText, setResumeText] = useState<string>("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisComplete, setAnalysisComplete] = useState(false);
   const [matchScore, setMatchScore] = useState(0);
@@ -31,7 +33,18 @@ const ATSOptimizer = () => {
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+      const selectedFile = e.target.files[0];
+      setFile(selectedFile);
+      
+      // Read file content for keyword matching
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target && typeof event.target.result === 'string') {
+          setResumeText(event.target.result);
+        }
+      };
+      reader.readAsText(selectedFile);
+      
       toast({
         title: "File uploaded",
         description: `Your ${activeTab === "resume" ? "resume" : "cover letter"} has been uploaded successfully.`,
@@ -98,6 +111,15 @@ const ATSOptimizer = () => {
     if (matchScore >= 70) return "bg-amber-500";
     return "bg-red-500";
   };
+  
+  const handleAddKeywords = (keywords: string[]) => {
+    setMissingKeywords([...new Set([...missingKeywords, ...keywords])]);
+    
+    toast({
+      title: "Keywords added",
+      description: `${keywords.length} keywords have been added to your optimization list.`,
+    });
+  };
 
   return (
     <Card className="w-full">
@@ -156,6 +178,17 @@ const ATSOptimizer = () => {
                 This helps our system identify key requirements and skills to match against your resume.
               </p>
             </div>
+            
+            {/* Add Keyword Match component */}
+            {file && jobDescription && (
+              <div className="space-y-2">
+                <KeywordMatch 
+                  jobDescription={jobDescription}
+                  resumeText={resumeText}
+                  onAddKeywords={handleAddKeywords}
+                />
+              </div>
+            )}
             
             <Button 
               className="w-full"
@@ -218,6 +251,17 @@ const ATSOptimizer = () => {
                 This helps our system identify key requirements to enhance your cover letter.
               </p>
             </div>
+            
+            {/* Add Keyword Match component for cover letters too */}
+            {file && jobDescription && activeTab === "coverLetter" && (
+              <div className="space-y-2">
+                <KeywordMatch 
+                  jobDescription={jobDescription}
+                  resumeText={resumeText}
+                  onAddKeywords={handleAddKeywords}
+                />
+              </div>
+            )}
             
             <Button 
               className="w-full"
@@ -319,6 +363,7 @@ const ATSOptimizer = () => {
               setMatchScore(0);
               setOptimizationTips([]);
               setMissingKeywords([]);
+              setResumeText("");
             }}>
               Start New Analysis
             </Button>
