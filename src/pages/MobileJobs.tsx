@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useRef } from 'react';
 import { Job, JobFilters } from "@/types/job";
 import { MobileJobCard } from "@/components/MobileJobCard";
 import { MobileJobDetail } from "@/components/MobileJobDetail";
@@ -28,6 +29,7 @@ export default function MobileJobs() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showDetailView, setShowDetailView] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [toastShown, setToastShown] = useState(false);
   const [activeFilters, setActiveFilters] = useState<JobFilters>({
     search: "",
     location: "",
@@ -41,6 +43,9 @@ export default function MobileJobs() {
     companySize: [],
     benefits: []
   });
+
+  // Use ref to track if the toast was already shown for the current search
+  const lastFilterRef = useRef<string>("");
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -213,6 +218,28 @@ export default function MobileJobs() {
   
   const filteredJobs = applyFiltersToJobs(jobs, activeFilters);
 
+  // Handle filter changes and show toast only once
+  useEffect(() => {
+    // Create a string representation of the current filters to compare
+    const filterString = JSON.stringify({
+      searchTerm,
+      activeFilters
+    });
+    
+    // Only show toast if filters actually changed
+    if (filterString !== lastFilterRef.current && filteredJobs.length > 0) {
+      // Update the last filter ref
+      lastFilterRef.current = filterString;
+      
+      // Show toast that disappears after 5 seconds
+      toast({
+        title: "Jobs found",
+        description: `Found ${filteredJobs.length} matching jobs based on your criteria.`,
+        duration: 5000,
+      });
+    }
+  }, [filteredJobs.length, searchTerm, activeFilters]);
+
   const handleSaveJob = (job: Job) => {
     if (savedJobIds.includes(job.id)) {
       setSavedJobIds(savedJobIds.filter(id => id !== job.id));
@@ -257,10 +284,7 @@ export default function MobileJobs() {
     setActiveFilters(filters);
     setShowFilters(false);
     
-    toast({
-      title: "Filters applied",
-      description: "Your job search filters have been applied.",
-    });
+    // Toast is now handled by the useEffect
   };
   
   const handleCloseFilters = () => {
@@ -301,10 +325,7 @@ export default function MobileJobs() {
       benefits: []
     });
     
-    toast({
-      title: "Filters cleared",
-      description: "All job filters have been reset.",
-    });
+    // Toast is now handled by the useEffect
   };
   
   return (

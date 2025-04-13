@@ -1,4 +1,3 @@
-
 // This script runs on job sites and can extract job information
 console.log("EmployEvolution extension loaded");
 
@@ -181,74 +180,229 @@ function detectFormFields() {
   };
   
   // Check for common form field patterns
-  const inputs = document.querySelectorAll('input, textarea');
+  const inputs = document.querySelectorAll('input, textarea, select');
   for (const input of inputs) {
-    const name = input.name.toLowerCase();
-    const id = input.id.toLowerCase();
+    const name = (input.name || '').toLowerCase();
+    const id = (input.id || '').toLowerCase();
     const type = input.type;
     const placeholder = (input.placeholder || '').toLowerCase();
+    const label = findLabelForInput(input);
+    const labelText = label ? label.textContent.toLowerCase() : '';
     
-    // Determine field type based on attributes
-    if (type === 'file' && (name.includes('resume') || id.includes('resume') || placeholder.includes('resume'))) {
+    // Determine field type based on attributes and label
+    if (type === 'file' && (name.includes('resume') || id.includes('resume') || placeholder.includes('resume') || labelText.includes('resume'))) {
       formFields.resume = input;
     }
-    else if (type === 'file' && (name.includes('cover') || id.includes('cover') || placeholder.includes('cover'))) {
+    else if (type === 'file' && (name.includes('cover') || id.includes('cover') || placeholder.includes('cover') || labelText.includes('cover letter'))) {
       formFields.coverLetter = input;
     }
-    else if ((name.includes('name') || id.includes('name') || placeholder.includes('name')) && 
-             !(name.includes('last') || id.includes('last') || placeholder.includes('last'))) {
+    else if ((name.includes('first') && name.includes('name')) || 
+             (id.includes('first') && id.includes('name')) || 
+             placeholder === 'first name' ||
+             labelText === 'first name') {
+      formFields.firstName = input;
+    }
+    else if ((name.includes('last') && name.includes('name')) || 
+             (id.includes('last') && id.includes('name')) || 
+             placeholder === 'last name' ||
+             labelText === 'last name') {
+      formFields.lastName = input;
+    }
+    else if ((name.includes('name') && !name.includes('last') && !name.includes('first')) || 
+             (id.includes('name') && !id.includes('last') && !id.includes('first')) || 
+             placeholder === 'full name' || placeholder === 'name' ||
+             labelText === 'full name' || labelText === 'name') {
       formFields.name = input;
     }
-    else if (type === 'email' || name.includes('email') || id.includes('email') || placeholder.includes('email')) {
+    else if (type === 'email' || name.includes('email') || id.includes('email') || placeholder.includes('email') || labelText.includes('email')) {
       formFields.email = input;
     }
-    else if (type === 'tel' || name.includes('phone') || id.includes('phone') || placeholder.includes('phone')) {
+    else if (type === 'tel' || name.includes('phone') || id.includes('phone') || placeholder.includes('phone') || labelText.includes('phone')) {
       formFields.phone = input;
     }
-    else if (name.includes('linkedin') || id.includes('linkedin') || placeholder.includes('linkedin')) {
+    else if (name.includes('linkedin') || id.includes('linkedin') || placeholder.includes('linkedin') || labelText.includes('linkedin')) {
       formFields.linkedin = input;
     }
-    else if ((name.includes('website') || id.includes('website') || placeholder.includes('website')) && 
+    else if ((name.includes('website') || id.includes('website') || placeholder.includes('website') || labelText.includes('website')) && 
              !(name.includes('linkedin') || id.includes('linkedin'))) {
       formFields.website = input;
+    }
+    else if (name.includes('address') || id.includes('address') || placeholder.includes('address') || labelText.includes('address')) {
+      formFields.address = input;
     }
   }
   
   return formFields;
 }
 
-// Function to auto-fill application forms
+// Helper function to find a label associated with an input
+function findLabelForInput(input) {
+  // Check for label with matching 'for' attribute
+  if (input.id) {
+    const label = document.querySelector(`label[for="${input.id}"]`);
+    if (label) return label;
+  }
+  
+  // Check if input is inside a label
+  let parent = input.parentElement;
+  while (parent) {
+    if (parent.tagName === 'LABEL') {
+      return parent;
+    }
+    parent = parent.parentElement;
+  }
+  
+  // Look for nearby labels
+  const labels = Array.from(document.querySelectorAll('label'));
+  const rect = input.getBoundingClientRect();
+  // Find the closest label above or to the left
+  return labels.find(label => {
+    const labelRect = label.getBoundingClientRect();
+    // Label is above or to the left and close to the input
+    return (labelRect.bottom < rect.top && Math.abs(labelRect.left - rect.left) < 100) || 
+           (labelRect.right < rect.left && Math.abs(labelRect.top - rect.top) < 30);
+  });
+}
+
+// Function to auto-fill application forms - Enhanced version
 function autoFillApplication(userData) {
+  console.log("Starting autofill with user data:", userData);
   const formFields = detectFormFields();
   let filledFields = 0;
   
   // Auto-fill detected fields
+  if (formFields.firstName && userData.firstName) {
+    formFields.firstName.value = userData.firstName;
+    triggerInputEvent(formFields.firstName);
+    filledFields++;
+  }
+  
+  if (formFields.lastName && userData.lastName) {
+    formFields.lastName.value = userData.lastName;
+    triggerInputEvent(formFields.lastName);
+    filledFields++;
+  }
+  
   if (formFields.name && userData.name) {
     formFields.name.value = userData.name;
+    triggerInputEvent(formFields.name);
     filledFields++;
   }
   
   if (formFields.email && userData.email) {
     formFields.email.value = userData.email;
+    triggerInputEvent(formFields.email);
     filledFields++;
   }
   
   if (formFields.phone && userData.phone) {
     formFields.phone.value = userData.phone;
+    triggerInputEvent(formFields.phone);
     filledFields++;
   }
   
   if (formFields.linkedin && userData.linkedin) {
     formFields.linkedin.value = userData.linkedin;
+    triggerInputEvent(formFields.linkedin);
     filledFields++;
   }
   
   if (formFields.website && userData.website) {
     formFields.website.value = userData.website;
+    triggerInputEvent(formFields.website);
     filledFields++;
   }
   
+  if (formFields.address && userData.address) {
+    formFields.address.value = userData.address;
+    triggerInputEvent(formFields.address);
+    filledFields++;
+  }
+  
+  console.log(`Auto-filled ${filledFields} fields`);
+  
+  // Attempt to find and click "Next" or "Continue" buttons after filling
+  if (filledFields > 0) {
+    setTimeout(() => {
+      attemptToAdvanceForm();
+    }, 500);
+  }
+  
   return filledFields;
+}
+
+// Helper function to trigger input events after filling fields
+function triggerInputEvent(element) {
+  if (!element) return;
+  
+  const events = ['input', 'change', 'blur'];
+  events.forEach(eventType => {
+    const event = new Event(eventType, { bubbles: true });
+    element.dispatchEvent(event);
+  });
+}
+
+// Function to attempt to advance to the next step in multi-step forms
+function attemptToAdvanceForm() {
+  // Common button text patterns
+  const buttonPatterns = [
+    'next', 'continue', 'submit', 'save', 'apply', 'proceed', 
+    'siguiente', 'next step', 'review', 'weiter', 'suivant'
+  ];
+  
+  // Look for buttons matching patterns
+  const buttons = Array.from(document.querySelectorAll('button, input[type="button"], input[type="submit"], a.button'));
+  
+  for (const button of buttons) {
+    const buttonText = button.textContent.toLowerCase() || button.value?.toLowerCase() || '';
+    if (buttonPatterns.some(pattern => buttonText.includes(pattern)) && isElementVisible(button)) {
+      console.log("Found potential 'Next' button:", buttonText);
+      // Don't actually click, just highlight to let user confirm
+      highlightElement(button);
+      return;
+    }
+  }
+}
+
+function isElementVisible(element) {
+  if (!element) return false;
+  const style = window.getComputedStyle(element);
+  return style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
+}
+
+function highlightElement(element) {
+  const originalBackground = element.style.backgroundColor;
+  const originalBorder = element.style.border;
+  
+  // Add pulsing highlight
+  element.style.backgroundColor = '#ceff9e';
+  element.style.border = '2px solid #4caf50';
+  element.style.transition = 'all 0.3s ease';
+  
+  // Create tooltip
+  const tooltip = document.createElement('div');
+  tooltip.textContent = 'EmployEvolution found this button to continue';
+  tooltip.style.position = 'absolute';
+  tooltip.style.backgroundColor = '#333';
+  tooltip.style.color = '#fff';
+  tooltip.style.padding = '5px 10px';
+  tooltip.style.borderRadius = '4px';
+  tooltip.style.fontSize = '12px';
+  tooltip.style.zIndex = '10000';
+  
+  // Position tooltip above the button
+  const rect = element.getBoundingClientRect();
+  tooltip.style.top = (rect.top - 30 + window.scrollY) + 'px';
+  tooltip.style.left = (rect.left + window.scrollX) + 'px';
+  
+  document.body.appendChild(tooltip);
+  
+  // Remove highlight after 3 seconds
+  setTimeout(() => {
+    element.style.backgroundColor = originalBackground;
+    element.style.border = originalBorder;
+    document.body.removeChild(tooltip);
+  }, 3000);
 }
 
 // Send data to extension popup when requested

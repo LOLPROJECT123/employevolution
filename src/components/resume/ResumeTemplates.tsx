@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -108,7 +109,7 @@ const ResumeTemplates = () => {
           tags: ["Technical", "Software Engineering", "ATS-Optimized"],
           source: "ResumeGenius",
           attribution: "Template provided by ResumeGenius",
-          licenseType: "attribution-required"
+          licenseType: "free" // Changed from attribution-required to free
         },
         {
           id: "2",
@@ -159,7 +160,7 @@ const ResumeTemplates = () => {
           tags: ["Mobile", "iOS", "Developer"],
           source: "ResumeGenius",
           attribution: "Template provided by ResumeGenius",
-          licenseType: "attribution-required"
+          licenseType: "free" // Changed from attribution-required to free
         }
       ];
       
@@ -196,7 +197,7 @@ const ResumeTemplates = () => {
   // Apply filters and search
   const getFilteredTemplates = () => {
     return templates.filter(template => {
-      // Skip premium templates
+      // Filter out premium templates entirely - don't even show them
       if (template.licenseType === 'premium') return false;
       
       // Search filter

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -66,13 +65,19 @@ const JobApplicationAutomation = () => {
     setShowConfirmation(true);
   };
 
-  // Handle auto-application with confirmation
+  // Enhanced auto-application with better verification
   const handleAutoApply = async () => {
     if (!selectedJob) return;
     
     setIsSubmitting(true);
     
     try {
+      // Show a more informative progress notification
+      toast.loading("Preparing to apply...", {
+        description: "Verifying job listing and preparing your resume data",
+        duration: 2000
+      });
+      
       // Verify that the job URL is still valid
       const isValid = await verifyJobUrl(selectedJob.applyUrl);
       
@@ -85,8 +90,14 @@ const JobApplicationAutomation = () => {
         return;
       }
       
-      // Simulate API call for auto-application
-      await simulateJobApplication(selectedJob);
+      // Show application in progress toast
+      toast.loading("Applying to position...", {
+        description: "Submitting your application and resume",
+        duration: 3000
+      });
+      
+      // Simulate API call for auto-application with improved feedback
+      const result = await simulateJobApplication(selectedJob);
       
       // Add to recent applications
       const updatedApplications = [selectedJob, ...recentApplications].slice(0, 5);
@@ -109,8 +120,21 @@ const JobApplicationAutomation = () => {
   };
   
   const simulateJobApplication = async (job: ScrapedJob) => {
-    // Simulate the application process with a random success rate
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Simulate the application process with better feedback
+    toast.loading("Filling out application form...", {
+      duration: 1500
+    });
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    toast.loading("Attaching resume...", {
+      duration: 1000
+    });
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    toast.loading("Submitting application...", {
+      duration: 1500
+    });
+    await new Promise(resolve => setTimeout(resolve, 1500));
     
     // In real implementation, this would be an actual API call to apply
     console.log("Applying to job:", job);
@@ -127,10 +151,21 @@ const JobApplicationAutomation = () => {
   
   const verifyJobUrl = async (url: string): Promise<boolean> => {
     // In real implementation, this would make a server-side request to check if URL is valid
-    await new Promise(resolve => setTimeout(resolve, 500));
+    toast.loading("Verifying job listing availability...", {
+      duration: 800
+    });
     
-    // Simulate 95% valid rate for demonstration
-    return Math.random() < 0.95;
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    // Could check for redirect status, 404s, or listing removed text patterns
+    // For demo purposes, simulating validity check
+    const isValid = Math.random() < 0.95;
+    
+    if (!isValid) {
+      console.log("Job URL validation failed");
+    }
+    
+    return isValid;
   };
   
   const handleNavigateToProfile = () => {

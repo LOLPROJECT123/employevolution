@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
@@ -26,6 +25,12 @@ interface MobileJobDetailProps {
   isSaved?: boolean;
   isApplied?: boolean;
 }
+
+const capitalizeFirstLetter = (string: string) => {
+  return string.split('-').map(word => 
+    word.charAt(0).toUpperCase() + word.slice(1)
+  ).join('-');
+};
 
 export function MobileJobDetail({ 
   job, 
@@ -127,7 +132,7 @@ export function MobileJobDetail({
   return (
     <div className="flex flex-col h-full">
       <header className="flex items-center justify-between p-4 border-b">
-        <button onClick={onBack} className="p-1">
+        <button onClick={onBack} className="p-1" aria-label="Back to job list">
           <ArrowLeft className="h-5 w-5" />
         </button>
         
@@ -149,7 +154,10 @@ export function MobileJobDetail({
             <div className="p-4">
               <div className="flex justify-between items-start mb-3">
                 <Badge className="bg-blue-50 text-blue-600 border-0 rounded-full px-4 py-1.5 text-sm">
-                  {job.level === 'intern' ? 'Internship' : job.type}
+                  {job.level === 'intern' 
+                    ? 'Internship' 
+                    : capitalizeFirstLetter(job.type)
+                  }
                 </Badge>
                 
                 {job.matchPercentage && (
