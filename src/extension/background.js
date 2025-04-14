@@ -7,7 +7,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // Handle job page detection
     console.log("Job page detected:", message.jobData);
     
-    // Could store the job data in Chrome storage
+    // Store the job data in Chrome storage
     chrome.storage.local.set({
       "lastDetectedJob": message.jobData
     });
@@ -46,6 +46,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
     
     sendResponse({ success: true });
+  }
+
+  if (message.action === "openJobUrl") {
+    // Handle opening job application URL
+    console.log("Opening job URL:", message.url);
+    
+    if (message.url) {
+      // Open the URL in a new tab
+      chrome.tabs.create({ url: message.url });
+      sendResponse({ success: true });
+    } else {
+      console.error("No URL provided for job application");
+      sendResponse({ success: false, error: "No URL provided" });
+    }
   }
   
   return true;
