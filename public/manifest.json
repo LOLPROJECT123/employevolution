@@ -14,21 +14,39 @@
   },
   "permissions": [
     "storage",
-    "activeTab"
+    "activeTab",
+    "scripting",
+    "clipboardWrite",
+    "notifications"
   ],
   "host_permissions": [
     "https://*.linkedin.com/*",
     "https://*.indeed.com/*",
-    "https://*.glassdoor.com/*"
+    "https://*.glassdoor.com/*",
+    "https://*.greenhouse.io/*",
+    "https://*.lever.co/*",
+    "https://*.myworkdayjobs.com/*",
+    "https://*.taleo.net/*",
+    "https://*.icims.com/*",
+    "https://*.brassring.com/*"
   ],
   "content_scripts": [
     {
       "matches": [
         "https://*.linkedin.com/jobs/*",
         "https://*.indeed.com/jobs*",
-        "https://*.glassdoor.com/Job/*"
+        "https://*.glassdoor.com/Job/*",
+        "https://*.greenhouse.io/*",
+        "https://*.lever.co/*",
+        "https://*.myworkdayjobs.com/*",
+        "https://*.taleo.net/*",
+        "https://*.icims.com/*",
+        "https://*.brassring.com/*"
       ],
       "js": ["src/extension/content.js"]
     }
-  ]
+  ],
+  "background": {
+    "service_worker": "src/extension/background.js"
+  }
 }

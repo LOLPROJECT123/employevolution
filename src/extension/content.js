@@ -1,4 +1,4 @@
-// This script runs on job sites and can extract job information
+// This script runs on job sites and can extract job information and assist with auto-filling applications
 console.log("EmployEvolution extension loaded");
 
 // Enhanced job data extraction
@@ -264,7 +264,7 @@ function findLabelForInput(input) {
   });
 }
 
-// Function to auto-fill application forms - Enhanced version
+// Improved auto-fill function that handles more field types and platforms
 function autoFillApplication(userData) {
   console.log("Starting autofill with user data:", userData);
   const formFields = detectFormFields();
@@ -329,6 +329,261 @@ function autoFillApplication(userData) {
   }
   
   return filledFields;
+}
+
+// New function to fill application-specific fields
+function fillApplicationSpecificFields(userData) {
+  // Look for fields related to salary expectations
+  const salaryInputs = findFieldsByKeywords(['salary', 'compensation', 'expected', 'desired']);
+  if (salaryInputs.length > 0 && userData.salaryExpectation) {
+    salaryInputs.forEach(input => {
+      input.value = userData.salaryExpectation;
+      triggerInputEvent(input);
+    });
+  }
+  
+  // Look for fields related to availability or start date
+  const availabilityInputs = findFieldsByKeywords(['available', 'start date', 'when can you start']);
+  if (availabilityInputs.length > 0 && userData.availability) {
+    availabilityInputs.forEach(input => {
+      input.value = userData.availability;
+      triggerInputEvent(input);
+    });
+  }
+  
+  // Look for fields related to referrals
+  const referralInputs = findFieldsByKeywords(['referred', 'referral', 'how did you hear']);
+  if (referralInputs.length > 0 && userData.referredBy) {
+    referralInputs.forEach(input => {
+      input.value = userData.referredBy;
+      triggerInputEvent(input);
+    });
+  }
+}
+
+// New function to fill common application questions using radio buttons and checkboxes
+function fillCommonQuestions(userData) {
+  // Handle work authorization questions
+  if (userData.workAuthorization) {
+    const workAuthInputs = findRadiosByKeywords([
+      'legally authorized', 'work authorization', 'eligible to work'
+    ]);
+    
+    // Determine which option to select based on user data
+    const isAuthorized = userData.workAuthorization === 'US Citizen' || 
+                          userData.workAuthorization === 'Green Card' ||
+                          userData.workAuthorization === 'Permanent Resident';
+                          
+    selectRadioOption(workAuthInputs, isAuthorized);
+  }
+  
+  // Handle sponsorship questions
+  if (userData.hasOwnProperty('requireSponsorship')) {
+    const sponsorshipInputs = findRadiosByKeywords([
+      'sponsorship', 'visa', 'require a visa'
+    ]);
+    
+    selectRadioOption(sponsorshipInputs, !userData.requireSponsorship);
+  }
+  
+  // Handle relocation questions
+  if (userData.hasOwnProperty('willingToRelocate')) {
+    const relocationInputs = findRadiosByKeywords([
+      'relocate', 'relocation', 'willing to move'
+    ]);
+    
+    selectRadioOption(relocationInputs, userData.willingToRelocate);
+  }
+  
+  // Handle remote work preference
+  if (userData.remotePreference) {
+    const remoteInputs = findRadiosByKeywords([
+      'remote', 'on-site', 'hybrid', 'work location'
+    ]);
+    
+    // This is more complex and would need a more sophisticated algorithm
+    // to match the user's preference with available options
+    console.log("Found remote work inputs, but needs manual selection");
+  }
+}
+
+// Helper function to find fields by keywords in labels, placeholders, or names
+function findFieldsByKeywords(keywords) {
+  const inputs = document.querySelectorAll('input[type="text"], input[type="number"], textarea, select');
+  const matches = [];
+  
+  for (const input of inputs) {
+    const inputId = input.id;
+    const inputName = input.name;
+    const inputPlaceholder = input.placeholder || '';
+    
+    // Check for associated label
+    const label = findLabelForInput(input);
+    const labelText = label ? label.textContent.toLowerCase() : '';
+    
+    // Check if any keywords match
+    const matchesKeyword = keywords.some(keyword => {
+      const lowerKeyword = keyword.toLowerCase();
+      return inputName.toLowerCase().includes(lowerKeyword) || 
+             inputId.toLowerCase().includes(lowerKeyword) || 
+             inputPlaceholder.toLowerCase().includes(lowerKeyword) || 
+             labelText.includes(lowerKeyword);
+    });
+    
+    if (matchesKeyword) {
+      matches.push(input);
+    }
+  }
+  
+  return matches;
+}
+
+// Helper function to find radio buttons by keywords
+function findRadiosByKeywords(keywords) {
+  const radioGroups = [];
+  const radioButtons = document.querySelectorAll('input[type="radio"]');
+  
+  for (const radio of radioButtons) {
+    const radioName = radio.name;
+    const radioId = radio.id;
+    
+    // Check for associated label
+    const label = findLabelForInput(radio);
+    const labelText = label ? label.textContent.toLowerCase() : '';
+    
+    // Check for fieldset legend or nearby text
+    const fieldset = radio.closest('fieldset');
+    const legend = fieldset ? fieldset.querySelector('legend') : null;
+    const legendText = legend ? legend.textContent.toLowerCase() : '';
+    
+    // Check if any keywords match
+    const matchesKeyword = keywords.some(keyword => {
+      const lowerKeyword = keyword.toLowerCase();
+      return radioName.toLowerCase().includes(lowerKeyword) || 
+             radioId.toLowerCase().includes(lowerKeyword) || 
+             labelText.includes(lowerKeyword) ||
+             legendText.includes(lowerKeyword);
+    });
+    
+    if (matchesKeyword) {
+      let existingGroup = radioGroups.find(group => group.name === radioName);
+      if (!existingGroup) {
+        existingGroup = { name: radioName, options: [] };
+        radioGroups.push(existingGroup);
+      }
+      existingGroup.options.push(radio);
+    }
+  }
+  
+  return radioGroups;
+}
+
+// Helper function to select the appropriate radio button based on a boolean value
+function selectRadioOption(radioGroups, positiveSelection) {
+  for (const group of radioGroups) {
+    if (group.options.length === 2) {
+      // Assume first is "Yes" and second is "No" (common pattern)
+      // But we should try to be smarter about this in a real implementation
+      const selectedOption = positiveSelection ? group.options[0] : group.options[1];
+      selectedOption.checked = true;
+      triggerInputEvent(selectedOption);
+      console.log(`Set ${group.name} to ${positiveSelection ? 'Yes' : 'No'}`);
+    }
+    else if (group.options.length > 0) {
+      console.log(`Radio group ${group.name} has ${group.options.length} options, needs manual selection`);
+    }
+  }
+}
+
+// Function to fill date fields
+function fillDateFields(userData) {
+  // Look for date inputs
+  const dateInputs = document.querySelectorAll('input[type="date"]');
+  
+  for (const input of dateInputs) {
+    const inputName = input.name.toLowerCase();
+    const inputId = input.id.toLowerCase();
+    const label = findLabelForInput(input);
+    const labelText = label ? label.textContent.toLowerCase() : '';
+    
+    // Try to determine what this date field is for
+    if (inputName.includes('start') || inputId.includes('start') || labelText.includes('start')) {
+      if (userData.availability) {
+        input.value = userData.availability;
+        triggerInputEvent(input);
+        console.log("Filled start date field");
+      }
+    }
+    else if (inputName.includes('birth') || inputId.includes('birth') || labelText.includes('birth')) {
+      if (userData.dateOfBirth) {
+        input.value = userData.dateOfBirth;
+        triggerInputEvent(input);
+        console.log("Filled birth date field");
+      }
+    }
+  }
+}
+
+// Function to fill education fields
+function fillEducationFields(education) {
+  // This would need to be much more sophisticated in a real implementation
+  // Look for inputs that seem to be related to education
+  const schoolInputs = findFieldsByKeywords(['school', 'university', 'college', 'institution']);
+  const degreeInputs = findFieldsByKeywords(['degree', 'diploma', 'qualification']);
+  const majorInputs = findFieldsByKeywords(['major', 'field', 'study', 'course']);
+  const gpaInputs = findFieldsByKeywords(['gpa', 'grade', 'score']);
+  
+  if (schoolInputs.length > 0 && education[0]?.institution) {
+    schoolInputs[0].value = education[0].institution;
+    triggerInputEvent(schoolInputs[0]);
+    console.log("Filled school field");
+  }
+  
+  if (degreeInputs.length > 0 && education[0]?.degree) {
+    degreeInputs[0].value = education[0].degree;
+    triggerInputEvent(degreeInputs[0]);
+    console.log("Filled degree field");
+  }
+  
+  if (majorInputs.length > 0 && education[0]?.field) {
+    majorInputs[0].value = education[0].field;
+    triggerInputEvent(majorInputs[0]);
+    console.log("Filled major/field of study");
+  }
+  
+  if (gpaInputs.length > 0 && education[0]?.gpa) {
+    gpaInputs[0].value = education[0].gpa;
+    triggerInputEvent(gpaInputs[0]);
+    console.log("Filled GPA");
+  }
+}
+
+// Function to fill work experience fields
+function fillExperienceFields(experience) {
+  // This would need to be much more sophisticated in a real implementation
+  const companyInputs = findFieldsByKeywords(['company', 'employer', 'organization']);
+  const titleInputs = findFieldsByKeywords(['title', 'position', 'role']);
+  const dutiesInputs = findFieldsByKeywords(['duties', 'responsibilities', 'description']);
+  
+  if (companyInputs.length > 0 && experience[0]?.company) {
+    companyInputs[0].value = experience[0].company;
+    triggerInputEvent(companyInputs[0]);
+    console.log("Filled company field");
+  }
+  
+  if (titleInputs.length > 0 && experience[0]?.title) {
+    titleInputs[0].value = experience[0].title;
+    triggerInputEvent(titleInputs[0]);
+    console.log("Filled job title field");
+  }
+  
+  if (dutiesInputs.length > 0 && experience[0]?.description) {
+    const description = Array.isArray(experience[0].description) ? 
+      experience[0].description.join("\n\n") : experience[0].description;
+    dutiesInputs[0].value = description;
+    triggerInputEvent(dutiesInputs[0]);
+    console.log("Filled job duties/description field");
+  }
 }
 
 // Helper function to trigger input events after filling fields
@@ -418,8 +673,54 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
   
+  if (request.action === "detectApplicationForm") {
+    const formFields = detectFormFields();
+    const isApplicationForm = Object.values(formFields).some(field => field !== null);
+    sendResponse({ 
+      isApplicationForm, 
+      fields: formFields,
+      platform: detectPlatform()
+    });
+    return true;
+  }
+  
   return true;
 });
+
+// Detect which ATS platform is being used
+function detectPlatform() {
+  const url = window.location.href;
+  const html = document.documentElement.innerHTML;
+  
+  // Check URL patterns
+  if (url.includes('greenhouse.io')) return 'Greenhouse';
+  if (url.includes('lever.co')) return 'Lever';
+  if (url.includes('myworkdayjobs') || url.includes('/workday/')) return 'Workday';
+  if (url.includes('taleo')) return 'Taleo';
+  if (url.includes('icims')) return 'iCIMS';
+  if (url.includes('brassring')) return 'BrassRing';
+  
+  // Check for platform-specific HTML signatures
+  if (html.includes('workday') || html.includes('myworkday')) return 'Workday';
+  if (html.includes('greenhouse')) return 'Greenhouse';
+  if (html.includes('lever-')) return 'Lever';
+  if (html.includes('taleo')) return 'Taleo';
+  if (html.includes('icims')) return 'iCIMS';
+  
+  // Check if common ATS JavaScript libraries are loaded
+  const scripts = document.querySelectorAll('script');
+  for (const script of scripts) {
+    const src = script.src || '';
+    if (src.includes('greenhouse')) return 'Greenhouse';
+    if (src.includes('lever')) return 'Lever';
+    if (src.includes('workday')) return 'Workday';
+    if (src.includes('taleo')) return 'Taleo';
+    if (src.includes('icims')) return 'iCIMS';
+    if (src.includes('brassring')) return 'BrassRing';
+  }
+  
+  return 'Unknown';
+}
 
 // Initialize by checking if we're on a job page
 function initialize() {
@@ -450,6 +751,38 @@ function initialize() {
       });
     } catch (e) {
       console.log("EmployEvolution: Unable to contact extension", e);
+    }
+  }
+  
+  // New: Also check if this is an application form page and offer to autofill
+  const formFields = detectFormFields();
+  const hasFormFields = Object.values(formFields).some(field => field !== null);
+  
+  if (hasFormFields) {
+    console.log("EmployEvolution: Detected possible application form");
+    
+    // Count significant form fields to determine if this looks like an application
+    let significantFieldCount = 0;
+    if (formFields.name || formFields.firstName) significantFieldCount++;
+    if (formFields.email) significantFieldCount++;
+    if (formFields.phone) significantFieldCount++;
+    if (formFields.resume) significantFieldCount++;
+    
+    if (significantFieldCount >= 2) {
+      // This looks like an application form, notify the extension
+      try {
+        chrome.runtime.sendMessage({
+          action: "applicationFormDetected",
+          formData: {
+            url: window.location.href,
+            title: document.title,
+            platform: detectPlatform(),
+            fields: Object.keys(formFields).filter(key => formFields[key] !== null)
+          }
+        });
+      } catch (e) {
+        console.log("EmployEvolution: Unable to contact extension", e);
+      }
     }
   }
 }

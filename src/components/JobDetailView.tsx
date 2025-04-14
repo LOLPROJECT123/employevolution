@@ -4,7 +4,7 @@ import { Job } from "@/types/job";
 import { getMatchBgColor, getMatchColor, getMatchLabel } from "@/utils/jobMatchingUtils";
 import { JobMatchDetails } from "@/components/JobMatchDetails";
 import { Button } from "@/components/ui/button";
-import { BookmarkIcon, ExternalLink, Zap } from "lucide-react";
+import { BookmarkIcon, ExternalLink, FileText, Zap } from "lucide-react";
 import AutoApplyModal from "@/components/AutoApplyModal";
 
 interface JobDetailViewProps {
@@ -58,6 +58,11 @@ export const JobDetailView = ({
     if (lowerUrl.includes('workday')) return 'Workday';
     if (lowerUrl.includes('indeed.com')) return 'Indeed';
     if (lowerUrl.includes('linkedin.com')) return 'LinkedIn';
+    if (lowerUrl.includes('taleo')) return 'Taleo';
+    if (lowerUrl.includes('icims')) return 'iCIMS';
+    if (lowerUrl.includes('brassring')) return 'BrassRing';
+    if (lowerUrl.includes('smartrecruiters')) return 'SmartRecruiters';
+    if (lowerUrl.includes('jobvite')) return 'Jobvite';
     
     return null; // Unknown platform
   };
@@ -118,6 +123,16 @@ export const JobDetailView = ({
             <BookmarkIcon className={`mr-2 h-4 w-4 ${isSaved ? "fill-primary" : ""}`} />
             {isSaved ? "Saved" : "Save"}
           </Button>
+          
+          {job.applyUrl && (
+            <Button 
+              variant="outline"
+              onClick={() => window.open(job.applyUrl, '_blank')}
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              Cover Letter
+            </Button>
+          )}
         </div>
       </div>
       

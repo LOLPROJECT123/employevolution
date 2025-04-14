@@ -1,15 +1,18 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Job } from "@/types/job";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, CheckCircle, Loader2, MonitorSmartphone, UserCheck, Zap } from "lucide-react";
+import { AlertCircle, CheckCircle, Loader2, MonitorSmartphone, UserCheck, Zap, FileText, Edit } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
 // Import auto applicator types
-import { AutoApplicator, ApplicationResult } from "@/server/autoApplicator";
+import { AutoApplicator, ApplicationResult, UserProfileData, generateCoverLetter } from "@/server/autoApplicator";
 
 enum AutoApplyStatus {
   INITIALIZING = "initializing",
@@ -34,19 +37,38 @@ const AutoApplyModal = ({ job, open, onClose, onSuccess }: AutoApplyModalProps) 
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<ApplicationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("auto-apply");
+  const [coverLetter, setCoverLetter] = useState<string>("");
+  const [isGeneratingCoverLetter, setIsGeneratingCoverLetter] = useState(false);
   
   // This would be replaced with actual profile data from your app's state/context
-  const profileData = {
+  const profileData: UserProfileData = {
     personal: {
       firstName: "John",
       lastName: "Doe",
       email: "john.doe@example.com",
       phone: "555-123-4567"
     },
-    // Other profile fields would be populated from the user's profile
-    education: [],
-    experience: [],
-    skills: [],
+    education: [{
+      institution: "University of Technology",
+      degree: "Bachelor of Science",
+      field: "Computer Science",
+      startDate: "2018-09",
+      endDate: "2022-05",
+      gpa: "3.8"
+    }],
+    experience: [{
+      company: "Tech Solutions Inc",
+      title: "Software Engineer",
+      startDate: "2022-06",
+      endDate: "Present",
+      description: [
+        "Developed full-stack web applications using React and Node.js",
+        "Improved system performance by 30% through code optimization",
+        "Collaborated with cross-functional teams to deliver features on schedule"
+      ]
+    }],
+    skills: ["JavaScript", "React", "Node.js", "TypeScript", "SQL", "Git"],
     resumePath: "/path/to/resume.pdf", 
     standardAnswers: {
       workAuthorization: "US Citizen",
@@ -54,7 +76,48 @@ const AutoApplyModal = ({ job, open, onClose, onSuccess }: AutoApplyModalProps) 
       willingToRelocate: true,
       remotePreference: "Remote or Hybrid"
     }
-  } as any; // Using 'any' here for simplicity, real implementation would use the full type
+  };
+
+  // Generate cover letter when the modal opens
+  useEffect(() => {
+    if (open && job && activeTab === "cover-letter" && !coverLetter && !isGeneratingCoverLetter) {
+      handleGenerateCoverLetter();
+    }
+  }, [open, job, activeTab]);
+
+  // Handle tab change
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    if (value === "cover-letter" && !coverLetter && !isGeneratingCoverLetter) {
+      handleGenerateCoverLetter();
+    }
+  };
+
+  const handleGenerateCoverLetter = async () => {
+    if (!job) return;
+    
+    setIsGeneratingCoverLetter(true);
+    
+    try {
+      // In a real implementation, this would use the job description
+      // For demo purposes, we'll create a simple job description from our job object
+      const jobDescription = `
+        ${job.title} at ${job.company}
+        ${job.description}
+        Required skills: ${job.skills?.join(', ')}
+      `;
+      
+      const generatedLetter = await generateCoverLetter(jobDescription, profileData);
+      setCoverLetter(generatedLetter);
+    } catch (error) {
+      console.error("Error generating cover letter:", error);
+      toast.error("Failed to generate cover letter", {
+        description: "Please try again or write one manually."
+      });
+    } finally {
+      setIsGeneratingCoverLetter(false);
+    }
+  };
 
   const startAutoApply = async () => {
     if (!job.applyUrl) {
@@ -67,54 +130,48 @@ const AutoApplyModal = ({ job, open, onClose, onSuccess }: AutoApplyModalProps) 
       setStatus(AutoApplyStatus.INITIALIZING);
       setProgress(10);
       
-      // In a real implementation, this would communicate with your server or extension
+      // Create auto applicator instance
+      const autoApplicator = new AutoApplicator(profileData, {
+        customQuestionStrategy: 'PAUSE_FOR_USER',
+        requireFinalReview: true
+      });
+      
+      // Start application process, update status and progress
+      setStatus(AutoApplyStatus.DETECTING_PLATFORM);
+      setProgress(30);
+      
+      // In a real implementation, this would communicate with your extension/server
       // For now, we'll simulate the process
-      await simulateStep(AutoApplyStatus.DETECTING_PLATFORM, 30, 1000);
+      const applicationResult = await autoApplicator.applyToJob(job);
       
-      // Simulate platform detection
-      const platform = detectPlatform(job.applyUrl);
-      if (!platform) {
-        setError("Could not detect application platform");
-        setStatus(AutoApplyStatus.FAILED);
-        return;
-      }
-      
-      await simulateStep(AutoApplyStatus.FILLING_FORM, 60, 2000);
-      
-      // Random chance of encountering custom questions
-      if (Math.random() > 0.7) {
-        setStatus(AutoApplyStatus.CUSTOM_QUESTIONS);
-        setProgress(75);
-        setResult({
-          status: 'paused',
-          reason: 'Custom questions require manual input',
-          platform: platform,
-          timestamp: new Date().toISOString(),
+      // Handle result based on status
+      if (applicationResult.status === 'completed') {
+        setStatus(AutoApplyStatus.COMPLETED);
+        setProgress(100);
+        setResult(applicationResult);
+        
+        // Notify parent component of successful application
+        onSuccess(job);
+        
+        // Show success toast
+        toast.success("Application Submitted Successfully", {
+          description: `Your application to ${job.company} for ${job.title} has been submitted.`,
         });
-        return;
+      } 
+      else if (applicationResult.status === 'paused') {
+        setStatus(AutoApplyStatus.PAUSED);
+        setProgress(75);
+        setResult(applicationResult);
       }
-      
-      await simulateStep(AutoApplyStatus.SUBMITTING, 90, 1000);
-      
-      // Simulate successful completion
-      setStatus(AutoApplyStatus.COMPLETED);
-      setProgress(100);
-      setResult({
-        status: 'completed',
-        confirmation: 'Your application has been successfully submitted',
-        platform: platform,
-        timestamp: new Date().toISOString(),
-        jobTitle: job.title,
-        company: job.company,
-      });
-      
-      // Notify parent component of successful application
-      onSuccess(job);
-      
-      // Show success toast
-      toast.success("Application Submitted Successfully", {
-        description: `Your application to ${job.company} for ${job.title} has been submitted.`,
-      });
+      else {
+        setStatus(AutoApplyStatus.FAILED);
+        setError(applicationResult.reason || "Unknown error");
+        
+        // Show error toast
+        toast.error("Application Failed", {
+          description: applicationResult.reason || "There was an error submitting your application.",
+        });
+      }
       
     } catch (e) {
       setStatus(AutoApplyStatus.FAILED);
@@ -125,27 +182,6 @@ const AutoApplyModal = ({ job, open, onClose, onSuccess }: AutoApplyModalProps) 
         description: e instanceof Error ? e.message : "There was an error submitting your application.",
       });
     }
-  };
-  
-  // Helper function to simulate steps with delays (for demonstration)
-  const simulateStep = async (newStatus: AutoApplyStatus, newProgress: number, delay: number) => {
-    await new Promise(resolve => setTimeout(resolve, delay));
-    setStatus(newStatus);
-    setProgress(newProgress);
-  };
-
-  // Detect platform based on URL (simplified version)
-  const detectPlatform = (url: string): string | null => {
-    if (!url) return null;
-    
-    const lowerUrl = url.toLowerCase();
-    if (lowerUrl.includes('greenhouse.io')) return 'Greenhouse';
-    if (lowerUrl.includes('lever.co')) return 'Lever';
-    if (lowerUrl.includes('workday')) return 'Workday';
-    if (lowerUrl.includes('indeed.com')) return 'Indeed';
-    if (lowerUrl.includes('linkedin.com')) return 'LinkedIn';
-    
-    return 'Generic';
   };
   
   // Helper function to get status text for display
@@ -186,81 +222,127 @@ const AutoApplyModal = ({ job, open, onClose, onSuccess }: AutoApplyModalProps) 
     <Dialog open={open} onOpenChange={() => {
       if (!isProcessing()) onClose();
     }}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>
-            {status === AutoApplyStatus.COMPLETED ? "Application Submitted" : "Auto-Apply to Job"}
+            {status === AutoApplyStatus.COMPLETED ? "Application Submitted" : "Apply to Job"}
           </DialogTitle>
           <DialogDescription>
             {job.company} - {job.title}
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-4">
-          {/* Progress indicator */}
-          <div>
-            <div className="flex justify-between mb-1">
-              <p className="text-sm font-medium">{getStatusText()}</p>
-              <p className="text-sm text-muted-foreground">{progress}%</p>
-            </div>
-            <Progress value={progress} className="h-2" />
-          </div>
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+          <TabsList className="grid grid-cols-2">
+            <TabsTrigger value="auto-apply">Auto-Apply</TabsTrigger>
+            <TabsTrigger value="cover-letter">Cover Letter</TabsTrigger>
+          </TabsList>
           
-          {/* Status Information */}
-          {status === AutoApplyStatus.COMPLETED && (
-            <Card className="border-green-500">
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-6 w-6 text-green-500 mt-1" />
-                  <div>
-                    <h3 className="font-semibold text-green-600">Application Submitted Successfully</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Your application to {job.company} for {job.title} has been submitted.
-                    </p>
-                    {result?.confirmation && (
-                      <p className="text-sm mt-2">{result.confirmation}</p>
-                    )}
+          <TabsContent value="auto-apply" className="space-y-4">
+            {/* Progress indicator */}
+            <div>
+              <div className="flex justify-between mb-1">
+                <p className="text-sm font-medium">{getStatusText()}</p>
+                <p className="text-sm text-muted-foreground">{progress}%</p>
+              </div>
+              <Progress value={progress} className="h-2" />
+            </div>
+            
+            {/* Status Information */}
+            {status === AutoApplyStatus.COMPLETED && (
+              <Card className="border-green-500">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="h-6 w-6 text-green-500 mt-1" />
+                    <div>
+                      <h3 className="font-semibold text-green-600">Application Submitted Successfully</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Your application to {job.company} for {job.title} has been submitted.
+                      </p>
+                      {result?.confirmation && (
+                        <p className="text-sm mt-2">{result.confirmation}</p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          
-          {status === AutoApplyStatus.PAUSED && (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                <p className="font-medium">Action required</p>
-                <p className="text-sm">
-                  {result?.reason || "The application requires your input to continue."}
-                  <br />
-                  Click the button below to open the application in a new tab.
+                </CardContent>
+              </Card>
+            )}
+            
+            {status === AutoApplyStatus.PAUSED && (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  <p className="font-medium">Action required</p>
+                  <p className="text-sm">
+                    {result?.reason || "The application requires your input to continue."}
+                    <br />
+                    Click the button below to open the application in a new tab.
+                  </p>
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            {status === AutoApplyStatus.FAILED && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  <p className="font-medium">Application failed</p>
+                  <p className="text-sm">{error || "There was an error processing your application."}</p>
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            {status === AutoApplyStatus.INITIALIZING && (
+              <div className="text-center py-6">
+                <Zap className="mx-auto h-8 w-8 text-primary animate-pulse" />
+                <p className="mt-2">Preparing to automate your job application</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  This uses your saved profile information to apply
                 </p>
-              </AlertDescription>
-            </Alert>
-          )}
+              </div>
+            )}
+          </TabsContent>
           
-          {status === AutoApplyStatus.FAILED && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                <p className="font-medium">Application failed</p>
-                <p className="text-sm">{error || "There was an error processing your application."}</p>
-              </AlertDescription>
-            </Alert>
-          )}
-          
-          {status === AutoApplyStatus.INITIALIZING && (
-            <div className="text-center py-6">
-              <Zap className="mx-auto h-8 w-8 text-primary animate-pulse" />
-              <p className="mt-2">Preparing to automate your job application</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                This uses your saved profile information to apply
-              </p>
-            </div>
-          )}
-        </div>
-
+          <TabsContent value="cover-letter" className="space-y-4">
+            {isGeneratingCoverLetter ? (
+              <div className="flex flex-col items-center justify-center py-6">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="mt-2">Generating cover letter...</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Using AI to create a personalized letter for this position
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-md font-medium">Customized Cover Letter</h3>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleGenerateCoverLetter}
+                    disabled={isGeneratingCoverLetter}
+                  >
+                    <Edit className="h-4 w-4 mr-1" />
+                    Regenerate
+                  </Button>
+                </div>
+                
+                <Textarea
+                  value={coverLetter}
+                  onChange={(e) => setCoverLetter(e.target.value)}
+                  placeholder="Your cover letter will appear here..."
+                  className="min-h-[300px] font-mono text-sm"
+                />
+                
+                <p className="text-xs text-muted-foreground">
+                  This AI-generated letter is based on your profile and the job description. 
+                  Feel free to edit it before submitting your application.
+                </p>
+              </>
+            )}
+          </TabsContent>
+        </Tabs>
+        
         <DialogFooter className="flex sm:justify-between">
           {!isProcessing() && status !== AutoApplyStatus.COMPLETED && (
             <div className="flex-1">

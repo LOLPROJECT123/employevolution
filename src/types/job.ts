@@ -36,9 +36,43 @@ export interface Job {
   category?: string;
   excludedSkills?: string[];
   jobFunction?: string;
+  applicationStatus?: JobApplicationStatus;
+  applicationDetails?: {
+    appliedDate?: string;
+    platform?: string;
+    resumeUsed?: string;
+    coverLetterUsed?: string;
+    contactPerson?: string;
+    notesHistory?: Array<{
+      date: string;
+      note: string;
+    }>;
+    nextSteps?: string;
+  };
+  interviews?: Array<{
+    id: string;
+    date: string;
+    type: 'phone' | 'video' | 'onsite' | 'technical' | 'behavioral';
+    interviewers?: string[];
+    feedback?: string;
+    status: 'scheduled' | 'completed' | 'cancelled';
+    notes?: string;
+  }>;
 }
 
 export type JobStatus = 'applied' | 'interviewing' | 'offered' | 'rejected' | 'accepted';
+
+export type JobApplicationStatus = 
+  | 'saved' 
+  | 'applied' 
+  | 'phone_screen' 
+  | 'interview' 
+  | 'assessment' 
+  | 'offer' 
+  | 'accepted' 
+  | 'rejected' 
+  | 'declined' 
+  | 'withdrawn';
 
 export interface JobApplication {
   id: string;
@@ -81,4 +115,22 @@ export interface JobFilters {
   companyStage?: string[];
   roleType?: string[];
   title?: string[];
+}
+
+export interface CoverLetterTemplate {
+  id: string;
+  name: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+  usageCount: number;
+}
+
+export interface ApplicationQuestion {
+  id: string;
+  question: string;
+  category: 'experience' | 'skills' | 'behavioral' | 'motivation' | 'other';
+  sampleAnswer: string;
+  lastUsed?: string;
+  jobIds?: string[];  // Jobs where this question appeared
 }
