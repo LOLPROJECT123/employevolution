@@ -28,9 +28,9 @@ const getMatchColor = (percentage?: number) => {
 // Function to get the match label based on percentage
 const getMatchLabel = (percentage?: number) => {
   if (!percentage) return "";
-  if (percentage >= 70) return `${percentage}% GOOD MATCH`;
-  if (percentage >= 50) return `${percentage}% FAIR MATCH`;
-  return `${percentage}% WEAK MATCH`;
+  if (percentage >= 70) return "GOOD MATCH";
+  if (percentage >= 50) return "FAIR MATCH";
+  return "WEAK MATCH";
 };
 
 export const JobDetailView = ({ 
@@ -53,7 +53,7 @@ export const JobDetailView = ({
       {job.matchPercentage && (
         <div className={`p-4 rounded-lg ${getMatchBgColor(job.matchPercentage)} mb-4`}>
           <div className="flex items-center gap-2">
-            <div className={`text-xl font-bold ${getMatchColor(job.matchPercentage)}`}>{job.matchPercentage}</div>
+            <div className={`text-xl font-bold ${getMatchColor(job.matchPercentage)}`}>{job.matchPercentage}%</div>
             <div className={`font-semibold ${getMatchColor(job.matchPercentage)}`}>
               {getMatchLabel(job.matchPercentage)}
             </div>
@@ -109,3 +109,4 @@ export const JobDetailView = ({
     </div>
   );
 };
+
