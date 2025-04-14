@@ -1,5 +1,7 @@
 
 import { Job } from "@/types/job";
+import { getMatchBgColor, getMatchColor, getMatchLabel } from "@/utils/jobMatchingUtils";
+import { JobMatchDetails } from "@/components/JobMatchDetails";
 
 interface JobDetailViewProps {
   job: Job | null;
@@ -8,30 +10,6 @@ interface JobDetailViewProps {
   isSaved?: boolean;
   isApplied?: boolean;
 }
-
-// Function to get the appropriate background color based on match percentage
-const getMatchBgColor = (percentage?: number) => {
-  if (!percentage) return "bg-gray-100 dark:bg-gray-800";
-  if (percentage >= 70) return "bg-green-50 dark:bg-green-900/30";
-  if (percentage >= 50) return "bg-amber-50 dark:bg-amber-900/30";
-  return "bg-red-50 dark:bg-red-900/30";
-};
-
-// Function to get the appropriate text color based on match percentage
-const getMatchColor = (percentage?: number) => {
-  if (!percentage) return "";
-  if (percentage >= 70) return "text-green-500";
-  if (percentage >= 50) return "text-amber-500";
-  return "text-red-500";
-};
-
-// Function to get the match label based on percentage
-const getMatchLabel = (percentage?: number) => {
-  if (!percentage) return "";
-  if (percentage >= 70) return "GOOD MATCH";
-  if (percentage >= 50) return "FAIR MATCH";
-  return "WEAK MATCH";
-};
 
 export const JobDetailView = ({ 
   job, 
@@ -59,6 +37,11 @@ export const JobDetailView = ({
             </div>
           </div>
           <p className="text-sm mt-1">Based on your profile, skills, and experience</p>
+          
+          {/* New enhanced match details section */}
+          <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+            <JobMatchDetails job={job} compact={true} />
+          </div>
         </div>
       )}
       
@@ -106,7 +89,14 @@ export const JobDetailView = ({
           </div>
         </div>
       )}
+      
+      {/* Full match analysis section */}
+      {job.matchPercentage && (
+        <div className="mt-8 border-t pt-6">
+          <h2 className="text-xl font-semibold mb-3">Detailed Match Analysis</h2>
+          <JobMatchDetails job={job} />
+        </div>
+      )}
     </div>
   );
 };
-
