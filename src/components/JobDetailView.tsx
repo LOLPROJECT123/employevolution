@@ -1,13 +1,11 @@
-
 import { useState } from "react";
 import { Job } from "@/types/job";
 import { getMatchBgColor, getMatchColor, getMatchLabel } from "@/utils/jobMatchingUtils";
 import { JobMatchDetails } from "@/components/JobMatchDetails";
 import { Button } from "@/components/ui/button";
-import { BookmarkIcon, ExternalLink, FileText, Zap } from "lucide-react";
+import { BookmarkIcon, ExternalLink, FileText, Zap, Users } from "lucide-react";
 import AutoApplyModal from "@/components/AutoApplyModal";
 
-// Type declaration for Chrome extensions API
 interface ChromeRuntime {
   sendMessage: (message: any) => void;
 }
@@ -49,22 +47,18 @@ export const JobDetailView = ({
 
   const handleApply = () => {
     if (job.applyUrl) {
-      // Check if auto-apply is possible
       const canAutoApply = job.applyUrl && detectPlatform(job.applyUrl) !== null;
       
       if (canAutoApply) {
         setShowAutoApplyModal(true);
       } else {
-        // Open the apply URL directly in a new tab
         if (typeof window !== 'undefined' && 
             window.chrome?.runtime?.sendMessage) {
-          // Use extension messaging if available
           window.chrome.runtime.sendMessage({ 
             action: "openJobUrl", 
             url: job.applyUrl 
           });
         } else {
-          // Fallback to standard window.open
           window.open(job.applyUrl, '_blank', 'noopener,noreferrer');
         }
         onApply(job);
@@ -104,19 +98,21 @@ export const JobDetailView = ({
           </div>
           <p className="text-sm mt-1">Based on your profile, skills, and experience</p>
           
-          {/* Match details section */}
           <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
             <JobMatchDetails job={job} compact={true} />
           </div>
         </div>
       )}
       
-      {/* Job header section with actions */}
       <div className="flex justify-between items-start mb-4">
         <div>
           <h1 className="text-2xl font-bold">{job.title}</h1>
           <div className="mt-2 text-lg">{job.company}</div>
           <div className="mt-1 text-gray-500">{job.location}</div>
+          <div className="mt-2 text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
+            <Users className="h-4 w-4" />
+            <span>{job.applicationDetails?.applicantCount || '0'} applicants</span>
+          </div>
         </div>
         
         <div className="flex flex-col gap-2">
@@ -161,7 +157,6 @@ export const JobDetailView = ({
         </div>
       </div>
       
-      {/* Salary information */}
       <div className="mt-4 p-4 border rounded-lg">
         <div className="font-semibold">Salary Range</div>
         <div className="text-xl font-bold mt-1">
@@ -169,13 +164,11 @@ export const JobDetailView = ({
         </div>
       </div>
       
-      {/* Job description */}
       <div className="mt-6">
         <h2 className="text-xl font-semibold mb-2">Description</h2>
         <p className="whitespace-pre-line">{job.description}</p>
       </div>
       
-      {/* Requirements */}
       {job.requirements && job.requirements.length > 0 && (
         <div className="mt-6">
           <h2 className="text-xl font-semibold mb-2">Requirements</h2>
@@ -187,7 +180,6 @@ export const JobDetailView = ({
         </div>
       )}
       
-      {/* Skills */}
       {job.skills && job.skills.length > 0 && (
         <div className="mt-6">
           <h2 className="text-xl font-semibold mb-2">Required Skills</h2>
@@ -201,7 +193,6 @@ export const JobDetailView = ({
         </div>
       )}
       
-      {/* Full match analysis section */}
       {job.matchPercentage && (
         <div className="mt-8 border-t pt-6">
           <h2 className="text-xl font-semibold mb-3">Detailed Match Analysis</h2>
@@ -209,7 +200,6 @@ export const JobDetailView = ({
         </div>
       )}
       
-      {/* Auto-Apply Modal */}
       <AutoApplyModal
         job={job}
         open={showAutoApplyModal}

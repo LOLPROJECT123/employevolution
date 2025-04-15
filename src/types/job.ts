@@ -1,4 +1,3 @@
-
 export interface Job {
   id: string;
   title: string;
@@ -48,6 +47,7 @@ export interface Job {
       note: string;
     }>;
     nextSteps?: string;
+    applicantCount?: number;
   };
   interviews?: Array<{
     id: string;
