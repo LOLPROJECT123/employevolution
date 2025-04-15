@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -172,13 +172,6 @@ export function MobileJobDetail({
               <p className="text-gray-500 mt-1">
                 Confirmed live in the last 24 hours
               </p>
-              
-              {!isApplied && (
-                <div className="mt-4 p-3 rounded-lg bg-gray-50 dark:bg-gray-800 flex items-center">
-                  <span className="text-sm">Unlock job views with</span>
-                  <span className="ml-1 text-primary font-medium">JobSearch+</span>
-                </div>
-              )}
               
               <div className="mt-5 flex items-center gap-3">
                 <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center">
