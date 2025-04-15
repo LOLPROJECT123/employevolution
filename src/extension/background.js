@@ -1,10 +1,129 @@
 
-// Background script for the EmployEvolution Chrome Extension
+// Background script for the Streamline Chrome Extension
+
+// Initialize storage when extension is first installed or updated
+chrome.runtime.onInstalled.addListener(initializeExtension);
+
+function initializeExtension() {
+  console.log("Streamline extension installed/updated");
+  
+  // Initialize storage with default values
+  chrome.storage.local.set({
+    "enableAutoDetect": true,
+    "enableNotifications": true,
+    "defaultCoverLetterTemplate": "I am writing to express my interest in the {position} position at {company}.",
+    "userProfileComplete": false,
+    "appliedJobs": [],
+    "savedJobs": [],
+    "preferredApplicationMethod": "auto", // Options: auto, manual
+    "lastSync": new Date().toISOString()
+  });
+  
+  // Set up context menus
+  setupContextMenus();
+}
+
+// Set up context menus for job pages
+function setupContextMenus() {
+  chrome.contextMenus.create({
+    id: "captureJob",
+    title: "Save This Job to Streamline",
+    contexts: ["page"]
+  });
+  
+  chrome.contextMenus.create({
+    id: "autoFillApplication",
+    title: "Auto-fill This Application",
+    contexts: ["page"]
+  });
+  
+  chrome.contextMenus.create({
+    id: "generateCoverLetter",
+    title: "Generate Cover Letter for This Job",
+    contexts: ["page"]
+  });
+}
+
+// Handle context menu clicks
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === "captureJob") {
+    // Capture job data from the current page
+    chrome.tabs.sendMessage(tab.id, { action: "captureJob" }, (response) => {
+      if (response && response.success) {
+        // Show notification
+        chrome.notifications.create({
+          type: "basic",
+          iconUrl: "favicon.ico",
+          title: "Job Saved",
+          message: `${response.jobData.title} at ${response.jobData.company} has been saved to your Streamline dashboard.`,
+          priority: 2
+        });
+      }
+    });
+  }
+  
+  if (info.menuItemId === "autoFillApplication") {
+    // Auto-fill the current application form
+    chrome.storage.local.get("userProfile", (data) => {
+      if (data.userProfile) {
+        chrome.tabs.sendMessage(tab.id, { 
+          action: "autoFillApplication", 
+          userData: data.userProfile
+        }, (response) => {
+          if (response && response.success) {
+            // Show notification
+            chrome.notifications.create({
+              type: "basic",
+              iconUrl: "favicon.ico",
+              title: "Application Auto-filled",
+              message: `${response.filledFields.count} fields have been filled based on your profile.`,
+              priority: 2
+            });
+          }
+        });
+      } else {
+        // Show a notification that profile is incomplete
+        chrome.notifications.create({
+          type: "basic",
+          iconUrl: "favicon.ico",
+          title: "Profile Incomplete",
+          message: "Please complete your profile in the Streamline app before using auto-fill.",
+          priority: 2
+        });
+      }
+    });
+  }
+  
+  if (info.menuItemId === "generateCoverLetter") {
+    // Get job data and generate a cover letter
+    chrome.tabs.sendMessage(tab.id, { action: "getJobData" }, (jobData) => {
+      if (jobData && jobData.title && jobData.company) {
+        chrome.storage.local.get(["userProfile", "defaultCoverLetterTemplate"], (data) => {
+          if (data.userProfile) {
+            // Open a new tab with the cover letter generator
+            chrome.tabs.create({
+              url: chrome.runtime.getURL("index.html") + `?page=coverLetter&jobTitle=${encodeURIComponent(jobData.title)}&company=${encodeURIComponent(jobData.company)}`
+            });
+          } else {
+            // Show a notification that profile is incomplete
+            chrome.notifications.create({
+              type: "basic",
+              iconUrl: "favicon.ico",
+              title: "Profile Incomplete",
+              message: "Please complete your profile in the Streamline app before generating cover letters.",
+              priority: 2
+            });
+          }
+        });
+      }
+    });
+  }
+});
 
 // Listen for messages from content scripts
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  // Job page detection handler
   if (message.action === "onJobPage") {
-    // Handle job page detection
     console.log("Job page detected:", message.jobData);
     
     // Store the job data in Chrome storage
@@ -19,8 +138,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     sendResponse({ success: true });
   }
   
+  // Application form detection handler
   if (message.action === "applicationFormDetected") {
-    // Handle application form detection
     console.log("Application form detected:", message.formData);
     
     // Store the form data in Chrome storage
@@ -32,24 +151,29 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     chrome.action.setBadgeText({ text: "FORM" });
     chrome.action.setBadgeBackgroundColor({ color: "#2196f3" });
     
-    // Show a notification to the user
-    chrome.notifications.create({
-      type: "basic",
-      iconUrl: "favicon.ico",
-      title: "Application Form Detected",
-      message: "EmployEvolution can help you fill out this job application. Click to open the extension.",
-      priority: 2,
-      buttons: [
-        { title: "Auto-fill Form" },
-        { title: "Dismiss" }
-      ]
+    // Check if we should show a notification
+    chrome.storage.local.get("enableNotifications", (data) => {
+      if (data.enableNotifications !== false) {
+        // Show a notification to the user
+        chrome.notifications.create({
+          type: "basic",
+          iconUrl: "favicon.ico",
+          title: "Application Form Detected",
+          message: "Streamline can help you fill out this job application. Click to open the extension.",
+          priority: 2,
+          buttons: [
+            { title: "Auto-fill Form" },
+            { title: "Dismiss" }
+          ]
+        });
+      }
     });
     
     sendResponse({ success: true });
   }
 
+  // Handle opening job application URL
   if (message.action === "openJobUrl") {
-    // Handle opening job application URL
     console.log("Opening job URL:", message.url);
     
     if (message.url) {
@@ -62,6 +186,59 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
   }
   
+  // Handle job application tracking
+  if (message.action === "trackJobApplication") {
+    console.log("Tracking job application:", message.jobData);
+    
+    chrome.storage.local.get("appliedJobs", (data) => {
+      const appliedJobs = data.appliedJobs || [];
+      
+      // Add the new application with status and timestamp
+      appliedJobs.push({
+        ...message.jobData,
+        appliedAt: new Date().toISOString(),
+        status: message.status || 'applied',
+        notes: message.notes || ''
+      });
+      
+      // Save back to storage
+      chrome.storage.local.set({ "appliedJobs": appliedJobs }, () => {
+        // Sync with main application if possible
+        syncWithMainApplication();
+        
+        sendResponse({ success: true });
+      });
+    });
+  }
+  
+  // Handle cover letter generation requests
+  if (message.action === "generateCoverLetter") {
+    console.log("Generating cover letter for:", message.jobData);
+    
+    // This would typically call an API to generate the cover letter
+    // For now, we'll use a template-based approach
+    chrome.storage.local.get(["userProfile", "defaultCoverLetterTemplate"], (data) => {
+      if (data.userProfile && data.defaultCoverLetterTemplate) {
+        const template = data.defaultCoverLetterTemplate;
+        const userProfile = data.userProfile;
+        
+        // Simple template replacement
+        let coverLetter = template
+          .replace('{position}', message.jobData.title || 'the open position')
+          .replace('{company}', message.jobData.company || 'your company')
+          .replace('{name}', `${userProfile.personal?.firstName || ''} ${userProfile.personal?.lastName || ''}`.trim())
+          .replace('{skills}', Array.isArray(userProfile.skills) ? userProfile.skills.join(', ') : '');
+          
+        sendResponse({ success: true, coverLetter });
+      } else {
+        sendResponse({ 
+          success: false, 
+          error: "User profile or cover letter template not found"
+        });
+      }
+    });
+  }
+  
   return true;
 });
 
@@ -69,63 +246,96 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 chrome.notifications.onButtonClicked.addListener((notificationId, buttonIndex) => {
   if (buttonIndex === 0) {
     // User clicked "Auto-fill Form"
-    // Open the extension popup
-    chrome.action.openPopup();
-  }
-  // If buttonIndex is 1, user clicked "Dismiss" - do nothing
-});
-
-// When extension is first installed or updated
-chrome.runtime.onInstalled.addListener(() => {
-  console.log("EmployEvolution extension installed/updated");
-  
-  // Initialize storage with default values
-  chrome.storage.local.set({
-    "enableAutoDetect": true,
-    "enableNotifications": true,
-    "defaultCoverLetterTemplate": "I am writing to express my interest in the {position} position at {company}.",
-    "userProfileComplete": false
-  });
-});
-
-// Context menu for job pages
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.contextMenus.create({
-    id: "captureJob",
-    title: "Capture This Job",
-    contexts: ["page"]
-  });
-  
-  chrome.contextMenus.create({
-    id: "autoFillApplication",
-    title: "Auto-fill This Application",
-    contexts: ["page"]
-  });
-});
-
-chrome.contextMenus.onClicked.addListener((info, tab) => {
-  if (info.menuItemId === "captureJob") {
-    // Capture job data from the current page
-    chrome.tabs.sendMessage(tab.id, { action: "captureJob" });
-  }
-  
-  if (info.menuItemId === "autoFillApplication") {
-    // Auto-fill the current application form
-    chrome.storage.local.get("userProfile", (data) => {
-      if (data.userProfile) {
-        chrome.tabs.sendMessage(tab.id, { 
-          action: "autoFillApplication", 
-          userData: data.userProfile
+    chrome.storage.local.get(["userProfile", "lastApplicationForm"], (data) => {
+      if (data.userProfile && data.lastApplicationForm) {
+        // Find the tab with the form
+        chrome.tabs.query({ url: data.lastApplicationForm.url }, (tabs) => {
+          if (tabs.length > 0) {
+            // Send message to content script to auto-fill
+            chrome.tabs.sendMessage(tabs[0].id, {
+              action: "autoFillApplication",
+              userData: data.userProfile
+            });
+            
+            // Focus the tab
+            chrome.tabs.update(tabs[0].id, { active: true });
+          } else {
+            // Open the URL in a new tab
+            chrome.tabs.create({ url: data.lastApplicationForm.url }, (tab) => {
+              // Wait for the page to load before sending the auto-fill message
+              chrome.tabs.onUpdated.addListener(function listener(tabId, changeInfo) {
+                if (tabId === tab.id && changeInfo.status === 'complete') {
+                  // Remove this listener
+                  chrome.tabs.onUpdated.removeListener(listener);
+                  
+                  // Send the auto-fill message
+                  setTimeout(() => {
+                    chrome.tabs.sendMessage(tab.id, {
+                      action: "autoFillApplication",
+                      userData: data.userProfile
+                    });
+                  }, 1000);
+                }
+              });
+            });
+          }
         });
       } else {
-        // Show a notification that profile is incomplete
-        chrome.notifications.create({
-          type: "basic",
-          iconUrl: "favicon.ico",
-          title: "Profile Incomplete",
-          message: "Please complete your profile in the EmployEvolution app before using auto-fill.",
-          priority: 2
-        });
+        // Open the extension popup to complete profile
+        chrome.action.openPopup();
+      }
+    });
+  }
+});
+
+// Function to sync data with main web application
+function syncWithMainApplication() {
+  // This would typically make an API call to sync data
+  // For now, we'll just mark the last sync time
+  chrome.storage.local.set({
+    "lastSync": new Date().toISOString()
+  });
+}
+
+// Add listeners for tab updates to detect job pages and forms
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === 'complete' && tab.url) {
+    chrome.storage.local.get("enableAutoDetect", (data) => {
+      if (data.enableAutoDetect !== false) {
+        // Check if this looks like a job page
+        if (tab.url.includes('/jobs/') || 
+            tab.url.includes('/job/') || 
+            tab.url.includes('/careers/') || 
+            tab.url.includes('/career/')) {
+          
+          // Ask content script to extract job data
+          chrome.tabs.sendMessage(tabId, { action: "getJobData" }, (response) => {
+            if (response && !chrome.runtime.lastError) {
+              chrome.storage.local.set({ "lastDetectedJob": response });
+              
+              // Update badge
+              chrome.action.setBadgeText({ text: "JOB", tabId });
+              chrome.action.setBadgeBackgroundColor({ color: "#4caf50", tabId });
+            }
+          });
+        }
+        
+        // Check if this looks like an application form
+        if (tab.url.includes('apply') || 
+            tab.url.includes('application') || 
+            tab.title.toLowerCase().includes('application')) {
+          
+          // Ask content script to detect form
+          chrome.tabs.sendMessage(tabId, { action: "detectApplicationForm" }, (response) => {
+            if (response && response.isApplicationForm && !chrome.runtime.lastError) {
+              chrome.storage.local.set({ "lastApplicationForm": response });
+              
+              // Update badge
+              chrome.action.setBadgeText({ text: "FORM", tabId });
+              chrome.action.setBadgeBackgroundColor({ color: "#2196f3", tabId });
+            }
+          });
+        }
       }
     });
   }

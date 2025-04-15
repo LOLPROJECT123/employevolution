@@ -1,238 +1,822 @@
-// This script runs on job sites and can extract job information and assist with auto-filling applications
-console.log("EmployEvolution extension loaded");
+// Streamline's browser extension content script
+// This script runs on supported job sites and handles job data extraction and form auto-filling
+console.log("Streamline extension loaded");
 
-// Enhanced job data extraction
+// Enhanced job data extraction with improved URL handling and error handling
 function extractJobData() {
-  let title = "";
-  let company = "";
-  let location = "";
-  let description = "";
-  let salary = "";
-  let requirements = [];
-  let postedDate = "";
-  let applyUrl = "";
-  
-  // Different extraction logic based on the current site
-  if (window.location.hostname.includes("linkedin.com")) {
-    // LinkedIn specific extraction
-    const titleElement = document.querySelector(".job-details-jobs-unified-top-card__job-title");
-    if (titleElement) title = titleElement.textContent.trim();
+  try {
+    const jobData = {
+      title: "",
+      company: "",
+      location: "",
+      description: "",
+      requirements: [],
+      salary: "",
+      postedDate: "",
+      applyUrl: "",
+      jobType: "",
+      level: "",
+      remote: false,
+      skills: [],
+      formFields: null
+    };
     
-    const companyElement = document.querySelector(".job-details-jobs-unified-top-card__company-name");
-    if (companyElement) company = companyElement.textContent.trim();
-    
-    const locationElement = document.querySelector(".job-details-jobs-unified-top-card__bullet");
-    if (locationElement) location = locationElement.textContent.trim();
-    
-    const descriptionElement = document.querySelector(".jobs-description-content");
-    if (descriptionElement) description = descriptionElement.textContent.trim();
-    
-    // Try to find Apply button URL
-    const applyButton = document.querySelector("button.jobs-apply-button");
-    if (applyButton) {
-      applyUrl = window.location.href;
+    // Different extraction logic based on the current site
+    if (window.location.hostname.includes("linkedin.com")) {
+      extractLinkedInJobData(jobData);
+    } 
+    else if (window.location.hostname.includes("indeed.com")) {
+      extractIndeedJobData(jobData);
+    }
+    else if (window.location.hostname.includes("greenhouse.io")) {
+      extractGreenhouseJobData(jobData);
+    }
+    else if (window.location.hostname.includes("lever.co")) {
+      extractLeverJobData(jobData);
+    }
+    else if (window.location.hostname.includes("workday")) {
+      extractWorkdayJobData(jobData);
+    }
+    else {
+      // Generic extraction for unsupported sites
+      extractGenericJobData(jobData);
     }
     
-    // Try to extract posted date
-    const postedElement = document.querySelector(".jobs-unified-top-card__posted-date");
-    if (postedElement) postedDate = postedElement.textContent.trim();
+    // Extract resume upload fields if on an application page
+    jobData.formFields = detectFormFields();
     
-    // Try to extract salary if visible
-    const salaryElement = document.querySelector(".jobs-unified-top-card__salary-info");
-    if (salaryElement) salary = salaryElement.textContent.trim();
-  } 
-  else if (window.location.hostname.includes("indeed.com")) {
-    // Indeed specific extraction
+    // Get actual apply URL with better detection
+    if (!jobData.applyUrl) {
+      jobData.applyUrl = findApplyUrl();
+    }
+    
+    return jobData;
+  } catch (error) {
+    console.error("Error extracting job data:", error);
+    return {
+      title: "Error extracting job data",
+      applyUrl: window.location.href,
+      error: error.message
+    };
+  }
+}
+
+// LinkedIn-specific job data extraction
+function extractLinkedInJobData(jobData) {
+  try {
+    // Job title
+    const titleElement = document.querySelector(".job-details-jobs-unified-top-card__job-title, .topcard__title");
+    if (titleElement) jobData.title = titleElement.textContent.trim();
+    
+    // Company name
+    const companyElement = document.querySelector(".job-details-jobs-unified-top-card__company-name, .topcard__org-name-link");
+    if (companyElement) jobData.company = companyElement.textContent.trim();
+    
+    // Location
+    const locationElement = document.querySelector(".job-details-jobs-unified-top-card__bullet, .topcard__flavor--bullet");
+    if (locationElement) jobData.location = locationElement.textContent.trim();
+    
+    // Description
+    const descriptionElement = document.querySelector(".jobs-description-content, .description__text");
+    if (descriptionElement) jobData.description = descriptionElement.textContent.trim();
+    
+    // Posted date
+    const postedElement = document.querySelector(".jobs-unified-top-card__posted-date, .topcard__flavor--metadata");
+    if (postedElement) jobData.postedDate = postedElement.textContent.trim();
+    
+    // Job type
+    const jobTypeElement = document.querySelector(".job-details-jobs-unified-top-card__workplace-type");
+    if (jobTypeElement) {
+      const jobTypeText = jobTypeElement.textContent.toLowerCase().trim();
+      if (jobTypeText.includes("remote")) jobData.remote = true;
+      if (jobTypeText.includes("full-time")) jobData.jobType = "full-time";
+      else if (jobTypeText.includes("part-time")) jobData.jobType = "part-time";
+      else if (jobTypeText.includes("contract")) jobData.jobType = "contract";
+      else if (jobTypeText.includes("internship")) jobData.jobType = "internship";
+    }
+    
+    // Requirements/skills section
+    const skillsContainer = document.querySelector(".job-details-skill-match-status-list");
+    if (skillsContainer) {
+      const skillElements = skillsContainer.querySelectorAll("li");
+      skillElements.forEach(element => {
+        jobData.skills.push(element.textContent.trim());
+      });
+    }
+    
+    // Better apply URL extraction
+    const applyButton = document.querySelector("button.jobs-apply-button, a.apply-button");
+    if (applyButton) {
+      if (applyButton.tagName === 'A' && applyButton.href) {
+        jobData.applyUrl = applyButton.href;
+      } else {
+        // For button-based apply, we'll use the current URL + a flag
+        jobData.applyUrl = window.location.href;
+        jobData.requiresExtensionClick = true;
+      }
+    }
+
+    // Salary
+    const salaryElement = document.querySelector(".job-details-jobs-unified-top-card__salary-info, .compensation");
+    if (salaryElement) jobData.salary = salaryElement.textContent.trim();
+    
+  } catch (error) {
+    console.error("Error extracting LinkedIn job data:", error);
+  }
+}
+
+// Indeed-specific job data extraction
+function extractIndeedJobData(jobData) {
+  try {
+    // Job title
     const titleElement = document.querySelector(".jobsearch-JobInfoHeader-title");
-    if (titleElement) title = titleElement.textContent.trim();
+    if (titleElement) jobData.title = titleElement.textContent.trim();
     
-    const companyElement = document.querySelector("[data-testid='inlineCompanyName']");
-    if (companyElement) company = companyElement.textContent.trim();
+    // Company name
+    const companyElement = document.querySelector("[data-testid='inlineCompanyName'], .jobsearch-InlineCompanyRating-companyHeader");
+    if (companyElement) jobData.company = companyElement.textContent.trim();
     
-    const locationElement = document.querySelector("[data-testid='jobLocationText']");
-    if (locationElement) location = locationElement.textContent.trim();
+    // Location
+    const locationElement = document.querySelector("[data-testid='jobLocationText'], .jobsearch-JobInfoHeader-subtitle > div");
+    if (locationElement) jobData.location = locationElement.textContent.trim();
     
     // Description
     const descriptionElement = document.querySelector("#jobDescriptionText");
-    if (descriptionElement) description = descriptionElement.textContent.trim();
+    if (descriptionElement) jobData.description = descriptionElement.textContent.trim();
     
-    // Apply button
-    const applyButton = document.querySelector("[data-testid='applyButton-top']");
-    if (applyButton && applyButton.tagName === 'A') {
-      applyUrl = applyButton.href;
-    } else {
-      applyUrl = window.location.href;
-    }
+    // Apply button - more robust detection
+    let applyUrl = '';
+    const applyButton = document.querySelector("[data-testid='applyButton-top'], .jobsearch-IndeedApplyButton-newDesign");
     
-    // Try to extract posted date
-    const dateElement = document.querySelector("[data-testid='jobPostDate']");
-    if (dateElement) postedDate = dateElement.textContent.trim();
-  }
-  else if (window.location.hostname.includes("levels.fyi")) {
-    // Levels.fyi specific extraction
-    const titleElement = document.querySelector(".job-title");
-    if (titleElement) title = titleElement.textContent.trim();
-    
-    const companyElement = document.querySelector(".company-name");
-    if (companyElement) company = companyElement.textContent.trim();
-    
-    const locationElement = document.querySelector(".job-location");
-    if (locationElement) location = locationElement.textContent.trim();
-    
-    // Get description
-    const descriptionElement = document.querySelector(".job-description");
-    if (descriptionElement) description = descriptionElement.textContent.trim();
-    
-    // Get apply URL if available
-    const applyButton = document.querySelector("a.apply-button");
     if (applyButton) {
-      applyUrl = applyButton.href;
-    } else {
-      applyUrl = window.location.href;
+      if (applyButton.tagName === 'A' && applyButton.href) {
+        applyUrl = applyButton.href;
+      } else if (applyButton.closest('a') && applyButton.closest('a').href) {
+        applyUrl = applyButton.closest('a').href;
+      } else {
+        // Button likely uses JavaScript to open the application
+        applyUrl = window.location.href;
+        jobData.requiresExtensionClick = true;
+      }
     }
     
-    // Salary information is often available on levels.fyi
-    const salaryElement = document.querySelector(".compensation");
-    if (salaryElement) salary = salaryElement.textContent.trim();
+    // If still no apply URL, try to find other apply links
+    if (!applyUrl) {
+      const applyLinks = document.querySelectorAll("a[href*='apply'], a[href*='application'], .icl-Button--primary");
+      for (const link of applyLinks) {
+        if (link.textContent.toLowerCase().includes('apply')) {
+          applyUrl = link.href;
+          break;
+        }
+      }
+    }
+    
+    jobData.applyUrl = applyUrl || window.location.href;
+    
+    // Posted date
+    const dateElement = document.querySelector("[data-testid='jobPostDate'], .jobsearch-JobMetadataFooter > div");
+    if (dateElement) jobData.postedDate = dateElement.textContent.trim();
+    
+    // Job type
+    const jobDetailsList = document.querySelectorAll(".jobsearch-JobDescriptionSection-sectionItem");
+    for (const item of jobDetailsList) {
+      const text = item.textContent.toLowerCase();
+      if (text.includes("job type") || text.includes("employment type")) {
+        if (text.includes("full-time")) jobData.jobType = "full-time";
+        else if (text.includes("part-time")) jobData.jobType = "part-time";
+        else if (text.includes("contract")) jobData.jobType = "contract";
+        else if (text.includes("internship")) jobData.jobType = "internship";
+        
+        if (text.includes("remote")) jobData.remote = true;
+      }
+    }
+
+    // Salary information
+    const salaryElement = document.querySelector(".jobsearch-JobMetadataHeader-item");
+    if (salaryElement && salaryElement.textContent.includes('$')) {
+      jobData.salary = salaryElement.textContent.trim();
+    }
+    
+  } catch (error) {
+    console.error("Error extracting Indeed job data:", error);
   }
-  
-  // Generic extraction as fallback for other sites
-  if (!title || !company) {
-    // Generic extraction logic for any site
-    // Look for job title patterns
+}
+
+// Greenhouse-specific job data extraction
+function extractGreenhouseJobData(jobData) {
+  try {
+    // Job title
+    const titleElement = document.querySelector(".app-title");
+    if (titleElement) jobData.title = titleElement.textContent.trim();
+    
+    // Company name - often in the logo alt text or page title
+    const logoElement = document.querySelector(".company-logo");
+    if (logoElement && logoElement.alt) {
+      jobData.company = logoElement.alt.trim();
+    } else {
+      // Try to extract from title
+      const pageTitle = document.title;
+      if (pageTitle.includes("at")) {
+        jobData.company = pageTitle.split("at")[1].trim();
+      }
+    }
+    
+    // Location
+    const locationElement = document.querySelector(".location");
+    if (locationElement) jobData.location = locationElement.textContent.trim();
+    
+    // Description
+    const descriptionElement = document.querySelector(".content-intro");
+    if (descriptionElement) jobData.description = descriptionElement.textContent.trim();
+    
+    // Apply URL - Greenhouse typically has an application form on the same page
+    jobData.applyUrl = window.location.href;
+    
+    // Check for a multi-page application
+    const applyButton = document.querySelector("a.btn-apply, button.btn-apply");
+    if (applyButton) {
+      if (applyButton.tagName === 'A' && applyButton.href) {
+        jobData.applyUrl = applyButton.href;
+      } else {
+        jobData.requiresExtensionClick = true;
+      }
+    }
+    
+    // Requirements/qualifications
+    const contentBlocks = document.querySelectorAll(".section-wrapper");
+    for (const block of contentBlocks) {
+      const heading = block.querySelector("h3, h2");
+      if (heading && (
+          heading.textContent.toLowerCase().includes("requirements") || 
+          heading.textContent.toLowerCase().includes("qualifications"))) {
+        
+        const listItems = block.querySelectorAll("li");
+        for (const item of listItems) {
+          jobData.requirements.push(item.textContent.trim());
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error extracting Greenhouse job data:", error);
+  }
+}
+
+// Lever-specific job data extraction
+function extractLeverJobData(jobData) {
+  try {
+    // Job title
+    const titleElement = document.querySelector(".posting-headline h2");
+    if (titleElement) jobData.title = titleElement.textContent.trim();
+    
+    // Company name - usually in the logo or can be derived from URL
+    const companyElement = document.querySelector(".main-header-logo img");
+    if (companyElement && companyElement.alt) {
+      jobData.company = companyElement.alt.trim();
+    } else {
+      // Extract from URL (lever.co/COMPANY_NAME/...)
+      const pathParts = window.location.pathname.split('/');
+      if (pathParts.length > 1) {
+        jobData.company = pathParts[1].replace(/-/g, ' ');
+        // Capitalize company name
+        jobData.company = jobData.company.charAt(0).toUpperCase() + jobData.company.slice(1);
+      }
+    }
+    
+    // Location
+    const locationElement = document.querySelector(".posting-category-location .location");
+    if (locationElement) jobData.location = locationElement.textContent.trim();
+    
+    // Description - Lever has a structured layout
+    const descriptionElement = document.querySelector(".posting-description");
+    if (descriptionElement) jobData.description = descriptionElement.textContent.trim();
+    
+    // Apply URL - Lever typically has an "Apply for this job" button
+    const applyButton = document.querySelector(".postings-btn-wrapper a, a.postings-btn");
+    if (applyButton && applyButton.href) {
+      jobData.applyUrl = applyButton.href;
+    } else {
+      jobData.applyUrl = window.location.href;
+    }
+    
+    // Requirements - look for specific sections
+    const sections = document.querySelectorAll(".section");
+    for (const section of sections) {
+      const heading = section.querySelector("h3");
+      if (heading && (
+          heading.textContent.toLowerCase().includes("requirements") || 
+          heading.textContent.toLowerCase().includes("qualifications"))) {
+        
+        const listItems = section.querySelectorAll("li");
+        for (const item of listItems) {
+          jobData.requirements.push(item.textContent.trim());
+        }
+      }
+    }
+    
+    // Work type/level
+    const categories = document.querySelectorAll(".posting-category-tag");
+    for (const category of categories) {
+      const text = category.textContent.toLowerCase();
+      if (text.includes("full-time")) jobData.jobType = "full-time";
+      else if (text.includes("part-time")) jobData.jobType = "part-time";
+      else if (text.includes("contract")) jobData.jobType = "contract";
+      else if (text.includes("internship")) jobData.jobType = "internship";
+      
+      if (text.includes("remote")) jobData.remote = true;
+      
+      // Try to determine level
+      if (text.includes("senior")) jobData.level = "senior";
+      else if (text.includes("lead")) jobData.level = "lead";
+      else if (text.includes("manager")) jobData.level = "manager";
+      else if (text.includes("entry")) jobData.level = "entry";
+      else if (text.includes("junior")) jobData.level = "entry";
+    }
+  } catch (error) {
+    console.error("Error extracting Lever job data:", error);
+  }
+}
+
+// Workday-specific job data extraction
+function extractWorkdayJobData(jobData) {
+  try {
+    // Job title
+    const titleElement = document.querySelector(".css-1l77fat, .css-9z5rtv, .GWTJobTitle");
+    if (titleElement) jobData.title = titleElement.textContent.trim();
+    
+    // Company name can be hard to extract from Workday - often in the logo or page title
+    const companyElement = document.querySelector(".css-1sgb1se, .gwt-Label");
+    if (companyElement) jobData.company = companyElement.textContent.trim();
+    
+    if (!jobData.company) {
+      // Try to get it from the page title
+      const titleParts = document.title.split('|');
+      if (titleParts.length > 1) {
+        jobData.company = titleParts[titleParts.length - 1].trim();
+      }
+    }
+    
+    // Location
+    const locationElement = document.querySelector(".css-1sg4kaf, .css-129fb8, .css-1ixbp0l");
+    if (locationElement) jobData.location = locationElement.textContent.trim();
+    
+    // Description
+    const descriptionElement = document.querySelector(".css-1sgpksa-positionDescription, .css-1ujt8f5, .css-1d59u00");
+    if (descriptionElement) jobData.description = descriptionElement.textContent.trim();
+    
+    // Apply URL - Workday typically has an "Apply" button
+    const applyButton = document.querySelector("a.css-1u0oqcg, button.css-1hddt8t, a.gwt-Anchor");
+    if (applyButton) {
+      if (applyButton.tagName === 'A' && applyButton.href) {
+        jobData.applyUrl = applyButton.href;
+      } else {
+        jobData.applyUrl = window.location.href;
+        jobData.requiresExtensionClick = true;
+      }
+    } else {
+      jobData.applyUrl = window.location.href;
+    }
+    
+    // Job type / work model
+    const jobMetadata = document.querySelectorAll(".css-g7iuka, .css-4obbn, .css-1iwhhmz");
+    for (const meta of jobMetadata) {
+      const text = meta.textContent.toLowerCase();
+      
+      if (text.includes("full-time")) jobData.jobType = "full-time";
+      else if (text.includes("part-time")) jobData.jobType = "part-time";
+      else if (text.includes("contract")) jobData.jobType = "contract";
+      else if (text.includes("internship")) jobData.jobType = "internship";
+      
+      if (text.includes("remote")) jobData.remote = true;
+    }
+  } catch (error) {
+    console.error("Error extracting Workday job data:", error);
+  }
+}
+
+// Generic job data extraction for unsupported sites
+function extractGenericJobData(jobData) {
+  try {
+    // Look for job title in common locations
     const possibleTitleElements = document.querySelectorAll("h1, h2, .job-title, .position-title, [class*='title']");
     for (const el of possibleTitleElements) {
       const text = el.textContent.trim();
       if (text.length > 0 && text.length < 100) {
-        title = text;
+        jobData.title = text;
         break;
       }
     }
     
-    // Look for company patterns
+    // Look for company name
     const possibleCompanyElements = document.querySelectorAll("[class*='company'], [class*='employer'], .organization");
     for (const el of possibleCompanyElements) {
       const text = el.textContent.trim();
       if (text.length > 0 && text.length < 50) {
-        company = text;
+        jobData.company = text;
         break;
       }
     }
     
-    // Look for location patterns
+    // Look for location
     const possibleLocationElements = document.querySelectorAll("[class*='location'], [class*='address'], .city");
     for (const el of possibleLocationElements) {
       const text = el.textContent.trim();
       if (text.length > 0 && text.length < 50) {
-        location = text;
+        jobData.location = text;
         break;
       }
     }
+    
+    // Description - look for main content area
+    const possibleDescElements = document.querySelectorAll("[class*='description'], [class*='details'], [class*='content']");
+    for (const el of possibleDescElements) {
+      if (el.textContent.length > 100) {
+        jobData.description = el.textContent.trim();
+        break;
+      }
+    }
+    
+    // Apply URL - look for apply buttons/links
+    const applyLinks = document.querySelectorAll("a[href*='apply'], button[class*='apply'], a[class*='apply']");
+    for (const link of applyLinks) {
+      if (link.textContent.toLowerCase().includes('apply')) {
+        if (link.tagName === 'A' && link.href) {
+          jobData.applyUrl = link.href;
+        } else {
+          jobData.applyUrl = window.location.href;
+          jobData.requiresExtensionClick = true;
+        }
+        break;
+      }
+    }
+    
+    if (!jobData.applyUrl) {
+      jobData.applyUrl = window.location.href;
+    }
+    
+    // Try to extract requirements
+    const requirementSections = document.querySelectorAll("ul, ol");
+    for (const section of requirementSections) {
+      if (section.textContent.toLowerCase().includes("requirement") || 
+          section.textContent.toLowerCase().includes("qualification")) {
+        const items = section.querySelectorAll("li");
+        for (const item of items) {
+          jobData.requirements.push(item.textContent.trim());
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error extracting generic job data:", error);
+  }
+}
+
+// Find apply URL with better heuristics
+function findApplyUrl() {
+  // Try to find the most likely apply button/link
+  const applySelectors = [
+    // Generic apply buttons
+    "a.apply-button", 
+    "a[href*='apply']", 
+    "button.apply", 
+    "a.apply",
+    "a[data-automation='apply-button']",
+    "a.job-apply-button",
+    // LinkedIn
+    "button.jobs-apply-button",
+    // Indeed
+    "[data-testid='applyButton-top']",
+    ".jobsearch-IndeedApplyButton",
+    // Greenhouse
+    "a.btn-apply",
+    "button.btn-apply",
+    // Lever
+    ".postings-btn-wrapper a",
+    "a.postings-btn",
+    // Workday
+    "a.css-1u0oqcg", 
+    "button.css-1hddt8t", 
+    "a.gwt-Anchor",
+    // BrassRing
+    "a#dialogApplyButton",
+    // Taleo
+    "a.btn-apply-now"
+  ];
+  
+  for (const selector of applySelectors) {
+    try {
+      const element = document.querySelector(selector);
+      if (element) {
+        if (element.tagName === 'A' && element.href) {
+          return element.href;
+        } else {
+          // It's a button that likely uses JS to trigger the application
+          return window.location.href;
+        }
+      }
+    } catch (error) {
+      console.error(`Error checking selector ${selector}:`, error);
+    }
   }
   
-  // Extract possible requirements
-  const skillsList = [];
-  const requirementSections = document.querySelectorAll("ul, ol");
-  for (const section of requirementSections) {
-    if (section.textContent.toLowerCase().includes("skill") || 
-        section.textContent.toLowerCase().includes("require") || 
-        section.textContent.toLowerCase().includes("qualif")) {
+  // If no apply button found, return current URL
+  return window.location.href;
+}
+
+// Enhanced form field detection for auto-filling
+function detectFormFields() {
+  const formFields = {
+    firstName: null,
+    lastName: null,
+    name: null,
+    email: null,
+    phone: null,
+    address: null,
+    city: null,
+    state: null,
+    zip: null,
+    country: null,
+    linkedin: null,
+    website: null,
+    resume: null,
+    coverLetter: null,
+    education: [],
+    experience: [],
+    salary: null,
+    availability: null,
+    referral: null,
+    fieldCounts: {
+      text: 0,
+      select: 0,
+      radio: 0,
+      checkbox: 0,
+      date: 0,
+      file: 0,
+      total: 0
+    }
+  };
+  
+  // Find all form inputs
+  const inputs = document.querySelectorAll('input, textarea, select');
+  for (const input of inputs) {
+    try {
+      const type = input.type || 'text';
+      const name = (input.name || '').toLowerCase();
+      const id = (input.id || '').toLowerCase();
+      const placeholder = (input.placeholder || '').toLowerCase();
+      const label = findLabelForInput(input);
+      const labelText = label ? label.textContent.toLowerCase() : '';
       
-      const items = section.querySelectorAll("li");
-      for (const item of items) {
-        skillsList.push(item.textContent.trim());
+      // Update field count
+      formFields.fieldCounts.total++;
+      if (['text', 'email', 'tel', 'url', 'textarea'].includes(type)) {
+        formFields.fieldCounts.text++;
+      } else if (type === 'select-one' || type === 'select-multiple') {
+        formFields.fieldCounts.select++;
+      } else if (type === 'radio') {
+        formFields.fieldCounts.radio++;
+      } else if (type === 'checkbox') {
+        formFields.fieldCounts.checkbox++;
+      } else if (type === 'date') {
+        formFields.fieldCounts.date++;
+      } else if (type === 'file') {
+        formFields.fieldCounts.file++;
+      }
+      
+      // Match field to appropriate category
+      
+      // Resume and cover letter uploads
+      if (type === 'file') {
+        if (containsAny(name + id + placeholder + labelText, ['resume', 'cv', 'curriculum'])) {
+          formFields.resume = input;
+        }
+        else if (containsAny(name + id + placeholder + labelText, ['cover', 'letter', 'motivation'])) {
+          formFields.coverLetter = input;
+        }
+      }
+      
+      // Name fields
+      else if (containsAny(name + id + placeholder + labelText, ['first name', 'firstname', 'given name'])) {
+        formFields.firstName = input;
+      }
+      else if (containsAny(name + id + placeholder + labelText, ['last name', 'lastname', 'family name', 'surname'])) {
+        formFields.lastName = input;
+      }
+      else if (type !== 'password' && containsAny(name + id + placeholder + labelText, ['full name', 'name']) && 
+              !containsAny(name + id + placeholder + labelText, ['first', 'last', 'user', 'company'])) {
+        formFields.name = input;
+      }
+      
+      // Contact information
+      else if (type === 'email' || containsAny(name + id + placeholder + labelText, ['email'])) {
+        formFields.email = input;
+      }
+      else if (type === 'tel' || containsAny(name + id + placeholder + labelText, ['phone', 'mobile', 'cell'])) {
+        formFields.phone = input;
+      }
+      
+      // Address fields
+      else if (containsAny(name + id + placeholder + labelText, ['address', 'street']) && 
+               !containsAny(name + id + placeholder + labelText, ['email'])) {
+        formFields.address = input;
+      }
+      else if (containsAny(name + id + placeholder + labelText, ['city', 'town'])) {
+        formFields.city = input;
+      }
+      else if (containsAny(name + id + placeholder + labelText, ['state', 'province', 'region'])) {
+        formFields.state = input;
+      }
+      else if (containsAny(name + id + placeholder + labelText, ['zip', 'postal', 'post code'])) {
+        formFields.zip = input;
+      }
+      else if (containsAny(name + id + placeholder + labelText, ['country', 'nation'])) {
+        formFields.country = input;
+      }
+      
+      // Online presence
+      else if (containsAny(name + id + placeholder + labelText, ['linkedin'])) {
+        formFields.linkedin = input;
+      }
+      else if (containsAny(name + id + placeholder + labelText, ['website', 'portfolio', 'personal site']) && 
+               !containsAny(name + id + placeholder + labelText, ['linkedin'])) {
+        formFields.website = input;
+      }
+      
+      // Application specific fields
+      else if (containsAny(name + id + placeholder + labelText, ['salary', 'compensation', 'expected', 'desired'])) {
+        formFields.salary = input;
+      }
+      else if (containsAny(name + id + placeholder + labelText, ['available', 'start date', 'when can you start'])) {
+        formFields.availability = input;
+      }
+      else if (containsAny(name + id + placeholder + labelText, ['referred', 'referral', 'how did you hear'])) {
+        formFields.referral = input;
+      }
+    } catch (error) {
+      console.error("Error processing form field:", error);
+    }
+  }
+  
+  // Look for education and experience sections
+  detectEducationFields(formFields);
+  detectExperienceFields(formFields);
+  
+  return formFields;
+}
+
+// Helper function to detect education-related fields
+function detectEducationFields(formFields) {
+  try {
+    // Look for education section containers
+    const educationContainers = findFieldContainers(['education', 'academic', 'school', 'university', 'college']);
+    
+    for (const container of educationContainers) {
+      const educationEntry = {
+        school: null,
+        degree: null,
+        field: null,
+        startDate: null,
+        endDate: null,
+        gpa: null
+      };
+      
+      // School name
+      const schoolField = findFieldInContainer(container, ['school', 'university', 'college', 'institution']);
+      if (schoolField) educationEntry.school = schoolField;
+      
+      // Degree
+      const degreeField = findFieldInContainer(container, ['degree', 'diploma', 'qualification', 'certificate']);
+      if (degreeField) educationEntry.degree = degreeField;
+      
+      // Field of study / major
+      const fieldField = findFieldInContainer(container, ['field', 'major', 'study', 'concentration']);
+      if (fieldField) educationEntry.field = fieldField;
+      
+      // Dates
+      const startDateField = findFieldInContainer(container, ['start date', 'from', 'begin']);
+      if (startDateField) educationEntry.startDate = startDateField;
+      
+      const endDateField = findFieldInContainer(container, ['end date', 'to', 'completion', 'graduated']);
+      if (endDateField) educationEntry.endDate = endDateField;
+      
+      // GPA
+      const gpaField = findFieldInContainer(container, ['gpa', 'grade', 'average', 'score']);
+      if (gpaField) educationEntry.gpa = gpaField;
+      
+      if (educationEntry.school || educationEntry.degree || educationEntry.field) {
+        formFields.education.push(educationEntry);
+      }
+    }
+  } catch (error) {
+    console.error("Error detecting education fields:", error);
+  }
+}
+
+// Helper function to detect experience-related fields
+function detectExperienceFields(formFields) {
+  try {
+    // Look for experience section containers
+    const experienceContainers = findFieldContainers(['experience', 'employment', 'work', 'job', 'career']);
+    
+    for (const container of experienceContainers) {
+      const experienceEntry = {
+        company: null,
+        title: null,
+        description: null,
+        startDate: null,
+        endDate: null,
+        location: null
+      };
+      
+      // Company name
+      const companyField = findFieldInContainer(container, ['company', 'employer', 'organization', 'business']);
+      if (companyField) experienceEntry.company = companyField;
+      
+      // Job title
+      const titleField = findFieldInContainer(container, ['title', 'position', 'role', 'job title']);
+      if (titleField) experienceEntry.title = titleField;
+      
+      // Description
+      const descriptionField = findFieldInContainer(container, ['description', 'responsibilities', 'duties', 'achievements']);
+      if (descriptionField) experienceEntry.description = descriptionField;
+      
+      // Dates
+      const startDateField = findFieldInContainer(container, ['start date', 'from', 'begin']);
+      if (startDateField) experienceEntry.startDate = startDateField;
+      
+      // EndDate
+      const endDateField = findFieldInContainer(container, ['end date', 'to', 'current']);
+      if (endDateField) experienceEntry.endDate = endDateField;
+      
+      // Location
+      const locationField = findFieldInContainer(container, ['location', 'city', 'address', 'where']);
+      if (locationField) experienceEntry.location = locationField;
+      
+      if (experienceEntry.company || experienceEntry.title || experienceEntry.description) {
+        formFields.experience.push(experienceEntry);
+      }
+    }
+  } catch (error) {
+    console.error("Error detecting experience fields:", error);
+  }
+}
+
+// Find containers that might contain related fields
+function findFieldContainers(keywords) {
+  const containers = [];
+  const potentialContainers = document.querySelectorAll('fieldset, div, section');
+  
+  for (const container of potentialContainers) {
+    // Check if container has a label or heading with a keyword
+    let hasKeyword = false;
+    
+    // Check headings inside the container
+    const headings = container.querySelectorAll('h2, h3, h4, legend, label');
+    for (const heading of headings) {
+      if (containsAny(heading.textContent.toLowerCase(), keywords)) {
+        hasKeyword = true;
+        break;
+      }
+    }
+    
+    // Check container's own attributes
+    if (!hasKeyword) {
+      const containerText = container.textContent.toLowerCase();
+      const containerClass = (container.className || '').toLowerCase();
+      const containerId = (container.id || '').toLowerCase();
+      
+      if (containsAny(containerText, keywords) || containsAny(containerClass, keywords) || containsAny(containerId, keywords)) {
+        hasKeyword = true;
+      }
+    }
+    
+    if (hasKeyword) {
+      // Check if it has inputs inside
+      const inputCount = container.querySelectorAll('input, textarea, select').length;
+      if (inputCount > 0) {
+        containers.push(container);
       }
     }
   }
   
-  if (skillsList.length > 0) {
-    requirements = skillsList;
-  }
-  
-  // Try to detect form fields for auto-filling
-  const formFields = detectFormFields();
-  
-  return { 
-    title, 
-    company, 
-    location, 
-    description, 
-    requirements, 
-    salary, 
-    postedDate,
-    applyUrl,
-    formFields
-  };
+  return containers;
 }
 
-// Detect form fields on the current page for auto-filling
-function detectFormFields() {
-  const formFields = {
-    name: null,
-    email: null,
-    phone: null,
-    resume: null,
-    coverLetter: null,
-    linkedin: null,
-    website: null,
-    education: [],
-    experience: []
-  };
+// Find a specific field inside a container based on keywords
+function findFieldInContainer(container, keywords) {
+  const inputs = container.querySelectorAll('input, textarea, select');
   
-  // Check for common form field patterns
-  const inputs = document.querySelectorAll('input, textarea, select');
   for (const input of inputs) {
     const name = (input.name || '').toLowerCase();
     const id = (input.id || '').toLowerCase();
-    const type = input.type;
     const placeholder = (input.placeholder || '').toLowerCase();
     const label = findLabelForInput(input);
     const labelText = label ? label.textContent.toLowerCase() : '';
     
-    // Determine field type based on attributes and label
-    if (type === 'file' && (name.includes('resume') || id.includes('resume') || placeholder.includes('resume') || labelText.includes('resume'))) {
-      formFields.resume = input;
-    }
-    else if (type === 'file' && (name.includes('cover') || id.includes('cover') || placeholder.includes('cover') || labelText.includes('cover letter'))) {
-      formFields.coverLetter = input;
-    }
-    else if ((name.includes('first') && name.includes('name')) || 
-             (id.includes('first') && id.includes('name')) || 
-             placeholder === 'first name' ||
-             labelText === 'first name') {
-      formFields.firstName = input;
-    }
-    else if ((name.includes('last') && name.includes('name')) || 
-             (id.includes('last') && id.includes('name')) || 
-             placeholder === 'last name' ||
-             labelText === 'last name') {
-      formFields.lastName = input;
-    }
-    else if ((name.includes('name') && !name.includes('last') && !name.includes('first')) || 
-             (id.includes('name') && !id.includes('last') && !id.includes('first')) || 
-             placeholder === 'full name' || placeholder === 'name' ||
-             labelText === 'full name' || labelText === 'name') {
-      formFields.name = input;
-    }
-    else if (type === 'email' || name.includes('email') || id.includes('email') || placeholder.includes('email') || labelText.includes('email')) {
-      formFields.email = input;
-    }
-    else if (type === 'tel' || name.includes('phone') || id.includes('phone') || placeholder.includes('phone') || labelText.includes('phone')) {
-      formFields.phone = input;
-    }
-    else if (name.includes('linkedin') || id.includes('linkedin') || placeholder.includes('linkedin') || labelText.includes('linkedin')) {
-      formFields.linkedin = input;
-    }
-    else if ((name.includes('website') || id.includes('website') || placeholder.includes('website') || labelText.includes('website')) && 
-             !(name.includes('linkedin') || id.includes('linkedin'))) {
-      formFields.website = input;
-    }
-    else if (name.includes('address') || id.includes('address') || placeholder.includes('address') || labelText.includes('address')) {
-      formFields.address = input;
+    if (containsAny(name + id + placeholder + labelText, keywords)) {
+      return input;
     }
   }
   
-  return formFields;
+  return null;
 }
 
 // Helper function to find a label associated with an input
@@ -249,543 +833,4 @@ function findLabelForInput(input) {
     if (parent.tagName === 'LABEL') {
       return parent;
     }
-    parent = parent.parentElement;
-  }
-  
-  // Look for nearby labels
-  const labels = Array.from(document.querySelectorAll('label'));
-  const rect = input.getBoundingClientRect();
-  // Find the closest label above or to the left
-  return labels.find(label => {
-    const labelRect = label.getBoundingClientRect();
-    // Label is above or to the left and close to the input
-    return (labelRect.bottom < rect.top && Math.abs(labelRect.left - rect.left) < 100) || 
-           (labelRect.right < rect.left && Math.abs(labelRect.top - rect.top) < 30);
-  });
-}
-
-// Improved auto-fill function that handles more field types and platforms
-function autoFillApplication(userData) {
-  console.log("Starting autofill with user data:", userData);
-  const formFields = detectFormFields();
-  let filledFields = 0;
-  
-  // Auto-fill detected fields
-  if (formFields.firstName && userData.firstName) {
-    formFields.firstName.value = userData.firstName;
-    triggerInputEvent(formFields.firstName);
-    filledFields++;
-  }
-  
-  if (formFields.lastName && userData.lastName) {
-    formFields.lastName.value = userData.lastName;
-    triggerInputEvent(formFields.lastName);
-    filledFields++;
-  }
-  
-  if (formFields.name && userData.name) {
-    formFields.name.value = userData.name;
-    triggerInputEvent(formFields.name);
-    filledFields++;
-  }
-  
-  if (formFields.email && userData.email) {
-    formFields.email.value = userData.email;
-    triggerInputEvent(formFields.email);
-    filledFields++;
-  }
-  
-  if (formFields.phone && userData.phone) {
-    formFields.phone.value = userData.phone;
-    triggerInputEvent(formFields.phone);
-    filledFields++;
-  }
-  
-  if (formFields.linkedin && userData.linkedin) {
-    formFields.linkedin.value = userData.linkedin;
-    triggerInputEvent(formFields.linkedin);
-    filledFields++;
-  }
-  
-  if (formFields.website && userData.website) {
-    formFields.website.value = userData.website;
-    triggerInputEvent(formFields.website);
-    filledFields++;
-  }
-  
-  if (formFields.address && userData.address) {
-    formFields.address.value = userData.address;
-    triggerInputEvent(formFields.address);
-    filledFields++;
-  }
-  
-  console.log(`Auto-filled ${filledFields} fields`);
-  
-  // Attempt to find and click "Next" or "Continue" buttons after filling
-  if (filledFields > 0) {
-    setTimeout(() => {
-      attemptToAdvanceForm();
-    }, 500);
-  }
-  
-  return filledFields;
-}
-
-// New function to fill application-specific fields
-function fillApplicationSpecificFields(userData) {
-  // Look for fields related to salary expectations
-  const salaryInputs = findFieldsByKeywords(['salary', 'compensation', 'expected', 'desired']);
-  if (salaryInputs.length > 0 && userData.salaryExpectation) {
-    salaryInputs.forEach(input => {
-      input.value = userData.salaryExpectation;
-      triggerInputEvent(input);
-    });
-  }
-  
-  // Look for fields related to availability or start date
-  const availabilityInputs = findFieldsByKeywords(['available', 'start date', 'when can you start']);
-  if (availabilityInputs.length > 0 && userData.availability) {
-    availabilityInputs.forEach(input => {
-      input.value = userData.availability;
-      triggerInputEvent(input);
-    });
-  }
-  
-  // Look for fields related to referrals
-  const referralInputs = findFieldsByKeywords(['referred', 'referral', 'how did you hear']);
-  if (referralInputs.length > 0 && userData.referredBy) {
-    referralInputs.forEach(input => {
-      input.value = userData.referredBy;
-      triggerInputEvent(input);
-    });
-  }
-}
-
-// New function to fill common application questions using radio buttons and checkboxes
-function fillCommonQuestions(userData) {
-  // Handle work authorization questions
-  if (userData.workAuthorization) {
-    const workAuthInputs = findRadiosByKeywords([
-      'legally authorized', 'work authorization', 'eligible to work'
-    ]);
-    
-    // Determine which option to select based on user data
-    const isAuthorized = userData.workAuthorization === 'US Citizen' || 
-                          userData.workAuthorization === 'Green Card' ||
-                          userData.workAuthorization === 'Permanent Resident';
-                          
-    selectRadioOption(workAuthInputs, isAuthorized);
-  }
-  
-  // Handle sponsorship questions
-  if (userData.hasOwnProperty('requireSponsorship')) {
-    const sponsorshipInputs = findRadiosByKeywords([
-      'sponsorship', 'visa', 'require a visa'
-    ]);
-    
-    selectRadioOption(sponsorshipInputs, !userData.requireSponsorship);
-  }
-  
-  // Handle relocation questions
-  if (userData.hasOwnProperty('willingToRelocate')) {
-    const relocationInputs = findRadiosByKeywords([
-      'relocate', 'relocation', 'willing to move'
-    ]);
-    
-    selectRadioOption(relocationInputs, userData.willingToRelocate);
-  }
-  
-  // Handle remote work preference
-  if (userData.remotePreference) {
-    const remoteInputs = findRadiosByKeywords([
-      'remote', 'on-site', 'hybrid', 'work location'
-    ]);
-    
-    // This is more complex and would need a more sophisticated algorithm
-    // to match the user's preference with available options
-    console.log("Found remote work inputs, but needs manual selection");
-  }
-}
-
-// Helper function to find fields by keywords in labels, placeholders, or names
-function findFieldsByKeywords(keywords) {
-  const inputs = document.querySelectorAll('input[type="text"], input[type="number"], textarea, select');
-  const matches = [];
-  
-  for (const input of inputs) {
-    const inputId = input.id;
-    const inputName = input.name;
-    const inputPlaceholder = input.placeholder || '';
-    
-    // Check for associated label
-    const label = findLabelForInput(input);
-    const labelText = label ? label.textContent.toLowerCase() : '';
-    
-    // Check if any keywords match
-    const matchesKeyword = keywords.some(keyword => {
-      const lowerKeyword = keyword.toLowerCase();
-      return inputName.toLowerCase().includes(lowerKeyword) || 
-             inputId.toLowerCase().includes(lowerKeyword) || 
-             inputPlaceholder.toLowerCase().includes(lowerKeyword) || 
-             labelText.includes(lowerKeyword);
-    });
-    
-    if (matchesKeyword) {
-      matches.push(input);
-    }
-  }
-  
-  return matches;
-}
-
-// Helper function to find radio buttons by keywords
-function findRadiosByKeywords(keywords) {
-  const radioGroups = [];
-  const radioButtons = document.querySelectorAll('input[type="radio"]');
-  
-  for (const radio of radioButtons) {
-    const radioName = radio.name;
-    const radioId = radio.id;
-    
-    // Check for associated label
-    const label = findLabelForInput(radio);
-    const labelText = label ? label.textContent.toLowerCase() : '';
-    
-    // Check for fieldset legend or nearby text
-    const fieldset = radio.closest('fieldset');
-    const legend = fieldset ? fieldset.querySelector('legend') : null;
-    const legendText = legend ? legend.textContent.toLowerCase() : '';
-    
-    // Check if any keywords match
-    const matchesKeyword = keywords.some(keyword => {
-      const lowerKeyword = keyword.toLowerCase();
-      return radioName.toLowerCase().includes(lowerKeyword) || 
-             radioId.toLowerCase().includes(lowerKeyword) || 
-             labelText.includes(lowerKeyword) ||
-             legendText.includes(lowerKeyword);
-    });
-    
-    if (matchesKeyword) {
-      let existingGroup = radioGroups.find(group => group.name === radioName);
-      if (!existingGroup) {
-        existingGroup = { name: radioName, options: [] };
-        radioGroups.push(existingGroup);
-      }
-      existingGroup.options.push(radio);
-    }
-  }
-  
-  return radioGroups;
-}
-
-// Helper function to select the appropriate radio button based on a boolean value
-function selectRadioOption(radioGroups, positiveSelection) {
-  for (const group of radioGroups) {
-    if (group.options.length === 2) {
-      // Assume first is "Yes" and second is "No" (common pattern)
-      // But we should try to be smarter about this in a real implementation
-      const selectedOption = positiveSelection ? group.options[0] : group.options[1];
-      selectedOption.checked = true;
-      triggerInputEvent(selectedOption);
-      console.log(`Set ${group.name} to ${positiveSelection ? 'Yes' : 'No'}`);
-    }
-    else if (group.options.length > 0) {
-      console.log(`Radio group ${group.name} has ${group.options.length} options, needs manual selection`);
-    }
-  }
-}
-
-// Function to fill date fields
-function fillDateFields(userData) {
-  // Look for date inputs
-  const dateInputs = document.querySelectorAll('input[type="date"]');
-  
-  for (const input of dateInputs) {
-    const inputName = input.name.toLowerCase();
-    const inputId = input.id.toLowerCase();
-    const label = findLabelForInput(input);
-    const labelText = label ? label.textContent.toLowerCase() : '';
-    
-    // Try to determine what this date field is for
-    if (inputName.includes('start') || inputId.includes('start') || labelText.includes('start')) {
-      if (userData.availability) {
-        input.value = userData.availability;
-        triggerInputEvent(input);
-        console.log("Filled start date field");
-      }
-    }
-    else if (inputName.includes('birth') || inputId.includes('birth') || labelText.includes('birth')) {
-      if (userData.dateOfBirth) {
-        input.value = userData.dateOfBirth;
-        triggerInputEvent(input);
-        console.log("Filled birth date field");
-      }
-    }
-  }
-}
-
-// Function to fill education fields
-function fillEducationFields(education) {
-  // This would need to be much more sophisticated in a real implementation
-  // Look for inputs that seem to be related to education
-  const schoolInputs = findFieldsByKeywords(['school', 'university', 'college', 'institution']);
-  const degreeInputs = findFieldsByKeywords(['degree', 'diploma', 'qualification']);
-  const majorInputs = findFieldsByKeywords(['major', 'field', 'study', 'course']);
-  const gpaInputs = findFieldsByKeywords(['gpa', 'grade', 'score']);
-  
-  if (schoolInputs.length > 0 && education[0]?.institution) {
-    schoolInputs[0].value = education[0].institution;
-    triggerInputEvent(schoolInputs[0]);
-    console.log("Filled school field");
-  }
-  
-  if (degreeInputs.length > 0 && education[0]?.degree) {
-    degreeInputs[0].value = education[0].degree;
-    triggerInputEvent(degreeInputs[0]);
-    console.log("Filled degree field");
-  }
-  
-  if (majorInputs.length > 0 && education[0]?.field) {
-    majorInputs[0].value = education[0].field;
-    triggerInputEvent(majorInputs[0]);
-    console.log("Filled major/field of study");
-  }
-  
-  if (gpaInputs.length > 0 && education[0]?.gpa) {
-    gpaInputs[0].value = education[0].gpa;
-    triggerInputEvent(gpaInputs[0]);
-    console.log("Filled GPA");
-  }
-}
-
-// Function to fill work experience fields
-function fillExperienceFields(experience) {
-  // This would need to be much more sophisticated in a real implementation
-  const companyInputs = findFieldsByKeywords(['company', 'employer', 'organization']);
-  const titleInputs = findFieldsByKeywords(['title', 'position', 'role']);
-  const dutiesInputs = findFieldsByKeywords(['duties', 'responsibilities', 'description']);
-  
-  if (companyInputs.length > 0 && experience[0]?.company) {
-    companyInputs[0].value = experience[0].company;
-    triggerInputEvent(companyInputs[0]);
-    console.log("Filled company field");
-  }
-  
-  if (titleInputs.length > 0 && experience[0]?.title) {
-    titleInputs[0].value = experience[0].title;
-    triggerInputEvent(titleInputs[0]);
-    console.log("Filled job title field");
-  }
-  
-  if (dutiesInputs.length > 0 && experience[0]?.description) {
-    const description = Array.isArray(experience[0].description) ? 
-      experience[0].description.join("\n\n") : experience[0].description;
-    dutiesInputs[0].value = description;
-    triggerInputEvent(dutiesInputs[0]);
-    console.log("Filled job duties/description field");
-  }
-}
-
-// Helper function to trigger input events after filling fields
-function triggerInputEvent(element) {
-  if (!element) return;
-  
-  const events = ['input', 'change', 'blur'];
-  events.forEach(eventType => {
-    const event = new Event(eventType, { bubbles: true });
-    element.dispatchEvent(event);
-  });
-}
-
-// Function to attempt to advance to the next step in multi-step forms
-function attemptToAdvanceForm() {
-  // Common button text patterns
-  const buttonPatterns = [
-    'next', 'continue', 'submit', 'save', 'apply', 'proceed', 
-    'siguiente', 'next step', 'review', 'weiter', 'suivant'
-  ];
-  
-  // Look for buttons matching patterns
-  const buttons = Array.from(document.querySelectorAll('button, input[type="button"], input[type="submit"], a.button'));
-  
-  for (const button of buttons) {
-    const buttonText = button.textContent.toLowerCase() || button.value?.toLowerCase() || '';
-    if (buttonPatterns.some(pattern => buttonText.includes(pattern)) && isElementVisible(button)) {
-      console.log("Found potential 'Next' button:", buttonText);
-      // Don't actually click, just highlight to let user confirm
-      highlightElement(button);
-      return;
-    }
-  }
-}
-
-function isElementVisible(element) {
-  if (!element) return false;
-  const style = window.getComputedStyle(element);
-  return style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
-}
-
-function highlightElement(element) {
-  const originalBackground = element.style.backgroundColor;
-  const originalBorder = element.style.border;
-  
-  // Add pulsing highlight
-  element.style.backgroundColor = '#ceff9e';
-  element.style.border = '2px solid #4caf50';
-  element.style.transition = 'all 0.3s ease';
-  
-  // Create tooltip
-  const tooltip = document.createElement('div');
-  tooltip.textContent = 'EmployEvolution found this button to continue';
-  tooltip.style.position = 'absolute';
-  tooltip.style.backgroundColor = '#333';
-  tooltip.style.color = '#fff';
-  tooltip.style.padding = '5px 10px';
-  tooltip.style.borderRadius = '4px';
-  tooltip.style.fontSize = '12px';
-  tooltip.style.zIndex = '10000';
-  
-  // Position tooltip above the button
-  const rect = element.getBoundingClientRect();
-  tooltip.style.top = (rect.top - 30 + window.scrollY) + 'px';
-  tooltip.style.left = (rect.left + window.scrollX) + 'px';
-  
-  document.body.appendChild(tooltip);
-  
-  // Remove highlight after 3 seconds
-  setTimeout(() => {
-    element.style.backgroundColor = originalBackground;
-    element.style.border = originalBorder;
-    document.body.removeChild(tooltip);
-  }, 3000);
-}
-
-// Send data to extension popup when requested
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === "getJobData") {
-    sendResponse(extractJobData());
-    return true;
-  }
-  
-  if (request.action === "autoFillApplication" && request.userData) {
-    const filledFields = autoFillApplication(request.userData);
-    sendResponse({ success: true, filledFields });
-    return true;
-  }
-  
-  if (request.action === "detectApplicationForm") {
-    const formFields = detectFormFields();
-    const isApplicationForm = Object.values(formFields).some(field => field !== null);
-    sendResponse({ 
-      isApplicationForm, 
-      fields: formFields,
-      platform: detectPlatform()
-    });
-    return true;
-  }
-  
-  return true;
-});
-
-// Detect which ATS platform is being used
-function detectPlatform() {
-  const url = window.location.href;
-  const html = document.documentElement.innerHTML;
-  
-  // Check URL patterns
-  if (url.includes('greenhouse.io')) return 'Greenhouse';
-  if (url.includes('lever.co')) return 'Lever';
-  if (url.includes('myworkdayjobs') || url.includes('/workday/')) return 'Workday';
-  if (url.includes('taleo')) return 'Taleo';
-  if (url.includes('icims')) return 'iCIMS';
-  if (url.includes('brassring')) return 'BrassRing';
-  
-  // Check for platform-specific HTML signatures
-  if (html.includes('workday') || html.includes('myworkday')) return 'Workday';
-  if (html.includes('greenhouse')) return 'Greenhouse';
-  if (html.includes('lever-')) return 'Lever';
-  if (html.includes('taleo')) return 'Taleo';
-  if (html.includes('icims')) return 'iCIMS';
-  
-  // Check if common ATS JavaScript libraries are loaded
-  const scripts = document.querySelectorAll('script');
-  for (const script of scripts) {
-    const src = script.src || '';
-    if (src.includes('greenhouse')) return 'Greenhouse';
-    if (src.includes('lever')) return 'Lever';
-    if (src.includes('workday')) return 'Workday';
-    if (src.includes('taleo')) return 'Taleo';
-    if (src.includes('icims')) return 'iCIMS';
-    if (src.includes('brassring')) return 'BrassRing';
-  }
-  
-  return 'Unknown';
-}
-
-// Initialize by checking if we're on a job page
-function initialize() {
-  const url = window.location.href;
-  
-  // Check if this appears to be a job listing page
-  if (
-    url.includes('/jobs/') || 
-    url.includes('/job/') || 
-    url.includes('/careers/') || 
-    url.includes('/career/') || 
-    url.includes('/position/') || 
-    url.includes('apply') ||
-    document.title.toLowerCase().includes('job') ||
-    document.title.toLowerCase().includes('career')
-  ) {
-    console.log("EmployEvolution: Detected possible job listing page");
-    
-    // Extract initial job data
-    const jobData = extractJobData();
-    console.log("EmployEvolution: Initial job data extracted", jobData);
-    
-    // Notify extension that we're on a job page
-    try {
-      chrome.runtime.sendMessage({
-        action: "onJobPage",
-        jobData: jobData
-      });
-    } catch (e) {
-      console.log("EmployEvolution: Unable to contact extension", e);
-    }
-  }
-  
-  // New: Also check if this is an application form page and offer to autofill
-  const formFields = detectFormFields();
-  const hasFormFields = Object.values(formFields).some(field => field !== null);
-  
-  if (hasFormFields) {
-    console.log("EmployEvolution: Detected possible application form");
-    
-    // Count significant form fields to determine if this looks like an application
-    let significantFieldCount = 0;
-    if (formFields.name || formFields.firstName) significantFieldCount++;
-    if (formFields.email) significantFieldCount++;
-    if (formFields.phone) significantFieldCount++;
-    if (formFields.resume) significantFieldCount++;
-    
-    if (significantFieldCount >= 2) {
-      // This looks like an application form, notify the extension
-      try {
-        chrome.runtime.sendMessage({
-          action: "applicationFormDetected",
-          formData: {
-            url: window.location.href,
-            title: document.title,
-            platform: detectPlatform(),
-            fields: Object.keys(formFields).filter(key => formFields[key] !== null)
-          }
-        });
-      } catch (e) {
-        console.log("EmployEvolution: Unable to contact extension", e);
-      }
-    }
-  }
-}
-
-// Run initialization
-setTimeout(initialize, 1000);
+    parent

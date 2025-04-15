@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Job } from "@/types/job";
 import { getMatchBgColor, getMatchColor, getMatchLabel } from "@/utils/jobMatchingUtils";
@@ -40,9 +41,12 @@ export const JobDetailView = ({
         setShowAutoApplyModal(true);
       } else {
         // Open the apply URL directly in a new tab
-        if (window.chrome && chrome.runtime && chrome.runtime.sendMessage) {
+        if (typeof window !== 'undefined' && 
+            'chrome' in window && 
+            window.chrome?.runtime && 
+            window.chrome?.runtime?.sendMessage) {
           // Use extension messaging if available
-          chrome.runtime.sendMessage({ 
+          window.chrome.runtime.sendMessage({ 
             action: "openJobUrl", 
             url: job.applyUrl 
           });
