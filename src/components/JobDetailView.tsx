@@ -7,6 +7,21 @@ import { Button } from "@/components/ui/button";
 import { BookmarkIcon, ExternalLink, FileText, Zap } from "lucide-react";
 import AutoApplyModal from "@/components/AutoApplyModal";
 
+// Type declaration for Chrome extensions API
+interface ChromeRuntime {
+  sendMessage: (message: any) => void;
+}
+
+interface Chrome {
+  runtime?: ChromeRuntime;
+}
+
+declare global {
+  interface Window {
+    chrome?: Chrome;
+  }
+}
+
 interface JobDetailViewProps {
   job: Job | null;
   onApply: (job: Job) => void;
@@ -42,8 +57,6 @@ export const JobDetailView = ({
       } else {
         // Open the apply URL directly in a new tab
         if (typeof window !== 'undefined' && 
-            'chrome' in window && 
-            window.chrome?.runtime && 
             window.chrome?.runtime?.sendMessage) {
           // Use extension messaging if available
           window.chrome.runtime.sendMessage({ 
