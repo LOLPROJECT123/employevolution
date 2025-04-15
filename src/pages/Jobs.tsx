@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -35,6 +34,19 @@ const generateSampleJobs = (count: number): Job[] => {
   const locations = ['San Francisco, CA', 'New York, NY', 'Seattle, WA', 'Austin, TX', 'Boston, MA', 'Chicago, IL', 'Los Angeles, CA', 'Denver, CO', 'Atlanta, GA', 'Remote'];
   const skills = ['JavaScript', 'Python', 'Java', 'React', 'Angular', 'Vue', 'Node.js', 'Express', 'MongoDB', 'SQL', 'TypeScript', 'AWS', 'Docker', 'Kubernetes', 'Git', 'CI/CD'];
   
+  const jobPortalUrls = [
+    'https://careers.google.com/jobs',
+    'https://www.microsoft.com/en-us/careers',
+    'https://www.apple.com/careers',
+    'https://www.amazon.jobs',
+    'https://careers.meta.com',
+    'https://jobs.netflix.com',
+    'https://www.uber.com/us/en/careers',
+    'https://careers.airbnb.com',
+    'https://careers.twitter.com',
+    'https://careers.linkedin.com'
+  ];
+
   const jobs: Job[] = [];
   
   for (let i = 0; i < count; i++) {
@@ -81,7 +93,7 @@ const generateSampleJobs = (count: number): Job[] => {
       skills: randomSkills,
       matchPercentage: Math.floor(Math.random() * 100),
       remote: Math.random() > 0.5,
-      applyUrl: `https://example.com/apply/${i}`
+      applyUrl: jobPortalUrls[Math.floor(Math.random() * jobPortalUrls.length)] + '/' + Math.random().toString(36).substring(7)
     });
   }
   

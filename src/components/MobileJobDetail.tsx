@@ -129,6 +129,13 @@ export function MobileJobDetail({
     "Employee Assistance Program"
   ];
 
+  const handleApply = () => {
+    if (job.applyUrl) {
+      window.open(job.applyUrl, '_blank', 'noopener,noreferrer');
+    }
+    onApply(job);
+  };
+
   return (
     <div className="flex flex-col h-full">
       <header className="flex items-center justify-between p-4 border-b">
@@ -480,7 +487,7 @@ export function MobileJobDetail({
           <Button
             size="lg"
             className="bg-primary rounded-lg px-6 h-10"
-            onClick={() => onApply(job!)}
+            onClick={handleApply}
             disabled={isApplied}
           >
             {isApplied ? (
