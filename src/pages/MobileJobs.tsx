@@ -1,11 +1,9 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Job, JobFilters } from "@/types/job";
 import { MobileJobCard } from "@/components/MobileJobCard";
 import { MobileJobDetail } from "@/components/MobileJobDetail";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/hooks/use-toast";
 import { MobileJobFilters } from "@/components/MobileJobFilters";
 import { SavedAndAppliedJobs } from "@/components/SavedAndAppliedJobs";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -20,6 +18,7 @@ import {
   X,
   BookmarkIcon
 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 export default function MobileJobs() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -131,7 +130,7 @@ export default function MobileJobs() {
           const randomWorkModel = randomRemote ? 'remote' : Math.random() > 0.5 ? 'hybrid' : 'onsite';
           const randomCompany = companies[Math.floor(Math.random() * companies.length)];
           const randomLocation = locations[Math.floor(Math.random() * locations.length)];
-          const randomMatchPercentage = Math.floor(Math.random() * 40) + 60; // 60-99%
+          const randomMatchPercentage = Math.floor(Math.random() * 31) + 70; // 70-100%
           
           return {
             id: (i + 1).toString(),
@@ -220,25 +219,11 @@ export default function MobileJobs() {
 
   // Handle filter changes and show toast only once
   useEffect(() => {
-    // Create a string representation of the current filters to compare
-    const filterString = JSON.stringify({
-      searchTerm,
-      activeFilters
-    });
-    
-    // Only show toast if filters actually changed
-    if (filterString !== lastFilterRef.current && filteredJobs.length > 0) {
-      // Update the last filter ref
-      lastFilterRef.current = filterString;
-      
-      // Show toast that disappears after 5 seconds
-      toast({
-        title: "Jobs found",
-        description: `Found ${filteredJobs.length} matching jobs based on your criteria.`,
-        duration: 5000,
-      });
+    // Removed the toast notification logic
+    if (filteredJobs.length > 0 && !selectedJob) {
+      setSelectedJob(filteredJobs[0]);
     }
-  }, [filteredJobs.length, searchTerm, activeFilters]);
+  }, [filteredJobs, selectedJob]);
 
   const handleSaveJob = (job: Job) => {
     if (savedJobIds.includes(job.id)) {
