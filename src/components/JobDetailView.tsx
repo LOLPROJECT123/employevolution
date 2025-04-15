@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Job } from "@/types/job";
 import { getMatchBgColor, getMatchColor, getMatchLabel } from "@/utils/jobMatchingUtils";
@@ -5,20 +6,6 @@ import { JobMatchDetails } from "@/components/JobMatchDetails";
 import { Button } from "@/components/ui/button";
 import { BookmarkIcon, ExternalLink, FileText, Zap, Users } from "lucide-react";
 import AutoApplyModal from "@/components/AutoApplyModal";
-
-interface ChromeRuntime {
-  sendMessage: (message: any) => void;
-}
-
-interface Chrome {
-  runtime?: ChromeRuntime;
-}
-
-declare global {
-  interface Window {
-    chrome?: Chrome;
-  }
-}
 
 interface JobDetailViewProps {
   job: Job | null;

@@ -7,7 +7,7 @@ import { Job, JobApplicationStatus } from "@/types/job";
 
 // Define Chrome extension types
 interface ChromeRuntime {
-  sendMessage: (extensionId: string, message: any, responseCallback?: (response: any) => void) => void;
+  sendMessage: (message: any, responseCallback?: (response: any) => void) => void;
   lastError?: {
     message: string;
   };
@@ -66,7 +66,6 @@ export const syncJobApplications = async (): Promise<{
       }
 
       window.chrome.runtime.sendMessage(
-        "", // Empty string for own extension
         { action: "getAppliedJobs" }, 
         (response: { jobs: Job[] } | undefined) => {
           if (window.chrome?.runtime?.lastError) {
@@ -122,7 +121,6 @@ export const updateApplicationStatus = async (
       }
 
       window.chrome.runtime.sendMessage(
-        "",
         { 
           action: "updateJobStatus", 
           jobId,
@@ -160,7 +158,6 @@ export const getUserProfileFromExtension = async (): Promise<any | null> => {
       }
 
       window.chrome.runtime.sendMessage(
-        "",
         { action: "getUserProfile" }, 
         (response: any) => {
           if (window.chrome?.runtime?.lastError) {
@@ -193,7 +190,6 @@ export const saveUserProfileToExtension = async (profile: any): Promise<boolean>
       }
 
       window.chrome.runtime.sendMessage(
-        "",
         { 
           action: "saveUserProfile", 
           userProfile: profile 
@@ -233,7 +229,6 @@ export const getExtensionSettings = async (): Promise<{
       }
 
       window.chrome.runtime.sendMessage(
-        "",
         { action: "getSettings" }, 
         (response: any) => {
           if (window.chrome?.runtime?.lastError) {
@@ -270,7 +265,6 @@ export const saveExtensionSettings = async (settings: {
       }
 
       window.chrome.runtime.sendMessage(
-        "",
         { 
           action: "saveSettings", 
           settings 
