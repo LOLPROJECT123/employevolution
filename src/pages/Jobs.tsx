@@ -34,18 +34,18 @@ const generateSampleJobs = (count: number): Job[] => {
   const locations = ['San Francisco, CA', 'New York, NY', 'Seattle, WA', 'Austin, TX', 'Boston, MA', 'Chicago, IL', 'Los Angeles, CA', 'Denver, CO', 'Atlanta, GA', 'Remote'];
   const skills = ['JavaScript', 'Python', 'Java', 'React', 'Angular', 'Vue', 'Node.js', 'Express', 'MongoDB', 'SQL', 'TypeScript', 'AWS', 'Docker', 'Kubernetes', 'Git', 'CI/CD'];
   
-  const jobPortalUrls = [
-    'https://careers.google.com/jobs',
-    'https://www.microsoft.com/en-us/careers',
-    'https://www.apple.com/careers',
-    'https://www.amazon.jobs',
-    'https://careers.meta.com',
-    'https://jobs.netflix.com',
-    'https://www.uber.com/us/en/careers',
-    'https://careers.airbnb.com',
-    'https://careers.twitter.com',
-    'https://careers.linkedin.com'
-  ];
+  const companyJobPortalUrls = {
+    'Google': 'https://careers.google.com/jobs',
+    'Microsoft': 'https://careers.microsoft.com/us/en/job',
+    'Apple': 'https://jobs.apple.com/en-us/details',
+    'Amazon': 'https://www.amazon.jobs/en/jobs',
+    'Meta': 'https://www.metacareers.com/jobs',
+    'Netflix': 'https://jobs.netflix.com/jobs',
+    'Uber': 'https://www.uber.com/us/en/careers/list',
+    'Airbnb': 'https://careers.airbnb.com/positions',
+    'Twitter': 'https://careers.twitter.com/en/jobs',
+    'LinkedIn': 'https://www.linkedin.com/jobs/linkedin-jobs'
+  };
 
   const jobs: Job[] = [];
   
@@ -75,10 +75,18 @@ const generateSampleJobs = (count: number): Job[] => {
       `Experience with ${randomSkills[2]} is preferred`
     ];
     
+    const company = companies[Math.floor(Math.random() * companies.length)];
+    
+    const jobId = `${company.toLowerCase().replace(/\s+/g, '-')}-${Math.random().toString(36).substring(2, 10)}`;
+    
+    const baseUrl = companyJobPortalUrls[company];
+    
+    const jobUrl = `${baseUrl}/${jobId}`;
+    
     jobs.push({
       id: `job-${i}`,
       title: titles[Math.floor(Math.random() * titles.length)],
-      company: companies[Math.floor(Math.random() * companies.length)],
+      company: company,
       location: locations[Math.floor(Math.random() * locations.length)],
       salary: {
         min: minSalary,
@@ -93,7 +101,7 @@ const generateSampleJobs = (count: number): Job[] => {
       skills: randomSkills,
       matchPercentage: Math.floor(Math.random() * 100),
       remote: Math.random() > 0.5,
-      applyUrl: jobPortalUrls[Math.floor(Math.random() * jobPortalUrls.length)] + '/' + Math.random().toString(36).substring(7)
+      applyUrl: jobUrl
     });
   }
   

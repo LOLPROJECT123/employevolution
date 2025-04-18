@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Job } from "@/types/job";
 import { getMatchBgColor, getMatchColor, getMatchLabel } from "@/utils/jobMatchingUtils";
@@ -59,25 +58,27 @@ export const JobDetailView = ({
     if (!url) return null;
     
     const lowerUrl = url.toLowerCase();
+    
+    if (lowerUrl.includes('google.com') || lowerUrl.includes('careers.google')) return 'Google';
+    if (lowerUrl.includes('microsoft.com') || lowerUrl.includes('careers.microsoft')) return 'Microsoft';
+    if (lowerUrl.includes('apple.com') || lowerUrl.includes('jobs.apple')) return 'Apple';
+    if (lowerUrl.includes('amazon.jobs') || lowerUrl.includes('amazon.com/jobs')) return 'Amazon';
+    if (lowerUrl.includes('meta.com') || lowerUrl.includes('metacareers')) return 'Meta';
+    if (lowerUrl.includes('netflix.com') || lowerUrl.includes('jobs.netflix')) return 'Netflix';
+    if (lowerUrl.includes('uber.com/careers') || lowerUrl.includes('uber.com/us/en/careers')) return 'Uber';
+    if (lowerUrl.includes('airbnb.com/careers') || lowerUrl.includes('careers.airbnb')) return 'Airbnb';
+    if (lowerUrl.includes('twitter.com/careers') || lowerUrl.includes('careers.twitter')) return 'Twitter';
+    if (lowerUrl.includes('linkedin.com/jobs') || lowerUrl.includes('careers.linkedin')) return 'LinkedIn';
+    
     if (lowerUrl.includes('greenhouse.io')) return 'Greenhouse';
     if (lowerUrl.includes('lever.co')) return 'Lever';
     if (lowerUrl.includes('workday')) return 'Workday';
     if (lowerUrl.includes('indeed.com')) return 'Indeed';
-    if (lowerUrl.includes('linkedin.com')) return 'LinkedIn';
     if (lowerUrl.includes('taleo')) return 'Taleo';
     if (lowerUrl.includes('icims')) return 'iCIMS';
     if (lowerUrl.includes('brassring')) return 'BrassRing';
     if (lowerUrl.includes('smartrecruiters')) return 'SmartRecruiters';
     if (lowerUrl.includes('jobvite')) return 'Jobvite';
-    if (lowerUrl.includes('google.com')) return 'Google';
-    if (lowerUrl.includes('microsoft.com')) return 'Microsoft';
-    if (lowerUrl.includes('apple.com')) return 'Apple';
-    if (lowerUrl.includes('amazon.jobs')) return 'Amazon';
-    if (lowerUrl.includes('meta.com')) return 'Meta';
-    if (lowerUrl.includes('netflix.com')) return 'Netflix';
-    if (lowerUrl.includes('uber.com')) return 'Uber';
-    if (lowerUrl.includes('airbnb.com')) return 'Airbnb';
-    if (lowerUrl.includes('twitter.com')) return 'Twitter';
     
     return null; // Unknown platform
   };
