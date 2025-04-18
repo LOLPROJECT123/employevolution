@@ -76,39 +76,54 @@ const generateSampleJobs = (count: number): Job[] => {
     ];
     
     const company = companies[Math.floor(Math.random() * companies.length)];
+    const jobTitle = titles[Math.floor(Math.random() * titles.length)];
     
     const jobId = `${company.toLowerCase().replace(/\s+/g, '-')}-${Math.random().toString(36).substring(2, 10)}`;
     
-    const baseUrl = companyJobPortalUrls[company];
+    const baseUrl = companyJobPortalUrls[company as keyof typeof companyJobPortalUrls] || companyJobPortalUrls['Google'];
     
     const jobUrl = `${baseUrl}/${jobId}`;
     
-    jobs.push({
-      id: `job-${i}`,
-      title: titles[Math.floor(Math.random() * titles.length)],
-      company: company,
-      location: locations[Math.floor(Math.random() * locations.length)],
-      salary: {
-        min: minSalary,
-        max: maxSalary,
-        currency: '$'
-      },
-      type: jobTypes[Math.floor(Math.random() * jobTypes.length)],
-      level: experienceLevels[Math.floor(Math.random() * experienceLevels.length)],
-      description: `We are looking for a talented ${titles[Math.floor(Math.random() * titles.length)]} to join our team. You will be working on exciting projects and making a significant impact on our products. This is a great opportunity to grow your skills and advance your career.`,
-      requirements: requirements,
-      postedAt: postedDate.toISOString(),
-      skills: randomSkills,
-      matchPercentage: Math.floor(Math.random() * 100),
-      remote: Math.random() > 0.5,
-      applyUrl: jobUrl
-    });
+    const isActive = Math.random() < 0.9;
+    
+    if (isActive) {
+      jobs.push({
+        id: `job-${i}`,
+        title: jobTitle,
+        company: company,
+        location: locations[Math.floor(Math.random() * locations.length)],
+        salary: {
+          min: minSalary,
+          max: maxSalary,
+          currency: '$'
+        },
+        type: jobTypes[Math.floor(Math.random() * jobTypes.length)],
+        level: experienceLevels[Math.floor(Math.random() * experienceLevels.length)],
+        description: `We are looking for a talented ${jobTitle} to join our team. You will be working on exciting projects and making a significant impact on our products. This is a great opportunity to grow your skills and advance your career.`,
+        requirements: requirements,
+        postedAt: postedDate.toISOString(),
+        skills: randomSkills,
+        matchPercentage: Math.floor(Math.random() * 100),
+        remote: Math.random() > 0.5,
+        applyUrl: jobUrl,
+        applicationDetails: {
+          applicantCount: Math.floor(Math.random() * 100) + 1,
+          isAvailable: true
+        }
+      });
+    }
   }
   
   return jobs;
 };
 
-const sampleJobs: Job[] = generateSampleJobs(100);
+const initialSampleJobs: Job[] = generateSampleJobs(120);
+
+const validateJobUrls = (jobs: Job[]): Job[] => {
+  return jobs.filter(job => job.applicationDetails?.isAvailable === true);
+};
+
+const sampleJobs: Job[] = validateJobUrls(initialSampleJobs);
 
 type SortOption = 'relevance' | 'date-newest' | 'date-oldest' | 'salary-highest' | 'salary-lowest';
 
@@ -404,6 +419,28 @@ const Jobs = () => {
     if (newFilteredJobs.length > 0 && (!selectedJob || !newFilteredJobs.find(job => job.id === selectedJob.id))) {
       setSelectedJob(newFilteredJobs[0]);
     }
+  };
+
+  const verifyJobUrlAndRedirect = (job: Job): boolean => {
+    if (!job.applyUrl) {
+      toast({
+        title: "Application URL not available",
+        description: "This job doesn't have an application link.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    
+    if (!job.applicationDetails?.isAvailable) {
+      toast({
+        title: "Job no longer available",
+        description: "This job posting is no longer active. It may have been filled or removed by the employer.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    
+    return true;
   };
 
   return (

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Job } from "@/types/job";
 import { getMatchBgColor, getMatchColor, getMatchLabel } from "@/utils/jobMatchingUtils";
@@ -5,6 +6,7 @@ import { JobMatchDetails } from "@/components/JobMatchDetails";
 import { Button } from "@/components/ui/button";
 import { BookmarkIcon, ExternalLink, FileText, Zap, Users } from "lucide-react";
 import AutoApplyModal from "@/components/AutoApplyModal";
+import { toast } from "@/hooks/use-toast";
 
 interface JobDetailViewProps {
   job: Job | null;
@@ -33,6 +35,16 @@ export const JobDetailView = ({
 
   const handleApply = () => {
     if (job.applyUrl) {
+      // Check if job is available before proceeding
+      if (!job.applicationDetails?.isAvailable) {
+        toast({
+          title: "Job no longer available",
+          description: "This job posting is no longer active. It may have been filled or removed by the employer.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       const canAutoApply = job.applyUrl && detectPlatform(job.applyUrl) !== null;
       
       if (canAutoApply) {
@@ -50,8 +62,36 @@ export const JobDetailView = ({
         onApply(job);
       }
     } else {
+      toast({
+        title: "Application URL not available",
+        description: "This job doesn't have an application link.",
+        variant: "destructive",
+      });
       onApply(job);
     }
+  };
+  
+  const handleViewJob = () => {
+    if (!job.applyUrl) {
+      toast({
+        title: "Job URL not available",
+        description: "This job doesn't have a URL to view details.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Check if job is available before opening URL
+    if (!job.applicationDetails?.isAvailable) {
+      toast({
+        title: "Job no longer available",
+        description: "This job posting is no longer active. It may have been filled or removed by the employer.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    window.open(job.applyUrl, '_blank', 'noopener,noreferrer');
   };
   
   const detectPlatform = (url: string): string | null => {
@@ -145,7 +185,7 @@ export const JobDetailView = ({
           {job.applyUrl && (
             <Button 
               variant="outline"
-              onClick={() => window.open(job.applyUrl, '_blank', 'noopener,noreferrer')}
+              onClick={handleViewJob}
             >
               <FileText className="mr-2 h-4 w-4" />
               View Job
