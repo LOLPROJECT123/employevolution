@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Job } from "@/types/job";
 import { getMatchBgColor, getMatchColor, getMatchLabel } from "@/utils/jobMatchingUtils";
@@ -68,6 +69,15 @@ export const JobDetailView = ({
     if (lowerUrl.includes('brassring')) return 'BrassRing';
     if (lowerUrl.includes('smartrecruiters')) return 'SmartRecruiters';
     if (lowerUrl.includes('jobvite')) return 'Jobvite';
+    if (lowerUrl.includes('google.com')) return 'Google';
+    if (lowerUrl.includes('microsoft.com')) return 'Microsoft';
+    if (lowerUrl.includes('apple.com')) return 'Apple';
+    if (lowerUrl.includes('amazon.jobs')) return 'Amazon';
+    if (lowerUrl.includes('meta.com')) return 'Meta';
+    if (lowerUrl.includes('netflix.com')) return 'Netflix';
+    if (lowerUrl.includes('uber.com')) return 'Uber';
+    if (lowerUrl.includes('airbnb.com')) return 'Airbnb';
+    if (lowerUrl.includes('twitter.com')) return 'Twitter';
     
     return null; // Unknown platform
   };
@@ -134,10 +144,10 @@ export const JobDetailView = ({
           {job.applyUrl && (
             <Button 
               variant="outline"
-              onClick={() => window.open(job.applyUrl, '_blank')}
+              onClick={() => window.open(job.applyUrl, '_blank', 'noopener,noreferrer')}
             >
               <FileText className="mr-2 h-4 w-4" />
-              Cover Letter
+              View Job
             </Button>
           )}
         </div>
