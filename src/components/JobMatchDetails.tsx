@@ -75,7 +75,7 @@ export const JobMatchDetails = ({ job, userSkills = [], compact = false }: JobMa
         <p className="text-sm text-muted-foreground">{explanation}</p>
       </div>
       
-      <Accordion type="single" collapsible className="w-full">
+      <Accordion type="single" collapsible className="w-full" defaultValue="skills">
         <AccordionItem value="skills">
           <AccordionTrigger className="hover:no-underline">
             <div className="flex items-center justify-between w-full pr-2">
