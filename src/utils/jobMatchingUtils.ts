@@ -96,20 +96,43 @@ export const getMatchLabel = (percentage?: number) => {
 };
 
 /**
+ * Generate a deterministic random number between 0 and 1 based on a string
+ * This ensures the same input always produces the same output
+ */
+function deterministicRandom(str: string, index = 0): number {
+  // Simple hash function for strings
+  let hash = 0;
+  const baseStr = str + index.toString();
+  for (let i = 0; i < baseStr.length; i++) {
+    const char = baseStr.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  // Normalize to [0, 1]
+  return (Math.abs(hash) % 1000) / 1000;
+}
+
+/**
  * Get detailed match information
  * (In a real app, this would compare job requirements against user profile)
  */
 export const getDetailedMatch = (job: Job, userSkills: string[] = []): ComprehensiveMatch => {
+  // Make results deterministic based on job ID
+  const jobId = job.id || "default";
+
   // Simulate skill matching
   const skillMatches: SkillMatch[] = [];
   const missingSkills: string[] = [];
   
-  // For this example, we'll use random skill matching
+  // For this example, we'll use deterministic skill matching based on job ID
   // In a real app, this would compare against the user's profile
   if (job.skills) {
-    for (const skill of job.skills) {
-      const isMatched = userSkills.includes(skill) || Math.random() > 0.3;
-      const isHighPriority = Math.random() > 0.5;
+    for (let i = 0; i < job.skills.length; i++) {
+      const skill = job.skills[i];
+      // Use deterministic random value tied to job ID and skill
+      const rand = deterministicRandom(`${jobId}-${skill}`, i);
+      const isMatched = userSkills.includes(skill) || rand > 0.3;
+      const isHighPriority = deterministicRandom(`${jobId}-priority-${skill}`, i) > 0.5;
       
       if (isMatched) {
         skillMatches.push({
@@ -128,23 +151,23 @@ export const getDetailedMatch = (job: Job, userSkills: string[] = []): Comprehen
     ? Math.round((skillMatches.length / job.skills.length) * 100)
     : 100;
   
-  // Simulate experience match
+  // Simulate experience match with deterministic values
   const experienceMatch: ExperienceMatch = {
-    matched: Math.random() > 0.4,
-    matchPercentage: Math.floor(Math.random() * 40) + 60,
+    matched: deterministicRandom(`${jobId}-experience`) > 0.4,
+    matchPercentage: Math.floor(deterministicRandom(`${jobId}-exp-percent`) * 40) + 60,
     details: "Your experience aligns with job requirements"
   };
   
-  // Simulate education match
+  // Simulate education match with deterministic values
   const educationMatch: EducationMatch = {
-    matched: Math.random() > 0.3,
+    matched: deterministicRandom(`${jobId}-education`) > 0.3,
     details: "You have the required education level"
   };
   
-  // Simulate location match
+  // Simulate location match with deterministic values
   const locationMatch: LocationMatch = {
-    matched: job.remote || Math.random() > 0.2,
-    distance: Math.floor(Math.random() * 30),
+    matched: job.remote || deterministicRandom(`${jobId}-location`) > 0.2,
+    distance: Math.floor(deterministicRandom(`${jobId}-distance`) * 30),
     details: job.remote ? "Remote job" : `Within commuting distance`
   };
   
@@ -169,7 +192,7 @@ export const getDetailedMatch = (job: Job, userSkills: string[] = []): Comprehen
     experience: experienceMatch,
     education: educationMatch,
     location: locationMatch,
-    salaryMatch: Math.random() > 0.2 // Simulate salary match
+    salaryMatch: deterministicRandom(`${jobId}-salary`) > 0.2 // Simulate salary match
   };
 };
 

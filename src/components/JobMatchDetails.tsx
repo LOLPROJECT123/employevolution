@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useMemo } from "react";
 import { getDetailedMatch, getMatchExplanation, getMatchColor, MatchScoreLevel } from "@/utils/jobMatchingUtils";
 import { Job } from "@/types/job";
 import { Check, X, AlertCircle, Sparkles } from "lucide-react";
@@ -15,8 +15,9 @@ interface JobMatchDetailsProps {
 }
 
 export const JobMatchDetails = ({ job, userSkills = [], compact = false }: JobMatchDetailsProps) => {
-  const match = getDetailedMatch(job, userSkills);
-  const explanation = getMatchExplanation(match);
+  // Memoize the match calculation to prevent recalculation on every render
+  const match = useMemo(() => getDetailedMatch(job, userSkills), [job.id, userSkills.join(',')]);
+  const explanation = useMemo(() => getMatchExplanation(match), [match.overallScore]);
   
   // Define color scheme based on match level
   const getColorByLevel = (level: MatchScoreLevel) => {
