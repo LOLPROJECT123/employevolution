@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { JobDetailView } from '@/components/JobDetailView';
-import { JobFilters } from '@/components/JobFilters';
+import { JobFiltersSection } from '@/components/JobFilters';
 import { Job } from '@/types/job';
 import { validateJobUrl, detectJobPlatform } from '@/utils/jobValidationUtils';
 import { toast } from 'sonner';
@@ -72,61 +72,18 @@ import { Separator } from "@/components/ui/separator"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Switch } from "@/components/ui/switch"
 import { Progress } from "@/components/ui/progress"
-import { ModeToggle } from "@/components/mode-toggle"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
-import { HoverCard, HoverCardContent, HoverCardDescription, HoverCardFooter, HoverCardHeader, HoverCardTrigger } from "@/components/ui/hover-card"
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 import { Link } from 'lucide-react';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu"
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { ContextMenu, ContextMenuCheckboxItem, ContextMenuContent, ContextMenuItem, ContextMenuLabel, ContextMenuRadioGroup, ContextMenuRadioItem, ContextMenuSeparator, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger, ContextMenuTrigger } from "@/components/ui/context-menu"
 import { Menubar, MenubarCheckboxItem, MenubarContent, MenubarItem, MenubarMenu, MenubarRadioGroup, MenubarRadioItem, MenubarSeparator, MenubarShortcut, MenubarSub, MenubarSubContent, MenubarSubTrigger, MenubarTrigger } from "@/components/ui/menubar"
-import { CommandDialog, Command as CommandUI } from "@/components/ui/command"
-import { CalendarDateRangePicker } from "@/components/ui/calendar"
-import { MultiSelect } from "@/components/ui/multi-select"
-import { InputWithSelect } from "@/components/ui/input-with-select"
-import { FileUpload } from "@/components/ui/file-upload"
-import { DataTable } from "@/components/ui/data-table"
-import { DataTableViewOptions } from "@/components/ui/data-table-view-options"
-import { Pagination } from "@/components/ui/pagination"
-import { Steps } from "@/components/ui/steps"
+import { CommandDialog } from "@/components/ui/command"
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
-import { AspectRatioDemo } from "@/components/ui/aspect-ratio"
-import { CalendarDemo } from "@/components/ui/calendar"
-import { AlertDialogDemo } from "@/components/ui/alert-dialog"
-import { HoverCardDemo } from "@/components/ui/hover-card"
-import { NavigationMenuDemo } from "@/components/ui/navigation-menu"
-import { DropdownMenuDemo } from "@/components/ui/dropdown-menu"
-import { ContextMenuDemo } from "@/components/ui/context-menu"
-import { MenubarDemo } from "@/components/ui/menubar"
-import { CommandDemo } from "@/components/ui/command"
-import { CalendarDateRangePickerDemo } from "@/components/ui/calendar"
-import { MultiSelectDemo } from "@/components/ui/multi-select"
-import { InputWithSelectDemo } from "@/components/ui/input-with-select"
-import { FileUploadDemo } from "@/components/ui/file-upload"
-import { DataTableDemo } from "@/components/ui/data-table"
-import { DataTableViewOptionsDemo } from "@/components/ui/data-table-view-options"
-import { PaginationDemo } from "@/components/ui/pagination"
-import { StepsDemo } from "@/components/ui/steps"
-import { CarouselDemo } from "@/components/ui/carousel"
-import { ProgressDemo } from "@/components/ui/progress"
-import { AccordionDemo } from "@/components/ui/accordion"
-import { SwitchDemo } from "@/components/ui/switch"
-import { SeparatorDemo } from "@/components/ui/separator"
-import { ScrollAreaDemo } from "@/components/ui/scroll-area"
-import { BadgeDemo } from "@/components/ui/badge"
-import { DrawerDemo } from "@/components/ui/drawer"
-import { PopoverDemo } from "@/components/ui/popover"
-import { SliderDemo } from "@/components/ui/slider"
-import { CheckboxDemo } from "@/components/ui/checkbox"
-import { TextareaDemo } from "@/components/ui/textarea"
-import { LabelDemo } from "@/components/ui/label"
-import { CardDemo } from "@/components/ui/card"
-import { TableDemo } from "@/components/ui/table"
-import { InputDemo } from "@/components/ui/input"
-import { ButtonDemo } from "@/components/ui/button"
 
 export default function Jobs() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -169,7 +126,6 @@ export default function Jobs() {
     setIsSaved(true);
   };
   
-  // Enhanced function to generate sample jobs with validation
   const generateSampleJobs = async (): Promise<Job[]> => {
     const sampleJobs: Job[] = [
       {
@@ -294,7 +250,6 @@ export default function Jobs() {
       },
     ];
 
-    // Validate each job's apply URL
     const validatedJobs = await Promise.all(
       sampleJobs.map(async (job) => {
         if (job.applyUrl) {
@@ -310,11 +265,9 @@ export default function Jobs() {
       })
     );
 
-    // Filter out jobs with invalid URLs
     return validatedJobs.filter(job => job.applicationDetails?.isAvailable);
   };
 
-  // Update useEffect to handle async job generation
   useEffect(() => {
     const loadJobs = async () => {
       const jobs = await generateSampleJobs();
@@ -325,19 +278,16 @@ export default function Jobs() {
 
   return (
     <div className="flex h-screen">
-      {/* Job Filters Section */}
       <aside className="w-80 border-r p-4">
         <Button onClick={() => setFiltersVisible(!filtersVisible)}>
           {filtersVisible ? 'Hide Filters' : 'Show Filters'}
         </Button>
         {filtersVisible && (
-          <JobFilters />
+          <JobFiltersSection />
         )}
       </aside>
 
-      {/* Job Listings and Detail View Section */}
       <main className="flex-1 flex flex-col">
-        {/* Job Listings */}
         <section className="p-4">
           <h1 className="text-2xl font-bold mb-4">Job Listings</h1>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -362,7 +312,6 @@ export default function Jobs() {
           </div>
         </section>
 
-        {/* Job Detail View */}
         <section className="p-4">
           {selectedJob ? (
             <JobDetailView 
