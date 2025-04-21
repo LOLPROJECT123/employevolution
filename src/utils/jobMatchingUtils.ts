@@ -1,4 +1,3 @@
-
 import { Job } from "@/types/job";
 
 /**
@@ -114,72 +113,53 @@ function deterministicRandom(str: string, index = 0): number {
 
 /**
  * Get detailed match information
- * (In a real app, this would compare job requirements against user profile)
+ * Now, overallScore and skills.score will be exactly the percentage of job-required skills matched by userSkills.
  */
 export const getDetailedMatch = (job: Job, userSkills: string[] = []): ComprehensiveMatch => {
-  // Make results deterministic based on job ID
   const jobId = job.id || "default";
 
-  // Simulate skill matching
+  // Skills calculation
   const skillMatches: SkillMatch[] = [];
   const missingSkills: string[] = [];
-  
-  // For this example, we'll use deterministic skill matching based on job ID
-  // In a real app, this would compare against the user's profile
+
   if (job.skills) {
-    for (let i = 0; i < job.skills.length; i++) {
-      const skill = job.skills[i];
-      // Use deterministic random value tied to job ID and skill
-      const rand = deterministicRandom(`${jobId}-${skill}`, i);
-      const isMatched = userSkills.includes(skill) || rand > 0.3;
-      const isHighPriority = deterministicRandom(`${jobId}-priority-${skill}`, i) > 0.5;
-      
+    for (const skill of job.skills) {
+      const isMatched = userSkills.includes(skill);
+      // Use deterministic value for isHighPriority if you want
+      const isHighPriority = false;
       if (isMatched) {
-        skillMatches.push({
-          skill,
-          matched: true,
-          isHighPriority
-        });
+        skillMatches.push({ skill, matched: true, isHighPriority });
       } else {
         missingSkills.push(skill);
       }
     }
   }
-  
-  // Calculate skill match score
+
+  // Percent skills matched (used for score everywhere now)
   const skillScore = job.skills && job.skills.length > 0
     ? Math.round((skillMatches.length / job.skills.length) * 100)
     : 100;
-  
-  // Simulate experience match with deterministic values
+
+  // The following sections exist for display only; don't contribute to main score
   const experienceMatch: ExperienceMatch = {
-    matched: deterministicRandom(`${jobId}-experience`) > 0.4,
-    matchPercentage: Math.floor(deterministicRandom(`${jobId}-exp-percent`) * 40) + 60,
-    details: "Your experience aligns with job requirements"
+    matched: true,
+    matchPercentage: skillScore,
+    details: "Experience sections are not considered in score for this view."
   };
-  
-  // Simulate education match with deterministic values
+
   const educationMatch: EducationMatch = {
-    matched: deterministicRandom(`${jobId}-education`) > 0.3,
-    details: "You have the required education level"
+    matched: true,
+    details: "Education sections are not considered in score for this view."
   };
-  
-  // Simulate location match with deterministic values
+
   const locationMatch: LocationMatch = {
-    matched: job.remote || deterministicRandom(`${jobId}-location`) > 0.2,
-    distance: Math.floor(deterministicRandom(`${jobId}-distance`) * 30),
-    details: job.remote ? "Remote job" : `Within commuting distance`
+    matched: true,
+    distance: 0,
+    details: "Location is not considered in score for this view."
   };
-  
-  // Determine overall score based on job.matchPercentage or calculate from components
-  const overallScore = job.matchPercentage || Math.round(
-    (skillScore * 0.4) +
-    (experienceMatch.matchPercentage * 0.3) +
-    (educationMatch.matched ? 15 : 0) +
-    (locationMatch.matched ? 15 : 0)
-  );
-  
-  // Return comprehensive match data
+
+  const overallScore = skillScore;
+
   return {
     overallScore,
     matchLevel: getMatchLevel(overallScore),
@@ -192,21 +172,22 @@ export const getDetailedMatch = (job: Job, userSkills: string[] = []): Comprehen
     experience: experienceMatch,
     education: educationMatch,
     location: locationMatch,
-    salaryMatch: deterministicRandom(`${jobId}-salary`) > 0.2 // Simulate salary match
+    salaryMatch: true
   };
 };
 
 /**
  * Generate a short explanation of why this job matches
+ * (tailored to emphasize skills only)
  */
 export const getMatchExplanation = (match: ComprehensiveMatch): string => {
   if (match.overallScore >= 85) {
-    return "This job is an excellent match for your profile based on skills, experience, and other factors.";
+    return "Your skills closely match the requirements for this job.";
   } else if (match.overallScore >= 70) {
-    return "This job is a good match for your profile, with strong alignment in key areas.";
+    return "Your skills match this job well.";
   } else if (match.overallScore >= 50) {
-    return "This job is a fair match for your profile, with some areas of alignment.";
+    return "You meet some of the required job skills.";
   } else {
-    return "This job is not a strong match for your profile but may still be worth considering.";
+    return "You are missing many of the required skills for this job.";
   }
 };
