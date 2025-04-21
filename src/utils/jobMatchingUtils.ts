@@ -66,7 +66,7 @@ export const getMatchLevel = (percentage: number): MatchScoreLevel => {
  * Get background color for match percentage display
  */
 export const getMatchBgColor = (percentage?: number) => {
-  if (!percentage) return "bg-gray-100 dark:bg-gray-800";
+  if (!percentage && percentage !== 0) return "bg-gray-100 dark:bg-gray-800";
   if (percentage >= 85) return "bg-emerald-50 dark:bg-emerald-900/30";
   if (percentage >= 70) return "bg-green-50 dark:bg-green-900/30";
   if (percentage >= 50) return "bg-amber-50 dark:bg-amber-900/30";
@@ -77,7 +77,7 @@ export const getMatchBgColor = (percentage?: number) => {
  * Get text color for match percentage display
  */
 export const getMatchColor = (percentage?: number) => {
-  if (!percentage) return "";
+  if (!percentage && percentage !== 0) return "";
   if (percentage >= 85) return "text-emerald-500";
   if (percentage >= 70) return "text-green-500";
   if (percentage >= 50) return "text-amber-500";
@@ -88,7 +88,7 @@ export const getMatchColor = (percentage?: number) => {
  * Get label for match percentage display
  */
 export const getMatchLabel = (percentage?: number) => {
-  if (!percentage) return "";
+  if (!percentage && percentage !== 0) return "";
   if (percentage >= 85) return "EXCELLENT MATCH";
   if (percentage >= 70) return "GOOD MATCH";
   if (percentage >= 50) return "FAIR MATCH";
@@ -186,6 +186,10 @@ export const getMatchExplanation = (match: ComprehensiveMatch): string => {
   } else if (match.overallScore >= 50) {
     return `You have ${match.overallScore}% of the required skills for this job.`;
   } else {
+    // Special case for 0% match
+    if (match.overallScore === 0) {
+      return `You have none of the required skills for this job.`;
+    }
     return `You have only ${match.overallScore}% of the required skills for this job.`;
   }
 };
