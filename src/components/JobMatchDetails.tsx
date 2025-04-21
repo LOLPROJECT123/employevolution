@@ -2,7 +2,7 @@
 import React, { useMemo } from "react";
 import { getDetailedMatch, getMatchExplanation, getMatchColor, MatchScoreLevel } from "@/utils/jobMatchingUtils";
 import { Job } from "@/types/job";
-import { Check, X, AlertCircle, Sparkles } from "lucide-react";
+import { Check, X, Sparkles } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
@@ -151,7 +151,7 @@ export const JobMatchDetails = ({ job, userSkills = [], compact = false }: JobMa
             <div className="flex items-center justify-between w-full pr-2">
               <div>Experience Match</div>
               <div className={getMatchColor(match.experience.matchPercentage)}>
-                <Check className="h-4 w-4" />
+                {match.experience.matchPercentage}%
               </div>
             </div>
           </AccordionTrigger>

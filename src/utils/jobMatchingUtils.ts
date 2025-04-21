@@ -130,7 +130,7 @@ export const getDetailedMatch = (job: Job, userSkills: string[] = []): Comprehen
     ? Math.round((skillMatches.length / job.skills.length) * 100)
     : 100;
 
-  // The following sections exist for display only; don't contribute to main score
+  // The following sections exist for display only; they all reflect the skill score
   const experienceMatch: ExperienceMatch = {
     matched: true,
     matchPercentage: skillScore, // Use the same score for consistency
