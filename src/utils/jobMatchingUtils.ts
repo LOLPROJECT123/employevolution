@@ -1,3 +1,4 @@
+
 import { Job } from "@/types/job";
 
 /**
@@ -95,38 +96,27 @@ export const getMatchLabel = (percentage?: number) => {
 };
 
 /**
- * Generate a deterministic random number between 0 and 1 based on a string
- * This ensures the same input always produces the same output
- */
-function deterministicRandom(str: string, index = 0): number {
-  // Simple hash function for strings
-  let hash = 0;
-  const baseStr = str + index.toString();
-  for (let i = 0; i < baseStr.length; i++) {
-    const char = baseStr.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  // Normalize to [0, 1]
-  return (Math.abs(hash) % 1000) / 1000;
-}
-
-/**
  * Get detailed match information
- * Now, overallScore and skills.score will be exactly the percentage of job-required skills matched by userSkills.
+ * The overallScore is now exactly the percentage of job-required skills matched by userSkills.
  */
 export const getDetailedMatch = (job: Job, userSkills: string[] = []): ComprehensiveMatch => {
-  const jobId = job.id || "default";
-
+  // Normalize skills for case-insensitive comparison
+  const normalizedUserSkills = userSkills.map(skill => skill.toLowerCase());
+  const normalizedJobSkills = job.skills?.map(skill => skill.toLowerCase()) || [];
+  
   // Skills calculation
   const skillMatches: SkillMatch[] = [];
   const missingSkills: string[] = [];
 
   if (job.skills) {
-    for (const skill of job.skills) {
-      const isMatched = userSkills.includes(skill);
-      // Use deterministic value for isHighPriority if you want
+    for (let i = 0; i < job.skills.length; i++) {
+      const skill = job.skills[i];
+      const normalizedSkill = skill.toLowerCase();
+      const isMatched = normalizedUserSkills.includes(normalizedSkill);
+      
+      // We consider all skills equally important for basic matching
       const isHighPriority = false;
+      
       if (isMatched) {
         skillMatches.push({ skill, matched: true, isHighPriority });
       } else {
@@ -135,7 +125,7 @@ export const getDetailedMatch = (job: Job, userSkills: string[] = []): Comprehen
     }
   }
 
-  // Percent skills matched (used for score everywhere now)
+  // Calculate skill score - percentage of required skills that the user has
   const skillScore = job.skills && job.skills.length > 0
     ? Math.round((skillMatches.length / job.skills.length) * 100)
     : 100;
@@ -143,21 +133,22 @@ export const getDetailedMatch = (job: Job, userSkills: string[] = []): Comprehen
   // The following sections exist for display only; don't contribute to main score
   const experienceMatch: ExperienceMatch = {
     matched: true,
-    matchPercentage: skillScore,
-    details: "Experience sections are not considered in score for this view."
+    matchPercentage: skillScore, // Use the same score for consistency
+    details: "Experience match is based on your skills match."
   };
 
   const educationMatch: EducationMatch = {
     matched: true,
-    details: "Education sections are not considered in score for this view."
+    details: "Education match is based on your skills match."
   };
 
   const locationMatch: LocationMatch = {
     matched: true,
     distance: 0,
-    details: "Location is not considered in score for this view."
+    details: "Location is not considered in this match calculation."
   };
 
+  // The overall score is now exactly the skill match percentage
   const overallScore = skillScore;
 
   return {
@@ -166,7 +157,15 @@ export const getDetailedMatch = (job: Job, userSkills: string[] = []): Comprehen
     skills: {
       matched: skillMatches,
       missing: missingSkills,
-      extras: userSkills.filter(skill => !job.skills?.includes(skill)),
+      extras: normalizedUserSkills.filter(skill => 
+        !normalizedJobSkills.includes(skill)
+      ).map(skill => {
+        // Find the original case from user's skills
+        const originalCaseIndex = userSkills.findIndex(
+          s => s.toLowerCase() === skill
+        );
+        return originalCaseIndex >= 0 ? userSkills[originalCaseIndex] : skill;
+      }),
       score: skillScore
     },
     experience: experienceMatch,
@@ -178,16 +177,15 @@ export const getDetailedMatch = (job: Job, userSkills: string[] = []): Comprehen
 
 /**
  * Generate a short explanation of why this job matches
- * (tailored to emphasize skills only)
  */
 export const getMatchExplanation = (match: ComprehensiveMatch): string => {
   if (match.overallScore >= 85) {
-    return "Your skills closely match the requirements for this job.";
+    return `You have ${match.overallScore}% of the required skills for this job.`;
   } else if (match.overallScore >= 70) {
-    return "Your skills match this job well.";
+    return `You have ${match.overallScore}% of the required skills for this job.`;
   } else if (match.overallScore >= 50) {
-    return "You meet some of the required job skills.";
+    return `You have ${match.overallScore}% of the required skills for this job.`;
   } else {
-    return "You are missing many of the required skills for this job.";
+    return `You have only ${match.overallScore}% of the required skills for this job.`;
   }
 };

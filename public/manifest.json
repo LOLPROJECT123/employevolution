@@ -37,7 +37,10 @@
     "https://*.dice.com/*",
     "https://*.ziprecruiter.com/*",
     "https://*.monster.com/*",
-    "https://*.careerbuilder.com/*"
+    "https://*.careerbuilder.com/*",
+    "https://*.levels.fyi/*",
+    "https://www.simplify.jobs/*",
+    "https://*.jobright.ai/*"
   ],
   "content_scripts": [
     {
@@ -60,7 +63,10 @@
         "https://*.dice.com/jobs*",
         "https://*.ziprecruiter.com/jobs/*",
         "https://*.monster.com/jobs/*",
-        "https://*.careerbuilder.com/job/*"
+        "https://*.careerbuilder.com/job/*",
+        "https://*.levels.fyi/jobs/*",
+        "https://www.simplify.jobs/p/*",
+        "https://*.jobright.ai/job/*"
       ],
       "js": ["src/extension/content.js"]
     }

@@ -1,3 +1,4 @@
+
 import React, { useMemo } from "react";
 import { getDetailedMatch, getMatchExplanation, getMatchColor, MatchScoreLevel } from "@/utils/jobMatchingUtils";
 import { Job } from "@/types/job";
@@ -14,7 +15,7 @@ interface JobMatchDetailsProps {
 }
 
 export const JobMatchDetails = ({ job, userSkills = [], compact = false }: JobMatchDetailsProps) => {
-  // Memoize match by skills only now
+  // Memoize match calculation to prevent unnecessary recalculations
   const match = useMemo(() => getDetailedMatch(job, userSkills), [job.id, userSkills.join(',')]);
   const explanation = useMemo(() => getMatchExplanation(match), [match.overallScore]);
   
@@ -118,6 +119,23 @@ export const JobMatchDetails = ({ job, userSkills = [], compact = false }: JobMa
                         className="bg-red-50 text-red-800 dark:bg-red-900/30 dark:text-red-300 flex items-center gap-1"
                       >
                         <X className="h-3 w-3" />
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {match.skills.extras.length > 0 && (
+                <div className="space-y-1.5">
+                  <h4 className="text-sm font-medium">Additional Skills</h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {match.skills.extras.map((skill, index) => (
+                      <Badge
+                        key={index}
+                        variant="outline"
+                        className="bg-purple-50 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300"
+                      >
                         {skill}
                       </Badge>
                     ))}
