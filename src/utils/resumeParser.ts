@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 
 export interface ParsedResume {
@@ -270,10 +269,10 @@ const extractPersonalInfo = (text: string) => {
   };
 };
 
-export const parseResume = async (file: File): Promise<ParsedResume> => {
+export const parseResume = async (file: File, showToast: boolean = false): Promise<ParsedResume> => {
   try {
     const text = await readFileAsText(file);
-    
+
     const personalInfo = extractPersonalInfo(text);
     const workExperiences = parseWorkExperiences(text);
     const education = parseEducation(text);
@@ -281,9 +280,9 @@ export const parseResume = async (file: File): Promise<ParsedResume> => {
     const skills = parseSkills(text);
     const languages = parseLanguages(text);
     const socialLinks = extractSocialLinks(text);
-    
-    toast.success("Resume parsed successfully!");
-    
+
+    if (showToast) toast.success("Resume parsed successfully!");
+
     return {
       personalInfo,
       workExperiences,
@@ -294,7 +293,9 @@ export const parseResume = async (file: File): Promise<ParsedResume> => {
       socialLinks
     };
   } catch (error) {
-    toast.error("Error parsing resume. Please try again or enter details manually.");
+    if (showToast) {
+      toast.error("Error parsing resume. Please try again or enter details manually.");
+    }
     console.error("Resume parsing error:", error);
     return {
       personalInfo: {
