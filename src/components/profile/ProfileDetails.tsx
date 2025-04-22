@@ -1,6 +1,7 @@
 
 import React, { useState } from "react";
-import { parseResume, ParsedResume } from "@/utils/resumeParser";
+import { parseResume } from "@/utils/resumeParser";
+import { ParsedResume } from "@/types/resume";
 import { Badge } from "@/components/ui/badge";
 
 const ProfileDetails = () => {

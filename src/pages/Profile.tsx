@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, ChangeEvent } from "react";
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -46,7 +45,9 @@ import {
   UserRound
 } from 'lucide-react';
 
-// Import edit components
+import { parseResume } from "@/utils/resumeParser";
+import { ParsedResume } from "@/types/resume";
+
 import EditProfileHeader from "@/components/profile/EditProfileHeader";
 import EditContactInfo from "@/components/profile/EditContactInfo";
 import EditWorkExperience from "@/components/profile/EditWorkExperience";
@@ -56,15 +57,11 @@ import EditSocialLinks from "@/components/profile/EditSocialLinks";
 import EditJobPreferences from "@/components/profile/EditJobPreferences";
 import EditEqualEmployment from "@/components/profile/EditEqualEmployment";
 
-// Import resume parser
-import { parseResume, ParsedResume } from "@/utils/resumeParser";
-
 const ProfilePage = () => {
   const isMobile = useMobile();
   const [activeTab, setActiveTab] = useState('contact');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Edit modal states
   const [profileHeaderModalOpen, setProfileHeaderModalOpen] = useState(false);
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [workExperienceModalOpen, setWorkExperienceModalOpen] = useState(false);
@@ -83,19 +80,16 @@ const ProfilePage = () => {
   const [workAuthModalOpen, setWorkAuthModalOpen] = useState(false);
   const [equalEmploymentModalOpen, setEqualEmploymentModalOpen] = useState(false);
 
-  // Profile data states
   const [name, setName] = useState("Varun Veluri");
   const [jobStatus, setJobStatus] = useState("Actively looking");
   const [showToRecruiters, setShowToRecruiters] = useState(true);
   const [showJobSearchStatus, setShowJobSearchStatus] = useState(true);
   
-  // Contact info
   const [email, setEmail] = useState("vveluri6@gmail.com");
   const [phone, setPhone] = useState("+1 (469) 551-9662");
   const [dateOfBirth, setDateOfBirth] = useState("06/19/2006");
   const [location, setLocation] = useState("Atlanta, GA, USA");
   
-  // Work experiences
   const [workExperiences, setWorkExperiences] = useState([
     {
       id: 1,
@@ -124,7 +118,6 @@ const ProfilePage = () => {
     }
   ]);
 
-  // Education
   const [education, setEducation] = useState([
     {
       id: 1,
@@ -135,7 +128,6 @@ const ProfilePage = () => {
     }
   ]);
 
-  // Projects
   const [projects, setProjects] = useState([
     {
       id: 1,
@@ -158,7 +150,6 @@ const ProfilePage = () => {
     }
   ]);
 
-  // Social links
   const [socialLinks, setSocialLinks] = useState({
     linkedin: "https://www.linkedin.com/in/varun-veluri-6698a628a/",
     github: "",
@@ -166,7 +157,6 @@ const ProfilePage = () => {
     other: ""
   });
 
-  // Equal employment data
   const [equalEmploymentData, setEqualEmploymentData] = useState({
     ethnicity: "Southeast Asian",
     workAuthUS: true,
@@ -179,7 +169,6 @@ const ProfilePage = () => {
     veteran: "Not specified"
   });
 
-  // Settings
   const [settings, setSettings] = useState({
     emailPreferences: {
       jobAlerts: true,
@@ -190,10 +179,8 @@ const ProfilePage = () => {
     languages: ["English", "Spanish", "Hindi"]
   });
 
-  // Progress tracking
   const [profileCompletionPercentage, setProfileCompletionPercentage] = useState(65);
   
-  // Job preferences
   const [jobPreferences, setJobPreferences] = useState({
     jobTypes: ["full-time", "internship", "contract"],
     preferredLocations: ["New York, NY", "San Francisco, CA", "Remote"],
@@ -217,7 +204,6 @@ const ProfilePage = () => {
     }
   });
 
-  // Resume upload handling
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -226,7 +212,6 @@ const ProfilePage = () => {
       toast.loading("Parsing resume...");
       const parsedData: ParsedResume = await parseResume(file);
       
-      // Apply parsed data to the profile
       if (parsedData.personalInfo.name) setName(parsedData.personalInfo.name);
       if (parsedData.personalInfo.email) setEmail(parsedData.personalInfo.email);
       if (parsedData.personalInfo.phone) setPhone(parsedData.personalInfo.phone);
@@ -271,7 +256,6 @@ const ProfilePage = () => {
         });
       }
 
-      // Update profile completion
       const newCompletionPercentage = calculateProfileCompletion();
       setProfileCompletionPercentage(newCompletionPercentage);
       
@@ -282,12 +266,10 @@ const ProfilePage = () => {
     }
   };
 
-  // Trigger file input click
   const handleBrowseFiles = () => {
     fileInputRef.current?.click();
   };
 
-  // Calculate profile completion percentage
   const calculateProfileCompletion = () => {
     let score = 0;
     const totalFields = 10;
@@ -306,7 +288,6 @@ const ProfilePage = () => {
     return Math.round((score / totalFields) * 100);
   };
 
-  // Handler functions for modals
   const handleUpdateProfileHeader = (data: { name: string; jobStatus: string }) => {
     setName(data.name);
     setJobStatus(data.jobStatus);
@@ -333,13 +314,11 @@ const ProfilePage = () => {
 
   const handleSaveWorkExperience = (experience: any) => {
     if (editingWorkExperience) {
-      // Update existing experience
       setWorkExperiences(workExperiences.map(exp => 
         exp.id === experience.id ? experience : exp
       ));
       toast.success("Work experience updated!");
     } else {
-      // Add new experience
       setWorkExperiences([...workExperiences, experience]);
       toast.success("Work experience added!");
     }
@@ -362,13 +341,11 @@ const ProfilePage = () => {
 
   const handleSaveEducation = (edu: any) => {
     if (editingEducation) {
-      // Update existing education
       setEducation(education.map(item => 
         item.id === edu.id ? edu : item
       ));
       toast.success("Education updated!");
     } else {
-      // Add new education
       setEducation([...education, edu]);
       toast.success("Education added!");
     }
@@ -391,13 +368,11 @@ const ProfilePage = () => {
 
   const handleSaveProject = (project: any) => {
     if (editingProject) {
-      // Update existing project
       setProjects(projects.map(item => 
         item.id === project.id ? project : item
       ));
       toast.success("Project updated!");
     } else {
-      // Add new project
       setProjects([...projects, project]);
       toast.success("Project added!");
     }
@@ -426,7 +401,6 @@ const ProfilePage = () => {
     toast.success("Equal employment data updated!");
   };
 
-  // Render profile card
   const renderProfileCard = () => (
     <Card className="mb-6 shadow-none border rounded-lg">
       <CardContent className="p-6">
@@ -485,7 +459,6 @@ const ProfilePage = () => {
               <p>Your current employer can't see you</p>
             </div>
             
-            {/* Profile Completion Progress */}
             <div className="mt-4">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-medium">Profile Completion</span>
@@ -499,7 +472,6 @@ const ProfilePage = () => {
     </Card>
   );
 
-  // Render contact section
   const renderContactContent = () => (
     <Card className="shadow-none border rounded-lg">
       <CardHeader className="flex flex-row items-center justify-between p-6">
@@ -533,7 +505,6 @@ const ProfilePage = () => {
     </Card>
   );
 
-  // Render resume section
   const renderResumeContent = () => (
     <>
       <div className="flex justify-between items-center mb-4">
@@ -755,10 +726,8 @@ const ProfilePage = () => {
       {isMobile && <MobileHeader showLogo={true} />}
       
       <div className={`container mx-auto ${isMobile ? 'px-4 pt-16' : 'py-8 px-4'} max-w-5xl`}>
-        {/* Profile Header */}
         {renderProfileCard()}
-
-        {/* Profile Tabs */}
+        
         <Tabs 
           value={activeTab} 
           onValueChange={setActiveTab}
@@ -808,7 +777,6 @@ const ProfilePage = () => {
             )}
           </div>
 
-          {/* Contact Tab */}
           <TabsContent value="contact" className="mt-0">
             {renderContactContent()}
           </TabsContent>
@@ -817,7 +785,6 @@ const ProfilePage = () => {
             {renderResumeContent()}
           </TabsContent>
 
-          {/* Job Preferences Tab */}
           <TabsContent value="jobPreferences" className="mt-0">
             <Card className="mb-6">
               <CardHeader className="p-6">
@@ -825,7 +792,6 @@ const ProfilePage = () => {
                 <CardDescription>Set your job preferences to find the perfect match</CardDescription>
               </CardHeader>
               <CardContent className="p-6 pt-0 space-y-6">
-                {/* Profile Strength */}
                 <div className="bg-muted/30 rounded-lg p-4 mb-6">
                   <div className="flex justify-between items-center mb-2">
                     <h3 className="font-medium">Profile Strength</h3>
@@ -837,7 +803,6 @@ const ProfilePage = () => {
                   </div>
                 </div>
                 
-                {/* Role & Experience Section */}
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <h3 className="font-medium flex items-center">
@@ -874,7 +839,6 @@ const ProfilePage = () => {
                   </div>
                 </div>
                 
-                {/* Industries & Companies Section */}
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <h3 className="font-medium flex items-center">
@@ -917,7 +881,6 @@ const ProfilePage = () => {
                   </div>
                 </div>
                 
-                {/* Compensation Section */}
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <h3 className="font-medium flex items-center">
@@ -954,7 +917,6 @@ const ProfilePage = () => {
                   </div>
                 </div>
                 
-                {/* Location & Work Model Section */}
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <h3 className="font-medium flex items-center">
@@ -991,7 +953,6 @@ const ProfilePage = () => {
                   </div>
                 </div>
                 
-                {/* Job Types Section */}
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <h3 className="font-medium flex items-center">
@@ -1018,7 +979,6 @@ const ProfilePage = () => {
                   </div>
                 </div>
                 
-                {/* Skills & Qualifications Section */}
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <h3 className="font-medium flex items-center">
@@ -1050,7 +1010,6 @@ const ProfilePage = () => {
                   </div>
                 </div>
                 
-                {/* Work Authorization Section */}
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <h3 className="font-medium flex items-center">
@@ -1094,7 +1053,6 @@ const ProfilePage = () => {
             </Card>
           </TabsContent>
 
-          {/* Equal Employment Tab */}
           <TabsContent value="equalEmployment" className="mt-0">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between p-6">
@@ -1228,7 +1186,6 @@ const ProfilePage = () => {
             </Card>
           </TabsContent>
 
-          {/* Settings Tab */}
           <TabsContent value="settings" className="mt-0">
             <Card className="mb-6">
               <CardHeader className="p-6">
@@ -1466,7 +1423,6 @@ const ProfilePage = () => {
         </Tabs>
       </div>
 
-      {/* All edit modals */}
       <EditProfileHeader
         open={profileHeaderModalOpen}
         onClose={() => setProfileHeaderModalOpen(false)}
