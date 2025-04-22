@@ -13,14 +13,18 @@ import NotFound from "./pages/NotFound";
 import InterviewPractice from "./pages/InterviewPractice";
 import Referrals from "./pages/Referrals";
 import Jobs from "./pages/Jobs";
+import JobDetail from "./pages/JobDetail";
 import MobileJobs from "./pages/MobileJobs"; 
 import Dashboard from "./pages/Dashboard";
+import DashboardHome from "./pages/DashboardHome";
+import JobTracker from "./pages/JobTracker";
+import Documents from "./pages/Documents";
 import Auth from "./pages/Auth";
 import ResumeTools from "./pages/ResumeTools";
 import LeetcodePatterns from "./pages/LeetcodePatterns";
 import SalaryNegotiations from "./pages/SalaryNegotiations";
 import Profile from "./pages/Profile";
-import NetworkingTools from "./pages/NetworkingTools"; // New import
+import NetworkingTools from "./pages/NetworkingTools";
 
 const queryClient = new QueryClient();
 
@@ -63,12 +67,15 @@ const App = () => {
             <Sonner />
             <BrowserRouter>
               <Routes>
-                <Route path="/" element={<Index />} />
+                <Route path="/" element={<DashboardHome />} />
                 <Route path="/interview-practice" element={<InterviewPractice />} />
                 <Route path="/referrals" element={<Referrals />} />
                 <Route path="/jobs" element={isMobile ? <MobileJobs /> : <Jobs />} />
+                <Route path="/jobs/:id" element={<JobDetail />} />
                 <Route path="/mobile-jobs" element={<MobileJobs />} />
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/job-tracker" element={<JobTracker />} />
+                <Route path="/documents" element={<Documents />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/resume-tools" element={<ResumeTools />} />
                 <Route path="/leetcode-patterns" element={<LeetcodePatterns />} />
