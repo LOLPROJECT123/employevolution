@@ -2,7 +2,7 @@
 "use client"
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   BriefcaseIcon, 
@@ -21,6 +21,7 @@ interface SidebarProps {
 
 const Sidebar = ({ className }: SidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
+  const location = useLocation();
   
   const navigationItems = [
     { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
@@ -52,24 +53,26 @@ const Sidebar = ({ className }: SidebarProps) => {
       
       <div className="mt-6">
         <nav className="space-y-1 px-2">
-          {navigationItems.map((item) => (
-            <Link
-              key={item.name}
-              to={item.path}
-              className={({ isActive }) =>
-                cn(
+          {navigationItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            
+            return (
+              <Link
+                key={item.name}
+                to={item.path}
+                className={cn(
                   "flex items-center px-3 py-2 rounded-md transition-colors",
                   isActive 
                     ? "bg-primary/10 text-primary" 
                     : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800",
                   collapsed && "justify-center"
-                )
-              }
-            >
-              <item.icon className="h-5 w-5" />
-              {!collapsed && <span className="ml-3">{item.name}</span>}
-            </Link>
-          ))}
+                )}
+              >
+                <item.icon className="h-5 w-5" />
+                {!collapsed && <span className="ml-3">{item.name}</span>}
+              </Link>
+            );
+          })}
         </nav>
       </div>
 
