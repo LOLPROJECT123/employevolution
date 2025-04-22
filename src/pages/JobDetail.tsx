@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState } from 'react';
@@ -23,7 +22,7 @@ const JobDetail = () => {
     postedDate: '2 days ago',
     description: 'We are looking for a talented and motivated Software Engineering Intern to join our team...',
     requirements: [
-      'Currently pursuing a Bachelor's or Master's degree in Computer Science or related field',
+      "Currently pursuing a Bachelor's or Master's degree in Computer Science or related field",
       'Strong programming skills in one or more languages (Python, Java, JavaScript)',
       'Experience with web development frameworks (React, Angular, Vue)',
       'Ability to work in a fast-paced environment',

@@ -35,7 +35,7 @@ const DashboardHome = () => {
     {
       id: 'preferences',
       title: 'Set your job preferences',
-      description: 'Tell us what kind of jobs you're looking for.',
+      description: "Tell us what kind of jobs you're looking for.",
       isCompleted: true
     },
     {
