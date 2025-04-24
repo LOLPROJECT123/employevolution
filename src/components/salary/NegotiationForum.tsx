@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquarePlus, ThumbsUp, MessageCircle, Share2, Filter, PlusCircle } from "lucide-react";
+import { ThumbsUp, MessageCircle, Share2, Filter, PlusCircle } from "lucide-react";
 
 type ForumPost = {
   id: string;
@@ -181,79 +182,7 @@ const NegotiationForum = ({ filters }: NegotiationForumProps) => {
     <div className="space-y-6">
       <div className="space-y-4">
         <h2 className="text-2xl font-semibold">Salary Negotiation Forum</h2>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <Filter className="h-4 w-4 mr-2" />
-            Filter
-          </Button>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <MessageSquarePlus className="h-4 w-4 mr-2" />
-                New Post
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[525px]">
-              <DialogHeader>
-                <DialogTitle>Create a Forum Post</DialogTitle>
-                <DialogDescription>
-                  Share your negotiation experience or ask for advice from the community
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <label htmlFor="title" className="text-sm font-medium">Title</label>
-                  <Input 
-                    id="title" 
-                    value={newPost.title}
-                    onChange={(e) => setNewPost({...newPost, title: e.target.value})}
-                    placeholder="E.g., How I negotiated a 15% higher offer" 
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <label htmlFor="content" className="text-sm font-medium">Content</label>
-                  <Textarea 
-                    id="content" 
-                    value={newPost.content}
-                    onChange={(e) => setNewPost({...newPost, content: e.target.value})}
-                    placeholder="Share your experience in detail..." 
-                    rows={5}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <label htmlFor="tags" className="text-sm font-medium">Tags (comma-separated)</label>
-                  <Input 
-                    id="tags" 
-                    value={newPost.tags}
-                    onChange={(e) => setNewPost({...newPost, tags: e.target.value})}
-                    placeholder="E.g., Tech, First Job, Success Story" 
-                  />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="anonymous" 
-                    checked={newPost.isAnonymous}
-                    onCheckedChange={(checked) => 
-                      setNewPost({...newPost, isAnonymous: checked as boolean})
-                    }
-                  />
-                  <label htmlFor="anonymous" className="text-sm font-medium cursor-pointer">
-                    Post anonymously
-                  </label>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                <Button 
-                  onClick={handleSubmitPost} 
-                  disabled={!newPost.title.trim() || !newPost.content.trim()}
-                >
-                  Post
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
+        {/* Removed "New Post" button from here as well */}
       </div>
 
       <div className="space-y-4">
