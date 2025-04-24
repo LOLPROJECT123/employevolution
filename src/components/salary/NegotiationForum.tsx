@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,7 +28,6 @@ type ForumPost = {
   position?: string;
 };
 
-// Define the interface for the filters prop
 interface NegotiationForumProps {
   filters?: {
     search?: string;
@@ -134,28 +132,23 @@ const NegotiationForum = ({ filters }: NegotiationForumProps) => {
     setIsDialogOpen(false);
   };
 
-  // Filter posts based on the filters prop
   const filteredPosts = React.useMemo(() => {
     if (!filters) return posts;
     
     return posts.filter(post => {
-      // Filter by search term
       if (filters.search && !post.title.toLowerCase().includes(filters.search.toLowerCase()) && 
           !post.content.toLowerCase().includes(filters.search.toLowerCase())) {
         return false;
       }
       
-      // Filter by company
       if (filters.company && post.company !== filters.company) {
         return false;
       }
       
-      // Filter by role
       if (filters.role && post.role !== filters.role) {
         return false;
       }
       
-      // Filter by position
       if (filters.position && post.position !== filters.position) {
         return false;
       }
@@ -164,11 +157,9 @@ const NegotiationForum = ({ filters }: NegotiationForumProps) => {
     });
   }, [posts, filters]);
 
-  // Sort posts based on sortOrder
   const sortedPosts = React.useMemo(() => {
     if (!filters?.sortOrder || filters.sortOrder === "newest") {
       return [...filteredPosts].sort((a, b) => {
-        // For simplicity, compare timestamps directly (in a real app, parse dates)
         return a.timestamp > b.timestamp ? -1 : 1;
       });
     } else {
@@ -182,7 +173,60 @@ const NegotiationForum = ({ filters }: NegotiationForumProps) => {
     <div className="space-y-6">
       <div className="space-y-4">
         <h2 className="text-2xl font-semibold">Salary Negotiation Forum</h2>
-        {/* Removed "New Post" button from here as well */}
+        <div className="flex justify-end">
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="flex items-center gap-2">
+                <PlusCircle className="h-4 w-4" />
+                New Post
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Post</DialogTitle>
+                <DialogDescription>
+                  Share your salary negotiation experience or ask for advice
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Input
+                    placeholder="Title"
+                    value={newPost.title}
+                    onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Textarea
+                    placeholder="Share your experience or ask a question..."
+                    value={newPost.content}
+                    onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Input
+                    placeholder="Tags (comma separated)"
+                    value={newPost.tags}
+                    onChange={(e) => setNewPost({ ...newPost, tags: e.target.value })}
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="anonymous"
+                    checked={newPost.isAnonymous}
+                    onCheckedChange={(checked) => 
+                      setNewPost({ ...newPost, isAnonymous: checked as boolean })
+                    }
+                  />
+                  <label htmlFor="anonymous">Post anonymously</label>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button onClick={handleSubmitPost}>Post Discussion</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <div className="space-y-4">
