@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { Job } from "@/types/job";
-import { getMatchBgColor, getMatchColor, getMatchLabel } from "@/utils/jobMatchingUtils";
+import { 
+  getMatchBgColor, 
+  getMatchColor, 
+  getMatchLabel 
+} from "@/utils/jobMatchingUtils";
+import { 
+  detectPlatform,
+  getDirectApplicationUrl 
+} from "@/utils/jobValidationUtils";
 import { JobMatchDetails } from "@/components/JobMatchDetails";
 import { Button } from "@/components/ui/button";
 import { BookmarkIcon, ExternalLink, FileText, Zap, Users } from "lucide-react";
@@ -34,7 +42,18 @@ export const JobDetailView = ({
   }
 
   const handleApply = () => {
-    if (job.applyUrl) {
+    if (job) {
+      const directUrl = getDirectApplicationUrl(job);
+      
+      if (!directUrl) {
+        toast({
+          title: "Application URL not available",
+          description: "This job doesn't have a valid application link.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Check if job is available before proceeding
       if (!job.applicationDetails?.isAvailable) {
         toast({
@@ -45,28 +64,15 @@ export const JobDetailView = ({
         return;
       }
       
-      const canAutoApply = job.applyUrl && detectPlatform(job.applyUrl) !== null;
+      const canAutoApply = detectPlatform(directUrl) !== null;
       
       if (canAutoApply) {
         setShowAutoApplyModal(true);
       } else {
-        if (typeof window !== 'undefined' && 
-            window.chrome?.runtime?.sendMessage) {
-          window.chrome.runtime.sendMessage({ 
-            action: "openJobUrl", 
-            url: job.applyUrl 
-          });
-        } else {
-          window.open(job.applyUrl, '_blank', 'noopener,noreferrer');
-        }
-        onApply(job);
+        // Open in new tab with proper URL
+        window.open(directUrl, '_blank', 'noopener,noreferrer');
       }
-    } else {
-      toast({
-        title: "Application URL not available",
-        description: "This job doesn't have an application link.",
-        variant: "destructive",
-      });
+      
       onApply(job);
     }
   };

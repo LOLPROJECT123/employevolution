@@ -1,4 +1,3 @@
-
 /**
  * Utility functions for validating job URLs and checking job availability
  */
@@ -292,6 +291,57 @@ export function estimateApplicationTime(url: string): number {
   
   // Default case - average time
   return 15;
+}
+
+/**
+ * Gets the direct application URL for a job posting
+ */
+export function getDirectApplicationUrl(job: { applyUrl?: string }): string | null {
+  if (!job.applyUrl) return null;
+  
+  try {
+    const url = new URL(job.applyUrl);
+    const platform = detectPlatform(job.applyUrl);
+    
+    // Platform-specific URL normalization
+    switch (platform) {
+      case 'LinkedIn':
+        // Ensure direct application URL format
+        if (!url.pathname.includes('/jobs/view/')) {
+          const jobId = extractJobIdFromUrl(job.applyUrl);
+          if (jobId) {
+            return `https://www.linkedin.com/jobs/view/${jobId}/`;
+          }
+        }
+        break;
+        
+      case 'Indeed':
+        // Ensure direct application URL format
+        const jk = url.searchParams.get('jk');
+        if (jk) {
+          return `https://www.indeed.com/viewjob?jk=${jk}`;
+        }
+        break;
+        
+      case 'Greenhouse':
+        // Already in correct format typically
+        return job.applyUrl;
+        
+      case 'Lever':
+        // Already in correct format typically
+        return job.applyUrl;
+        
+      case 'Workday':
+        // Already in correct format typically
+        return job.applyUrl;
+    }
+    
+    // If no special handling needed, return original URL
+    return job.applyUrl;
+  } catch (e) {
+    console.error("Error processing application URL:", e);
+    return null;
+  }
 }
 
 /**
