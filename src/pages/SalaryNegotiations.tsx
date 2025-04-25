@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -207,8 +206,6 @@ const SalaryNegotiations = () => {
                   </SelectContent>
                 </Select>
               </div>
-
-              {/* Removed the New Discussion button from here */}
             </div>
             
             {activeFilterCount > 0 && (
