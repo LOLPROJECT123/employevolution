@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Menu } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,39 @@ interface MobileHeaderProps {
 }
 
 const MobileHeader: React.FC<MobileHeaderProps> = ({ title, showLogo = true }) => {
+  const [username, setUsername] = useState("User");
+
+  // Listen for profile updates and update username
+  useEffect(() => {
+    // Try to load username from localStorage
+    const storedProfile = localStorage.getItem('userProfile');
+    if (storedProfile) {
+      try {
+        const profile = JSON.parse(storedProfile);
+        if (profile?.firstName) {
+          setUsername(profile.firstName);
+        }
+      } catch (error) {
+        console.error('Error parsing user profile:', error);
+      }
+    }
+    
+    // Listen for custom profile update events
+    const handleProfileUpdate = (event: CustomEvent) => {
+      if (event.detail?.firstName) {
+        setUsername(event.detail.firstName);
+      }
+    };
+    
+    // Add event listener for profile updates
+    window.addEventListener('profileUpdated' as any, handleProfileUpdate as EventListener);
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('profileUpdated' as any, handleProfileUpdate as EventListener);
+    };
+  }, []);
+
   return (
     <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between bg-white dark:bg-slate-900 border-b px-4 h-14">
       <div className="flex items-center gap-2">
@@ -33,10 +66,10 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({ title, showLogo = true }) =
             <div className="border-b p-4">
               <Link to="/profile" className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold text-gray-500">
-                  VV
+                  {username.substring(0, 2).toUpperCase()}
                 </div>
                 <div>
-                  <div className="font-medium">Varun Veluri</div>
+                  <div className="font-medium">{username}</div>
                   <div className="text-xs text-muted-foreground">View Profile</div>
                 </div>
               </Link>
@@ -84,7 +117,7 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({ title, showLogo = true }) =
             
             <div className="border-t p-4">
               <div className="flex items-center justify-between">
-                <Link to="/logout" className="text-sm text-muted-foreground">Log out</Link>
+                <Link to="/" onClick={handleLogout} className="text-sm text-muted-foreground">Log out</Link>
               </div>
             </div>
           </div>
@@ -92,6 +125,27 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({ title, showLogo = true }) =
       </Sheet>
     </div>
   );
+  
+  function handleLogout(e: React.MouseEvent) {
+    e.preventDefault();
+    // Clear auth data from localStorage
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userProfile');
+    
+    // Display logout notification
+    const toast = document.createEvent('CustomEvent');
+    toast.initCustomEvent('toast', {
+      bubbles: true,
+      detail: {
+        title: 'Logged out',
+        description: 'You have been successfully logged out',
+      }
+    });
+    document.dispatchEvent(toast);
+    
+    // Redirect to login/home page
+    window.location.href = '/';
+  }
 };
 
 export default MobileHeader;

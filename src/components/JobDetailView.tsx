@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Job } from "@/types/job";
 import { 
@@ -15,6 +16,10 @@ import { BookmarkIcon, ExternalLink, FileText, Zap, Users } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import AutoApplyModal from "@/components/AutoApplyModal";
 import { toast } from "@/hooks/use-toast";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { ApplicationScoreCalculator } from "@/components/ApplicationScoreCalculator";
+import { ResumeGenerator } from "@/components/ResumeGenerator";
+import { RealTimeJobAlerts } from "@/components/RealTimeJobAlerts";
 
 interface JobDetailViewProps {
   job: Job | null;
@@ -32,6 +37,31 @@ export const JobDetailView = ({
   isApplied
 }: JobDetailViewProps) => {
   const [showAutoApplyModal, setShowAutoApplyModal] = useState(false);
+  const [activeTab, setActiveTab] = useState("details");
+  
+  const mockUserProfile = {
+    name: "Alex Johnson",
+    email: "alex.johnson@example.com",
+    phone: "555-123-4567",
+    location: "San Francisco, CA",
+    skills: ["React", "TypeScript", "JavaScript", "HTML", "CSS", "Node.js", "Express", "MongoDB", "Git"],
+    experience: 4,
+    education: ["Bachelor of Science in Computer Science"],
+    experience: [
+      {
+        title: "Frontend Developer",
+        company: "Tech Solutions Inc.",
+        duration: "2020-2022",
+        description: "Developed and maintained responsive web applications using React and TypeScript."
+      },
+      {
+        title: "Junior Web Developer",
+        company: "Digital Creations",
+        duration: "2018-2020",
+        description: "Built and styled websites for various clients using HTML, CSS, and JavaScript."
+      }
+    ]
+  };
   
   if (!job) {
     return (
@@ -98,35 +128,6 @@ export const JobDetailView = ({
     }
     
     window.open(job.applyUrl, '_blank', 'noopener,noreferrer');
-  };
-  
-  const detectPlatform = (url: string): string | null => {
-    if (!url) return null;
-    
-    const lowerUrl = url.toLowerCase();
-    
-    if (lowerUrl.includes('google.com') || lowerUrl.includes('careers.google')) return 'Google';
-    if (lowerUrl.includes('microsoft.com') || lowerUrl.includes('careers.microsoft')) return 'Microsoft';
-    if (lowerUrl.includes('apple.com') || lowerUrl.includes('jobs.apple')) return 'Apple';
-    if (lowerUrl.includes('amazon.jobs') || lowerUrl.includes('amazon.com/jobs')) return 'Amazon';
-    if (lowerUrl.includes('meta.com') || lowerUrl.includes('metacareers')) return 'Meta';
-    if (lowerUrl.includes('netflix.com') || lowerUrl.includes('jobs.netflix')) return 'Netflix';
-    if (lowerUrl.includes('uber.com/careers') || lowerUrl.includes('uber.com/us/en/careers')) return 'Uber';
-    if (lowerUrl.includes('airbnb.com/careers') || lowerUrl.includes('careers.airbnb')) return 'Airbnb';
-    if (lowerUrl.includes('twitter.com/careers') || lowerUrl.includes('careers.twitter')) return 'Twitter';
-    if (lowerUrl.includes('linkedin.com/jobs') || lowerUrl.includes('careers.linkedin')) return 'LinkedIn';
-    
-    if (lowerUrl.includes('greenhouse.io')) return 'Greenhouse';
-    if (lowerUrl.includes('lever.co')) return 'Lever';
-    if (lowerUrl.includes('workday')) return 'Workday';
-    if (lowerUrl.includes('indeed.com')) return 'Indeed';
-    if (lowerUrl.includes('taleo')) return 'Taleo';
-    if (lowerUrl.includes('icims')) return 'iCIMS';
-    if (lowerUrl.includes('brassring')) return 'BrassRing';
-    if (lowerUrl.includes('smartrecruiters')) return 'SmartRecruiters';
-    if (lowerUrl.includes('jobvite')) return 'Jobvite';
-    
-    return null; // Unknown platform
   };
 
   return (
@@ -208,41 +209,70 @@ export const JobDetailView = ({
           </div>
         </div>
         
-        <div className="mt-6">
-          <h2 className="text-xl font-semibold mb-2">Description</h2>
-          <p className="whitespace-pre-line">{job.description}</p>
-        </div>
-        
-        {job.requirements && job.requirements.length > 0 && (
-          <div className="mt-6">
-            <h2 className="text-xl font-semibold mb-2">Requirements</h2>
-            <ul className="list-disc pl-5 space-y-2">
-              {job.requirements.map((req, index) => (
-                <li key={index}>{req}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-        
-        {job.skills && job.skills.length > 0 && (
-          <div className="mt-6">
-            <h2 className="text-xl font-semibold mb-2">Required Skills</h2>
-            <div className="flex flex-wrap gap-2">
-              {job.skills.map((skill, index) => (
-                <span key={index} className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-sm">
-                  {skill}
-                </span>
-              ))}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
+          <TabsList className="w-full grid grid-cols-4">
+            <TabsTrigger value="details">Details</TabsTrigger>
+            <TabsTrigger value="match">Match Score</TabsTrigger>
+            <TabsTrigger value="documents">Documents</TabsTrigger>
+            <TabsTrigger value="alerts">Alerts</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="details" className="mt-4 space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold mb-2">Description</h2>
+              <p className="whitespace-pre-line">{job.description}</p>
             </div>
-          </div>
-        )}
-        
-        {job.matchPercentage && (
-          <div className="mt-8 border-t pt-6">
-            <h2 className="text-xl font-semibold mb-3">Detailed Match Analysis</h2>
-            <JobMatchDetails job={job} />
-          </div>
-        )}
+            
+            {job.requirements && job.requirements.length > 0 && (
+              <div>
+                <h2 className="text-xl font-semibold mb-2">Requirements</h2>
+                <ul className="list-disc pl-5 space-y-2">
+                  {job.requirements.map((req, index) => (
+                    <li key={index}>{req}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {job.skills && job.skills.length > 0 && (
+              <div>
+                <h2 className="text-xl font-semibold mb-2">Required Skills</h2>
+                <div className="flex flex-wrap gap-2">
+                  {job.skills.map((skill, index) => (
+                    <span key={index} className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-sm">
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="match" className="mt-4">
+            <ApplicationScoreCalculator 
+              job={job} 
+              userSkills={mockUserProfile.skills}
+              userExperience={mockUserProfile.experience}
+              userEducation={mockUserProfile.education}
+              userLocation={mockUserProfile.location}
+            />
+            
+            {job.matchPercentage && (
+              <div className="mt-8 border-t pt-6">
+                <h2 className="text-xl font-semibold mb-3">Detailed Match Analysis</h2>
+                <JobMatchDetails job={job} />
+              </div>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="documents" className="mt-4">
+            <ResumeGenerator job={job} userProfile={mockUserProfile} />
+          </TabsContent>
+          
+          <TabsContent value="alerts" className="mt-4">
+            <RealTimeJobAlerts />
+          </TabsContent>
+        </Tabs>
         
         <AutoApplyModal
           job={job}
