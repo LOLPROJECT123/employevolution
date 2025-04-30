@@ -5,22 +5,32 @@
 
 import { Job, JobApplicationStatus } from "@/types/job";
 
-// Define Chrome extension types
-interface ChromeRuntime {
-  sendMessage: (message: any, responseCallback?: (response: any) => void) => void;
-  lastError?: {
-    message: string;
-  };
+// Define Chrome extension types with proper structure
+interface ChromeLastError {
+  message: string;
 }
 
-interface Chrome {
+interface ChromeRuntime {
+  sendMessage: (message: any, responseCallback?: (response: any) => void) => void;
+  lastError?: ChromeLastError;
+}
+
+interface ChromeStorage {
+  local: {
+    set: (items: {[key: string]: any}, callback?: () => void) => void;
+    get: (keys: string | string[] | null, callback: (items: {[key: string]: any}) => void) => void;
+  }
+}
+
+interface ChromeExtension {
   runtime?: ChromeRuntime;
+  storage?: ChromeStorage;
 }
 
 // Declare global window with chrome property
 declare global {
   interface Window {
-    chrome?: Chrome;
+    chrome?: ChromeExtension;
   }
 }
 

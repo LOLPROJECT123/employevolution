@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { getUserInitials, getUserFullName } from "@/utils/profileUtils";
+import { toast } from "sonner";
 
 interface MobileHeaderProps {
   title?: string;
@@ -13,26 +14,38 @@ interface MobileHeaderProps {
 
 const MobileHeader: React.FC<MobileHeaderProps> = ({ title, showLogo = true }) => {
   const [username, setUsername] = useState("User");
+  const [fullName, setFullName] = useState("");
 
   // Listen for profile updates and update username
   useEffect(() => {
-    // Try to load username from localStorage
-    const storedProfile = localStorage.getItem('userProfile');
-    if (storedProfile) {
+    // Function to update user information from profile
+    const updateUserInfo = () => {
       try {
-        const profile = JSON.parse(storedProfile);
-        if (profile?.firstName) {
-          setUsername(profile.firstName);
+        const storedProfile = localStorage.getItem('userProfile');
+        if (storedProfile) {
+          const profile = JSON.parse(storedProfile);
+          if (profile?.firstName) {
+            setUsername(profile.firstName);
+          }
+          
+          // Also set full name
+          setFullName(getUserFullName(profile));
         }
       } catch (error) {
         console.error('Error parsing user profile:', error);
       }
-    }
+    };
+    
+    // Initial load
+    updateUserInfo();
     
     // Listen for custom profile update events
     const handleProfileUpdate = (event: CustomEvent) => {
-      if (event.detail?.firstName) {
-        setUsername(event.detail.firstName);
+      if (event.detail) {
+        if (event.detail.firstName) {
+          setUsername(event.detail.firstName);
+        }
+        setFullName(getUserFullName(event.detail));
       }
     };
     
@@ -70,7 +83,7 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({ title, showLogo = true }) =
                   {getUserInitials()}
                 </div>
                 <div>
-                  <div className="font-medium">{getUserFullName()}</div>
+                  <div className="font-medium">{fullName || username}</div>
                   <div className="text-xs text-muted-foreground">View Profile</div>
                 </div>
               </Link>
@@ -134,14 +147,7 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({ title, showLogo = true }) =
     localStorage.removeItem('userProfile');
     
     // Create and dispatch toast event properly
-    const toastEvent = new CustomEvent('toast', {
-      bubbles: true,
-      detail: {
-        title: 'Logged out',
-        description: 'You have been successfully logged out',
-      }
-    });
-    document.dispatchEvent(toastEvent);
+    toast.success('Logged out successfully');
     
     // Redirect to login/home page
     window.location.href = '/';

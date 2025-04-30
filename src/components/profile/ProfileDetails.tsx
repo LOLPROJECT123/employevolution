@@ -2,11 +2,12 @@ import React, { useState } from "react";
 import { parseResume } from "@/utils/resumeParser";
 import { ParsedResume } from "@/types/resume";
 import { Badge } from "@/components/ui/badge";
-import { extractAndUpdateProfileFromResume, getUserProfile } from "@/utils/profileUtils";
+import { getUserProfile } from "@/utils/profileUtils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { UserProfile } from "@/utils/profileUtils";
+import { smartProfileSync } from "@/utils/profileSynchronizer";
 
 const ProfileDetails = () => {
   const [resume, setResume] = useState<ParsedResume | null>(null);
@@ -42,7 +43,7 @@ const ProfileDetails = () => {
         setShowConfirmDialog(true);
       } else {
         // Otherwise just update the profile directly
-        await extractAndUpdateProfileFromResume(parsed, true);
+        await smartProfileSync(parsed, true, true);
         toast.success("Profile updated from resume");
       }
     } catch (error) {
@@ -55,17 +56,21 @@ const ProfileDetails = () => {
   
   const handleConfirmOverwrite = async () => {
     if (parsedResumeData) {
-      await extractAndUpdateProfileFromResume(parsedResumeData, true);
+      await smartProfileSync(parsedResumeData, true, true);
       toast.success("Profile updated from resume");
       setShowConfirmDialog(false);
+      // Update the current profile state to reflect changes
+      setCurrentProfile(getUserProfile());
     }
   };
   
   const handleSmartMerge = async () => {
     if (parsedResumeData) {
-      await extractAndUpdateProfileFromResume(parsedResumeData, false);
+      await smartProfileSync(parsedResumeData, false, true);
       toast.success("Profile updated from resume (merged with existing data)");
       setShowConfirmDialog(false);
+      // Update the current profile state to reflect changes
+      setCurrentProfile(getUserProfile());
     }
   };
 

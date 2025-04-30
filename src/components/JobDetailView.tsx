@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Job } from "@/types/job";
 import { 
@@ -30,6 +29,28 @@ interface JobDetailViewProps {
   isApplied?: boolean;
 }
 
+// Define the profile type for the mockUserProfile to match ResumeGenerator expectation
+interface MockUserProfile {
+  name: string;
+  email: string;
+  phone: string;
+  location: string;
+  skills: string[];
+  experience: {
+    title: string;
+    company: string;
+    duration: string;
+    description: string;
+  }[];
+  education: string[];
+  workHistory: {
+    title: string;
+    company: string;
+    duration: string;
+    description: string;
+  }[];
+}
+
 export const JobDetailView = ({ 
   job, 
   onApply, 
@@ -43,15 +64,20 @@ export const JobDetailView = ({
   // Get user profile for job matching
   const userProfile = getUserProfile();
   
-  const mockUserProfile = {
-    name: userProfile.firstName ? `${userProfile.firstName} ${userProfile.lastName || ''}` : "Alex Johnson",
-    email: userProfile.email || "alex.johnson@example.com",
-    phone: userProfile.phone || "555-123-4567",
-    location: userProfile.location || "San Francisco, CA",
-    skills: userProfile.skills || ["React", "TypeScript", "JavaScript", "HTML", "CSS", "Node.js", "Express", "MongoDB", "Git"],
-    experience: userProfile.experience ? calculateYearsOfExperience(userProfile.experience) : 4,
-    education: userProfile.education?.map(edu => edu.degree) || ["Bachelor of Science in Computer Science"],
-    workHistory: userProfile.experience || [
+  // Function to format experience data for the UI
+  const formatProfileExperience = () => {
+    if (userProfile.experience && Array.isArray(userProfile.experience)) {
+      return userProfile.experience.map(exp => ({
+        title: exp.title || '',
+        company: exp.company || '',
+        duration: exp.startDate ? 
+          (exp.current ? `${exp.startDate} - Present` : `${exp.startDate} - ${exp.endDate || ''}`) : 
+          '2020-2022',
+        description: exp.description || ''
+      }));
+    }
+    
+    return [
       {
         title: "Frontend Developer",
         company: "Tech Solutions Inc.",
@@ -64,7 +90,19 @@ export const JobDetailView = ({
         duration: "2018-2020",
         description: "Built and styled websites for various clients using HTML, CSS, and JavaScript."
       }
-    ]
+    ];
+  };
+  
+  // Create a mock user profile that matches the expected format for ResumeGenerator
+  const mockUserProfile: MockUserProfile = {
+    name: userProfile.firstName ? `${userProfile.firstName} ${userProfile.lastName || ''}` : "Alex Johnson",
+    email: userProfile.email || "alex.johnson@example.com",
+    phone: userProfile.phone || "555-123-4567",
+    location: userProfile.location || "San Francisco, CA",
+    skills: userProfile.skills || ["React", "TypeScript", "JavaScript", "HTML", "CSS", "Node.js", "Express", "MongoDB", "Git"],
+    experience: formatProfileExperience(),
+    education: userProfile.education?.map(edu => edu.degree) || ["Bachelor of Science in Computer Science"],
+    workHistory: formatProfileExperience()
   };
   
   if (!job) {
@@ -75,7 +113,7 @@ export const JobDetailView = ({
     );
   }
 
-  const handleApply = () => {
+  function handleApply() {
     if (job) {
       const directUrl = getDirectApplicationUrl(job);
       
@@ -111,7 +149,7 @@ export const JobDetailView = ({
     }
   };
   
-  const handleViewJob = () => {
+  function handleViewJob() {
     if (!job.applyUrl) {
       toast({
         title: "Job URL not available",
@@ -136,6 +174,10 @@ export const JobDetailView = ({
 
   // Helper function to calculate years of experience from profile data
   function calculateYearsOfExperience(experience) {
+    if (!experience || !Array.isArray(experience) || experience.length === 0) {
+      return 0;
+    }
+    
     let totalMonths = 0;
     
     experience.forEach(exp => {
@@ -183,7 +225,7 @@ export const JobDetailView = ({
           
           <div className="flex flex-col gap-2">
             <Button 
-              onClick={handleApply}
+              onClick={() => handleApply()}
               disabled={isApplied}
               className={isApplied ? "bg-green-600 hover:bg-green-700" : ""}
             >
@@ -214,7 +256,7 @@ export const JobDetailView = ({
             {job.applyUrl && (
               <Button 
                 variant="outline"
-                onClick={handleViewJob}
+                onClick={() => handleViewJob()}
               >
                 <FileText className="mr-2 h-4 w-4" />
                 View Job
@@ -273,7 +315,7 @@ export const JobDetailView = ({
             <ApplicationScoreCalculator 
               job={job} 
               userSkills={mockUserProfile.skills}
-              userExperience={mockUserProfile.experience}
+              userExperience={calculateYearsOfExperience(userProfile.experience)}
               userEducation={mockUserProfile.education}
               userLocation={mockUserProfile.location}
             />

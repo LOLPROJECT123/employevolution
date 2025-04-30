@@ -1,11 +1,13 @@
+
 import { ParsedResume } from "@/types/resume";
 import { parseWorkExperiences } from "./resume/workExperienceParser";
 import { parseEducation } from "./resume/educationParser";
 import { parseProjects } from "./resume/projectParser";
-import { parseSkills, parseLanguages } from "./resume/skillsParser";
+import { parseSkills, parseLanguages, extractSkillKeywords } from "./resume/skillsParser";
 import { extractPersonalInfo, extractSocialLinks } from "./resume/personalInfoParser";
 import { toast } from "sonner";
-import { extractAndUpdateProfileFromResume, getUserProfile } from "./profileUtils";
+import { getUserProfile } from "./profileUtils";
+import { smartProfileSync } from "./profileSynchronizer";
 
 const readFileAsText = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -63,7 +65,7 @@ export const parseResume = async (file: File, showToast: boolean = false): Promi
       
       // If the profile is empty, update it right away
       if (!hasExistingData) {
-        await extractAndUpdateProfileFromResume(parsedResume, true);
+        await smartProfileSync(parsedResume, true, true);
         toast.success("Profile updated with resume data");
       } else {
         // Otherwise mention that they can update their profile from the Profile page
@@ -172,6 +174,22 @@ export const suggestProfileImprovements = (jobDescription: string, userProfile: 
     suggestions.push(`Consider adding these skills to your profile: ${missingSkills.slice(0, 5).join(", ")}${missingSkills.length > 5 ? '...' : ''}`);
   }
   
+  // Now also use extractSkillKeywords for a more comprehensive analysis
+  const keywordSkills = extractSkillKeywords(jobDescription);
+  const missingKeywords = keywordSkills.filter(skill => 
+    !userSkills.some(userSkill => 
+      userSkill.toLowerCase().includes(skill.toLowerCase()) || 
+      skill.toLowerCase().includes(userSkill.toLowerCase())
+    )
+  );
+  
+  if (missingKeywords.length > 0 && missingKeywords.some(k => !missingSkills.includes(k))) {
+    const uniqueKeywords = missingKeywords.filter(k => !missingSkills.includes(k));
+    if (uniqueKeywords.length > 0) {
+      suggestions.push(`We also detected these technical keywords in job postings: ${uniqueKeywords.slice(0, 3).join(", ")}${uniqueKeywords.length > 3 ? '...' : ''}`);
+    }
+  }
+  
   // Check for incomplete profile sections
   if (!userProfile.location) {
     suggestions.push("Add your location to improve location-based job matching");
@@ -187,6 +205,18 @@ export const suggestProfileImprovements = (jobDescription: string, userProfile: 
   
   if (!userProfile.jobPreferences) {
     suggestions.push("Set your job preferences to get more relevant recommendations");
+  }
+  
+  // Check for profile completeness
+  const hasGithubLink = userProfile.socialLinks?.github;
+  const hasLinkedinLink = userProfile.socialLinks?.linkedin;
+  
+  if (!hasGithubLink && !hasLinkedinLink) {
+    suggestions.push("Add your LinkedIn and GitHub links to enhance your professional profile");
+  } else if (!hasGithubLink) {
+    suggestions.push("Add your GitHub link to showcase your technical projects");
+  } else if (!hasLinkedinLink) {
+    suggestions.push("Add your LinkedIn profile to strengthen your professional network");
   }
   
   return suggestions;
