@@ -1,7 +1,26 @@
-
 /**
  * Utilities for user profile management and synchronization
  */
+
+// Define Chrome extension types to fix the missing property error
+interface ChromeStorage {
+  local: {
+    set: (items: {[key: string]: any}, callback?: () => void) => void;
+  }
+}
+
+interface ChromeExtension {
+  storage?: ChromeStorage;
+  runtime?: {
+    sendMessage: (message: any, callback?: (response: any) => void) => void;
+  }
+}
+
+declare global {
+  interface Window {
+    chrome?: ChromeExtension;
+  }
+}
 
 export interface UserProfile {
   id?: string;
@@ -57,6 +76,12 @@ export interface UserProfile {
     };
     jobTypes?: string[];
   };
+  resumeSnapshots?: Array<{
+    id: string;
+    uploadDate: string;
+    fileName: string;
+    extractedData: any;
+  }>;
 }
 
 /**
@@ -205,4 +230,151 @@ export function calculateYearsOfExperience(profile?: Partial<UserProfile>): numb
   
   // Convert to years (rounded to 1 decimal place)
   return Math.round((totalMonths / 12) * 10) / 10;
+}
+
+/**
+ * Extract structured data from a resume and update profile
+ * This function integrates with the resume parser
+ */
+export async function extractAndUpdateProfileFromResume(
+  resumeData: any, 
+  overwrite: boolean = false
+): Promise<Partial<UserProfile>> {
+  try {
+    // Get current profile
+    const currentProfile = getUserProfile();
+    
+    // Create a new profile with extracted data
+    const updatedProfile: Partial<UserProfile> = { ...currentProfile };
+    
+    // Update personal information if available and allowed to overwrite
+    if (resumeData.personalInfo) {
+      const { name, email, phone, location } = resumeData.personalInfo;
+      
+      // Split name into first and last name
+      if (name && (overwrite || !currentProfile.firstName)) {
+        const nameParts = name.split(' ');
+        if (nameParts.length > 1) {
+          updatedProfile.firstName = nameParts[0];
+          updatedProfile.lastName = nameParts.slice(1).join(' ');
+        } else {
+          updatedProfile.firstName = name;
+        }
+      }
+      
+      // Update other personal info
+      if (email && (overwrite || !currentProfile.email)) {
+        updatedProfile.email = email;
+      }
+      
+      if (phone && (overwrite || !currentProfile.phone)) {
+        updatedProfile.phone = phone;
+      }
+      
+      if (location && (overwrite || !currentProfile.location)) {
+        updatedProfile.location = location;
+      }
+    }
+    
+    // Update work experience
+    if (resumeData.workExperiences && resumeData.workExperiences.length > 0) {
+      // Only overwrite if explicitly allowed or no existing experience
+      if (overwrite || !currentProfile.experience || currentProfile.experience.length === 0) {
+        updatedProfile.experience = resumeData.workExperiences.map((exp: any) => ({
+          title: exp.role,
+          company: exp.company,
+          location: exp.location,
+          startDate: exp.startDate,
+          endDate: exp.endDate,
+          current: !exp.endDate || exp.endDate.toLowerCase().includes('present'),
+          description: Array.isArray(exp.description) ? exp.description.join('\n') : exp.description || ''
+        }));
+      }
+    }
+    
+    // Update education
+    if (resumeData.education && resumeData.education.length > 0) {
+      if (overwrite || !currentProfile.education || currentProfile.education.length === 0) {
+        updatedProfile.education = resumeData.education.map((edu: any) => ({
+          degree: edu.degree,
+          institution: edu.school,
+          startDate: edu.startDate,
+          endDate: edu.endDate,
+          current: !edu.endDate || edu.endDate.toLowerCase().includes('present'),
+          description: ''
+        }));
+      }
+    }
+    
+    // Update skills
+    if (resumeData.skills && resumeData.skills.length > 0) {
+      // If overwriting or no existing skills, just use the new skills
+      if (overwrite || !currentProfile.skills || currentProfile.skills.length === 0) {
+        updatedProfile.skills = resumeData.skills;
+      } else {
+        // Otherwise merge skills without duplicates
+        const existingSkills = new Set(currentProfile.skills);
+        resumeData.skills.forEach((skill: string) => existingSkills.add(skill));
+        updatedProfile.skills = Array.from(existingSkills);
+      }
+    }
+    
+    // Update projects
+    if (resumeData.projects && resumeData.projects.length > 0) {
+      if (overwrite || !currentProfile.projects || currentProfile.projects.length === 0) {
+        updatedProfile.projects = resumeData.projects.map((proj: any) => ({
+          name: proj.name,
+          description: Array.isArray(proj.description) ? proj.description.join('\n') : proj.description || '',
+          startDate: proj.startDate,
+          endDate: proj.endDate
+        }));
+      }
+    }
+    
+    // Update social links
+    if (resumeData.socialLinks) {
+      if (overwrite || !currentProfile.socialLinks) {
+        updatedProfile.socialLinks = {
+          linkedin: resumeData.socialLinks.linkedin || '',
+          github: resumeData.socialLinks.github || '',
+          website: resumeData.socialLinks.portfolio || resumeData.socialLinks.other || '',
+          twitter: ''
+        };
+      } else {
+        // Selectively update social links
+        updatedProfile.socialLinks = {
+          ...currentProfile.socialLinks,
+          linkedin: (overwrite || !currentProfile.socialLinks.linkedin) ? resumeData.socialLinks.linkedin || '' : currentProfile.socialLinks.linkedin,
+          github: (overwrite || !currentProfile.socialLinks.github) ? resumeData.socialLinks.github || '' : currentProfile.socialLinks.github,
+          website: (overwrite || !currentProfile.socialLinks.website) ? resumeData.socialLinks.portfolio || resumeData.socialLinks.other || '' : currentProfile.socialLinks.website
+        };
+      }
+    }
+    
+    // Store resume snapshot for versioning
+    if (!updatedProfile.resumeSnapshots) {
+      updatedProfile.resumeSnapshots = [];
+    }
+    
+    // Add the current resume snapshot
+    updatedProfile.resumeSnapshots.push({
+      id: `resume_${Date.now()}`,
+      uploadDate: new Date().toISOString(),
+      fileName: 'Uploaded Resume',
+      extractedData: resumeData
+    });
+    
+    // Limit the number of stored snapshots to 5
+    if (updatedProfile.resumeSnapshots.length > 5) {
+      updatedProfile.resumeSnapshots = updatedProfile.resumeSnapshots.slice(-5);
+    }
+    
+    // Save the updated profile
+    saveUserProfile(updatedProfile);
+    
+    return updatedProfile;
+  } catch (error) {
+    console.error('Error extracting and updating profile from resume:', error);
+    throw error;
+  }
 }

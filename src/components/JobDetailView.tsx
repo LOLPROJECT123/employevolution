@@ -20,6 +20,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ApplicationScoreCalculator } from "@/components/ApplicationScoreCalculator";
 import { ResumeGenerator } from "@/components/ResumeGenerator";
 import { RealTimeJobAlerts } from "@/components/RealTimeJobAlerts";
+import { getUserProfile } from "@/utils/profileUtils";
 
 interface JobDetailViewProps {
   job: Job | null;
@@ -39,15 +40,18 @@ export const JobDetailView = ({
   const [showAutoApplyModal, setShowAutoApplyModal] = useState(false);
   const [activeTab, setActiveTab] = useState("details");
   
+  // Get user profile for job matching
+  const userProfile = getUserProfile();
+  
   const mockUserProfile = {
-    name: "Alex Johnson",
-    email: "alex.johnson@example.com",
-    phone: "555-123-4567",
-    location: "San Francisco, CA",
-    skills: ["React", "TypeScript", "JavaScript", "HTML", "CSS", "Node.js", "Express", "MongoDB", "Git"],
-    experience: 4,
-    education: ["Bachelor of Science in Computer Science"],
-    experience: [
+    name: userProfile.firstName ? `${userProfile.firstName} ${userProfile.lastName || ''}` : "Alex Johnson",
+    email: userProfile.email || "alex.johnson@example.com",
+    phone: userProfile.phone || "555-123-4567",
+    location: userProfile.location || "San Francisco, CA",
+    skills: userProfile.skills || ["React", "TypeScript", "JavaScript", "HTML", "CSS", "Node.js", "Express", "MongoDB", "Git"],
+    experience: userProfile.experience ? calculateYearsOfExperience(userProfile.experience) : 4,
+    education: userProfile.education?.map(edu => edu.degree) || ["Bachelor of Science in Computer Science"],
+    workHistory: userProfile.experience || [
       {
         title: "Frontend Developer",
         company: "Tech Solutions Inc.",
@@ -129,6 +133,23 @@ export const JobDetailView = ({
     
     window.open(job.applyUrl, '_blank', 'noopener,noreferrer');
   };
+
+  // Helper function to calculate years of experience from profile data
+  function calculateYearsOfExperience(experience) {
+    let totalMonths = 0;
+    
+    experience.forEach(exp => {
+      const startDate = new Date(exp.startDate);
+      const endDate = exp.current ? new Date() : (exp.endDate ? new Date(exp.endDate) : new Date());
+      
+      const months = (endDate.getFullYear() - startDate.getFullYear()) * 12 + 
+                    (endDate.getMonth() - startDate.getMonth());
+      
+      totalMonths += Math.max(0, months);
+    });
+    
+    return Math.round((totalMonths / 12) * 10) / 10;
+  }
 
   return (
     <ScrollArea className="h-[calc(100vh-250px)]">

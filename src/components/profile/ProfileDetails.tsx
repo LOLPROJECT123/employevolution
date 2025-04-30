@@ -1,33 +1,91 @@
-
 import React, { useState } from "react";
 import { parseResume } from "@/utils/resumeParser";
 import { ParsedResume } from "@/types/resume";
 import { Badge } from "@/components/ui/badge";
+import { extractAndUpdateProfileFromResume, getUserProfile } from "@/utils/profileUtils";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { UserProfile } from "@/utils/profileUtils";
 
 const ProfileDetails = () => {
   const [resume, setResume] = useState<ParsedResume | null>(null);
   const [parsing, setParsing] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [parsedResumeData, setParsedResumeData] = useState<ParsedResume | null>(null);
+  const [currentProfile, setCurrentProfile] = useState<Partial<UserProfile>>(() => getUserProfile());
 
   const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    
     setParsing(true);
-    const parsed = await parseResume(file, false); // No pop-up
-    setResume(parsed);
-    setParsing(false);
+    
+    try {
+      // Parse the resume
+      const parsed = await parseResume(file, false); // No pop-up
+      setResume(parsed);
+      
+      // Check if profile already exists with data
+      const userProfile = getUserProfile();
+      const hasExistingData = Boolean(
+        userProfile.firstName || 
+        userProfile.lastName ||
+        (userProfile.skills && userProfile.skills.length > 0) ||
+        (userProfile.experience && userProfile.experience.length > 0)
+      );
+      
+      // If profile exists with data, ask for confirmation before overwriting
+      if (hasExistingData) {
+        setParsedResumeData(parsed);
+        setCurrentProfile(userProfile);
+        setShowConfirmDialog(true);
+      } else {
+        // Otherwise just update the profile directly
+        await extractAndUpdateProfileFromResume(parsed, true);
+        toast.success("Profile updated from resume");
+      }
+    } catch (error) {
+      console.error("Error parsing resume:", error);
+      toast.error("Failed to parse resume. Please try again.");
+    } finally {
+      setParsing(false);
+    }
+  };
+  
+  const handleConfirmOverwrite = async () => {
+    if (parsedResumeData) {
+      await extractAndUpdateProfileFromResume(parsedResumeData, true);
+      toast.success("Profile updated from resume");
+      setShowConfirmDialog(false);
+    }
+  };
+  
+  const handleSmartMerge = async () => {
+    if (parsedResumeData) {
+      await extractAndUpdateProfileFromResume(parsedResumeData, false);
+      toast.success("Profile updated from resume (merged with existing data)");
+      setShowConfirmDialog(false);
+    }
   };
 
   return (
     <div className="max-w-2xl mx-auto p-4">
       <h2 className="text-xl font-semibold mb-3">Profile Details</h2>
       <div className="mb-4">
-        <input
-          type="file"
-          accept=".pdf,.txt"
-          className="block"
-          onChange={handleResumeUpload}
-          disabled={parsing}
-        />
+        <div className="flex items-center gap-2">
+          <input
+            type="file"
+            accept=".pdf,.txt,.docx"
+            className="block"
+            onChange={handleResumeUpload}
+            disabled={parsing}
+          />
+          <div className="text-xs text-muted-foreground">
+            Upload your resume to auto-populate your profile
+          </div>
+        </div>
+        
         {parsing && (
           <div className="flex items-center mt-2 gap-2 text-sm text-muted-foreground">
             <span className="animate-spin inline-block h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></span>
@@ -116,6 +174,60 @@ const ProfileDetails = () => {
           </div>
         </div>
       )}
+      
+      {/* Confirmation Dialog */}
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Update Profile from Resume</DialogTitle>
+            <DialogDescription>
+              Your profile already contains data. How would you like to proceed?
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4 space-y-4">
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium">Current Profile Data:</h3>
+              <div className="text-xs text-muted-foreground">
+                <p>Name: {currentProfile.firstName} {currentProfile.lastName}</p>
+                {currentProfile.email && <p>Email: {currentProfile.email}</p>}
+                {currentProfile.skills && currentProfile.skills.length > 0 && (
+                  <p>Skills: {currentProfile.skills.slice(0, 5).join(", ")}{currentProfile.skills.length > 5 ? "..." : ""}</p>
+                )}
+                {currentProfile.experience && currentProfile.experience.length > 0 && (
+                  <p>Experience: {currentProfile.experience.length} entries</p>
+                )}
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium">Resume Data:</h3>
+              <div className="text-xs text-muted-foreground">
+                {parsedResumeData && (
+                  <>
+                    <p>Name: {parsedResumeData.personalInfo.name}</p>
+                    <p>Email: {parsedResumeData.personalInfo.email}</p>
+                    <p>Skills: {parsedResumeData.skills.slice(0, 5).join(", ")}{parsedResumeData.skills.length > 5 ? "..." : ""}</p>
+                    <p>Experience: {parsedResumeData.workExperiences.length} entries</p>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setShowConfirmDialog(false)}>
+              Cancel
+            </Button>
+            <Button variant="secondary" onClick={handleSmartMerge}>
+              Smart Merge
+            </Button>
+            <Button onClick={handleConfirmOverwrite}>
+              Overwrite
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

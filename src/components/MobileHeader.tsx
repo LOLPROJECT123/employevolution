@@ -4,6 +4,7 @@ import { Menu } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { getUserInitials, getUserFullName } from "@/utils/profileUtils";
 
 interface MobileHeaderProps {
   title?: string;
@@ -66,10 +67,10 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({ title, showLogo = true }) =
             <div className="border-b p-4">
               <Link to="/profile" className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold text-gray-500">
-                  {username.substring(0, 2).toUpperCase()}
+                  {getUserInitials()}
                 </div>
                 <div>
-                  <div className="font-medium">{username}</div>
+                  <div className="font-medium">{getUserFullName()}</div>
                   <div className="text-xs text-muted-foreground">View Profile</div>
                 </div>
               </Link>
@@ -132,16 +133,15 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({ title, showLogo = true }) =
     localStorage.removeItem('authToken');
     localStorage.removeItem('userProfile');
     
-    // Display logout notification
-    const toast = document.createEvent('CustomEvent');
-    toast.initCustomEvent('toast', {
+    // Create and dispatch toast event properly
+    const toastEvent = new CustomEvent('toast', {
       bubbles: true,
       detail: {
         title: 'Logged out',
         description: 'You have been successfully logged out',
       }
     });
-    document.dispatchEvent(toast);
+    document.dispatchEvent(toastEvent);
     
     // Redirect to login/home page
     window.location.href = '/';
