@@ -122,6 +122,11 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({ title, showLogo = true }) =
                   </Link>
                 </li>
                 <li>
+                  <Link to="/salary-calculator" className="flex items-center gap-3 p-2 rounded-md hover:bg-accent">
+                    <span className="text-sm">Tax Calculator</span>
+                  </Link>
+                </li>
+                <li>
                   <Link to="/networking" className="flex items-center gap-3 p-2 rounded-md hover:bg-accent">
                     <span className="text-sm">Networking</span>
                   </Link>

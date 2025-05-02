@@ -19,8 +19,9 @@ import Auth from "./pages/Auth";
 import ResumeTools from "./pages/ResumeTools";
 import LeetcodePatterns from "./pages/LeetcodePatterns";
 import SalaryNegotiations from "./pages/SalaryNegotiations";
+import SalaryCalculator from "./pages/SalaryCalculator"; // New import
 import Profile from "./pages/Profile";
-import NetworkingTools from "./pages/NetworkingTools"; // New import
+import NetworkingTools from "./pages/NetworkingTools";
 
 const queryClient = new QueryClient();
 
@@ -73,6 +74,7 @@ const App = () => {
                 <Route path="/resume-tools" element={<ResumeTools />} />
                 <Route path="/leetcode-patterns" element={<LeetcodePatterns />} />
                 <Route path="/salary-negotiations" element={<SalaryNegotiations />} />
+                <Route path="/salary-calculator" element={<SalaryCalculator />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/networking" element={<NetworkingTools />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
