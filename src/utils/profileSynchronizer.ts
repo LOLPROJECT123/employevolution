@@ -1,4 +1,3 @@
-
 /**
  * Profile synchronization utilities
  * Handles extracting data from resumes and syncing with user profile
@@ -67,7 +66,7 @@ export const smartProfileSync = async (
     if (resumeData.workExperiences && resumeData.workExperiences.length > 0) {
       if (overwrite || !currentProfile.experience || currentProfile.experience.length === 0) {
         updatedProfile.experience = resumeData.workExperiences.map(exp => ({
-          title: exp.role, // Fixed: using role from parsed resume
+          title: exp.role, // Using role from parsed resume for title field
           company: exp.company,
           location: exp.location,
           startDate: exp.startDate,
@@ -374,7 +373,7 @@ export const extractResumeData = (text: string): ResumeData => {
     let match;
     while ((match = companyTitlePattern.exec(experienceBlocks)) !== null) {
       const company = match[1].trim();
-      const role = match[2].trim(); // Changed from title to role
+      const role = match[2].trim(); // Using role consistently
       const dateRange = match[3].trim();
       
       const dateRangeParts = dateRange.split(/(?:-|–|to)/i);
@@ -384,10 +383,10 @@ export const extractResumeData = (text: string): ResumeData => {
       
       experienceData.push({
         company,
-        role, // Changed from title to role
+        role,
         location: '',
         startDate,
-        endDate: current ? '' : endDate,
+        endDate: current ? endDate : endDate,
         description: [],
         current
       });
@@ -432,7 +431,7 @@ export const syncResumeWithProfile = (resumeData: ResumeData, overwriteExisting:
           location: resumeData.personalInfo?.location || userProfile.location || ''
         },
         workExperiences: (resumeData.workExperiences || []).map(exp => ({
-          role: exp.role, // Changed from title to role
+          role: exp.role,
           company: exp.company,
           location: exp.location,
           startDate: exp.startDate,
@@ -486,7 +485,7 @@ export const syncResumeWithProfile = (resumeData: ResumeData, overwriteExisting:
     if (resumeData.workExperiences && resumeData.workExperiences.length > 0) {
       if (!userProfile.experience || userProfile.experience.length === 0 || overwriteExisting) {
         userProfile.experience = resumeData.workExperiences.map(exp => ({
-          title: exp.role, // Changed from role to title, to match UserProfile interface
+          title: exp.role, // Using role for title field to match UserProfile interface
           company: exp.company,
           location: exp.location,
           startDate: exp.startDate,
@@ -497,7 +496,7 @@ export const syncResumeWithProfile = (resumeData: ResumeData, overwriteExisting:
       }
     }
     
-    // Update skills
+    // Update skills and other fields
     if (resumeData.skills && resumeData.skills.length > 0) {
       if (!userProfile.skills || userProfile.skills.length === 0) {
         userProfile.skills = resumeData.skills;
@@ -583,6 +582,44 @@ export const syncResumeWithProfile = (resumeData: ResumeData, overwriteExisting:
  * Process uploaded resume file
  */
 export const processResumeFile = async (file: File): Promise<boolean> => {
+  // Check if we should confirm overwrite
+  const shouldConfirm = () => {
+    try {
+      const storedProfile = localStorage.getItem('userProfile');
+      if (!storedProfile) return false;
+      
+      const userProfile = JSON.parse(storedProfile);
+      
+      // Check if profile already has substantial data
+      return (userProfile.firstName && userProfile.lastName) || 
+             (userProfile.experience && userProfile.experience.length > 0) ||
+             (userProfile.skills && userProfile.skills.length > 3);
+    } catch (e) {
+      return false;
+    }
+  };
+  
+  if (shouldConfirm()) {
+    const confirm = window.confirm(
+      'Your profile already contains data. Would you like to merge the resume data with your existing profile? ' +
+      'Click OK to merge (keeping existing data where conflicts occur), or Cancel to completely overwrite your profile.'
+    );
+    
+    if (confirm) {
+      // Merge mode - don't overwrite existing data
+      syncResumeWithProfile(resumeData, false);
+      toast.success('Resume data merged with your profile');
+    } else {
+      // Overwrite mode
+      syncResumeWithProfile(resumeData, true);
+      toast.success('Profile updated with resume data');
+    }
+  } else {
+    // No existing data, just sync
+    syncResumeWithProfile(resumeData, true);
+    toast.success('Profile updated with resume data');
+  }
+  
   try {
     const text = await file.text();
     const resumeData = extractResumeData(text);

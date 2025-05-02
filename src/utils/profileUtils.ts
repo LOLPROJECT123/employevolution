@@ -1,4 +1,3 @@
-
 /**
  * Utilities for user profile management and synchronization
  */
@@ -325,6 +324,18 @@ export async function extractAndUpdateProfileFromResume(
       }
     }
     
+    // Update languages
+    if (resumeData.languages && resumeData.languages.length > 0) {
+      if (overwrite || !currentProfile.languages || currentProfile.languages.length === 0) {
+        updatedProfile.languages = resumeData.languages;
+      } else {
+        // Merge languages without duplicates
+        const existingLanguages = new Set(currentProfile.languages || []);
+        resumeData.languages.forEach((lang: string) => existingLanguages.add(lang));
+        updatedProfile.languages = Array.from(existingLanguages);
+      }
+    }
+    
     // Update projects
     if (resumeData.projects && resumeData.projects.length > 0) {
       if (overwrite || !currentProfile.projects || currentProfile.projects.length === 0) {
@@ -344,7 +355,8 @@ export async function extractAndUpdateProfileFromResume(
           linkedin: resumeData.socialLinks.linkedin || '',
           github: resumeData.socialLinks.github || '',
           website: resumeData.socialLinks.portfolio || resumeData.socialLinks.other || '',
-          twitter: ''
+          twitter: '',
+          portfolio: resumeData.socialLinks.other || ''
         };
       } else {
         // Selectively update social links
@@ -352,7 +364,8 @@ export async function extractAndUpdateProfileFromResume(
           ...currentProfile.socialLinks,
           linkedin: (overwrite || !currentProfile.socialLinks.linkedin) ? resumeData.socialLinks.linkedin || '' : currentProfile.socialLinks.linkedin,
           github: (overwrite || !currentProfile.socialLinks.github) ? resumeData.socialLinks.github || '' : currentProfile.socialLinks.github,
-          website: (overwrite || !currentProfile.socialLinks.website) ? resumeData.socialLinks.portfolio || resumeData.socialLinks.other || '' : currentProfile.socialLinks.website
+          website: (overwrite || !currentProfile.socialLinks.website) ? resumeData.socialLinks.portfolio || resumeData.socialLinks.other || '' : currentProfile.socialLinks.website,
+          portfolio: (overwrite || !currentProfile.socialLinks.portfolio) ? resumeData.socialLinks.other || '' : currentProfile.socialLinks.portfolio
         };
       }
     }
