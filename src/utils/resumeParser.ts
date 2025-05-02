@@ -1,4 +1,3 @@
-
 import { ParsedResume } from "@/types/resume";
 import { parseWorkExperiences } from "./resume/workExperienceParser";
 import { parseEducation } from "./resume/educationParser";

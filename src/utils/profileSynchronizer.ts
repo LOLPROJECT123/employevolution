@@ -1,4 +1,3 @@
-
 /**
  * Profile synchronization utilities
  * Handles extracting data from resumes and syncing with user profile
@@ -8,6 +7,8 @@ import { toast } from "sonner";
 import { extractSkillKeywords } from "./resume/skillsParser";
 import { parseLanguages } from "./resume/skillsParser";
 import { addResumeSnapshot } from "./resume/versionControl";
+import { ParsedResume } from "@/types/resume";
+import { getUserProfile, saveUserProfile, UserProfile } from "./profileUtils";
 
 interface ResumeData {
   personalInfo?: {
@@ -52,54 +53,171 @@ interface ResumeData {
     github?: string;
     portfolio?: string;
     twitter?: string;
+    other?: string;
   };
 }
 
-interface UserProfile {
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  phone?: string;
-  location?: string;
-  summary?: string;
-  skills?: string[];
-  languages?: string[];
-  experience?: Array<{
-    title?: string;
-    company?: string;
-    location?: string;
-    startDate?: string;
-    endDate?: string;
-    description?: string;
-    current?: boolean;
-  }>;
-  education?: Array<{
-    degree?: string;
-    institution?: string;
-    location?: string;
-    startDate?: string;
-    endDate?: string;
-    gpa?: string;
-    current?: boolean;
-  }>;
-  projects?: Array<{
-    title?: string;
-    description?: string;
-    technologies?: string[];
-    link?: string;
-    startDate?: string;
-    endDate?: string;
-    current?: boolean;
-  }>;
-  certifications?: string[];
-  socialLinks?: {
-    linkedin?: string;
-    github?: string;
-    portfolio?: string;
-    twitter?: string;
-  };
-  resumeSnapshots?: Array<any>;
-}
+/**
+ * Smart Profile Sync - Intelligently syncs parsed resume data with user profile
+ * @param resumeData The parsed resume data
+ * @param overwrite Whether to overwrite existing data
+ * @param notify Whether to show notifications
+ * @returns Updated user profile
+ */
+export const smartProfileSync = async (
+  resumeData: ParsedResume,
+  overwrite: boolean = false,
+  notify: boolean = true
+): Promise<Partial<UserProfile>> => {
+  try {
+    // Get current profile
+    const currentProfile = getUserProfile();
+    
+    // Create a new profile with extracted data
+    const updatedProfile: Partial<UserProfile> = { ...currentProfile };
+    
+    // Create a timestamp for this sync operation
+    const syncTimestamp = new Date().toISOString();
+    
+    // Process personal information
+    if (resumeData.personalInfo) {
+      const { name, email, phone, location } = resumeData.personalInfo;
+      
+      // Split name into first and last name
+      if (name && (overwrite || !currentProfile.firstName)) {
+        const nameParts = name.split(' ');
+        if (nameParts.length > 1) {
+          updatedProfile.firstName = nameParts[0];
+          updatedProfile.lastName = nameParts.slice(1).join(' ');
+        } else {
+          updatedProfile.firstName = name;
+          updatedProfile.lastName = '';
+        }
+      }
+      
+      // Update other personal info
+      if (email && (overwrite || !currentProfile.email)) {
+        updatedProfile.email = email;
+      }
+      
+      if (phone && (overwrite || !currentProfile.phone)) {
+        updatedProfile.phone = phone;
+      }
+      
+      if (location && (overwrite || !currentProfile.location)) {
+        updatedProfile.location = location;
+      }
+    }
+    
+    // Update work experience
+    if (resumeData.workExperiences && resumeData.workExperiences.length > 0) {
+      if (overwrite || !currentProfile.experience || currentProfile.experience.length === 0) {
+        updatedProfile.experience = resumeData.workExperiences.map(exp => ({
+          title: exp.role,
+          company: exp.company,
+          location: exp.location,
+          startDate: exp.startDate,
+          endDate: exp.endDate,
+          current: exp.endDate.toLowerCase().includes('present'),
+          description: Array.isArray(exp.description) ? exp.description.join('\n') : '',
+        }));
+      }
+    }
+    
+    // Update education
+    if (resumeData.education && resumeData.education.length > 0) {
+      if (overwrite || !currentProfile.education || currentProfile.education.length === 0) {
+        updatedProfile.education = resumeData.education.map(edu => ({
+          degree: edu.degree,
+          institution: edu.school,
+          location: '',
+          startDate: edu.startDate,
+          endDate: edu.endDate,
+          current: false,
+          description: '',
+        }));
+      }
+    }
+    
+    // Update skills
+    if (resumeData.skills && resumeData.skills.length > 0) {
+      if (!updatedProfile.skills || updatedProfile.skills.length === 0) {
+        updatedProfile.skills = resumeData.skills;
+      } else if (!overwrite) {
+        // Merge skills without duplicates
+        const existingSkills = new Set(updatedProfile.skills);
+        resumeData.skills.forEach(skill => existingSkills.add(skill));
+        updatedProfile.skills = Array.from(existingSkills);
+      } else {
+        updatedProfile.skills = resumeData.skills;
+      }
+    }
+    
+    // Update social links
+    if (resumeData.socialLinks) {
+      if (!updatedProfile.socialLinks) {
+        updatedProfile.socialLinks = {};
+      }
+      
+      if (resumeData.socialLinks.linkedin && (overwrite || !updatedProfile.socialLinks.linkedin)) {
+        updatedProfile.socialLinks.linkedin = resumeData.socialLinks.linkedin;
+      }
+      
+      if (resumeData.socialLinks.github && (overwrite || !updatedProfile.socialLinks.github)) {
+        updatedProfile.socialLinks.github = resumeData.socialLinks.github;
+      }
+      
+      if (resumeData.socialLinks.portfolio && (overwrite || !updatedProfile.socialLinks.website)) {
+        updatedProfile.socialLinks.website = resumeData.socialLinks.portfolio;
+      }
+      
+      if (resumeData.socialLinks.other && (overwrite || !updatedProfile.socialLinks.other)) {
+        updatedProfile.socialLinks.other = resumeData.socialLinks.other;
+      }
+    }
+    
+    // Update projects
+    if (resumeData.projects && resumeData.projects.length > 0) {
+      if (overwrite || !currentProfile.projects || currentProfile.projects.length === 0) {
+        updatedProfile.projects = resumeData.projects.map(proj => ({
+          name: proj.name,
+          description: Array.isArray(proj.description) ? proj.description.join('\n') : '',
+          startDate: proj.startDate,
+          endDate: proj.endDate,
+          skills: [],
+        }));
+      }
+    }
+    
+    // Store a snapshot of the resume data
+    if (!updatedProfile.resumeSnapshots) {
+      updatedProfile.resumeSnapshots = [];
+    }
+    
+    // Add resume snapshot
+    addResumeSnapshot(resumeData);
+    
+    // Save the updated profile
+    saveUserProfile(updatedProfile);
+    
+    // Show notification if requested
+    if (notify) {
+      if (overwrite) {
+        toast.success("Profile updated from resume");
+      } else {
+        toast.success("Profile merged with resume data");
+      }
+    }
+    
+    return updatedProfile;
+  } catch (error) {
+    console.error('Error syncing profile from resume:', error);
+    if (notify) {
+      toast.error("Failed to sync profile");
+    }
+    return getUserProfile();
+  }
+};
 
 /**
  * Extract data from resume text
