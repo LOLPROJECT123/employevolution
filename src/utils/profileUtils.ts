@@ -14,6 +14,9 @@ interface ChromeExtension {
   storage?: ChromeStorage;
   runtime?: {
     sendMessage: (message: any, callback?: (response: any) => void) => void;
+    lastError?: {
+      message: string;
+    }
   }
 }
 
@@ -34,7 +37,7 @@ export interface UserProfile {
   jobTitle?: string;
   company?: string;
   skills?: string[];
-  languages?: string[]; // Adding missing languages property
+  languages?: string[]; // Now properly included in the type
   experience?: Array<{
     title: string;
     company: string;
@@ -66,7 +69,7 @@ export interface UserProfile {
     github?: string;
     website?: string;
     twitter?: string;
-    portfolio?: string; // Adding portfolio for compatibility
+    portfolio?: string; // Added portfolio for compatibility
   };
   jobPreferences?: {
     roles?: string[];

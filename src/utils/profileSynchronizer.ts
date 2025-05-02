@@ -67,7 +67,7 @@ export const smartProfileSync = async (
     if (resumeData.workExperiences && resumeData.workExperiences.length > 0) {
       if (overwrite || !currentProfile.experience || currentProfile.experience.length === 0) {
         updatedProfile.experience = resumeData.workExperiences.map(exp => ({
-          title: exp.role,
+          title: exp.role, // Fixed: using role from parsed resume
           company: exp.company,
           location: exp.location,
           startDate: exp.startDate,
@@ -124,7 +124,13 @@ export const smartProfileSync = async (
     // Update social links
     if (resumeData.socialLinks) {
       if (!updatedProfile.socialLinks) {
-        updatedProfile.socialLinks = {};
+        updatedProfile.socialLinks = {
+          linkedin: '',
+          github: '',
+          website: '',
+          portfolio: '',
+          twitter: ''
+        };
       }
       
       if (resumeData.socialLinks.linkedin && (overwrite || !updatedProfile.socialLinks.linkedin)) {
@@ -368,7 +374,7 @@ export const extractResumeData = (text: string): ResumeData => {
     let match;
     while ((match = companyTitlePattern.exec(experienceBlocks)) !== null) {
       const company = match[1].trim();
-      const title = match[2].trim();
+      const role = match[2].trim(); // Changed from title to role
       const dateRange = match[3].trim();
       
       const dateRangeParts = dateRange.split(/(?:-|–|to)/i);
@@ -378,9 +384,11 @@ export const extractResumeData = (text: string): ResumeData => {
       
       experienceData.push({
         company,
-        title,
+        role, // Changed from title to role
+        location: '',
         startDate,
         endDate: current ? '' : endDate,
+        description: [],
         current
       });
     }
@@ -398,7 +406,9 @@ export const extractResumeData = (text: string): ResumeData => {
     languages,
     socialLinks: {
       linkedin,
-      github
+      github,
+      portfolio: '',  // Add empty string for portfolio
+      other: ''       // Add empty string for other
     }
   };
 };
@@ -422,7 +432,7 @@ export const syncResumeWithProfile = (resumeData: ResumeData, overwriteExisting:
           location: resumeData.personalInfo?.location || userProfile.location || ''
         },
         workExperiences: (resumeData.workExperiences || []).map(exp => ({
-          role: exp.role,
+          role: exp.role, // Changed from title to role
           company: exp.company,
           location: exp.location,
           startDate: exp.startDate,
@@ -476,7 +486,7 @@ export const syncResumeWithProfile = (resumeData: ResumeData, overwriteExisting:
     if (resumeData.workExperiences && resumeData.workExperiences.length > 0) {
       if (!userProfile.experience || userProfile.experience.length === 0 || overwriteExisting) {
         userProfile.experience = resumeData.workExperiences.map(exp => ({
-          title: exp.role,
+          title: exp.role, // Changed from role to title, to match UserProfile interface
           company: exp.company,
           location: exp.location,
           startDate: exp.startDate,
