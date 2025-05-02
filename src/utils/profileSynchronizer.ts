@@ -599,27 +599,6 @@ export const processResumeFile = async (file: File): Promise<boolean> => {
     }
   };
   
-  if (shouldConfirm()) {
-    const confirm = window.confirm(
-      'Your profile already contains data. Would you like to merge the resume data with your existing profile? ' +
-      'Click OK to merge (keeping existing data where conflicts occur), or Cancel to completely overwrite your profile.'
-    );
-    
-    if (confirm) {
-      // Merge mode - don't overwrite existing data
-      syncResumeWithProfile(resumeData, false);
-      toast.success('Resume data merged with your profile');
-    } else {
-      // Overwrite mode
-      syncResumeWithProfile(resumeData, true);
-      toast.success('Profile updated with resume data');
-    }
-  } else {
-    // No existing data, just sync
-    syncResumeWithProfile(resumeData, true);
-    toast.success('Profile updated with resume data');
-  }
-  
   try {
     const text = await file.text();
     const resumeData = extractResumeData(text);
