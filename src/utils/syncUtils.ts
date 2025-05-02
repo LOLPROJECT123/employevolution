@@ -27,10 +27,10 @@ interface ChromeExtension {
   storage?: ChromeStorage;
 }
 
-// Declare global window with chrome property
+// Declare global window with chrome property - fixed declaration to avoid conflict
 declare global {
   interface Window {
-    chrome?: ChromeExtension;
+    chrome?: ChromeExtension | undefined;
   }
 }
 
