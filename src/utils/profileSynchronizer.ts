@@ -1,3 +1,4 @@
+
 /**
  * Profile synchronization utilities
  * Handles extracting data from resumes and syncing with user profile
@@ -106,6 +107,20 @@ export const smartProfileSync = async (
       }
     }
     
+    // Update languages
+    if (resumeData.languages && resumeData.languages.length > 0) {
+      if (!updatedProfile.languages || updatedProfile.languages.length === 0) {
+        updatedProfile.languages = resumeData.languages;
+      } else if (!overwrite) {
+        // Merge languages without duplicates
+        const existingLanguages = new Set(updatedProfile.languages);
+        resumeData.languages.forEach(language => existingLanguages.add(language));
+        updatedProfile.languages = Array.from(existingLanguages);
+      } else {
+        updatedProfile.languages = resumeData.languages;
+      }
+    }
+    
     // Update social links
     if (resumeData.socialLinks) {
       if (!updatedProfile.socialLinks) {
@@ -122,6 +137,10 @@ export const smartProfileSync = async (
       
       if (resumeData.socialLinks.portfolio && (overwrite || !updatedProfile.socialLinks.website)) {
         updatedProfile.socialLinks.website = resumeData.socialLinks.portfolio;
+      }
+      
+      if (resumeData.socialLinks.other && (overwrite || !updatedProfile.socialLinks.portfolio)) {
+        updatedProfile.socialLinks.portfolio = resumeData.socialLinks.other;
       }
     }
     
@@ -170,54 +189,51 @@ export const smartProfileSync = async (
 
 interface ResumeData {
   personalInfo?: {
-    name?: string;
-    email?: string;
-    phone?: string;
-    location?: string;
+    name: string;
+    email: string;
+    phone: string;
+    location: string;
     summary?: string;
   };
   workExperiences?: Array<{
-    title?: string;
-    company?: string;
-    location?: string;
-    startDate?: string;
-    endDate?: string;
-    description?: string;
+    role: string;
+    company: string;
+    location: string;
+    startDate: string;
+    endDate: string;
+    description: string[];
     current?: boolean;
   }>;
   education?: Array<{
-    degree?: string;
-    institution?: string;
+    school: string;
+    degree: string;
     location?: string;
-    startDate?: string;
-    endDate?: string;
+    startDate: string;
+    endDate: string;
     gpa?: string;
     current?: boolean;
   }>;
   skills?: string[];
   languages?: string[];
   projects?: Array<{
-    title?: string;
-    description?: string;
+    name: string;
+    description: string[];
     technologies?: string[];
     link?: string;
-    startDate?: string;
-    endDate?: string;
+    startDate: string;
+    endDate: string;
     current?: boolean;
   }>;
   certifications?: string[];
   socialLinks?: {
-    linkedin?: string;
-    github?: string;
-    portfolio?: string;
-    twitter?: string;
+    linkedin: string;
+    github: string;
+    portfolio: string;
+    other: string;
   };
 }
 
-// The rest of the file remains unchanged, but we're no longer using functions that reference 'other' property 
-// or 'languages' field in UserProfile since they're causing type errors
-
-// For addResumeSnapshot function calls with ParsedResume, we need to make sure the properties match
+// For addResumeSnapshot function calls with ParsedResume, ensure properties match
 const sanitizeResumeDataForSnapshot = (data: any): ParsedResume => {
   return {
     personalInfo: {
@@ -252,7 +268,7 @@ const sanitizeResumeDataForSnapshot = (data: any): ParsedResume => {
       linkedin: data.socialLinks?.linkedin || '',
       github: data.socialLinks?.github || '',
       portfolio: data.socialLinks?.portfolio || data.socialLinks?.website || '',
-      other: ''
+      other: data.socialLinks?.other || ''
     }
   };
 };
@@ -399,17 +415,35 @@ export const syncResumeWithProfile = (resumeData: ResumeData, overwriteExisting:
     // Create a snapshot before making changes
     if (resumeData && storedProfile) {
       addResumeSnapshot({
-        personalInfo: resumeData.personalInfo || {
-          name: `${userProfile.firstName || ''} ${userProfile.lastName || ''}`.trim(),
-          email: userProfile.email || '',
-          phone: userProfile.phone || '',
-          location: userProfile.location || ''
+        personalInfo: {
+          name: resumeData.personalInfo?.name || `${userProfile.firstName || ''} ${userProfile.lastName || ''}`.trim(),
+          email: resumeData.personalInfo?.email || userProfile.email || '',
+          phone: resumeData.personalInfo?.phone || userProfile.phone || '',
+          location: resumeData.personalInfo?.location || userProfile.location || ''
         },
-        workExperiences: resumeData.workExperiences || [],
-        education: resumeData.education || [],
+        workExperiences: (resumeData.workExperiences || []).map(exp => ({
+          role: exp.role,
+          company: exp.company,
+          location: exp.location,
+          startDate: exp.startDate,
+          endDate: exp.endDate,
+          description: Array.isArray(exp.description) ? exp.description : [exp.description || '']
+        })),
+        education: (resumeData.education || []).map(edu => ({
+          school: edu.school,
+          degree: edu.degree,
+          startDate: edu.startDate,
+          endDate: edu.endDate
+        })),
         skills: resumeData.skills || [],
         languages: resumeData.languages || [],
-        socialLinks: resumeData.socialLinks || {}
+        projects: [],
+        socialLinks: resumeData.socialLinks || {
+          linkedin: '',
+          github: '',
+          portfolio: '',
+          other: ''
+        }
       });
     }
     
@@ -441,7 +475,15 @@ export const syncResumeWithProfile = (resumeData: ResumeData, overwriteExisting:
     // Update work experience
     if (resumeData.workExperiences && resumeData.workExperiences.length > 0) {
       if (!userProfile.experience || userProfile.experience.length === 0 || overwriteExisting) {
-        userProfile.experience = resumeData.workExperiences;
+        userProfile.experience = resumeData.workExperiences.map(exp => ({
+          title: exp.role,
+          company: exp.company,
+          location: exp.location,
+          startDate: exp.startDate,
+          endDate: exp.endDate,
+          current: exp.endDate.toLowerCase().includes('present'),
+          description: Array.isArray(exp.description) ? exp.description.join('\n') : ''
+        }));
       }
     }
     
@@ -476,7 +518,15 @@ export const syncResumeWithProfile = (resumeData: ResumeData, overwriteExisting:
     // Update education
     if (resumeData.education && resumeData.education.length > 0) {
       if (!userProfile.education || userProfile.education.length === 0 || overwriteExisting) {
-        userProfile.education = resumeData.education;
+        userProfile.education = resumeData.education.map(edu => ({
+          degree: edu.degree,
+          institution: edu.school,
+          location: '',
+          startDate: edu.startDate,
+          endDate: edu.endDate,
+          current: edu.current || false,
+          description: ''
+        }));
       }
     }
     
@@ -494,8 +544,12 @@ export const syncResumeWithProfile = (resumeData: ResumeData, overwriteExisting:
         userProfile.socialLinks.github = resumeData.socialLinks.github;
       }
       
-      if (resumeData.socialLinks.portfolio && (!userProfile.socialLinks.portfolio || overwriteExisting)) {
-        userProfile.socialLinks.portfolio = resumeData.socialLinks.portfolio;
+      if (resumeData.socialLinks.portfolio && (!userProfile.socialLinks.website || overwriteExisting)) {
+        userProfile.socialLinks.website = resumeData.socialLinks.portfolio;
+      }
+      
+      if (resumeData.socialLinks.other && (!userProfile.socialLinks.portfolio || overwriteExisting)) {
+        userProfile.socialLinks.portfolio = resumeData.socialLinks.other;
       }
     }
     

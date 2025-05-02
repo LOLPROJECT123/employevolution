@@ -1,3 +1,4 @@
+
 /**
  * Utilities for user profile management and synchronization
  */
@@ -33,6 +34,7 @@ export interface UserProfile {
   jobTitle?: string;
   company?: string;
   skills?: string[];
+  languages?: string[]; // Adding missing languages property
   experience?: Array<{
     title: string;
     company: string;
@@ -64,6 +66,7 @@ export interface UserProfile {
     github?: string;
     website?: string;
     twitter?: string;
+    portfolio?: string; // Adding portfolio for compatibility
   };
   jobPreferences?: {
     roles?: string[];

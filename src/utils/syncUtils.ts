@@ -78,15 +78,12 @@ export const syncJobApplications = async (): Promise<{
       window.chrome.runtime.sendMessage(
         { action: "getAppliedJobs" }, 
         (response: { jobs: Job[] } | undefined) => {
-          // Access lastError from runtime
-          const chrome = window.chrome;
-          const runtimeError = chrome?.runtime?.lastError;
-          
-          if (runtimeError) {
+          // Check for runtime error
+          if (window.chrome?.runtime?.lastError) {
             resolve({ 
               success: false, 
               syncedJobs: [], 
-              error: runtimeError.message 
+              error: window.chrome.runtime.lastError.message 
             });
             return;
           }
@@ -142,11 +139,8 @@ export const updateApplicationStatus = async (
           notes
         }, 
         (response: { success: boolean } | undefined) => {
-          const chrome = window.chrome;
-          const runtimeError = chrome?.runtime?.lastError;
-          
-          if (runtimeError) {
-            console.error("Error updating application status:", runtimeError.message);
+          if (window.chrome?.runtime?.lastError) {
+            console.error("Error updating application status:", window.chrome.runtime.lastError.message);
             resolve(false);
             return;
           }
@@ -177,11 +171,8 @@ export const getUserProfileFromExtension = async (): Promise<any | null> => {
       window.chrome.runtime.sendMessage(
         { action: "getUserProfile" }, 
         (response: any) => {
-          const chrome = window.chrome;
-          const runtimeError = chrome?.runtime?.lastError;
-          
-          if (runtimeError) {
-            console.error("Error getting user profile:", runtimeError.message);
+          if (window.chrome?.runtime?.lastError) {
+            console.error("Error getting user profile:", window.chrome.runtime.lastError.message);
             resolve(null);
             return;
           }
@@ -215,11 +206,8 @@ export const saveUserProfileToExtension = async (profile: any): Promise<boolean>
           userProfile: profile 
         }, 
         (response: { success: boolean } | undefined) => {
-          const chrome = window.chrome;
-          const runtimeError = chrome?.runtime?.lastError;
-          
-          if (runtimeError) {
-            console.error("Error saving user profile:", runtimeError.message);
+          if (window.chrome?.runtime?.lastError) {
+            console.error("Error saving user profile:", window.chrome.runtime.lastError.message);
             resolve(false);
             return;
           }
@@ -254,11 +242,8 @@ export const getExtensionSettings = async (): Promise<{
       window.chrome.runtime.sendMessage(
         { action: "getSettings" }, 
         (response: any) => {
-          const chrome = window.chrome;
-          const runtimeError = chrome?.runtime?.lastError;
-          
-          if (runtimeError) {
-            console.error("Error getting extension settings:", runtimeError.message);
+          if (window.chrome?.runtime?.lastError) {
+            console.error("Error getting extension settings:", window.chrome.runtime.lastError.message);
             resolve(null);
             return;
           }
@@ -296,11 +281,8 @@ export const saveExtensionSettings = async (settings: {
           settings 
         }, 
         (response: { success: boolean } | undefined) => {
-          const chrome = window.chrome;
-          const runtimeError = chrome?.runtime?.lastError;
-          
-          if (runtimeError) {
-            console.error("Error saving extension settings:", runtimeError.message);
+          if (window.chrome?.runtime?.lastError) {
+            console.error("Error saving extension settings:", window.chrome.runtime.lastError.message);
             resolve(false);
             return;
           }
