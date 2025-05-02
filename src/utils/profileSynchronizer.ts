@@ -10,53 +10,6 @@ import { addResumeSnapshot } from "./resume/versionControl";
 import { ParsedResume } from "@/types/resume";
 import { getUserProfile, saveUserProfile, UserProfile } from "./profileUtils";
 
-interface ResumeData {
-  personalInfo?: {
-    name?: string;
-    email?: string;
-    phone?: string;
-    location?: string;
-    summary?: string;
-  };
-  workExperiences?: Array<{
-    title?: string;
-    company?: string;
-    location?: string;
-    startDate?: string;
-    endDate?: string;
-    description?: string;
-    current?: boolean;
-  }>;
-  education?: Array<{
-    degree?: string;
-    institution?: string;
-    location?: string;
-    startDate?: string;
-    endDate?: string;
-    gpa?: string;
-    current?: boolean;
-  }>;
-  skills?: string[];
-  languages?: string[];
-  projects?: Array<{
-    title?: string;
-    description?: string;
-    technologies?: string[];
-    link?: string;
-    startDate?: string;
-    endDate?: string;
-    current?: boolean;
-  }>;
-  certifications?: string[];
-  socialLinks?: {
-    linkedin?: string;
-    github?: string;
-    portfolio?: string;
-    twitter?: string;
-    other?: string;
-  };
-}
-
 /**
  * Smart Profile Sync - Intelligently syncs parsed resume data with user profile
  * @param resumeData The parsed resume data
@@ -170,10 +123,6 @@ export const smartProfileSync = async (
       if (resumeData.socialLinks.portfolio && (overwrite || !updatedProfile.socialLinks.website)) {
         updatedProfile.socialLinks.website = resumeData.socialLinks.portfolio;
       }
-      
-      if (resumeData.socialLinks.other && (overwrite || !updatedProfile.socialLinks.other)) {
-        updatedProfile.socialLinks.other = resumeData.socialLinks.other;
-      }
     }
     
     // Update projects
@@ -217,6 +166,141 @@ export const smartProfileSync = async (
     }
     return getUserProfile();
   }
+};
+
+interface ResumeData {
+  personalInfo?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    location?: string;
+    summary?: string;
+  };
+  workExperiences?: Array<{
+    title?: string;
+    company?: string;
+    location?: string;
+    startDate?: string;
+    endDate?: string;
+    description?: string;
+    current?: boolean;
+  }>;
+  education?: Array<{
+    degree?: string;
+    institution?: string;
+    location?: string;
+    startDate?: string;
+    endDate?: string;
+    gpa?: string;
+    current?: boolean;
+  }>;
+  skills?: string[];
+  languages?: string[];
+  projects?: Array<{
+    title?: string;
+    description?: string;
+    technologies?: string[];
+    link?: string;
+    startDate?: string;
+    endDate?: string;
+    current?: boolean;
+  }>;
+  certifications?: string[];
+  socialLinks?: {
+    linkedin?: string;
+    github?: string;
+    portfolio?: string;
+    twitter?: string;
+  };
+}
+
+// The rest of the file remains unchanged, but we're no longer using functions that reference 'other' property 
+// or 'languages' field in UserProfile since they're causing type errors
+
+// For addResumeSnapshot function calls with ParsedResume, we need to make sure the properties match
+const sanitizeResumeDataForSnapshot = (data: any): ParsedResume => {
+  return {
+    personalInfo: {
+      name: data.personalInfo?.name || '',
+      email: data.personalInfo?.email || '',
+      phone: data.personalInfo?.phone || '',
+      location: data.personalInfo?.location || ''
+    },
+    workExperiences: (data.workExperiences || []).map((exp: any) => ({
+      role: exp.title || exp.role || '',
+      company: exp.company || '',
+      location: exp.location || '',
+      startDate: exp.startDate || '',
+      endDate: exp.endDate || '',
+      description: Array.isArray(exp.description) ? exp.description : [exp.description || '']
+    })),
+    education: (data.education || []).map((edu: any) => ({
+      school: edu.institution || edu.school || '',
+      degree: edu.degree || '',
+      startDate: edu.startDate || '',
+      endDate: edu.endDate || ''
+    })),
+    projects: (data.projects || []).map((proj: any) => ({
+      name: proj.title || proj.name || '',
+      startDate: proj.startDate || '',
+      endDate: proj.endDate || '',
+      description: Array.isArray(proj.description) ? proj.description : [proj.description || '']
+    })),
+    skills: data.skills || [],
+    languages: data.languages || [],
+    socialLinks: {
+      linkedin: data.socialLinks?.linkedin || '',
+      github: data.socialLinks?.github || '',
+      portfolio: data.socialLinks?.portfolio || data.socialLinks?.website || '',
+      other: ''
+    }
+  };
+};
+
+/**
+ * Generate profile improvement suggestions
+ */
+export const generateProfileSuggestions = (userProfile: UserProfile): string[] => {
+  const suggestions: string[] = [];
+  
+  if (!userProfile.firstName || !userProfile.lastName) {
+    suggestions.push('Add your full name to your profile');
+  }
+  
+  if (!userProfile.email) {
+    suggestions.push('Add your email address');
+  }
+  
+  if (!userProfile.phone) {
+    suggestions.push('Add your phone number for recruiters to contact you');
+  }
+  
+  if (!userProfile.location) {
+    suggestions.push('Add your location to help find nearby opportunities');
+  }
+  
+  if (!userProfile.skills || userProfile.skills.length < 5) {
+    suggestions.push('Add more skills to your profile (aim for at least 5-10 relevant skills)');
+  }
+  
+  if (!userProfile.experience || userProfile.experience.length === 0) {
+    suggestions.push('Add your work experience to improve job matching');
+  } else {
+    const needsDescription = userProfile.experience.some(exp => !exp.description || exp.description.length < 50);
+    if (needsDescription) {
+      suggestions.push('Add detailed descriptions to your work experiences');
+    }
+  }
+  
+  if (!userProfile.education || userProfile.education.length === 0) {
+    suggestions.push('Add your education details');
+  }
+  
+  if (!userProfile.socialLinks || (!userProfile.socialLinks.linkedin && !userProfile.socialLinks.github)) {
+    suggestions.push('Add your LinkedIn and/or GitHub profile links');
+  }
+  
+  return suggestions;
 };
 
 /**
@@ -429,52 +513,6 @@ export const syncResumeWithProfile = (resumeData: ResumeData, overwriteExisting:
     console.error('Error syncing resume with profile:', error);
     return false;
   }
-};
-
-/**
- * Generate profile improvement suggestions
- */
-export const generateProfileSuggestions = (userProfile: UserProfile): string[] => {
-  const suggestions: string[] = [];
-  
-  if (!userProfile.firstName || !userProfile.lastName) {
-    suggestions.push('Add your full name to your profile');
-  }
-  
-  if (!userProfile.email) {
-    suggestions.push('Add your email address');
-  }
-  
-  if (!userProfile.phone) {
-    suggestions.push('Add your phone number for recruiters to contact you');
-  }
-  
-  if (!userProfile.location) {
-    suggestions.push('Add your location to help find nearby opportunities');
-  }
-  
-  if (!userProfile.skills || userProfile.skills.length < 5) {
-    suggestions.push('Add more skills to your profile (aim for at least 5-10 relevant skills)');
-  }
-  
-  if (!userProfile.experience || userProfile.experience.length === 0) {
-    suggestions.push('Add your work experience to improve job matching');
-  } else {
-    const needsDescription = userProfile.experience.some(exp => !exp.description || exp.description.length < 50);
-    if (needsDescription) {
-      suggestions.push('Add detailed descriptions to your work experiences');
-    }
-  }
-  
-  if (!userProfile.education || userProfile.education.length === 0) {
-    suggestions.push('Add your education details');
-  }
-  
-  if (!userProfile.socialLinks || (!userProfile.socialLinks.linkedin && !userProfile.socialLinks.github)) {
-    suggestions.push('Add your LinkedIn and/or GitHub profile links');
-  }
-  
-  return suggestions;
 };
 
 /**
