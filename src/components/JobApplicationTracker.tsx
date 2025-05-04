@@ -166,8 +166,7 @@ const JobApplicationTracker: React.FC<JobApplicationTrackerProps> = ({
           <Progress 
             value={stageToProgress(currentStatus)} 
             className="h-2" 
-            // Fix: using className for the indicator instead of indicatorClassName
-            className={`h-2 ${getStatusColor(currentStatus)}`}
+            indicatorClassName={getStatusColor(currentStatus)}
           />
           <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
             <span>Saved</span>
