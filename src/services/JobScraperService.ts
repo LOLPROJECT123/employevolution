@@ -1,6 +1,7 @@
 
 import { toast } from "sonner";
 import { Job } from "@/types/job";
+import { ExtendedJob } from "@/types/jobExtensions";
 
 // Types for the API response from our scraper
 interface ScrapedJob {
@@ -58,7 +59,7 @@ export class JobScraperService {
     location: string,
     sources: JobSource[] = ['indeed', 'linkedin'],
     filters: JobSearchFilters = {}
-  ): Promise<Job[]> {
+  ): Promise<ExtendedJob[]> {
     try {
       // In a real app, this would call an actual API
       // For now, we'll simulate with mock data
@@ -70,7 +71,7 @@ export class JobScraperService {
       }
       
       // Convert scraped jobs to our application's Job type
-      const jobs: Job[] = mockResponse.jobs.map(job => ({
+      const jobs: ExtendedJob[] = mockResponse.jobs.map(job => ({
         id: job.id,
         title: job.title,
         company: job.company,
@@ -86,6 +87,11 @@ export class JobScraperService {
         logo: this.getCompanyLogo(job.company),
         remote: job.location?.toLowerCase().includes('remote') || false,
         jobType: job.jobType || 'Full-time',
+        // Add required Job properties
+        type: 'full-time',
+        level: 'mid',
+        postedAt: job.scrapedAt,
+        requirements: job.requirements || []
       }));
       
       return jobs;
