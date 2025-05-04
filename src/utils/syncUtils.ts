@@ -1,3 +1,4 @@
+
 /**
  * Utilities for synchronizing data between the extension and web app
  */
