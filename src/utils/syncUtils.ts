@@ -1,4 +1,3 @@
-
 /**
  * Utilities for synchronizing data between the extension and web app
  */
@@ -27,10 +26,11 @@ interface ChromeExtension {
   storage?: ChromeStorage;
 }
 
-// Declare global window with chrome property - fixed declaration to avoid conflict
+// Use a different approach to declare global chrome property to avoid conflicts
 declare global {
+  // Use interface merging instead of redeclaring the Window interface
   interface Window {
-    chrome?: ChromeExtension | undefined;
+    chrome?: ChromeExtension;
   }
 }
 
