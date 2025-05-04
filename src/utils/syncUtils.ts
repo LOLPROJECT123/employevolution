@@ -26,12 +26,9 @@ interface ChromeExtension {
   storage?: ChromeStorage;
 }
 
-// Use a different approach to declare global chrome property to avoid conflicts
+// Fix: Instead of using interface merging, declare the global chrome property differently
 declare global {
-  // Use interface merging instead of redeclaring the Window interface
-  interface Window {
-    chrome?: ChromeExtension;
-  }
+  var chrome: ChromeExtension | undefined;
 }
 
 export interface SyncState {
