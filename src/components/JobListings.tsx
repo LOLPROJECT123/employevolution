@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -19,19 +18,20 @@ import {
 } from "lucide-react";
 import { jobScraperService, JobSource } from "@/services/JobScraperService";
 import { Job } from "@/types/job";
+import { ExtendedJob } from "@/types/jobExtensions";
 import { toast } from "sonner";
 
 interface JobListingsProps {
-  initialJobs?: Job[];
+  initialJobs?: ExtendedJob[];
 }
 
 const JobListings: React.FC<JobListingsProps> = ({ initialJobs = [] }) => {
-  const [jobs, setJobs] = useState<Job[]>(initialJobs);
+  const [jobs, setJobs] = useState<ExtendedJob[]>(initialJobs);
   const [loading, setLoading] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [location, setLocation] = useState<string>('');
   const [sources, setSources] = useState<JobSource[]>(['indeed', 'linkedin']);
-  const [filteredJobs, setFilteredJobs] = useState<Job[]>(jobs);
+  const [filteredJobs, setFilteredJobs] = useState<ExtendedJob[]>(jobs);
   
   useEffect(() => {
     // Filter jobs based on search term and location

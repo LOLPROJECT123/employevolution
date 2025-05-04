@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -11,10 +10,11 @@ import JobMatchingAnalyzer from "@/components/JobMatchingAnalyzer";
 import JobApplicationTracker from "@/components/JobApplicationTracker";
 import AutoFillDetector from "@/components/AutoFillDetector";
 import { Job, JobApplicationStatus } from "@/types/job";
+import { ExtendedJob } from "@/types/jobExtensions";
 import { getUserProfile, saveUserProfile } from "@/utils/profileUtils";
 
 // Mock data - in a real app this would come from a context or API
-const mockJob: Job = {
+const mockJob: ExtendedJob = {
   id: "job123",
   title: "Senior React Developer",
   company: "Tech Innovations Inc",
@@ -63,11 +63,15 @@ const mockJob: Job = {
   logo: "/placeholder.svg",
   remote: true,
   jobType: "Full-time",
+  type: 'full-time',
+  level: 'mid',
+  postedAt: new Date().toISOString(),
+  requirements: []
 };
 
 const JobDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const [job, setJob] = useState<Job>(mockJob);
+  const [job, setJob] = useState<ExtendedJob>(mockJob);
   const [autoFillEnabled, setAutoFillEnabled] = useState<boolean>(true);
   
   const handleUpdateStatus = (jobId: string, status: JobApplicationStatus) => {

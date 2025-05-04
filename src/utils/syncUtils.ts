@@ -1,4 +1,3 @@
-
 /**
  * Utilities for synchronizing data between the extension and web app
  */
@@ -27,7 +26,7 @@ interface ChromeExtension {
   storage?: ChromeStorage;
 }
 
-// Fix: Using a different approach to declare global chrome
+// Fix: Using a proper global declaration
 declare global {
   interface Window {
     chrome?: ChromeExtension;

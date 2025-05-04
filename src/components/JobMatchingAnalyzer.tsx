@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -248,7 +247,10 @@ const JobMatchingAnalyzer: React.FC<JobMatchingAnalyzerProps> = ({
               <span>Match Score</span>
               <span>{result.score}%</span>
             </div>
-            <Progress value={result.score} className="h-2" indicatorClassName={getScoreBackgroundColor(result.score)} />
+            <Progress 
+              value={result.score} 
+              className={`h-2 ${getScoreColor(result.score)}`} 
+            />
           </div>
           
           <div className="space-y-4">

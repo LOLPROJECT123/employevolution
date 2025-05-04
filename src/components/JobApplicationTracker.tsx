@@ -15,11 +15,12 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Job, JobApplicationStatus } from "@/types/job";
+import { ExtendedJob } from "@/types/jobExtensions";
 import { updateApplicationStatus } from "@/utils/syncUtils";
 import { toast } from "sonner";
 
 interface JobApplicationTrackerProps {
-  job: Job;
+  job: ExtendedJob;
   onStatusChange?: (jobId: string, status: JobApplicationStatus) => void;
 }
 
@@ -80,8 +81,10 @@ const JobApplicationTracker: React.FC<JobApplicationTrackerProps> = ({
     switch(stage) {
       case 'saved': return 0;
       case 'applied': return 25;
-      case 'interviewing': return 50;
-      case 'offered': return 75;
+      case 'interviewing':
+      case 'interview': return 50;
+      case 'offered':
+      case 'offer': return 75;
       case 'accepted': return 100;
       case 'rejected': return 0;
       default: return 0;
@@ -92,8 +95,10 @@ const JobApplicationTracker: React.FC<JobApplicationTrackerProps> = ({
     switch(status) {
       case 'saved': return 'bg-blue-500';
       case 'applied': return 'bg-purple-500';
-      case 'interviewing': return 'bg-orange-500';
-      case 'offered': return 'bg-amber-500';
+      case 'interviewing':
+      case 'interview': return 'bg-orange-500';
+      case 'offered':
+      case 'offer': return 'bg-amber-500';
       case 'accepted': return 'bg-green-500';
       case 'rejected': return 'bg-gray-500';
       default: return 'bg-blue-500';
@@ -104,8 +109,10 @@ const JobApplicationTracker: React.FC<JobApplicationTrackerProps> = ({
     switch(status) {
       case 'saved': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300';
       case 'applied': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300';
-      case 'interviewing': return 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-300';
-      case 'offered': return 'bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-300';
+      case 'interviewing':
+      case 'interview': return 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-300';
+      case 'offered':
+      case 'offer': return 'bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-300';
       case 'accepted': return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300';
       case 'rejected': return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
       default: return 'bg-blue-100 text-blue-800';
@@ -159,7 +166,8 @@ const JobApplicationTracker: React.FC<JobApplicationTrackerProps> = ({
           <Progress 
             value={stageToProgress(currentStatus)} 
             className="h-2" 
-            indicatorClassName={getStatusColor(currentStatus)} 
+            // Fix: using className for the indicator instead of indicatorClassName
+            className={`h-2 ${getStatusColor(currentStatus)}`}
           />
           <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
             <span>Saved</span>
