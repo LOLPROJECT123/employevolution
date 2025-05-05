@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, ChangeEvent } from "react";
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -844,3 +845,119 @@ const ProfilePage = () => {
               </CardHeader>
               <CardContent className="p-6 pt-0 space-y-6">
                 <div className="bg-muted/30 rounded-lg p-4 mb-6">
+                  {/* This div was missing closing tag in the original file */}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="equalEmployment" className="mt-0">
+            <Card>
+              <CardHeader className="p-6">
+                <CardTitle>Equal Employment</CardTitle>
+                <CardDescription>Information for equal employment opportunities</CardDescription>
+              </CardHeader>
+              <CardContent className="p-6 pt-0">
+                {/* Content for equal employment tab */}
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="settings" className="mt-0">
+            <Card>
+              <CardHeader className="p-6">
+                <CardTitle>Account Settings</CardTitle>
+                <CardDescription>Manage your account preferences</CardDescription>
+              </CardHeader>
+              <CardContent className="p-6 pt-0">
+                {/* Content for settings tab */}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+      
+      {profileHeaderModalOpen && (
+        <EditProfileHeader 
+          open={profileHeaderModalOpen} 
+          onOpenChange={setProfileHeaderModalOpen}
+          name={name}
+          jobStatus={jobStatus} 
+          onSave={handleUpdateProfileHeader}
+        />
+      )}
+
+      {contactModalOpen && (
+        <EditContactInfo 
+          open={contactModalOpen} 
+          onOpenChange={setContactModalOpen}
+          email={email}
+          phone={phone} 
+          dateOfBirth={dateOfBirth}
+          location={location}
+          onSave={handleUpdateContactInfo}
+        />
+      )}
+
+      {workExperienceModalOpen && (
+        <EditWorkExperience 
+          open={workExperienceModalOpen} 
+          onOpenChange={setWorkExperienceModalOpen}
+          experience={editingWorkExperience}
+          onSave={handleSaveWorkExperience}
+          onDelete={handleDeleteWorkExperience}
+        />
+      )}
+
+      {educationModalOpen && (
+        <EditEducation 
+          open={educationModalOpen} 
+          onOpenChange={setEducationModalOpen}
+          education={editingEducation}
+          onSave={handleSaveEducation}
+          onDelete={handleDeleteEducation}
+        />
+      )}
+
+      {projectModalOpen && (
+        <EditProject
+          open={projectModalOpen} 
+          onOpenChange={setProjectModalOpen}
+          project={editingProject}
+          onSave={handleSaveProject}
+          onDelete={handleDeleteProject}
+        />
+      )}
+
+      {socialLinksModalOpen && (
+        <EditSocialLinks 
+          open={socialLinksModalOpen} 
+          onOpenChange={setSocialLinksModalOpen}
+          socialLinks={socialLinks}
+          onSave={handleUpdateSocialLinks}
+        />
+      )}
+
+      {roleExperienceModalOpen && (
+        <EditJobPreferences
+          open={roleExperienceModalOpen}
+          onOpenChange={setRoleExperienceModalOpen}
+          preferences={jobPreferences}
+          onSave={handleUpdateJobPreferences}
+          section="roles"
+        />
+      )}
+
+      {equalEmploymentModalOpen && (
+        <EditEqualEmployment
+          open={equalEmploymentModalOpen}
+          onOpenChange={setEqualEmploymentModalOpen}
+          data={equalEmploymentData}
+          onSave={handleUpdateEqualEmployment}
+        />
+      )}
+    </>
+  );
+};
+
+export default ProfilePage;
