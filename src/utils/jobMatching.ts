@@ -43,13 +43,24 @@ export const calculateMatchPercentage = (job: Job, resumeData: any): number => {
   return Math.min(matchPercentage, 100);
 };
 
+// Add these functions for JobMatchingDemo.tsx
+export const calculateJobMatch = calculateMatchPercentage;
+
+export const addMatchPercentageToJob = (job: Job, resumeData: any): Job => {
+  const matchPercentage = calculateMatchPercentage(job, resumeData);
+  return {
+    ...job,
+    matchPercentage
+  };
+};
+
 /**
  * Enhance a job with match data
  */
 export const enhanceJobWithMatchData = (job: Job, resumeData: any): ExtendedJob => {
   const matchPercentage = calculateMatchPercentage(job, resumeData);
   
-  const enhancedJob: ExtendedJob = {
+  const enhancedJob = {
     ...job,
     matchPercentage,
     matchDetails: {
@@ -61,7 +72,7 @@ export const enhanceJobWithMatchData = (job: Job, resumeData: any): ExtendedJob 
       educationScore: calculateEducationScore(job, resumeData),
       experienceScore: calculateExperienceScore(job, resumeData)
     }
-  };
+  } as ExtendedJob;
   
   return enhancedJob;
 };

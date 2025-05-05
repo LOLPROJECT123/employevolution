@@ -104,6 +104,22 @@ export const getUserProfile = (): UserProfile => {
         current: false,
         description: ''
       }
+    ],
+    projects: [
+      {
+        name: 'Portfolio Website',
+        description: 'Personal portfolio website built with React and TypeScript',
+        startDate: '2022-01',
+        endDate: '2022-03',
+        skills: ['React', 'TypeScript', 'Tailwind CSS']
+      },
+      {
+        name: 'Task Management App',
+        description: 'A full-stack application for managing tasks and projects',
+        startDate: '2021-06',
+        endDate: '2021-12',
+        skills: ['React', 'Node.js', 'Express', 'MongoDB']
+      }
     ]
   };
 };

@@ -3,7 +3,7 @@
  * Extensions to the Job type to support job matching and additional features
  */
 
-import { Job } from "@/types/job";
+import { Job, JobApplicationStatus } from "@/types/job";
 import { SkillMatch } from "@/utils/jobMatching";
 
 // Extended version of Job with match details
