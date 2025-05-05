@@ -16,4 +16,11 @@ export interface ExtendedJob extends Job {
     experienceScore?: number;
     locationScore?: number;
   };
+  // Additional properties needed by the UI
+  status?: string;
+  appliedAt?: string;
+  logo?: string;
+  jobType?: string;
+  savedAt?: string;
+  interviewDate?: string;
 }

@@ -1,14 +1,15 @@
 
 import React from "react";
 import { Job, JobApplicationStatus } from "@/types/job";
+import { ExtendedJob } from "@/types/jobExtensions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CheckCircle, Clock, Send, Calendar } from "lucide-react";
 
 export interface JobApplicationTrackerProps {
-  jobs: Job[];
-  job?: Job; // Optional single job parameter for detail view
+  jobs: ExtendedJob[];
+  job?: ExtendedJob; // Optional single job parameter for detail view
   onStatusChange: (jobId: string, status: JobApplicationStatus) => void;
 }
 
@@ -20,7 +21,7 @@ export default function JobApplicationTracker({ jobs, job, onStatusChange }: Job
     onStatusChange(jobId, value as JobApplicationStatus);
   };
 
-  const getStatusDisplay = (status: JobApplicationStatus) => {
+  const getStatusDisplay = (status: string = "saved") => {
     switch (status) {
       case "saved":
         return { label: "Saved", icon: <Clock className="h-4 w-4 text-blue-500" />, color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" };
