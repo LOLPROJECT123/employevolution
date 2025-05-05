@@ -16,18 +16,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface JobApplicationTrackerProps {
   jobs: ExtendedJob[];
+  job?: ExtendedJob; // Added this optional property to support single job view
+  onStatusChange?: (jobId: string, status: JobApplicationStatus) => void;
 }
 
-const JobApplicationTracker = ({ jobs }: JobApplicationTrackerProps) => {
+const JobApplicationTracker = ({ jobs = [], job, onStatusChange }: JobApplicationTrackerProps) => {
   const [filter, setFilter] = useState<string>("all");
+  
+  // If a single job is provided, use that instead of jobs array
+  const jobsToUse = job ? [job] : jobs;
   
   // Filter jobs based on status
   const filteredJobs = filter === "all" 
-    ? jobs 
-    : jobs.filter(job => job.status === filter);
+    ? jobsToUse 
+    : jobsToUse.filter(job => job.status === filter);
 
   // Group jobs by status
-  const groupedJobs = jobs.reduce((acc, job) => {
+  const groupedJobs = jobsToUse.reduce((acc, job) => {
     const status = job.status || 'saved';
     if (!acc[status]) {
       acc[status] = [];
@@ -49,8 +54,11 @@ const JobApplicationTracker = ({ jobs }: JobApplicationTrackerProps) => {
   
   // Update job status
   const updateStatus = (jobId: string, newStatus: JobApplicationStatus) => {
-    console.log(`Updating job ${jobId} to status ${newStatus}`);
-    // In a real implementation, this would update the job status in your state management or API
+    if (onStatusChange) {
+      onStatusChange(jobId, newStatus);
+    } else {
+      console.log(`Updating job ${jobId} to status ${newStatus}`);
+    }
   };
 
   return (
@@ -85,7 +93,19 @@ const JobApplicationTracker = ({ jobs }: JobApplicationTrackerProps) => {
                   <Badge className={getStatusColor(job.status || 'saved')}>
                     {job.status || 'Saved'}
                   </Badge>
-                  <Button variant="outline" size="sm">Update</Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      // Simple status cycling logic
+                      const statuses: JobApplicationStatus[] = ['saved', 'applied', 'interviewing', 'offered', 'rejected'];
+                      const currentIndex = statuses.indexOf((job.status as JobApplicationStatus) || 'saved');
+                      const nextStatus = statuses[(currentIndex + 1) % statuses.length];
+                      updateStatus(job.id, nextStatus);
+                    }}
+                  >
+                    Update
+                  </Button>
                 </div>
               </div>
             ))
@@ -98,7 +118,7 @@ const JobApplicationTracker = ({ jobs }: JobApplicationTrackerProps) => {
       </CardContent>
       <CardFooter>
         <div className="w-full text-sm text-muted-foreground">
-          <p>Total applications: {jobs.length}</p>
+          <p>Total applications: {jobsToUse.length}</p>
         </div>
       </CardFooter>
     </Card>

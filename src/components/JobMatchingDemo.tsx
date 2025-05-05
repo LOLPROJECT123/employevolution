@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Job } from '@/types/job';
 import { ExtendedJob } from '@/types/jobExtensions';
 import { calculateJobMatch, addMatchPercentageToJob } from '@/utils/jobMatching';
-import ResumeJobMatchIndicator from '@/components/ResumeJobMatchIndicator';
+import { ResumeJobMatchIndicator } from '@/components/ResumeJobMatchIndicator'; // Fixed import
 import { getParsedResumeFromProfile } from '@/utils/profileUtils';
 
 const JobMatchingDemo = () => {

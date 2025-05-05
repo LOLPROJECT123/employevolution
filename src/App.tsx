@@ -4,7 +4,7 @@ import { Routes, Route } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import JobsPage from '@/pages/JobsPage';
 import JobDetailPage from '@/pages/JobDetailPage';
-import ProfilePage from '@/pages/ProfilePage';
+import Profile from '@/pages/Profile'; // Changed from ProfilePage to Profile
 import JobAutomationPage from '@/pages/JobAutomationPage';
 
 function App() {
@@ -16,7 +16,7 @@ function App() {
           <Route path="/" element={<JobsPage />} />
           <Route path="/jobs" element={<JobsPage />} />
           <Route path="/jobs/:id" element={<JobDetailPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/automation" element={<JobAutomationPage />} />
         </Routes>
       </main>
