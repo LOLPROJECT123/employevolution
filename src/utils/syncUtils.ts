@@ -26,7 +26,7 @@ interface ChromeExtension {
   storage?: ChromeStorage;
 }
 
-// Fix: Using a proper global declaration
+// Fix: Use a properly defined interface extension instead of redeclaring Window
 declare global {
   interface Window {
     chrome?: ChromeExtension;
