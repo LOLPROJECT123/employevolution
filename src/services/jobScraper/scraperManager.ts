@@ -33,7 +33,7 @@ interface ScrapeResponse {
 }
 
 // Job scraper progress tracking
-interface ScraperProgress {
+export interface ScraperProgress {
   jobsFound: number;
   jobsProcessed: number;
   currentSource?: string;
@@ -171,7 +171,7 @@ export const convertScrapedToJob = (scrapedJob: ScrapedJob): ExtendedJob => {
  */
 const simulateScraping = async (
   config: JobScraperConfig, 
-  setProgress: (progress: ScraperProgress | ((prev: ScraperProgress) => ScraperProgress)) => void
+  setProgress: React.Dispatch<React.SetStateAction<ScraperProgress>>
 ) => {
   const totalSources = config.sources.length;
   const jobsPerSource = config.maxJobsPerSource;
