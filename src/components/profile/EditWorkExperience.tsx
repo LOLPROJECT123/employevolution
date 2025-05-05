@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { 
   Dialog, 
@@ -26,6 +25,7 @@ interface WorkExperience {
 interface EditWorkExperienceProps {
   open: boolean;
   onClose: () => void;
+  onOpenChange?: (open: boolean) => void;
   experience?: WorkExperience;
   onSave: (experience: WorkExperience) => void;
   onDelete?: (id: number) => void;
@@ -34,6 +34,7 @@ interface EditWorkExperienceProps {
 const EditWorkExperience: React.FC<EditWorkExperienceProps> = ({
   open,
   onClose,
+  onOpenChange,
   experience,
   onSave,
   onDelete,
@@ -87,8 +88,18 @@ const EditWorkExperience: React.FC<EditWorkExperienceProps> = ({
 
   const isNew = !experience;
 
+  // Use onOpenChange if provided, otherwise use onClose
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen && onClose) {
+      onClose();
+    }
+    if (onOpenChange) {
+      onOpenChange(isOpen);
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isNew ? "Add" : "Edit"} Work Experience</DialogTitle>

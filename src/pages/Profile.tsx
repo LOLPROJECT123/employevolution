@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, ChangeEvent } from "react";
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -880,9 +879,8 @@ const ProfilePage = () => {
       {profileHeaderModalOpen && (
         <EditProfileHeader 
           open={profileHeaderModalOpen} 
-          onOpenChange={setProfileHeaderModalOpen}
-          name={name}
-          jobStatus={jobStatus} 
+          onClose={() => setProfileHeaderModalOpen(false)}
+          initialData={{ name, jobStatus }} 
           onSave={handleUpdateProfileHeader}
         />
       )}
@@ -890,11 +888,8 @@ const ProfilePage = () => {
       {contactModalOpen && (
         <EditContactInfo 
           open={contactModalOpen} 
-          onOpenChange={setContactModalOpen}
-          email={email}
-          phone={phone} 
-          dateOfBirth={dateOfBirth}
-          location={location}
+          onClose={() => setContactModalOpen(false)}
+          initialData={{ email, phone, dateOfBirth, location }}
           onSave={handleUpdateContactInfo}
         />
       )}
@@ -902,7 +897,7 @@ const ProfilePage = () => {
       {workExperienceModalOpen && (
         <EditWorkExperience 
           open={workExperienceModalOpen} 
-          onOpenChange={setWorkExperienceModalOpen}
+          onClose={() => setWorkExperienceModalOpen(false)}
           experience={editingWorkExperience}
           onSave={handleSaveWorkExperience}
           onDelete={handleDeleteWorkExperience}
@@ -912,7 +907,7 @@ const ProfilePage = () => {
       {educationModalOpen && (
         <EditEducation 
           open={educationModalOpen} 
-          onOpenChange={setEducationModalOpen}
+          onClose={() => setEducationModalOpen(false)}
           education={editingEducation}
           onSave={handleSaveEducation}
           onDelete={handleDeleteEducation}
@@ -922,7 +917,7 @@ const ProfilePage = () => {
       {projectModalOpen && (
         <EditProject
           open={projectModalOpen} 
-          onOpenChange={setProjectModalOpen}
+          onClose={() => setProjectModalOpen(false)}
           project={editingProject}
           onSave={handleSaveProject}
           onDelete={handleDeleteProject}
@@ -932,8 +927,8 @@ const ProfilePage = () => {
       {socialLinksModalOpen && (
         <EditSocialLinks 
           open={socialLinksModalOpen} 
-          onOpenChange={setSocialLinksModalOpen}
-          socialLinks={socialLinks}
+          onClose={() => setSocialLinksModalOpen(false)}
+          initialData={socialLinks}
           onSave={handleUpdateSocialLinks}
         />
       )}
@@ -941,8 +936,8 @@ const ProfilePage = () => {
       {roleExperienceModalOpen && (
         <EditJobPreferences
           open={roleExperienceModalOpen}
-          onOpenChange={setRoleExperienceModalOpen}
-          preferences={jobPreferences}
+          onClose={() => setRoleExperienceModalOpen(false)}
+          initialData={jobPreferences}
           onSave={handleUpdateJobPreferences}
           section="roles"
         />
@@ -951,8 +946,8 @@ const ProfilePage = () => {
       {equalEmploymentModalOpen && (
         <EditEqualEmployment
           open={equalEmploymentModalOpen}
-          onOpenChange={setEqualEmploymentModalOpen}
-          data={equalEmploymentData}
+          onClose={() => setEqualEmploymentModalOpen(false)}
+          initialData={equalEmploymentData}
           onSave={handleUpdateEqualEmployment}
         />
       )}

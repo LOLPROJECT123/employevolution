@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { 
   Dialog, 
@@ -22,6 +21,7 @@ interface SocialLinks {
 interface EditSocialLinksProps {
   open: boolean;
   onClose: () => void;
+  onOpenChange?: (open: boolean) => void;
   initialData: SocialLinks;
   onSave: (data: SocialLinks) => void;
 }
@@ -29,6 +29,7 @@ interface EditSocialLinksProps {
 const EditSocialLinks: React.FC<EditSocialLinksProps> = ({
   open,
   onClose,
+  onOpenChange,
   initialData,
   onSave,
 }) => {
@@ -47,8 +48,18 @@ const EditSocialLinks: React.FC<EditSocialLinksProps> = ({
     onClose();
   };
 
+  // Use onOpenChange if provided, otherwise use onClose
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen && onClose) {
+      onClose();
+    }
+    if (onOpenChange) {
+      onOpenChange(isOpen);
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Edit Social Links</DialogTitle>
