@@ -19,6 +19,10 @@ export interface ExtendedJob extends Job {
     experienceScore?: number;
   };
   appliedAt?: string | null;
+  status?: string;
+  savedAt?: string;
+  logo?: string;
+  jobType?: string;
 }
 
 // Type for a job posting with additional analytics

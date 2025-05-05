@@ -3,8 +3,65 @@
  * Utilities for working with user profiles and resume data
  */
 
+// Define the UserProfile interface
+export interface UserProfile {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  location?: string;
+  title?: string;
+  summary?: string;
+  skills?: string[];
+  languages?: string[];
+  experience?: Array<{
+    title: string;
+    company: string;
+    location: string;
+    startDate: string;
+    endDate: string;
+    current: boolean;
+    description: string;
+  }>;
+  education?: Array<{
+    degree: string;
+    institution: string;
+    location: string;
+    startDate: string;
+    endDate: string;
+    current: boolean;
+    description: string;
+  }>;
+  socialLinks?: {
+    linkedin?: string;
+    github?: string;
+    website?: string;
+    portfolio?: string;
+    twitter?: string;
+  };
+  projects?: Array<{
+    name: string;
+    description: string;
+    startDate?: string;
+    endDate?: string;
+    skills?: string[];
+  }>;
+  resumeSnapshots?: any[];
+}
+
 // Simple mock profile for development purposes
-export const getUserProfile = () => {
+export const getUserProfile = (): UserProfile => {
+  // Try to get profile from localStorage
+  try {
+    const storedProfile = localStorage.getItem('userProfile');
+    if (storedProfile) {
+      return JSON.parse(storedProfile);
+    }
+  } catch (e) {
+    console.error('Error parsing stored profile:', e);
+  }
+
+  // Return default profile if nothing in localStorage
   return {
     firstName: 'Alex',
     lastName: 'Johnson',
@@ -39,14 +96,67 @@ export const getUserProfile = () => {
     ],
     education: [
       {
-        school: 'University of California, Berkeley',
         degree: 'Bachelor of Science in Computer Science',
-        fieldOfStudy: 'Computer Science',
+        institution: 'University of California, Berkeley',
+        location: 'Berkeley, CA',
         startDate: '2015-09',
-        endDate: '2019-05'
+        endDate: '2019-05',
+        current: false,
+        description: ''
       }
     ]
   };
+};
+
+/**
+ * Save user profile to localStorage
+ */
+export const saveUserProfile = (profile: UserProfile): void => {
+  try {
+    localStorage.setItem('userProfile', JSON.stringify(profile));
+    
+    // Dispatch event for components to react to profile changes
+    const event = new CustomEvent('profileUpdated', {
+      detail: profile
+    });
+    window.dispatchEvent(event);
+  } catch (error) {
+    console.error('Error saving profile:', error);
+  }
+};
+
+/**
+ * Get user initials from profile
+ */
+export const getUserInitials = (profile?: UserProfile): string => {
+  const userProfile = profile || getUserProfile();
+  
+  if (userProfile.firstName && userProfile.lastName) {
+    return `${userProfile.firstName[0]}${userProfile.lastName[0]}`;
+  }
+  
+  if (userProfile.firstName) {
+    return userProfile.firstName.substring(0, 2);
+  }
+  
+  return 'U';
+};
+
+/**
+ * Get user full name from profile
+ */
+export const getUserFullName = (profile?: UserProfile): string => {
+  const userProfile = profile || getUserProfile();
+  
+  if (userProfile.firstName && userProfile.lastName) {
+    return `${userProfile.firstName} ${userProfile.lastName}`;
+  }
+  
+  if (userProfile.firstName) {
+    return userProfile.firstName;
+  }
+  
+  return 'User';
 };
 
 /**
@@ -69,18 +179,23 @@ export const convertProfileToResumeFormat = (profile: any) => {
       description: [exp.description]
     })) || [],
     education: profile.education?.map((edu: any) => ({
-      school: edu.school,
+      school: edu.institution || edu.school,
       degree: edu.degree,
       startDate: edu.startDate,
       endDate: edu.endDate
     })) || [],
-    projects: [],
+    projects: profile.projects?.map((proj: any) => ({
+      name: proj.name,
+      startDate: proj.startDate || '',
+      endDate: proj.endDate || '',
+      description: Array.isArray(proj.description) ? proj.description : [proj.description || '']
+    })) || [],
     skills: profile.skills || [],
-    languages: [],
+    languages: profile.languages || [],
     socialLinks: {
-      linkedin: '',
-      github: '',
-      portfolio: '',
+      linkedin: profile.socialLinks?.linkedin || '',
+      github: profile.socialLinks?.github || '',
+      portfolio: profile.socialLinks?.portfolio || profile.socialLinks?.website || '',
       other: ''
     }
   };
