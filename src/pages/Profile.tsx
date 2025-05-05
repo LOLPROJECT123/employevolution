@@ -559,7 +559,7 @@ const ProfilePage = () => {
                   </Button>
                 </div>
                 <p className="text-muted-foreground font-medium">{experience.company}</p>
-                <p className="text-muted-foreground text-sm">{experience.location || ""}</p>
+                <p className="text-muted-foreground text-sm">{experience.location || "Remote"}</p>
                 <p className="text-muted-foreground text-sm">{experience.startDate} - {experience.endDate}</p>
                 <div className="mt-3 space-y-2">
                   {experience.description.map((item, index) => (

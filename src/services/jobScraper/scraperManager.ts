@@ -1,6 +1,8 @@
+
 import { toast } from "sonner";
 import { Job } from "@/types/job";
 import { ExtendedJob } from "@/types/jobExtensions";
+import { useState } from "react";
 
 // Types for the API response from our scraper
 interface ScrapedJob {
@@ -30,16 +32,184 @@ interface ScrapeResponse {
   error?: string;
 }
 
+// Job scraper progress tracking
+interface ScraperProgress {
+  jobsFound: number;
+  jobsProcessed: number;
+  currentSource?: string;
+}
+
+// JobScraper configurations
+export interface JobScraperConfig {
+  sources: string[];
+  maxJobsPerSource: number;
+  filters: JobSearchFilters;
+  useProxy: boolean;
+  excludeDuplicates: boolean;
+}
+
 // Supported job sources
-export type JobSource = 'indeed' | 'linkedin' | 'glassdoor' | 'ziprecruiter' | 'monster';
+export type JobSource = 'LinkedIn' | 'Indeed' | 'Glassdoor' | 'ZipRecruiter' | 'AngelList' | 'Monster';
 
 interface JobSearchFilters {
+  keywords: string[];
+  location?: string;
+  remote?: boolean;
   datePosted?: 'today' | 'week' | 'month' | 'any';
-  jobType?: 'fulltime' | 'parttime' | 'contract' | 'internship' | 'remote';
+  jobType?: string[];
   experience?: 'entry' | 'midlevel' | 'senior' | 'executive';
   salary?: string;
   distance?: number;
 }
+
+// Hook for job scraping functionality
+export const useJobScraper = () => {
+  const [isRunning, setIsRunning] = useState(false);
+  const [isComplete, setIsComplete] = useState(false);
+  const [filters, setFilters] = useState<JobSearchFilters>({
+    keywords: [],
+    location: '',
+    remote: false,
+    jobType: [],
+  });
+  const [progress, setProgress] = useState<ScraperProgress>({
+    jobsFound: 0,
+    jobsProcessed: 0,
+  });
+  const [results, setResults] = useState<ScrapeResponse | null>(null);
+
+  // Start the scraper with given configuration
+  const startScraping = async (config: JobScraperConfig) => {
+    setIsRunning(true);
+    setIsComplete(false);
+    setProgress({ jobsFound: 0, jobsProcessed: 0 });
+    
+    try {
+      // Simulate scraping process
+      await simulateScraping(config, setProgress);
+      
+      // Get results from jobScraperService
+      const jobResults = await jobScraperService.searchJobs(
+        config.filters.keywords.join(' '),
+        config.filters.location || '',
+        config.sources as JobSource[],
+        config.filters
+      );
+      
+      setResults({
+        success: true,
+        jobs: jobResults.map(job => ({
+          id: job.id,
+          title: job.title,
+          company: job.company,
+          location: job.location,
+          description: job.description,
+          salary: job.salary,
+          link: job.applyUrl,
+          applyLink: job.applyUrl,
+          source: job.source,
+          postedDate: job.datePosted,
+          scrapedAt: new Date().toISOString(),
+          skills: job.skills,
+          jobType: job.jobType
+        }))
+      });
+      
+      setIsComplete(true);
+    } catch (error) {
+      setResults({
+        success: false,
+        jobs: [],
+        error: "Failed to scrape jobs"
+      });
+      console.error("Error during job scraping:", error);
+      toast.error("Failed to complete job search");
+    } finally {
+      setIsRunning(false);
+    }
+  };
+  
+  return {
+    isRunning,
+    isComplete,
+    progress,
+    results,
+    filters,
+    setFilters,
+    startScraping
+  };
+}
+
+// Function to convert scraped job format to application job format
+export const convertScrapedToJob = (scrapedJob: ScrapedJob): ExtendedJob => {
+  return {
+    id: scrapedJob.id,
+    title: scrapedJob.title,
+    company: scrapedJob.company,
+    location: scrapedJob.location,
+    description: scrapedJob.description,
+    applyUrl: scrapedJob.applyLink || scrapedJob.link,
+    source: scrapedJob.source,
+    datePosted: scrapedJob.postedDate || new Date().toLocaleDateString(),
+    postedAt: new Date().toISOString(),
+    salary: scrapedJob.salary || { min: 0, max: 0, currency: 'USD' },
+    skills: scrapedJob.skills || [],
+    status: 'saved',
+    savedAt: new Date().toISOString(),
+    logo: getCompanyLogo(scrapedJob.company),
+    remote: scrapedJob.location?.toLowerCase().includes('remote') || false,
+    jobType: scrapedJob.jobType || 'Full-time',
+    // Add required Job properties
+    type: 'full-time',
+    level: 'mid',
+    requirements: scrapedJob.requirements || []
+  };
+};
+
+/**
+ * Helper function to simulate scraping process progress
+ */
+const simulateScraping = async (
+  config: JobScraperConfig, 
+  setProgress: (progress: ScraperProgress) => void
+) => {
+  const totalSources = config.sources.length;
+  const jobsPerSource = config.maxJobsPerSource;
+  const totalJobs = totalSources * Math.floor(Math.random() * jobsPerSource) + 5;
+  
+  setProgress({
+    jobsFound: totalJobs,
+    jobsProcessed: 0
+  });
+  
+  // Simulate progress for each source
+  for (let i = 0; i < totalSources; i++) {
+    const source = config.sources[i];
+    setProgress(prev => ({
+      ...prev,
+      currentSource: source
+    }));
+    
+    // Simulate processing jobs from this source
+    const sourceJobs = Math.floor(totalJobs / totalSources);
+    for (let j = 0; j < sourceJobs; j++) {
+      await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 200));
+      setProgress(prev => ({
+        ...prev,
+        jobsProcessed: prev.jobsProcessed + 1
+      }));
+    }
+  }
+};
+
+/**
+ * Get company logo URL (mock function)
+ */
+const getCompanyLogo = (company: string): string => {
+  // In a real app, this would use a logo API or database
+  // For now, return a placeholder
+  return '/placeholder.svg';
+};
 
 // Main class for job scraping functionality
 export class JobScraperService {
@@ -56,8 +226,8 @@ export class JobScraperService {
   public async searchJobs(
     query: string,
     location: string,
-    sources: JobSource[] = ['indeed', 'linkedin'],
-    filters: JobSearchFilters = {}
+    sources: JobSource[] = ['LinkedIn', 'Indeed'],
+    filters: JobSearchFilters = { keywords: [] }
   ): Promise<ExtendedJob[]> {
     try {
       // In a real app, this would call an actual API
@@ -79,7 +249,7 @@ export class JobScraperService {
         applyUrl: job.applyLink || job.link,
         source: job.source,
         datePosted: job.postedDate || new Date().toLocaleDateString(),
-        salary: job.salary,
+        salary: job.salary || { min: 0, max: 0, currency: 'USD' },
         skills: job.skills || [],
         status: 'saved',
         savedAt: new Date().toISOString(),
@@ -199,8 +369,8 @@ export class JobScraperService {
    * Capitalize job source name
    */
   private capitalizeSource(source: string): string {
-    if (source === 'linkedin') return 'LinkedIn';
-    if (source === 'ziprecruiter') return 'ZipRecruiter';
+    if (source === 'LinkedIn') return 'LinkedIn';
+    if (source === 'ZipRecruiter') return 'ZipRecruiter';
     return source.charAt(0).toUpperCase() + source.slice(1);
   }
   

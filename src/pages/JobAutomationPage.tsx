@@ -102,7 +102,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { CalendarIcon } from "@radix-ui/react-icons";
+import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { DateRange } from "react-day-picker";
@@ -129,8 +129,6 @@ import {
 import {
   HoverCard,
   HoverCardContent,
-  HoverCardDescription,
-  HoverCardHeader,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import {
