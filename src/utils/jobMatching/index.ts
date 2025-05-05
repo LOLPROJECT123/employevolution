@@ -6,12 +6,12 @@
 export { JobRequirementsAnalyzer, type JobRequirements } from './JobRequirementsAnalyzer';
 export { ResumeSkillsExtractor, type ExtractedSkill } from './ResumeSkillsExtractor';
 export { JobMatchCalculator, type JobMatchResult, type SkillMatch } from './JobMatchCalculator';
+import { ExtendedJob } from '@/types/jobExtensions';
 
 // Helper function to calculate job match for a given job and resume
 import { JobMatchCalculator } from './JobMatchCalculator';
 import { Job } from '@/types/job';
 import { ParsedResume } from '@/types/resume';
-import { ExtendedJob } from '@/types/jobExtensions';
 
 /**
  * Calculate match percentage between a job and a resume
@@ -42,7 +42,7 @@ export function addMatchPercentageToJob(job: Job, resume: ParsedResume): Extende
       educationScore: matchResult.details.educationScore,
       experienceScore: matchResult.details.experienceScore
     }
-  };
+  } as ExtendedJob;
   
   return enhancedJob;
 }
