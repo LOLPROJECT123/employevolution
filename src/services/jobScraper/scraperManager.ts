@@ -171,7 +171,7 @@ export const convertScrapedToJob = (scrapedJob: ScrapedJob): ExtendedJob => {
  */
 const simulateScraping = async (
   config: JobScraperConfig, 
-  setProgress: (progress: ScraperProgress) => void
+  setProgress: (progress: ScraperProgress | ((prev: ScraperProgress) => ScraperProgress)) => void
 ) => {
   const totalSources = config.sources.length;
   const jobsPerSource = config.maxJobsPerSource;
@@ -185,7 +185,7 @@ const simulateScraping = async (
   // Simulate progress for each source
   for (let i = 0; i < totalSources; i++) {
     const source = config.sources[i];
-    setProgress(prev => ({
+    setProgress((prev: ScraperProgress) => ({
       ...prev,
       currentSource: source
     }));
@@ -194,7 +194,7 @@ const simulateScraping = async (
     const sourceJobs = Math.floor(totalJobs / totalSources);
     for (let j = 0; j < sourceJobs; j++) {
       await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 200));
-      setProgress(prev => ({
+      setProgress((prev: ScraperProgress) => ({
         ...prev,
         jobsProcessed: prev.jobsProcessed + 1
       }));

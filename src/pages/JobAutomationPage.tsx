@@ -238,7 +238,6 @@ const JobAutomationPage: React.FC = () => {
   const onFormSubmit = (values: z.infer<typeof formSchema>) => {
     console.log(values);
     toast({
-      title: "Form submitted",
       description: "Job details have been saved.",
     });
   };
