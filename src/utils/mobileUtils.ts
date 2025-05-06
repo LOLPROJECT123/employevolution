@@ -1,69 +1,47 @@
 
-import { Capacitor } from '@capacitor/core';
-import { Device } from '@capacitor/device';
+// Utility functions to detect mobile app and Chrome extension environment
 
-/**
- * Types of platforms the app can run on
- */
-export enum PlatformType {
-  WEB = 'web',
-  ANDROID = 'android',
-  IOS = 'ios',
-  EXTENSION = 'extension'
-}
-
-/**
- * Check if the app is running in a mobile environment (Capacitor)
- */
 export const isMobileApp = (): boolean => {
-  return Capacitor.isNativePlatform();
+  // Check if running in a mobile app context (Capacitor or Cordova)
+  return (
+    typeof window !== 'undefined' &&
+    (window.hasOwnProperty('Capacitor') || 
+     document.URL.includes('http://localhost') && (
+       navigator.userAgent.match(/iPhone/i) ||
+       navigator.userAgent.match(/iPad/i) ||
+       navigator.userAgent.match(/Android/i)
+     ))
+  );
 };
 
-/**
- * Check if the app is running as a Chrome extension
- */
 export const isChromeExtension = (): boolean => {
-  return typeof window !== 'undefined' && 
-         typeof (window as any).chrome !== 'undefined' && 
-         typeof (window as any).chrome.runtime !== 'undefined' && 
-         typeof (window as any).chrome.runtime.id !== 'undefined';
+  // Check if running in a Chrome extension context
+  return (
+    typeof window !== 'undefined' &&
+    window.chrome !== undefined &&
+    window.chrome.runtime !== undefined &&
+    typeof window.chrome.runtime.sendMessage === 'function'
+  );
 };
 
-/**
- * Check if the current device has a mobile screen size
- */
-export const isMobileScreenSize = (): boolean => {
-  return typeof window !== 'undefined' && window.innerWidth < 768;
+export const isIOS = (): boolean => {
+  return (
+    typeof navigator !== 'undefined' &&
+    (
+      navigator.userAgent.match(/iPhone/i) ||
+      navigator.userAgent.match(/iPad/i) ||
+      navigator.userAgent.match(/iPod/i)
+    ) !== null
+  );
 };
 
-/**
- * Get the current platform the app is running on
- */
-export const getCurrentPlatform = async (): Promise<PlatformType> => {
-  if (isChromeExtension()) {
-    return PlatformType.EXTENSION;
-  }
-  
-  if (isMobileApp()) {
-    try {
-      const info = await Device.getInfo();
-      if (info.platform === 'android') {
-        return PlatformType.ANDROID;
-      } else if (info.platform === 'ios') {
-        return PlatformType.IOS;
-      }
-    } catch (error) {
-      console.error('Error getting device info:', error);
-    }
-  }
-  
-  return PlatformType.WEB;
+export const isAndroid = (): boolean => {
+  return (
+    typeof navigator !== 'undefined' &&
+    navigator.userAgent.match(/Android/i) !== null
+  );
 };
 
-/**
- * Check if the app is running in a specific platform
- */
-export const isPlatform = async (platform: PlatformType): Promise<boolean> => {
-  const currentPlatform = await getCurrentPlatform();
-  return currentPlatform === platform;
+export const isMobileSize = (): boolean => {
+  return typeof window !== 'undefined' && window.innerWidth <= 768;
 };

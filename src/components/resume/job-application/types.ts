@@ -1,5 +1,5 @@
 
-export type JobApplicationTab = 'manual' | 'auto' | 'scraper';
+// Types for job scraper and application functionality
 
 export interface ScrapedJob {
   id: string;
@@ -10,10 +10,10 @@ export interface ScrapedJob {
   source: string;
   datePosted: string;
   description: string;
-  applyUrl: string;
-  verified?: boolean;
+  applyUrl?: string;
   matchPercentage?: number;
-  matchKeywords?: string[];
+  requirements?: string[];
+  verified?: boolean;
   keywordMatch?: {
     score: number;
     total: number;
@@ -29,32 +29,54 @@ export interface ScrapedJob {
       total: number;
     };
   };
-  requirements?: string[];
 }
 
-export interface ResumeTemplate {
-  id: string;
-  title: string;
-  description: string;
-  imageUrl: string;
-  previewUrl: string;
-  downloadUrl: string;
-  company: string;
-  role: string;
-  roleType?: string;
-  rating: number;
-  downloads: number;
-  tags: string[];
-  source?: string;
-  attribution?: string;
-  licenseType?: 'free' | 'premium' | 'attribution-required';
-}
-
-export interface TemplateSource {
-  id: string;
+export interface JobSource {
   name: string;
-  url: string;
-  apiKey?: string;
-  isActive: boolean;
-  attribution: string;
+  supported: boolean;
+  icon?: React.ReactNode;
+  description?: string;
+}
+
+export interface JobScraperSettings {
+  maxResults: number;
+  useProxy: boolean;
+  proxyConfig: {
+    url: string;
+    enabled: boolean;
+  };
+  selectedSources: string[];
+  keywords: string[];
+  locations: string[];
+}
+
+export interface ApplicationCredentials {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  linkedin: string;
+  website: string;
+  yearsOfExperience: number;
+  workAuthorization: string;
+  education: {
+    school: string;
+    degree: string;
+    field: string;
+    graduationDate: string;
+  };
+}
+
+export interface AutofillConfig {
+  enabled: boolean;
+  credentials: ApplicationCredentials;
+  preferences: {
+    skipAssessments: boolean;
+    skipCoverLetter: boolean;
+    skipFutureEmails: boolean;
+  };
 }
