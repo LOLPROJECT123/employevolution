@@ -15,11 +15,6 @@ import { BookmarkIcon, ExternalLink, FileText, Zap, Users } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import AutoApplyModal from "@/components/AutoApplyModal";
 import { toast } from "@/hooks/use-toast";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { ApplicationScoreCalculator } from "@/components/ApplicationScoreCalculator";
-import { ResumeGenerator } from "@/components/ResumeGenerator";
-import { RealTimeJobAlerts } from "@/components/RealTimeJobAlerts";
-import { getUserProfile } from "@/utils/profileUtils";
 
 interface JobDetailViewProps {
   job: Job | null;
@@ -27,28 +22,6 @@ interface JobDetailViewProps {
   onSave: (job: Job) => void;
   isSaved?: boolean;
   isApplied?: boolean;
-}
-
-// Define the profile type for the mockUserProfile to match ResumeGenerator expectation
-interface MockUserProfile {
-  name: string;
-  email: string;
-  phone: string;
-  location: string;
-  skills: string[];
-  experience: {
-    title: string;
-    company: string;
-    duration: string;
-    description: string;
-  }[];
-  education: string[];
-  workHistory: {
-    title: string;
-    company: string;
-    duration: string;
-    description: string;
-  }[];
 }
 
 export const JobDetailView = ({ 
@@ -59,51 +32,6 @@ export const JobDetailView = ({
   isApplied
 }: JobDetailViewProps) => {
   const [showAutoApplyModal, setShowAutoApplyModal] = useState(false);
-  const [activeTab, setActiveTab] = useState("details");
-  
-  // Get user profile for job matching
-  const userProfile = getUserProfile();
-  
-  // Function to format experience data for the UI
-  const formatProfileExperience = () => {
-    if (userProfile.experience && Array.isArray(userProfile.experience)) {
-      return userProfile.experience.map(exp => ({
-        title: exp.title || '',
-        company: exp.company || '',
-        duration: exp.startDate ? 
-          (exp.current ? `${exp.startDate} - Present` : `${exp.startDate} - ${exp.endDate || ''}`) : 
-          '2020-2022',
-        description: exp.description || ''
-      }));
-    }
-    
-    return [
-      {
-        title: "Frontend Developer",
-        company: "Tech Solutions Inc.",
-        duration: "2020-2022",
-        description: "Developed and maintained responsive web applications using React and TypeScript."
-      },
-      {
-        title: "Junior Web Developer",
-        company: "Digital Creations",
-        duration: "2018-2020",
-        description: "Built and styled websites for various clients using HTML, CSS, and JavaScript."
-      }
-    ];
-  };
-  
-  // Create a mock user profile that matches the expected format for ResumeGenerator
-  const mockUserProfile: MockUserProfile = {
-    name: userProfile.name || "Alex Johnson",
-    email: userProfile.email || "alex.johnson@example.com",
-    phone: userProfile.phone || "555-123-4567",
-    location: userProfile.location || "San Francisco, CA",
-    skills: userProfile.skills || ["React", "TypeScript", "JavaScript", "HTML", "CSS", "Node.js", "Express", "MongoDB", "Git"],
-    experience: formatProfileExperience(),
-    education: userProfile.education?.map(edu => edu.degree) || ["Bachelor of Science in Computer Science"],
-    workHistory: formatProfileExperience()
-  };
   
   if (!job) {
     return (
@@ -113,7 +41,7 @@ export const JobDetailView = ({
     );
   }
 
-  function handleApply() {
+  const handleApply = () => {
     if (job) {
       const directUrl = getDirectApplicationUrl(job);
       
@@ -149,7 +77,7 @@ export const JobDetailView = ({
     }
   };
   
-  function handleViewJob() {
+  const handleViewJob = () => {
     if (!job.applyUrl) {
       toast({
         title: "Job URL not available",
@@ -171,27 +99,35 @@ export const JobDetailView = ({
     
     window.open(job.applyUrl, '_blank', 'noopener,noreferrer');
   };
-
-  // Helper function to calculate years of experience from profile data
-  function calculateYearsOfExperience(experience) {
-    if (!experience || !Array.isArray(experience) || experience.length === 0) {
-      return 0;
-    }
+  
+  const detectPlatform = (url: string): string | null => {
+    if (!url) return null;
     
-    let totalMonths = 0;
+    const lowerUrl = url.toLowerCase();
     
-    experience.forEach(exp => {
-      const startDate = new Date(exp.startDate);
-      const endDate = exp.current ? new Date() : (exp.endDate ? new Date(exp.endDate) : new Date());
-      
-      const months = (endDate.getFullYear() - startDate.getFullYear()) * 12 + 
-                    (endDate.getMonth() - startDate.getMonth());
-      
-      totalMonths += Math.max(0, months);
-    });
+    if (lowerUrl.includes('google.com') || lowerUrl.includes('careers.google')) return 'Google';
+    if (lowerUrl.includes('microsoft.com') || lowerUrl.includes('careers.microsoft')) return 'Microsoft';
+    if (lowerUrl.includes('apple.com') || lowerUrl.includes('jobs.apple')) return 'Apple';
+    if (lowerUrl.includes('amazon.jobs') || lowerUrl.includes('amazon.com/jobs')) return 'Amazon';
+    if (lowerUrl.includes('meta.com') || lowerUrl.includes('metacareers')) return 'Meta';
+    if (lowerUrl.includes('netflix.com') || lowerUrl.includes('jobs.netflix')) return 'Netflix';
+    if (lowerUrl.includes('uber.com/careers') || lowerUrl.includes('uber.com/us/en/careers')) return 'Uber';
+    if (lowerUrl.includes('airbnb.com/careers') || lowerUrl.includes('careers.airbnb')) return 'Airbnb';
+    if (lowerUrl.includes('twitter.com/careers') || lowerUrl.includes('careers.twitter')) return 'Twitter';
+    if (lowerUrl.includes('linkedin.com/jobs') || lowerUrl.includes('careers.linkedin')) return 'LinkedIn';
     
-    return Math.round((totalMonths / 12) * 10) / 10;
-  }
+    if (lowerUrl.includes('greenhouse.io')) return 'Greenhouse';
+    if (lowerUrl.includes('lever.co')) return 'Lever';
+    if (lowerUrl.includes('workday')) return 'Workday';
+    if (lowerUrl.includes('indeed.com')) return 'Indeed';
+    if (lowerUrl.includes('taleo')) return 'Taleo';
+    if (lowerUrl.includes('icims')) return 'iCIMS';
+    if (lowerUrl.includes('brassring')) return 'BrassRing';
+    if (lowerUrl.includes('smartrecruiters')) return 'SmartRecruiters';
+    if (lowerUrl.includes('jobvite')) return 'Jobvite';
+    
+    return null; // Unknown platform
+  };
 
   return (
     <ScrollArea className="h-[calc(100vh-250px)]">
@@ -225,7 +161,7 @@ export const JobDetailView = ({
           
           <div className="flex flex-col gap-2">
             <Button 
-              onClick={() => handleApply()}
+              onClick={handleApply}
               disabled={isApplied}
               className={isApplied ? "bg-green-600 hover:bg-green-700" : ""}
             >
@@ -256,7 +192,7 @@ export const JobDetailView = ({
             {job.applyUrl && (
               <Button 
                 variant="outline"
-                onClick={() => handleViewJob()}
+                onClick={handleViewJob}
               >
                 <FileText className="mr-2 h-4 w-4" />
                 View Job
@@ -272,70 +208,41 @@ export const JobDetailView = ({
           </div>
         </div>
         
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
-          <TabsList className="w-full grid grid-cols-4">
-            <TabsTrigger value="details">Details</TabsTrigger>
-            <TabsTrigger value="match">Match Score</TabsTrigger>
-            <TabsTrigger value="documents">Documents</TabsTrigger>
-            <TabsTrigger value="alerts">Alerts</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="details" className="mt-4 space-y-6">
-            <div>
-              <h2 className="text-xl font-semibold mb-2">Description</h2>
-              <p className="whitespace-pre-line">{job.description}</p>
+        <div className="mt-6">
+          <h2 className="text-xl font-semibold mb-2">Description</h2>
+          <p className="whitespace-pre-line">{job.description}</p>
+        </div>
+        
+        {job.requirements && job.requirements.length > 0 && (
+          <div className="mt-6">
+            <h2 className="text-xl font-semibold mb-2">Requirements</h2>
+            <ul className="list-disc pl-5 space-y-2">
+              {job.requirements.map((req, index) => (
+                <li key={index}>{req}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+        
+        {job.skills && job.skills.length > 0 && (
+          <div className="mt-6">
+            <h2 className="text-xl font-semibold mb-2">Required Skills</h2>
+            <div className="flex flex-wrap gap-2">
+              {job.skills.map((skill, index) => (
+                <span key={index} className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-sm">
+                  {skill}
+                </span>
+              ))}
             </div>
-            
-            {job.requirements && job.requirements.length > 0 && (
-              <div>
-                <h2 className="text-xl font-semibold mb-2">Requirements</h2>
-                <ul className="list-disc pl-5 space-y-2">
-                  {job.requirements.map((req, index) => (
-                    <li key={index}>{req}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            
-            {job.skills && job.skills.length > 0 && (
-              <div>
-                <h2 className="text-xl font-semibold mb-2">Required Skills</h2>
-                <div className="flex flex-wrap gap-2">
-                  {job.skills.map((skill, index) => (
-                    <span key={index} className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-sm">
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="match" className="mt-4">
-            <ApplicationScoreCalculator 
-              job={job} 
-              userSkills={mockUserProfile.skills}
-              userExperience={calculateYearsOfExperience(userProfile.experience)}
-              userEducation={mockUserProfile.education}
-              userLocation={mockUserProfile.location}
-            />
-            
-            {job.matchPercentage && (
-              <div className="mt-8 border-t pt-6">
-                <h2 className="text-xl font-semibold mb-3">Detailed Match Analysis</h2>
-                <JobMatchDetails job={job} />
-              </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="documents" className="mt-4">
-            <ResumeGenerator job={job} userProfile={mockUserProfile} />
-          </TabsContent>
-          
-          <TabsContent value="alerts" className="mt-4">
-            <RealTimeJobAlerts />
-          </TabsContent>
-        </Tabs>
+          </div>
+        )}
+        
+        {job.matchPercentage && (
+          <div className="mt-8 border-t pt-6">
+            <h2 className="text-xl font-semibold mb-3">Detailed Match Analysis</h2>
+            <JobMatchDetails job={job} />
+          </div>
+        )}
         
         <AutoApplyModal
           job={job}

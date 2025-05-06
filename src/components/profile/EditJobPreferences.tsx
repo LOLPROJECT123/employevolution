@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { 
   Dialog, 
@@ -41,7 +42,6 @@ interface JobPreferences {
 interface EditJobPreferencesProps {
   open: boolean;
   onClose: () => void;
-  onOpenChange?: (open: boolean) => void;
   section: 'roles' | 'industries' | 'compensation' | 'location' | 'jobTypes' | 'skills' | 'workAuth';
   initialData: JobPreferences;
   onSave: (data: Partial<JobPreferences>) => void;
@@ -50,7 +50,6 @@ interface EditJobPreferencesProps {
 const EditJobPreferences: React.FC<EditJobPreferencesProps> = ({
   open,
   onClose,
-  onOpenChange,
   section,
   initialData,
   onSave,
@@ -631,18 +630,8 @@ const EditJobPreferences: React.FC<EditJobPreferencesProps> = ({
     }
   };
 
-  // Use onOpenChange if provided, otherwise use onClose
-  const handleOpenChange = (isOpen: boolean) => {
-    if (!isOpen && onClose) {
-      onClose();
-    }
-    if (onOpenChange) {
-      onOpenChange(isOpen);
-    }
-  };
-
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{getSectionTitle()}</DialogTitle>

@@ -1,3 +1,4 @@
+
 export interface Job {
   id: string;
   title: string;
@@ -67,11 +68,9 @@ export type JobApplicationStatus =
   | 'saved' 
   | 'applied' 
   | 'phone_screen' 
-  | 'interview'
-  | 'interviewing' 
+  | 'interview' 
   | 'assessment' 
-  | 'offer'
-  | 'offered'
+  | 'offer' 
   | 'accepted' 
   | 'rejected' 
   | 'declined' 

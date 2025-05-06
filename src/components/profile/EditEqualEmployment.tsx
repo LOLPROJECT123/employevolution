@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { 
   Dialog, 
@@ -26,7 +27,6 @@ interface EqualEmploymentData {
 interface EditEqualEmploymentProps {
   open: boolean;
   onClose: () => void;
-  onOpenChange?: (open: boolean) => void;
   initialData: EqualEmploymentData;
   onSave: (data: EqualEmploymentData) => void;
 }
@@ -63,7 +63,6 @@ const specifiedOptions = [
 const EditEqualEmployment: React.FC<EditEqualEmploymentProps> = ({
   open,
   onClose,
-  onOpenChange,
   initialData,
   onSave,
 }) => {
@@ -76,16 +75,6 @@ const EditEqualEmployment: React.FC<EditEqualEmploymentProps> = ({
   const [lgbtq, setLgbtq] = useState(initialData.lgbtq);
   const [disability, setDisability] = useState(initialData.disability);
   const [veteran, setVeteran] = useState(initialData.veteran);
-
-  // Use onOpenChange if provided, otherwise use onClose
-  const handleOpenChange = (isOpen: boolean) => {
-    if (!isOpen && onClose) {
-      onClose();
-    }
-    if (onOpenChange) {
-      onOpenChange(isOpen);
-    }
-  };
 
   const handleSave = () => {
     onSave({
@@ -103,7 +92,7 @@ const EditEqualEmployment: React.FC<EditEqualEmploymentProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Equal Employment Information</DialogTitle>

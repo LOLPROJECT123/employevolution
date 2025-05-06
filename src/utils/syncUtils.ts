@@ -5,32 +5,22 @@
 
 import { Job, JobApplicationStatus } from "@/types/job";
 
-// Define Chrome extension types with proper structure
-interface ChromeLastError {
-  message: string;
-}
-
+// Define Chrome extension types
 interface ChromeRuntime {
   sendMessage: (message: any, responseCallback?: (response: any) => void) => void;
-  lastError?: ChromeLastError;
+  lastError?: {
+    message: string;
+  };
 }
 
-interface ChromeStorage {
-  local: {
-    set: (items: {[key: string]: any}, callback?: () => void) => void;
-    get: (keys: string | string[] | null, callback: (items: {[key: string]: any}) => void) => void;
-  }
-}
-
-interface ChromeExtension {
+interface Chrome {
   runtime?: ChromeRuntime;
-  storage?: ChromeStorage;
 }
 
-// Fix the declaration using proper interface augmentation
+// Declare global window with chrome property
 declare global {
   interface Window {
-    chrome?: ChromeExtension;
+    chrome?: Chrome;
   }
 }
 
@@ -78,7 +68,6 @@ export const syncJobApplications = async (): Promise<{
       window.chrome.runtime.sendMessage(
         { action: "getAppliedJobs" }, 
         (response: { jobs: Job[] } | undefined) => {
-          // Check for runtime error
           if (window.chrome?.runtime?.lastError) {
             resolve({ 
               success: false, 
