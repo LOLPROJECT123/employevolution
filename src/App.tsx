@@ -7,11 +7,14 @@ import JobDetailPage from '@/pages/JobDetailPage';
 import Profile from '@/pages/Profile'; 
 import JobAutomationPage from '@/pages/JobAutomationPage';
 import Index from '@/pages/Index';
+import { Toaster } from 'sonner';
 
 function App() {
   return (
     <div className="min-h-screen flex flex-col">
-      <main className="flex-1">
+      <Navbar />
+      <Toaster position="top-right" />
+      <main className="flex-1 pt-16"> {/* Add padding-top to account for the fixed navbar */}
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/jobs" element={<JobsPage />} />
