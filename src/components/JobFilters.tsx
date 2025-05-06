@@ -849,6 +849,3 @@ export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) =>
     </Card>
   );
 };
-
-// Create a default export for compatibility with Jobs.tsx
-export const JobFilters = JobFiltersSection;
