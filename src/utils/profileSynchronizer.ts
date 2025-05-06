@@ -126,9 +126,8 @@ export const smartProfileSync = async (
         updatedProfile.socialLinks = {
           linkedin: '',
           github: '',
-          website: '',
           portfolio: '',
-          twitter: ''
+          other: ''
         };
       }
       
@@ -144,8 +143,8 @@ export const smartProfileSync = async (
         updatedProfile.socialLinks.website = resumeData.socialLinks.portfolio;
       }
       
-      if (resumeData.socialLinks.other && (overwrite || !updatedProfile.socialLinks.portfolio)) {
-        updatedProfile.socialLinks.portfolio = resumeData.socialLinks.other;
+      if (resumeData.socialLinks.other && (overwrite || !updatedProfile.socialLinks.other)) {
+        updatedProfile.socialLinks.other = resumeData.socialLinks.other;
       }
     }
     
@@ -171,7 +170,14 @@ export const smartProfileSync = async (
     addResumeSnapshot(resumeData);
     
     // Save the updated profile
-    saveUserProfile(updatedProfile);
+    saveUserProfile({
+      name: updatedProfile.name || "User",
+      email: updatedProfile.email || "",
+      phone: updatedProfile.phone || "",
+      location: updatedProfile.location || "",
+      skills: updatedProfile.skills || [],
+      ...updatedProfile
+    } as UserProfile);
     
     // Show notification if requested
     if (notify) {

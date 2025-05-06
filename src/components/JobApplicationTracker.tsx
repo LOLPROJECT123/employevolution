@@ -1,128 +1,98 @@
 
-import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import React from "react";
 import { Job, JobApplicationStatus } from "@/types/job";
 import { ExtendedJob } from "@/types/jobExtensions";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CheckCircle, Clock, Send, Calendar } from "lucide-react";
 
-interface JobApplicationTrackerProps {
+export interface JobApplicationTrackerProps {
   jobs: ExtendedJob[];
-  job?: ExtendedJob; // Added this optional property to support single job view
-  onStatusChange?: (jobId: string, status: JobApplicationStatus) => void;
+  job?: ExtendedJob; // Optional single job parameter for detail view
+  onStatusChange: (jobId: string, status: JobApplicationStatus) => void;
 }
 
-const JobApplicationTracker = ({ jobs = [], job, onStatusChange }: JobApplicationTrackerProps) => {
-  const [filter, setFilter] = useState<string>("all");
+export default function JobApplicationTracker({ jobs, job, onStatusChange }: JobApplicationTrackerProps) {
+  // Use the single job if provided, otherwise use the array
+  const jobsToTrack = job ? [job] : jobs;
   
-  // If a single job is provided, use that instead of jobs array
-  const jobsToUse = job ? [job] : jobs;
-  
-  // Filter jobs based on status
-  const filteredJobs = filter === "all" 
-    ? jobsToUse 
-    : jobsToUse.filter(job => job.status === filter);
-
-  // Group jobs by status
-  const groupedJobs = jobsToUse.reduce((acc, job) => {
-    const status = job.status || 'saved';
-    if (!acc[status]) {
-      acc[status] = [];
-    }
-    acc[status].push(job);
-    return acc;
-  }, {} as Record<string, ExtendedJob[]>);
-
-  // Get status badge color
-  const getStatusColor = (status: string) => {
-    switch(status) {
-      case 'applied': return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400";
-      case 'interviewing': return "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400";
-      case 'offered': return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
-      case 'rejected': return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
-      default: return "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400";
-    }
+  const handleStatusChange = (jobId: string, value: string) => {
+    onStatusChange(jobId, value as JobApplicationStatus);
   };
-  
-  // Update job status
-  const updateStatus = (jobId: string, newStatus: JobApplicationStatus) => {
-    if (onStatusChange) {
-      onStatusChange(jobId, newStatus);
-    } else {
-      console.log(`Updating job ${jobId} to status ${newStatus}`);
+
+  const getStatusDisplay = (status: string = "saved") => {
+    switch (status) {
+      case "saved":
+        return { label: "Saved", icon: <Clock className="h-4 w-4 text-blue-500" />, color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" };
+      case "applied":
+        return { label: "Applied", icon: <Send className="h-4 w-4 text-green-500" />, color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" };
+      case "interviewing":
+        return { label: "Interviewing", icon: <Calendar className="h-4 w-4 text-purple-500" />, color: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400" };
+      case "offered":
+        return { label: "Offered", icon: <CheckCircle className="h-4 w-4 text-amber-500" />, color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" };
+      case "accepted":
+        return { label: "Accepted", icon: <CheckCircle className="h-4 w-4 text-green-500" />, color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" };
+      case "rejected":
+        return { label: "Rejected", icon: <Clock className="h-4 w-4 text-red-500" />, color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" };
+      default:
+        return { label: "Saved", icon: <Clock className="h-4 w-4 text-blue-500" />, color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" };
     }
   };
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Application Tracker</CardTitle>
-        <CardDescription>Track the status of your job applications</CardDescription>
-        <Tabs
-          value={filter}
-          onValueChange={setFilter}
-          className="w-full mt-2"
-        >
-          <TabsList className="grid grid-cols-5">
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="applied">Applied</TabsTrigger>
-            <TabsTrigger value="interviewing">Interviewing</TabsTrigger>
-            <TabsTrigger value="offered">Offered</TabsTrigger>
-            <TabsTrigger value="rejected">Rejected</TabsTrigger>
-          </TabsList>
-        </Tabs>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg">Application Status</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {filteredJobs.length > 0 ? (
-            filteredJobs.map(job => (
-              <div key={job.id} className="flex justify-between items-center border-b pb-3 last:border-b-0">
-                <div>
-                  <h3 className="font-medium">{job.title}</h3>
-                  <p className="text-sm text-muted-foreground">{job.company}</p>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Badge className={getStatusColor(job.status || 'saved')}>
-                    {job.status || 'Saved'}
+        {jobsToTrack.map((job) => {
+          const status = job.status || "saved";
+          const { label, icon, color } = getStatusDisplay(status);
+          
+          return (
+            <div key={job.id} className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {icon}
+                  <Badge variant="outline" className={color}>
+                    {label}
                   </Badge>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      // Simple status cycling logic
-                      const statuses: JobApplicationStatus[] = ['saved', 'applied', 'interviewing', 'offered', 'rejected'];
-                      const currentIndex = statuses.indexOf((job.status as JobApplicationStatus) || 'saved');
-                      const nextStatus = statuses[(currentIndex + 1) % statuses.length];
-                      updateStatus(job.id, nextStatus);
-                    }}
-                  >
-                    Update
-                  </Button>
                 </div>
+                
+                <Select
+                  value={status}
+                  onValueChange={(value) => handleStatusChange(job.id, value)}
+                >
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="saved">Saved</SelectItem>
+                    <SelectItem value="applied">Applied</SelectItem>
+                    <SelectItem value="interviewing">Interviewing</SelectItem>
+                    <SelectItem value="offered">Offered</SelectItem>
+                    <SelectItem value="accepted">Accepted</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            ))
-          ) : (
-            <p className="text-center text-muted-foreground py-4">
-              No applications found for the selected filter.
-            </p>
-          )}
-        </div>
+              
+              {job.appliedAt && (
+                <div className="text-sm text-muted-foreground">
+                  <span className="font-medium">Applied:</span> {new Date(job.appliedAt).toLocaleDateString()}
+                </div>
+              )}
+              
+              {job.status === "interviewing" && job.interviewDate && (
+                <div className="text-sm text-muted-foreground">
+                  <span className="font-medium">Interview:</span> {new Date(job.interviewDate).toLocaleDateString()}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </CardContent>
-      <CardFooter>
-        <div className="w-full text-sm text-muted-foreground">
-          <p>Total applications: {jobsToUse.length}</p>
-        </div>
-      </CardFooter>
     </Card>
   );
-};
-
-export default JobApplicationTracker;
+}

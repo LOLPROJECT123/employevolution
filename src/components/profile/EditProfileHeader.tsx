@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { 
   Dialog, 
@@ -15,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 interface EditProfileHeaderProps {
   open: boolean;
   onClose: () => void;
+  onOpenChange?: (open: boolean) => void;
   initialData: {
     name: string;
     jobStatus: string;
@@ -33,6 +33,7 @@ const jobStatusOptions = [
 const EditProfileHeader: React.FC<EditProfileHeaderProps> = ({
   open,
   onClose,
+  onOpenChange,
   initialData,
   onSave,
 }) => {
@@ -43,9 +44,19 @@ const EditProfileHeader: React.FC<EditProfileHeaderProps> = ({
     onSave({ name, jobStatus });
     onClose();
   };
+  
+  // Use onOpenChange if provided, otherwise use onClose
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen && onClose) {
+      onClose();
+    }
+    if (onOpenChange) {
+      onOpenChange(isOpen);
+    }
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Edit Profile</DialogTitle>
