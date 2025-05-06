@@ -1,6 +1,4 @@
 
-import { normalizeJobUrl, extractJobIdFromUrl } from "@/utils/jobValidationUtils";
-
 // Validate and potentially fix URL
 export const validateUrl = (url: string): boolean | string => {
   if (!url) return false;
@@ -25,31 +23,28 @@ export const validateUrl = (url: string): boolean | string => {
 
 // Extract job ID from URL if present
 export const extractJobId = (url: string): string | null => {
-  return extractJobIdFromUrl(url);
-};
-
-// Clean and normalize job application URL
-export const cleanJobUrl = (url: string): string => {
-  return normalizeJobUrl(url);
-};
-
-// Generate a unique job ID if one doesn't exist
-export const generateJobId = (company: string, title: string, url?: string): string => {
-  if (url) {
-    const extractedId = extractJobId(url);
-    if (extractedId) return extractedId;
+  try {
+    const urlObj = new URL(url);
+    const pathParts = urlObj.pathname.split('/');
+    // Look for "job" or "jobs" in the path
+    const jobIndex = pathParts.findIndex(part => 
+      part === 'job' || part === 'jobs' || part === 'position' || part === 'posting');
+    
+    if (jobIndex >= 0 && jobIndex < pathParts.length - 1) {
+      return pathParts[jobIndex + 1];
+    }
+    
+    // Try to extract from query params
+    const jobId = urlObj.searchParams.get('jobId') || 
+                 urlObj.searchParams.get('id') || 
+                 urlObj.searchParams.get('job');
+    
+    if (jobId) return jobId;
+    
+    // Last resort: just return the last part of the path
+    return pathParts[pathParts.length - 1];
+  } catch (e) {
+    console.error("Error extracting job ID:", e);
+    return null;
   }
-  
-  // Create a deterministic ID from job info
-  const baseString = `${company}-${title}-${url || ''}`;
-  let hash = 0;
-  
-  for (let i = 0; i < baseString.length; i++) {
-    const char = baseString.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  
-  // Convert to a positive hex string
-  return Math.abs(hash).toString(16);
 };

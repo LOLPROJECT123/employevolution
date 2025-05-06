@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ThumbsUp, MessageCircle, Share2, Filter, PlusCircle } from "lucide-react";
+import { MessageSquarePlus, ThumbsUp, MessageCircle, Share2, Filter, PlusCircle } from "lucide-react";
 
 type ForumPost = {
   id: string;
@@ -28,6 +29,7 @@ type ForumPost = {
   position?: string;
 };
 
+// Define the interface for the filters prop
 interface NegotiationForumProps {
   filters?: {
     search?: string;
@@ -132,23 +134,28 @@ const NegotiationForum = ({ filters }: NegotiationForumProps) => {
     setIsDialogOpen(false);
   };
 
+  // Filter posts based on the filters prop
   const filteredPosts = React.useMemo(() => {
     if (!filters) return posts;
     
     return posts.filter(post => {
+      // Filter by search term
       if (filters.search && !post.title.toLowerCase().includes(filters.search.toLowerCase()) && 
           !post.content.toLowerCase().includes(filters.search.toLowerCase())) {
         return false;
       }
       
+      // Filter by company
       if (filters.company && post.company !== filters.company) {
         return false;
       }
       
+      // Filter by role
       if (filters.role && post.role !== filters.role) {
         return false;
       }
       
+      // Filter by position
       if (filters.position && post.position !== filters.position) {
         return false;
       }
@@ -157,9 +164,11 @@ const NegotiationForum = ({ filters }: NegotiationForumProps) => {
     });
   }, [posts, filters]);
 
+  // Sort posts based on sortOrder
   const sortedPosts = React.useMemo(() => {
     if (!filters?.sortOrder || filters.sortOrder === "newest") {
       return [...filteredPosts].sort((a, b) => {
+        // For simplicity, compare timestamps directly (in a real app, parse dates)
         return a.timestamp > b.timestamp ? -1 : 1;
       });
     } else {
@@ -173,56 +182,75 @@ const NegotiationForum = ({ filters }: NegotiationForumProps) => {
     <div className="space-y-6">
       <div className="space-y-4">
         <h2 className="text-2xl font-semibold">Salary Negotiation Forum</h2>
-        <div className="flex justify-end">
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm">
+            <Filter className="h-4 w-4 mr-2" />
+            Filter
+          </Button>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="flex items-center gap-2">
-                <PlusCircle className="h-4 w-4" />
+              <Button>
+                <MessageSquarePlus className="h-4 w-4 mr-2" />
                 New Post
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="sm:max-w-[525px]">
               <DialogHeader>
-                <DialogTitle>Create New Post</DialogTitle>
+                <DialogTitle>Create a Forum Post</DialogTitle>
                 <DialogDescription>
-                  Share your salary negotiation experience or ask for advice
+                  Share your negotiation experience or ask for advice from the community
                 </DialogDescription>
               </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Input
-                    placeholder="Title"
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <label htmlFor="title" className="text-sm font-medium">Title</label>
+                  <Input 
+                    id="title" 
                     value={newPost.title}
-                    onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
+                    onChange={(e) => setNewPost({...newPost, title: e.target.value})}
+                    placeholder="E.g., How I negotiated a 15% higher offer" 
                   />
                 </div>
-                <div>
-                  <Textarea
-                    placeholder="Share your experience or ask a question..."
+                <div className="grid gap-2">
+                  <label htmlFor="content" className="text-sm font-medium">Content</label>
+                  <Textarea 
+                    id="content" 
                     value={newPost.content}
-                    onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
+                    onChange={(e) => setNewPost({...newPost, content: e.target.value})}
+                    placeholder="Share your experience in detail..." 
+                    rows={5}
                   />
                 </div>
-                <div>
-                  <Input
-                    placeholder="Tags (comma separated)"
+                <div className="grid gap-2">
+                  <label htmlFor="tags" className="text-sm font-medium">Tags (comma-separated)</label>
+                  <Input 
+                    id="tags" 
                     value={newPost.tags}
-                    onChange={(e) => setNewPost({ ...newPost, tags: e.target.value })}
+                    onChange={(e) => setNewPost({...newPost, tags: e.target.value})}
+                    placeholder="E.g., Tech, First Job, Success Story" 
                   />
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="anonymous"
+                  <Checkbox 
+                    id="anonymous" 
                     checked={newPost.isAnonymous}
                     onCheckedChange={(checked) => 
-                      setNewPost({ ...newPost, isAnonymous: checked as boolean })
+                      setNewPost({...newPost, isAnonymous: checked as boolean})
                     }
                   />
-                  <label htmlFor="anonymous">Post anonymously</label>
+                  <label htmlFor="anonymous" className="text-sm font-medium cursor-pointer">
+                    Post anonymously
+                  </label>
                 </div>
               </div>
               <DialogFooter>
-                <Button onClick={handleSubmitPost}>Post Discussion</Button>
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                <Button 
+                  onClick={handleSubmitPost} 
+                  disabled={!newPost.title.trim() || !newPost.content.trim()}
+                >
+                  Post
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>

@@ -2,9 +2,7 @@
 import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Home, Search, ExternalLink } from "lucide-react";
-import { validateJobUrl } from "@/utils/jobValidationUtils";
-import { toast } from "sonner";
+import { ArrowLeft, Home, Search } from "lucide-react";
 
 const NotFound = () => {
   const location = useLocation();
@@ -14,47 +12,12 @@ const NotFound = () => {
       "404 Error: User attempted to access non-existent route:",
       location.pathname
     );
-    
-    // Check if this was a job URL that might have expired
-    const isJobUrl = location.pathname.includes('/job/') || location.state?.fromJobApplication;
-    if (isJobUrl && location.state?.originalJobUrl) {
-      checkJobUrl(location.state.originalJobUrl);
-    }
-  }, [location.pathname, location.state]);
-
-  // Check if the original job URL is still valid
-  const checkJobUrl = async (url: string) => {
-    if (!url) return;
-    
-    try {
-      const isValid = await validateJobUrl(url);
-      if (isValid) {
-        toast.info(
-          "The original job posting appears to be available on the employer's website",
-          {
-            duration: 8000,
-            action: {
-              label: "Visit",
-              onClick: () => window.open(url, '_blank')
-            }
-          }
-        );
-      } else {
-        toast.warning(
-          "The job posting might have been removed or the URL has changed",
-          { duration: 5000 }
-        );
-      }
-    } catch (error) {
-      console.error("Error checking job URL:", error);
-    }
-  };
+  }, [location.pathname]);
 
   // Extract the URL to display to the user
   const attemptedUrl = location.pathname;
   const isJobUrl = attemptedUrl.includes('/job/') || location.state?.fromJobApplication;
   const jobId = location.state?.jobId;
-  const originalJobUrl = location.state?.originalJobUrl;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
@@ -71,27 +34,14 @@ const NotFound = () => {
         
         <div className="space-y-3">
           {isJobUrl && (
-            <>
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => window.history.back()}
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Return to Jobs
-              </Button>
-              
-              {originalJobUrl && (
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => window.open(originalJobUrl, '_blank')}
-                >
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  Visit Original Job Post
-                </Button>
-              )}
-            </>
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => window.history.back()}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Return to Jobs
+            </Button>
           )}
           
           <Link to="/jobs" className="block">

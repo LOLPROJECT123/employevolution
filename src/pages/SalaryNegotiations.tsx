@@ -1,9 +1,10 @@
+
 import React, { useState } from "react";
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
 import { useMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
-import { FilterIcon } from "lucide-react";
+import { FilterIcon, PlusSquare } from "lucide-react";
 import NegotiationForum from "@/components/salary/NegotiationForum";
 import NegotiationGuides from "@/components/salary/NegotiationGuides";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -206,6 +207,11 @@ const SalaryNegotiations = () => {
                   </SelectContent>
                 </Select>
               </div>
+
+              <Button className="ml-auto">
+                <PlusSquare className="h-4 w-4 mr-2" />
+                New Discussion
+              </Button>
             </div>
             
             {activeFilterCount > 0 && (

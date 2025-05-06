@@ -1,6 +1,7 @@
 
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
 import { useMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -116,8 +117,10 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {isMobile && (
+      {isMobile ? (
         <MobileHeader title="Streamline" />
+      ) : (
+        <Navbar />
       )}
       
       {/* Hero Section */}
@@ -172,7 +175,7 @@ const Index = () => {
       <section className="py-20">
         <div className="container px-4">
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className={`${animationReady ? 'slide-up' : 'opacity-0'} text-3xl font-bold mb-4 transition-all duration-700`}>
+            <h2 className={`${animationReady ? 'slide-up' : 'opacity-0'} font-bold transition-all duration-700`}>
               Everything You Need for Your Job Search
             </h2>
             <p className={`${animationReady ? 'slide-up' : 'opacity-0'} text-muted-foreground mt-4 transition-all duration-700 delay-100`}>
@@ -231,7 +234,7 @@ const Index = () => {
       <section className="py-20 bg-gradient-to-br from-accent to-background">
         <div className="container px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className={`${animationReady ? 'slide-up' : 'opacity-0'} text-3xl font-bold mb-6 transition-all duration-700`}>
+            <h2 className={`${animationReady ? 'slide-up' : 'opacity-0'} font-bold mb-6 transition-all duration-700`}>
               Ready to Accelerate Your Career?
             </h2>
             <p className={`${animationReady ? 'slide-up' : 'opacity-0'} text-xl text-muted-foreground mb-10 transition-all duration-700 delay-100`}>

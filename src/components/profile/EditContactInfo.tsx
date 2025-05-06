@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { 
   Dialog, 
@@ -13,7 +14,6 @@ import { Input } from "@/components/ui/input";
 interface EditContactInfoProps {
   open: boolean;
   onClose: () => void;
-  onOpenChange?: (open: boolean) => void;
   initialData: {
     email: string;
     phone: string;
@@ -31,7 +31,6 @@ interface EditContactInfoProps {
 const EditContactInfo: React.FC<EditContactInfoProps> = ({
   open,
   onClose,
-  onOpenChange,
   initialData,
   onSave,
 }) => {
@@ -49,19 +48,9 @@ const EditContactInfo: React.FC<EditContactInfoProps> = ({
     });
     onClose();
   };
-  
-  // Use onOpenChange if provided, otherwise use onClose
-  const handleOpenChange = (isOpen: boolean) => {
-    if (!isOpen && onClose) {
-      onClose();
-    }
-    if (onOpenChange) {
-      onOpenChange(isOpen);
-    }
-  };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Edit Contact Information</DialogTitle>

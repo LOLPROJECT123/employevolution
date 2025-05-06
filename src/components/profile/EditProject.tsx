@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { 
   Dialog, 
@@ -23,7 +24,6 @@ interface Project {
 interface EditProjectProps {
   open: boolean;
   onClose: () => void;
-  onOpenChange?: (open: boolean) => void;
   project?: Project;
   onSave: (project: Project) => void;
   onDelete?: (id: number) => void;
@@ -32,7 +32,6 @@ interface EditProjectProps {
 const EditProject: React.FC<EditProjectProps> = ({
   open,
   onClose,
-  onOpenChange,
   project,
   onSave,
   onDelete,
@@ -82,18 +81,8 @@ const EditProject: React.FC<EditProjectProps> = ({
 
   const isNew = !project;
 
-  // Use onOpenChange if provided, otherwise use onClose
-  const handleOpenChange = (isOpen: boolean) => {
-    if (!isOpen && onClose) {
-      onClose();
-    }
-    if (onOpenChange) {
-      onOpenChange(isOpen);
-    }
-  };
-
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isNew ? "Add" : "Edit"} Project</DialogTitle>

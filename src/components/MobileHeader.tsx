@@ -1,11 +1,9 @@
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Menu } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { getUserInitials, getUserFullName } from "@/utils/profileUtils";
-import { toast } from "sonner";
 
 interface MobileHeaderProps {
   title?: string;
@@ -13,51 +11,6 @@ interface MobileHeaderProps {
 }
 
 const MobileHeader: React.FC<MobileHeaderProps> = ({ title, showLogo = true }) => {
-  const [username, setUsername] = useState("User");
-  const [fullName, setFullName] = useState("");
-
-  // Listen for profile updates and update username
-  useEffect(() => {
-    // Function to update user information from profile
-    const updateUserInfo = () => {
-      try {
-        const storedProfile = localStorage.getItem('userProfile');
-        if (storedProfile) {
-          const profile = JSON.parse(storedProfile);
-          if (profile?.firstName) {
-            setUsername(profile.firstName);
-          }
-          
-          // Also set full name
-          setFullName(getUserFullName(profile));
-        }
-      } catch (error) {
-        console.error('Error parsing user profile:', error);
-      }
-    };
-    
-    // Initial load
-    updateUserInfo();
-    
-    // Listen for custom profile update events
-    const handleProfileUpdate = (event: CustomEvent) => {
-      if (event.detail) {
-        if (event.detail.firstName) {
-          setUsername(event.detail.firstName);
-        }
-        setFullName(getUserFullName(event.detail));
-      }
-    };
-    
-    // Add event listener for profile updates
-    window.addEventListener('profileUpdated' as any, handleProfileUpdate as EventListener);
-    
-    // Cleanup
-    return () => {
-      window.removeEventListener('profileUpdated' as any, handleProfileUpdate as EventListener);
-    };
-  }, []);
-
   return (
     <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between bg-white dark:bg-slate-900 border-b px-4 h-14">
       <div className="flex items-center gap-2">
@@ -80,10 +33,10 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({ title, showLogo = true }) =
             <div className="border-b p-4">
               <Link to="/profile" className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold text-gray-500">
-                  {getUserInitials()}
+                  VV
                 </div>
                 <div>
-                  <div className="font-medium">{fullName || username}</div>
+                  <div className="font-medium">Varun Veluri</div>
                   <div className="text-xs text-muted-foreground">View Profile</div>
                 </div>
               </Link>
@@ -122,11 +75,6 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({ title, showLogo = true }) =
                   </Link>
                 </li>
                 <li>
-                  <Link to="/salary-calculator" className="flex items-center gap-3 p-2 rounded-md hover:bg-accent">
-                    <span className="text-sm">Tax Calculator</span>
-                  </Link>
-                </li>
-                <li>
                   <Link to="/networking" className="flex items-center gap-3 p-2 rounded-md hover:bg-accent">
                     <span className="text-sm">Networking</span>
                   </Link>
@@ -136,7 +84,7 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({ title, showLogo = true }) =
             
             <div className="border-t p-4">
               <div className="flex items-center justify-between">
-                <Link to="/" onClick={handleLogout} className="text-sm text-muted-foreground">Log out</Link>
+                <Link to="/logout" className="text-sm text-muted-foreground">Log out</Link>
               </div>
             </div>
           </div>
@@ -144,19 +92,6 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({ title, showLogo = true }) =
       </Sheet>
     </div>
   );
-  
-  function handleLogout(e: React.MouseEvent) {
-    e.preventDefault();
-    // Clear auth data from localStorage
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userProfile');
-    
-    // Create and dispatch toast event properly
-    toast.success('Logged out successfully');
-    
-    // Redirect to login/home page
-    window.location.href = '/';
-  }
 };
 
 export default MobileHeader;

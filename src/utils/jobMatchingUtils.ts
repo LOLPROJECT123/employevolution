@@ -66,7 +66,7 @@ export const getMatchLevel = (percentage: number): MatchScoreLevel => {
  * Get background color for match percentage display
  */
 export const getMatchBgColor = (percentage?: number) => {
-  if (!percentage && percentage !== 0) return "bg-gray-100 dark:bg-gray-800";
+  if (!percentage) return "bg-gray-100 dark:bg-gray-800";
   if (percentage >= 85) return "bg-emerald-50 dark:bg-emerald-900/30";
   if (percentage >= 70) return "bg-green-50 dark:bg-green-900/30";
   if (percentage >= 50) return "bg-amber-50 dark:bg-amber-900/30";
@@ -77,7 +77,7 @@ export const getMatchBgColor = (percentage?: number) => {
  * Get text color for match percentage display
  */
 export const getMatchColor = (percentage?: number) => {
-  if (!percentage && percentage !== 0) return "";
+  if (!percentage) return "";
   if (percentage >= 85) return "text-emerald-500";
   if (percentage >= 70) return "text-green-500";
   if (percentage >= 50) return "text-amber-500";
@@ -88,7 +88,7 @@ export const getMatchColor = (percentage?: number) => {
  * Get label for match percentage display
  */
 export const getMatchLabel = (percentage?: number) => {
-  if (!percentage && percentage !== 0) return "";
+  if (!percentage) return "";
   if (percentage >= 85) return "EXCELLENT MATCH";
   if (percentage >= 70) return "GOOD MATCH";
   if (percentage >= 50) return "FAIR MATCH";
@@ -97,81 +97,79 @@ export const getMatchLabel = (percentage?: number) => {
 
 /**
  * Get detailed match information
- * The overallScore is now exactly the percentage of job-required skills matched by userSkills.
+ * (In a real app, this would compare job requirements against user profile)
  */
 export const getDetailedMatch = (job: Job, userSkills: string[] = []): ComprehensiveMatch => {
-  // Normalize skills for case-insensitive comparison
-  const normalizedUserSkills = userSkills.map(skill => skill.toLowerCase());
-  const normalizedJobSkills = job.skills?.map(skill => skill.toLowerCase()) || [];
-  
-  // Skills calculation
+  // Simulate skill matching
   const skillMatches: SkillMatch[] = [];
   const missingSkills: string[] = [];
-
+  
+  // For this example, we'll use random skill matching
+  // In a real app, this would compare against the user's profile
   if (job.skills) {
-    for (let i = 0; i < job.skills.length; i++) {
-      const skill = job.skills[i];
-      const normalizedSkill = skill.toLowerCase();
-      const isMatched = normalizedUserSkills.includes(normalizedSkill);
-      
-      // We consider all skills equally important for basic matching
-      const isHighPriority = false;
+    for (const skill of job.skills) {
+      const isMatched = userSkills.includes(skill) || Math.random() > 0.3;
+      const isHighPriority = Math.random() > 0.5;
       
       if (isMatched) {
-        skillMatches.push({ skill, matched: true, isHighPriority });
+        skillMatches.push({
+          skill,
+          matched: true,
+          isHighPriority
+        });
       } else {
         missingSkills.push(skill);
       }
     }
   }
-
-  // Calculate skill score - percentage of required skills that the user has
+  
+  // Calculate skill match score
   const skillScore = job.skills && job.skills.length > 0
     ? Math.round((skillMatches.length / job.skills.length) * 100)
     : 100;
-
-  // The following sections exist for display only; they all reflect the skill score
+  
+  // Simulate experience match
   const experienceMatch: ExperienceMatch = {
-    matched: true,
-    matchPercentage: skillScore, // Use the same score for consistency
-    details: "Experience match is based on your skills match."
+    matched: Math.random() > 0.4,
+    matchPercentage: Math.floor(Math.random() * 40) + 60,
+    details: "Your experience aligns with job requirements"
   };
-
+  
+  // Simulate education match
   const educationMatch: EducationMatch = {
-    matched: true,
-    details: "Education match is based on your skills match."
+    matched: Math.random() > 0.3,
+    details: "You have the required education level"
   };
-
+  
+  // Simulate location match
   const locationMatch: LocationMatch = {
-    matched: true,
-    distance: 0,
-    details: "Location is not considered in this match calculation."
+    matched: job.remote || Math.random() > 0.2,
+    distance: Math.floor(Math.random() * 30),
+    details: job.remote ? "Remote job" : `Within commuting distance`
   };
-
-  // The overall score is now exactly the skill match percentage
-  const overallScore = skillScore;
-
+  
+  // Determine overall score based on job.matchPercentage or calculate from components
+  const overallScore = job.matchPercentage || Math.round(
+    (skillScore * 0.4) +
+    (experienceMatch.matchPercentage * 0.3) +
+    (educationMatch.matched ? 15 : 0) +
+    (locationMatch.matched ? 15 : 0)
+  );
+  
+  // Return comprehensive match data
   return {
     overallScore,
     matchLevel: getMatchLevel(overallScore),
     skills: {
       matched: skillMatches,
       missing: missingSkills,
-      extras: normalizedUserSkills.filter(skill => 
-        !normalizedJobSkills.includes(skill)
-      ).map(skill => {
-        // Find the original case from user's skills
-        const originalCaseIndex = userSkills.findIndex(
-          s => s.toLowerCase() === skill
-        );
-        return originalCaseIndex >= 0 ? userSkills[originalCaseIndex] : skill;
-      }),
+      extras: userSkills.filter(skill => !job.skills?.includes(skill)),
       score: skillScore
     },
     experience: experienceMatch,
     education: educationMatch,
     location: locationMatch,
-    salaryMatch: true
+    salaryMatch: Math.random() > 0.2 // Simulate salary match
   };
 };
 
@@ -180,16 +178,12 @@ export const getDetailedMatch = (job: Job, userSkills: string[] = []): Comprehen
  */
 export const getMatchExplanation = (match: ComprehensiveMatch): string => {
   if (match.overallScore >= 85) {
-    return `You have ${match.overallScore}% of the required skills for this job.`;
+    return "This job is an excellent match for your profile based on skills, experience, and other factors.";
   } else if (match.overallScore >= 70) {
-    return `You have ${match.overallScore}% of the required skills for this job.`;
+    return "This job is a good match for your profile, with strong alignment in key areas.";
   } else if (match.overallScore >= 50) {
-    return `You have ${match.overallScore}% of the required skills for this job.`;
+    return "This job is a fair match for your profile, with some areas of alignment.";
   } else {
-    // Special case for 0% match
-    if (match.overallScore === 0) {
-      return `You have none of the required skills for this job.`;
-    }
-    return `You have only ${match.overallScore}% of the required skills for this job.`;
+    return "This job is not a strong match for your profile but may still be worth considering.";
   }
 };
