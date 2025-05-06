@@ -11,7 +11,6 @@ export { JobMatchCalculator, type JobMatchResult, type SkillMatch } from './JobM
 import { JobMatchCalculator } from './JobMatchCalculator';
 import { Job } from '@/types/job';
 import { ParsedResume } from '@/types/resume';
-import { ExtendedJob } from '@/types/jobExtensions';
 
 /**
  * Calculate match percentage between a job and a resume
@@ -26,11 +25,10 @@ export function calculateJobMatch(job: Job, resume: ParsedResume) {
  * Update job object with match percentage
  * This is useful for displaying match % in job listings
  */
-export function addMatchPercentageToJob(job: Job, resume: ParsedResume): ExtendedJob {
+export function addMatchPercentageToJob(job: Job, resume: ParsedResume): Job {
   const matchResult = calculateJobMatch(job, resume);
   
-  // Create an ExtendedJob object with the match information
-  const enhancedJob: ExtendedJob = {
+  return {
     ...job,
     matchPercentage: matchResult.matchPercentage,
     matchDetails: {
@@ -43,15 +41,13 @@ export function addMatchPercentageToJob(job: Job, resume: ParsedResume): Extende
       experienceScore: matchResult.details.experienceScore
     }
   };
-  
-  return enhancedJob;
 }
 
 /**
  * Updates job array with match percentages
  * Sorts jobs by match percentage (highest first)
  */
-export function addMatchPercentagesToJobs(jobs: Job[], resume: ParsedResume): ExtendedJob[] {
+export function addMatchPercentagesToJobs(jobs: Job[], resume: ParsedResume): Job[] {
   return jobs
     .map(job => addMatchPercentageToJob(job, resume))
     .sort((a, b) => (b.matchPercentage || 0) - (a.matchPercentage || 0));

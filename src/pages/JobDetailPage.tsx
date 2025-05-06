@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -223,7 +222,6 @@ const JobDetailPage: React.FC = () => {
         <div className="space-y-6">
           {/* Application Tracker */}
           <JobApplicationTracker 
-            jobs={[job]} 
             job={job} 
             onStatusChange={handleUpdateStatus} 
           />
