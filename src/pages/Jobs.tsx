@@ -1,609 +1,333 @@
-import { useState, useEffect, useRef } from 'react';
-import Navbar from "@/components/Navbar";
-import MobileHeader from "@/components/MobileHeader";
-import { Job, JobFilters } from "@/types/job";
-import { JobDetailView } from "@/components/JobDetailView";
-import { JobFiltersSection } from "@/components/JobFilters";
-import { JobCard } from "@/components/JobCard";
-import { useIsMobile } from "@/hooks/use-mobile";
-import SwipeJobsInterface from "@/components/SwipeJobsInterface";
-import { SavedAndAppliedJobs } from "@/components/SavedAndAppliedJobs";
-import { toast } from "@/hooks/use-toast";
-import AutomationSettings from "@/components/AutomationSettings";
-import { Zap } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { JobDetailView } from '@/components/JobDetailView';
+import { JobFiltersSection } from '@/components/JobFilters';
+import { Job } from '@/types/job';
+import { validateJobUrl, detectJobPlatform } from '@/utils/jobValidationUtils';
+import { toast } from 'sonner';
 import { Button } from "@/components/ui/button";
-import { 
-  detectPlatform, 
-  startAutomation 
-} from '@/utils/automationUtils';
-import JobSourcesDisplay from "@/components/JobSourcesDisplay";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { SavedSearch } from "@/types/job";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Slider } from "@/components/ui/slider"
+import { Calendar } from "@/components/ui/calendar"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { CalendarIcon } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { format } from "date-fns"
+import { DateRange } from "react-day-picker"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+  CommandShortcut,
+} from "@/components/ui/command"
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer"
+import { Badge } from "@/components/ui/badge"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Switch } from "@/components/ui/switch"
+import { Progress } from "@/components/ui/progress"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Skeleton } from "@/components/ui/skeleton"
+import { AspectRatio } from "@/components/ui/aspect-ratio"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
+import { Link } from 'lucide-react';
+import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu"
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { ContextMenu, ContextMenuCheckboxItem, ContextMenuContent, ContextMenuItem, ContextMenuLabel, ContextMenuRadioGroup, ContextMenuRadioItem, ContextMenuSeparator, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger, ContextMenuTrigger } from "@/components/ui/context-menu"
+import { Menubar, MenubarCheckboxItem, MenubarContent, MenubarItem, MenubarMenu, MenubarRadioGroup, MenubarRadioItem, MenubarSeparator, MenubarShortcut, MenubarSub, MenubarSubContent, MenubarSubTrigger, MenubarTrigger } from "@/components/ui/menubar"
+import { CommandDialog } from "@/components/ui/command"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
 
-const generateSampleJobs = (count: number): Job[] => {
-  const jobTypes: Job['type'][] = ['full-time', 'part-time', 'contract', 'internship', 'temporary', 'volunteer', 'other'];
-  const experienceLevels: Job['level'][] = ['intern', 'entry', 'mid', 'senior', 'lead', 'executive', 'manager', 'director'];
-  const companies = ['Google', 'Microsoft', 'Apple', 'Amazon', 'Meta', 'Netflix', 'Uber', 'Airbnb', 'Twitter', 'LinkedIn'];
-  const titles = ['Software Engineer', 'Product Manager', 'Data Scientist', 'UX Designer', 'DevOps Engineer', 'Frontend Developer', 'Backend Developer', 'Full Stack Developer', 'Machine Learning Engineer', 'QA Engineer'];
-  const locations = ['San Francisco, CA', 'New York, NY', 'Seattle, WA', 'Austin, TX', 'Boston, MA', 'Chicago, IL', 'Los Angeles, CA', 'Denver, CO', 'Atlanta, GA', 'Remote'];
-  const skills = ['JavaScript', 'Python', 'Java', 'React', 'Angular', 'Vue', 'Node.js', 'Express', 'MongoDB', 'SQL', 'TypeScript', 'AWS', 'Docker', 'Kubernetes', 'Git', 'CI/CD'];
-  
-  const companyJobPortalUrls = {
-    'Google': 'https://careers.google.com/jobs',
-    'Microsoft': 'https://careers.microsoft.com/us/en/job',
-    'Apple': 'https://jobs.apple.com/en-us/details',
-    'Amazon': 'https://www.amazon.jobs/en/jobs',
-    'Meta': 'https://www.metacareers.com/jobs',
-    'Netflix': 'https://jobs.netflix.com/jobs',
-    'Uber': 'https://www.uber.com/us/en/careers/list',
-    'Airbnb': 'https://careers.airbnb.com/positions',
-    'Twitter': 'https://careers.twitter.com/en/jobs',
-    'LinkedIn': 'https://www.linkedin.com/jobs/linkedin-jobs'
-  };
-
-  const jobs: Job[] = [];
-  
-  for (let i = 0; i < count; i++) {
-    const randomSkillsCount = Math.floor(Math.random() * 8) + 3;
-    const randomSkills: string[] = [];
-    
-    while (randomSkills.length < randomSkillsCount) {
-      const skill = skills[Math.floor(Math.random() * skills.length)];
-      if (!randomSkills.includes(skill)) {
-        randomSkills.push(skill);
-      }
-    }
-    
-    const minSalary = Math.floor(Math.random() * 100000) + 50000;
-    const maxSalary = minSalary + Math.floor(Math.random() * 50000);
-    
-    const dateOffset = Math.floor(Math.random() * 30);
-    const postedDate = new Date();
-    postedDate.setDate(postedDate.getDate() - dateOffset);
-    
-    const requirements = [
-      'Bachelor\'s degree in Computer Science or related field',
-      `3+ years of experience with ${randomSkills[0]} and ${randomSkills[1]}`,
-      'Strong problem-solving skills',
-      'Excellent communication and teamwork abilities',
-      `Experience with ${randomSkills[2]} is preferred`
-    ];
-    
-    const company = companies[Math.floor(Math.random() * companies.length)];
-    
-    const jobId = `${company.toLowerCase().replace(/\s+/g, '-')}-${Math.random().toString(36).substring(2, 10)}`;
-    
-    const baseUrl = companyJobPortalUrls[company];
-    
-    const jobUrl = `${baseUrl}/${jobId}`;
-    
-    jobs.push({
-      id: `job-${i}`,
-      title: titles[Math.floor(Math.random() * titles.length)],
-      company: company,
-      location: locations[Math.floor(Math.random() * locations.length)],
-      salary: {
-        min: minSalary,
-        max: maxSalary,
-        currency: '$'
-      },
-      type: jobTypes[Math.floor(Math.random() * jobTypes.length)],
-      level: experienceLevels[Math.floor(Math.random() * experienceLevels.length)],
-      description: `We are looking for a talented ${titles[Math.floor(Math.random() * titles.length)]} to join our team. You will be working on exciting projects and making a significant impact on our products. This is a great opportunity to grow your skills and advance your career.`,
-      requirements: requirements,
-      postedAt: postedDate.toISOString(),
-      skills: randomSkills,
-      matchPercentage: Math.floor(Math.random() * 100),
-      remote: Math.random() > 0.5,
-      applyUrl: jobUrl
-    });
-  }
-  
-  return jobs;
-};
-
-const sampleJobs: Job[] = generateSampleJobs(100);
-
-type SortOption = 'relevance' | 'date-newest' | 'date-oldest' | 'salary-highest' | 'salary-lowest';
-
-const Jobs = () => {
+export default function Jobs() {
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-  const [jobs, setJobs] = useState<Job[]>(sampleJobs);
-  const [filteredJobs, setFilteredJobs] = useState<Job[]>(sampleJobs);
-  const [savedJobIds, setSavedJobIds] = useState<string[]>([]);
-  const [appliedJobIds, setAppliedJobIds] = useState<string[]>([]);
-  const [showAutomation, setShowAutomation] = useState(false);
-  const [sortOption, setSortOption] = useState<SortOption>('relevance');
-  const isMobile = useIsMobile();
-  const [viewMode, setViewMode] = useState<'list' | 'swipe'>(isMobile ? 'swipe' : 'list');
-  const [showMyJobs, setShowMyJobs] = useState(false);
-  const [activeFilters, setActiveFilters] = useState<JobFilters>({
-    search: "",
-    location: "",
-    jobType: [],
-    remote: false,
-    experienceLevels: [],
-    education: [],
-    salaryRange: [0, 300000],
-    skills: [],
-    companyTypes: [],
-    companySize: [],
-    benefits: []
-  });
-  const toastDisplayedRef = useRef(false);
-  const filtersAppliedRef = useRef(false);
-
-  useEffect(() => {
-    setViewMode(isMobile ? 'swipe' : 'list');
-  }, [isMobile]);
-
-  useEffect(() => {
-    if (filteredJobs.length > 0 && !selectedJob) {
-      setSelectedJob(filteredJobs[0]);
-    }
-  }, [filteredJobs, selectedJob]);
-
-  useEffect(() => {
-    sortJobs(sortOption);
-  }, [sortOption]);
-
-  const savedJobs = jobs.filter(job => savedJobIds.includes(job.id));
-  const appliedJobs = jobs.filter(job => appliedJobIds.includes(job.id));
-
-  const handleJobSelect = (job: Job) => {
-    setSelectedJob(job);
-  };
-
-  const handleSaveJob = (job: Job) => {
-    if (savedJobIds.includes(job.id)) {
-      setSavedJobIds(savedJobIds.filter(id => id !== job.id));
-      toast({
-        title: "Job Removed From Saved Jobs",
-        variant: "default",
-      });
-    } else {
-      setSavedJobIds([...savedJobIds, job.id]);
-      toast({
-        title: "Job Saved Successfully",
-        variant: "default",
-      });
-    }
-  };
-
-  const handleApplyJob = (job: Job) => {
-    if (!appliedJobIds.includes(job.id)) {
-      setAppliedJobIds([...appliedJobIds, job.id]);
-      
-      const canAutomate = job.applyUrl ? detectPlatform(job.applyUrl) !== null : false;
-      const automationEnabled = (() => {
-        try {
-          const config = JSON.parse(localStorage.getItem('automationConfig') || '{}');
-          return config?.credentials?.enabled || false;
-        } catch (e) {
-          return false;
-        }
-      })();
-      
-      if (!isMobile && job.applyUrl) {
-        if (canAutomate && automationEnabled) {
-          setShowAutomation(true);
-          toast({
-            title: "Automation Available",
-            description: "You can use the automation tools to apply to this job automatically.",
-            variant: "default",
-          });
-        } else {
-          window.open(job.applyUrl, '_blank');
-          toast({
-            title: "Opening application page",
-            description: "The application page has been opened in a new tab.",
-            variant: "default",
-          });
-        }
-      } else {
-        toast({
-          title: "Application submitted successfully",
-          description: `Your application to ${job.company} for ${job.title} has been submitted.`,
-          variant: "default",
-        });
-      }
-      
-      if (viewMode === 'swipe') {
-        const currentIndex = filteredJobs.findIndex(j => j.id === job.id);
-        if (currentIndex < filteredJobs.length - 1) {
-          setSelectedJob(filteredJobs[currentIndex + 1]);
-        }
-      }
-    }
-  };
-
-  const handleAutomatedApply = (job: Job) => {
-    try {
-      if (!job.applyUrl) {
-        toast({
-          title: "Cannot automate application",
-          description: "This job doesn't have an application URL.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      const automationConfig = localStorage.getItem('automationConfig');
-      if (!automationConfig) {
-        toast({
-          title: "Automation not configured",
-          description: "Please configure your automation settings first.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      const config = JSON.parse(automationConfig);
-      
-      startAutomation(job.applyUrl, config);
-      
-      const platform = detectPlatform(job.applyUrl);
-      
-      toast({
-        title: "Automation initiated",
-        description: `The automation script will now apply to this job on ${platform || 'the job platform'}. Please check the browser extension for details.`,
-        variant: "default",
-      });
-    } catch (error) {
-      toast({
-        title: "Automation failed",
-        description: "There was an error starting the automation process.",
-        variant: "destructive",
-      });
-      console.error("Automation error:", error);
-    }
-  };
-
-  const handleSkipJob = (job: Job) => {
-    // No action needed for now
-  };
-
-  const toggleViewMode = () => {
-    setViewMode(viewMode === 'list' ? 'swipe' : 'list');
-  };
-
-  const toggleMyJobs = () => {
-    setShowMyJobs(!showMyJobs);
-  };
-
-  const sortJobs = (option: SortOption) => {
-    let sortedJobs = [...filteredJobs];
-    
-    switch (option) {
-      case 'relevance':
-        sortedJobs.sort((a, b) => {
-          const matchA = a.matchPercentage || 0;
-          const matchB = b.matchPercentage || 0;
-          return matchB - matchA;
-        });
-        break;
-        
-      case 'date-newest':
-        sortedJobs.sort((a, b) => {
-          return new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime();
-        });
-        break;
-        
-      case 'date-oldest':
-        sortedJobs.sort((a, b) => {
-          return new Date(a.postedAt).getTime() - new Date(b.postedAt).getTime();
-        });
-        break;
-        
-      case 'salary-highest':
-        sortedJobs.sort((a, b) => {
-          return b.salary.max - a.salary.max;
-        });
-        break;
-        
-      case 'salary-lowest':
-        sortedJobs.sort((a, b) => {
-          return a.salary.min - b.salary.min;
-        });
-        break;
-    }
-    
-    setFilteredJobs(sortedJobs);
-    
-    if (sortedJobs.length > 0) {
-      setSelectedJob(sortedJobs[0]);
-    }
-  };
-
-  const handleSortChange = (value: string) => {
-    setSortOption(value as SortOption);
-    
-    toast({
-      title: "Jobs Sorted",
-      description: `Jobs Are Now Sorted By ${getSortDescription(value as SortOption)}`,
-      variant: "default",
-    });
+  const [filtersVisible, setFiltersVisible] = useState(false);
+  const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
+  const [isSaved, setIsSaved] = useState(false);
+  const [isApplied, setIsApplied] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [locationQuery, setLocationQuery] = useState('');
+  const [jobTypeFilter, setJobTypeFilter] = useState<string[]>([]);
+  const [remoteFilter, setRemoteFilter] = useState(false);
+  const [experienceLevelsFilter, setExperienceLevelsFilter] = useState<string[]>([]);
+  const [educationFilter, setEducationFilter] = useState<string[]>([]);
+  const [salaryRangeFilter, setSalaryRangeFilter] = useState<[number, number]>([0, 200000]);
+  const [skillsFilter, setSkillsFilter] = useState<string[]>([]);
+  const [companyTypesFilter, setCompanyTypesFilter] = useState<string[]>([]);
+  const [companySizeFilter, setCompanySizeFilter] = useState<string[]>([]);
+  const [benefitsFilter, setBenefitsFilter] = useState<string[]>([]);
+  const [datePostedFilter, setDatePostedFilter] = useState<string>('');
+  const [excludedSkillsFilter, setExcludedSkillsFilter] = useState<string[]>([]);
+  const [jobFunctionFilter, setJobFunctionFilter] = useState<string[]>([]);
+  const [workModelFilter, setWorkModelFilter] = useState<string[]>([]);
+  const [experienceYearsFilter, setExperienceYearsFilter] = useState<[number, number]>([0, 10]);
+  const [sponsorH1bFilter, setSponsorH1bFilter] = useState<boolean>(false);
+  const [categoriesFilter, setCategoriesFilter] = useState<string[]>([]);
+  const [companiesFilter, setCompaniesFilter] = useState<string[]>([]);
+  const [excludeStaffingAgencyFilter, setExcludeStaffingAgencyFilter] = useState<boolean>(false);
+  const [companyStageFilter, setCompanyStageFilter] = useState<string[]>([]);
+  const [roleTypeFilter, setRoleTypeFilter] = useState<string[]>([]);
+  const [titleFilter, setTitleFilter] = useState<string[]>([]);
+  
+  const handleApply = (job: Job) => {
+    toast.success(`${job.title} at ${job.company} applied!`);
+    setIsApplied(true);
   };
   
-  const getSortDescription = (option: SortOption): string => {
-    switch (option) {
-      case 'relevance': return 'Relevance';
-      case 'date-newest': return 'Date (Newest First)';
-      case 'date-oldest': return 'Date (Oldest First)';
-      case 'salary-highest': return 'Salary (Highest First)';
-      case 'salary-lowest': return 'Salary (Lowest First)';
-      default: return 'Relevance';
-    }
+  const handleSave = (job: Job) => {
+    toast.success(`${job.title} at ${job.company} saved!`);
+    setIsSaved(true);
+  };
+  
+  const generateSampleJobs = async (): Promise<Job[]> => {
+    const sampleJobs: Job[] = [
+      {
+        id: '1',
+        title: 'Frontend Developer',
+        company: 'Google',
+        location: 'Mountain View, CA',
+        description: 'Join our team to build the next generation of web applications...',
+        requirements: ['5+ years of experience', 'Expert in React', 'Strong CS fundamentals'],
+        skills: ['React', 'TypeScript', 'GraphQL'],
+        salary: {
+          min: 130000,
+          max: 180000,
+          currency: '$'
+        },
+        type: 'full-time',
+        level: 'senior',
+        matchPercentage: 92,
+        remote: true,
+        postedAt: new Date().toISOString(),
+        applyUrl: 'https://careers.google.com/jobs/results',
+        applicationDetails: {
+          isAvailable: true,
+          applicantCount: 45
+        }
+      },
+      {
+        id: '2',
+        title: 'Data Scientist',
+        company: 'Microsoft',
+        location: 'Seattle, WA',
+        description: 'Help us make sense of the world\'s data...',
+        requirements: ['3+ years of experience', 'Strong in Python', 'Experience with machine learning'],
+        skills: ['Python', 'Machine Learning', 'SQL'],
+        salary: {
+          min: 140000,
+          max: 200000,
+          currency: '$'
+        },
+        type: 'full-time',
+        level: 'mid',
+        matchPercentage: 88,
+        remote: false,
+        postedAt: new Date().toISOString(),
+        applyUrl: 'https://careers.microsoft.com/professionals/us/en/job-listings',
+        applicationDetails: {
+          isAvailable: true,
+          applicantCount: 62
+        }
+      },
+      {
+        id: '3',
+        title: 'Software Engineer',
+        company: 'Amazon',
+        location: 'Remote',
+        description: 'Build scalable systems that power the world\'s largest e-commerce platform...',
+        requirements: ['4+ years of experience', 'Proficient in Java', 'Experience with AWS'],
+        skills: ['Java', 'AWS', 'Docker'],
+        salary: {
+          min: 120000,
+          max: 170000,
+          currency: '$'
+        },
+        type: 'full-time',
+        level: 'mid',
+        matchPercentage: 75,
+        remote: true,
+        postedAt: new Date().toISOString(),
+        applyUrl: 'https://www.amazon.jobs/en/business_categories/software-development',
+        applicationDetails: {
+          isAvailable: true,
+          applicantCount: 38
+        }
+      },
+      {
+        id: '4',
+        title: 'Product Manager',
+        company: 'Apple',
+        location: 'Cupertino, CA',
+        description: 'Define and drive the product vision for our next generation devices...',
+        requirements: ['5+ years of experience', 'Strong analytical skills', 'Experience with Agile'],
+        skills: ['Product Management', 'Agile', 'Analytics'],
+        salary: {
+          min: 150000,
+          max: 220000,
+          currency: '$'
+        },
+        type: 'full-time',
+        level: 'senior',
+        matchPercentage: 95,
+        remote: false,
+        postedAt: new Date().toISOString(),
+        applyUrl: 'https://jobs.apple.com/en-us/search?team=Software-Engineering',
+        applicationDetails: {
+          isAvailable: true,
+          applicantCount: 55
+        }
+      },
+      {
+        id: '5',
+        title: 'Data Analyst',
+        company: 'Netflix',
+        location: 'Los Gatos, CA',
+        description: 'Help us understand our users and improve their experience...',
+        requirements: ['2+ years of experience', 'Proficient in SQL', 'Experience with data visualization'],
+        skills: ['SQL', 'Data Visualization', 'Tableau'],
+        salary: {
+          min: 110000,
+          max: 160000,
+          currency: '$'
+        },
+        type: 'full-time',
+        level: 'entry',
+        matchPercentage: 68,
+        remote: false,
+        postedAt: new Date().toISOString(),
+        applyUrl: 'https://jobs.netflix.com/search',
+        applicationDetails: {
+          isAvailable: true,
+          applicantCount: 41
+        }
+      },
+    ];
+
+    const validatedJobs = await Promise.all(
+      sampleJobs.map(async (job) => {
+        if (job.applyUrl) {
+          const validation = await validateJobUrl(job.applyUrl);
+          if (job.applicationDetails) {
+            job.applicationDetails.isAvailable = validation.isValid;
+          }
+          if (!validation.isValid) {
+            console.warn(`Invalid job URL for ${job.title}: ${validation.error}`);
+          }
+        }
+        return job;
+      })
+    );
+
+    return validatedJobs.filter(job => job.applicationDetails?.isAvailable);
   };
 
-  const applyFilters = (filters: JobFilters) => {
-    setActiveFilters(filters);
-    
-    let newFilteredJobs = [...jobs];
-    
-    if (filters.location && filters.location.trim() !== "") {
-      newFilteredJobs = newFilteredJobs.filter(job => 
-        job.location.toLowerCase().includes(filters.location.toLowerCase())
-      );
-    }
-    
-    if (filters.remote) {
-      newFilteredJobs = newFilteredJobs.filter(job => job.remote === true);
-    }
-    
-    if (filters.jobType && filters.jobType.length > 0) {
-      newFilteredJobs = newFilteredJobs.filter(job => 
-        filters.jobType.includes(job.type)
-      );
-    }
-    
-    if (filters.experienceLevels && filters.experienceLevels.length > 0) {
-      newFilteredJobs = newFilteredJobs.filter(job => 
-        filters.experienceLevels.includes(job.level)
-      );
-    }
-    
-    if (filters.salaryRange && filters.salaryRange[0] !== 0 && filters.salaryRange[1] !== 300000) {
-      newFilteredJobs = newFilteredJobs.filter(job => 
-        job.salary.min >= filters.salaryRange[0] && job.salary.max <= filters.salaryRange[1]
-      );
-    }
-    
-    if (filters.skills && filters.skills.length > 0) {
-      newFilteredJobs = newFilteredJobs.filter(job => 
-        filters.skills.some(skill => job.skills.includes(skill))
-      );
-    }
-    
-    if (filters.companies && filters.companies.length > 0) {
-      newFilteredJobs = newFilteredJobs.filter(job => 
-        filters.companies.includes(job.company)
-      );
-    }
-    
-    if (filters.workModel && filters.workModel.length > 0) {
-      newFilteredJobs = newFilteredJobs.filter(job => 
-        job.workModel && filters.workModel.includes(job.workModel)
-      );
-    }
-    
-    if (filters.title && filters.title.length > 0) {
-      newFilteredJobs = newFilteredJobs.filter(job => 
-        filters.title.some(title => job.title.toLowerCase().includes(title.toLowerCase()))
-      );
-    }
-    
-    setFilteredJobs(newFilteredJobs);
-    
-    if (newFilteredJobs.length > 0 && (!selectedJob || !newFilteredJobs.find(job => job.id === selectedJob.id))) {
-      setSelectedJob(newFilteredJobs[0]);
-    }
-  };
+  useEffect(() => {
+    const loadJobs = async () => {
+      const jobs = await generateSampleJobs();
+      setJobs(jobs);
+    };
+    loadJobs();
+  }, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900/30">
-      {!isMobile && <Navbar />}
-      {isMobile && <MobileHeader />}
-      <main className={`flex-1 ${isMobile ? 'pt-16' : 'pt-20'}`}>
-        <div className="container px-4 py-8 mx-auto max-w-7xl">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
-              Find Your Next Opportunity
-            </h1>
-            <div className="hidden md:block">
-              <AutomationSettings />
-            </div>
-          </div>
-          
-          <div className="space-y-6">
-            <div className="w-full">
-              <JobSourcesDisplay />
-            </div>
+    <div className="flex h-screen">
+      <aside className="w-80 border-r p-4">
+        <Button onClick={() => setFiltersVisible(!filtersVisible)}>
+          {filtersVisible ? 'Hide Filters' : 'Show Filters'}
+        </Button>
+        {filtersVisible && (
+          <JobFiltersSection />
+        )}
+      </aside>
 
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                <h2 className="font-semibold text-lg">My Jobs</h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Saved and Applied Positions</p>
-              </div>
-              <div className="p-4">
-                <SavedAndAppliedJobs
-                  savedJobs={savedJobs}
-                  appliedJobs={appliedJobs}
-                  onApply={handleApplyJob}
-                  onSave={handleSaveJob}
-                  onSelect={handleJobSelect}
-                  selectedJobId={selectedJob?.id || null}
-                />
-              </div>
-            </div>
-            
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                <h2 className="font-semibold text-lg">Filter Jobs</h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Narrow Down Your Search</p>
-              </div>
-              <div className="p-4">
-                <JobFiltersSection onApplyFilters={applyFilters} />
-              </div>
-            </div>
+      <main className="flex-1 flex flex-col">
+        <section className="p-4">
+          <h1 className="text-2xl font-bold mb-4">Job Listings</h1>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {jobs.map((job) => (
+              <Card
+                key={job.id}
+                className="cursor-pointer hover:shadow-md transition-shadow duration-300"
+                onClick={() => setSelectedJob(job)}
+              >
+                <CardHeader>
+                  <CardTitle>{job.title}</CardTitle>
+                  <CardDescription>{job.company}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-500">{job.location}</p>
+                  <p className="text-sm mt-2">
+                    Match: {job.matchPercentage}%
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
-          
-          {isMobile && (
-            <div className="space-y-3 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6 mt-6">
-              <button 
-                onClick={toggleViewMode}
-                className="w-full py-2.5 px-4 rounded-lg bg-primary text-white font-medium"
-              >
-                Switch To {viewMode === 'list' ? 'Swipe' : 'List'} View
-              </button>
-              
-              <button 
-                onClick={toggleMyJobs}
-                className="w-full py-2.5 px-4 rounded-lg bg-secondary text-foreground font-medium border"
-              >
-                {showMyJobs ? 'Browse Jobs' : 'My Saved & Applied Jobs'}
-              </button>
-              
-              <div className="mt-2">
-                <AutomationSettings />
-              </div>
-            </div>
-          )}
-          
-          {isMobile && showMyJobs ? (
-            <SavedAndAppliedJobs
-              savedJobs={savedJobs}
-              appliedJobs={appliedJobs}
-              onApply={handleApplyJob}
-              onSave={handleSaveJob}
-              onSelect={handleJobSelect}
-              selectedJobId={selectedJob?.id || null}
+        </section>
+
+        <section className="p-4">
+          {selectedJob ? (
+            <JobDetailView 
+              job={selectedJob} 
+              onApply={handleApply} 
+              onSave={handleSave}
+              isSaved={isSaved}
+              isApplied={isApplied}
             />
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
-              <div className="lg:col-span-12">
-                {viewMode === 'swipe' && isMobile ? (
-                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden p-4">
-                    <SwipeJobsInterface 
-                      jobs={filteredJobs}
-                      onApply={handleApplyJob}
-                      onSkip={handleSkipJob}
-                    />
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div>
-                      <Card className="overflow-hidden h-full max-h-[calc(100vh-250px)]">
-                        <CardHeader className="py-3 px-4 border-b flex flex-row justify-between items-center">
-                          <div>
-                            <CardTitle className="text-base font-medium">Browse Jobs</CardTitle>
-                            <p className="text-xs text-muted-foreground">Showing {filteredJobs.length} of {jobs.length} Jobs</p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Select defaultValue={sortOption} onValueChange={handleSortChange}>
-                              <SelectTrigger className="w-[180px] bg-white dark:bg-gray-800 h-8 text-sm">
-                                <SelectValue placeholder="Sort By: Relevance" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="relevance">Sort By: Relevance</SelectItem>
-                                <SelectItem value="date-newest">Date: Newest First</SelectItem>
-                                <SelectItem value="date-oldest">Date: Oldest First</SelectItem>
-                                <SelectItem value="salary-highest">Salary: Highest First</SelectItem>
-                                <SelectItem value="salary-lowest">Salary: Lowest First</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </CardHeader>
-                        
-                        <CardContent className="p-0 divide-y overflow-y-auto max-h-[calc(100vh-300px)]">
-                          {filteredJobs.map(job => (
-                            <JobCard 
-                              key={job.id}
-                              job={job}
-                              onApply={handleApplyJob}
-                              isSelected={selectedJob?.id === job.id}
-                              isSaved={savedJobIds.includes(job.id)}
-                              isApplied={appliedJobIds.includes(job.id)}
-                              onClick={() => handleJobSelect(job)}
-                              onSave={() => handleSaveJob(job)}
-                              variant="list"
-                            />
-                          ))}
-                        </CardContent>
-                      </Card>
-                    </div>
-                    
-                    <div>
-                      <Card className="h-full max-h-[calc(100vh-250px)] overflow-hidden">
-                        <CardContent className="p-0">
-                          <JobDetailView 
-                            job={selectedJob} 
-                            onApply={handleApplyJob}
-                            onSave={handleSaveJob}
-                          />
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </div>
-                )}
-                
-                {showAutomation && selectedJob && (
-                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl shadow-sm border border-blue-200 dark:border-blue-800 overflow-hidden mt-6">
-                    <div className="flex justify-between items-center p-4 border-b border-blue-200 dark:border-blue-800">
-                      <h3 className="font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-2">
-                        <Zap className="h-4 w-4" />
-                        Automated Application
-                      </h3>
-                      <Button 
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setShowAutomation(false)}
-                      >
-                        Close
-                      </Button>
-                    </div>
-                    
-                    <div className="p-4">
-                      <p className="text-sm mb-3 text-blue-600 dark:text-blue-400">
-                        Use Automation To Apply To This Job At {selectedJob.company} Automatically.
-                      </p>
-                      
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          onClick={() => handleAutomatedApply(selectedJob)}
-                          className="bg-blue-600 hover:bg-blue-700"
-                        >
-                          <Zap className="h-4 w-4 mr-2" />
-                          Run Automation Script
-                        </Button>
-                        
-                        <Button
-                          variant="outline"
-                          onClick={() => window.open(selectedJob.applyUrl, '_blank')}
-                        >
-                          Apply Manually
-                        </Button>
-                        
-                        <div className="ml-auto">
-                          <AutomationSettings />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+            <div className="h-full flex items-center justify-center">
+              <p>Select a job to view details</p>
             </div>
           )}
-        </div>
+        </section>
       </main>
     </div>
   );
-};
-
-export default Jobs;
+}

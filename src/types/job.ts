@@ -48,6 +48,7 @@ export interface Job {
     }>;
     nextSteps?: string;
     applicantCount?: number;
+    isAvailable?: boolean;
   };
   interviews?: Array<{
     id: string;
