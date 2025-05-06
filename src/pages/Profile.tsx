@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, ChangeEvent } from "react";
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -57,6 +58,26 @@ import EditSocialLinks from "@/components/profile/EditSocialLinks";
 import EditJobPreferences from "@/components/profile/EditJobPreferences";
 import EditEqualEmployment from "@/components/profile/EditEqualEmployment";
 
+// Define the WorkExperience type to match what's expected
+interface WorkExperience {
+  id: number;
+  role: string;
+  company: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  description: string[];
+}
+
+// Define the Project type to match what's expected
+interface Project {
+  id: number;
+  name: string;
+  startDate: string;
+  endDate: string;
+  description: string[];
+}
+
 const ProfilePage = () => {
   const isMobile = useMobile();
   const [activeTab, setActiveTab] = useState('contact');
@@ -90,7 +111,7 @@ const ProfilePage = () => {
   const [dateOfBirth, setDateOfBirth] = useState("06/19/2006");
   const [location, setLocation] = useState("Atlanta, GA, USA");
   
-  const [workExperiences, setWorkExperiences] = useState([
+  const [workExperiences, setWorkExperiences] = useState<WorkExperience[]>([
     {
       id: 1,
       role: "Software Engineer Intern/ Co-Lead",
@@ -128,7 +149,7 @@ const ProfilePage = () => {
     }
   ]);
 
-  const [projects, setProjects] = useState([
+  const [projects, setProjects] = useState<Project[]>([
     {
       id: 1,
       name: "AI Malware and Virus Reader For Emails",
@@ -218,9 +239,25 @@ const ProfilePage = () => {
       if (parsedData.personalInfo.location) setLocation(parsedData.personalInfo.location);
       
       if (parsedData.workExperiences.length > 0) {
-        setWorkExperiences(
-          parsedData.workExperiences.map((exp, i) => ({ ...exp, id: i + 1 }))
-        );
+        // Make sure all required fields are present and description is an array
+        const formattedExperiences = parsedData.workExperiences.map((exp, i) => {
+          // Ensure description is an array
+          const descriptionArray = Array.isArray(exp.description) 
+            ? exp.description 
+            : exp.description ? [exp.description] : [];
+          
+          return {
+            id: i + 1,
+            role: exp.role || '',
+            company: exp.company || '',
+            location: exp.location || '',
+            startDate: exp.startDate || '',
+            endDate: exp.endDate || '',
+            description: descriptionArray
+          };
+        });
+        
+        setWorkExperiences(formattedExperiences);
       }
       
       if (parsedData.education.length > 0) {
@@ -230,9 +267,23 @@ const ProfilePage = () => {
       }
       
       if (parsedData.projects.length > 0) {
-        setProjects(
-          parsedData.projects.map((project, i) => ({ ...project, id: i + 1 }))
-        );
+        // Make sure all required fields are present and description is an array
+        const formattedProjects = parsedData.projects.map((project, i) => {
+          // Ensure description is an array
+          const descriptionArray = Array.isArray(project.description) 
+            ? project.description 
+            : project.description ? [project.description] : [];
+          
+          return {
+            id: i + 1,
+            name: project.name || '',
+            startDate: project.startDate || '',
+            endDate: project.endDate || '',
+            description: descriptionArray
+          };
+        });
+        
+        setProjects(formattedProjects);
       }
       
       if (parsedData.skills.length > 0) {
@@ -559,7 +610,7 @@ const ProfilePage = () => {
                   </Button>
                 </div>
                 <p className="text-muted-foreground font-medium">{experience.company}</p>
-                <p className="text-muted-foreground text-sm">{experience.location}</p>
+                <p className="text-muted-foreground text-sm">{experience.location || "Remote"}</p>
                 <p className="text-muted-foreground text-sm">{experience.startDate} - {experience.endDate}</p>
                 <div className="mt-3 space-y-2">
                   {experience.description.map((item, index) => (
@@ -1532,6 +1583,138 @@ const ProfilePage = () => {
       />
     </>
   );
+
+  // Include these functions to resolve the error
+  function calculateProfileCompletion() {
+    let score = 0;
+    const totalFields = 10;
+    
+    if (name) score++;
+    if (email) score++;
+    if (phone) score++;
+    if (location) score++;
+    if (workExperiences.length > 0) score++;
+    if (education.length > 0) score++;
+    if (projects.length > 0) score++;
+    if (settings.skills.length > 0) score++;
+    if (settings.languages.length > 0) score++;
+    if (socialLinks.linkedin || socialLinks.github || socialLinks.portfolio || socialLinks.other) score++;
+    
+    return Math.round((score / totalFields) * 100);
+  }
+
+  function handleUpdateProfileHeader(data: { name: string; jobStatus: string }) {
+    setName(data.name);
+    setJobStatus(data.jobStatus);
+    toast.success("Profile updated successfully!");
+  }
+
+  function handleUpdateContactInfo(data: { email: string; phone: string; dateOfBirth: string; location: string }) {
+    setEmail(data.email);
+    setPhone(data.phone);
+    setDateOfBirth(data.dateOfBirth);
+    setLocation(data.location);
+    toast.success("Contact information updated successfully!");
+  }
+
+  function handleAddWorkExperience() {
+    setEditingWorkExperience(null);
+    setWorkExperienceModalOpen(true);
+  }
+
+  function handleEditWorkExperience(experience: any) {
+    setEditingWorkExperience(experience);
+    setWorkExperienceModalOpen(true);
+  }
+
+  function handleSaveWorkExperience(experience: any) {
+    if (editingWorkExperience) {
+      setWorkExperiences(workExperiences.map(exp => 
+        exp.id === experience.id ? experience : exp
+      ));
+      toast.success("Work experience updated!");
+    } else {
+      setWorkExperiences([...workExperiences, experience]);
+      toast.success("Work experience added!");
+    }
+  }
+
+  function handleDeleteWorkExperience(id: number) {
+    setWorkExperiences(workExperiences.filter(exp => exp.id !== id));
+    toast.success("Work experience deleted!");
+  }
+
+  function handleAddEducation() {
+    setEditingEducation(null);
+    setEducationModalOpen(true);
+  }
+
+  function handleEditEducation(edu: any) {
+    setEditingEducation(edu);
+    setEducationModalOpen(true);
+  }
+
+  function handleSaveEducation(edu: any) {
+    if (editingEducation) {
+      setEducation(education.map(item => 
+        item.id === edu.id ? edu : item
+      ));
+      toast.success("Education updated!");
+    } else {
+      setEducation([...education, edu]);
+      toast.success("Education added!");
+    }
+  }
+
+  function handleDeleteEducation(id: number) {
+    setEducation(education.filter(edu => edu.id !== id));
+    toast.success("Education deleted!");
+  }
+
+  function handleAddProject() {
+    setEditingProject(null);
+    setProjectModalOpen(true);
+  }
+
+  function handleEditProject(project: any) {
+    setEditingProject(project);
+    setProjectModalOpen(true);
+  }
+
+  function handleSaveProject(project: any) {
+    if (editingProject) {
+      setProjects(projects.map(item => 
+        item.id === project.id ? project : item
+      ));
+      toast.success("Project updated!");
+    } else {
+      setProjects([...projects, project]);
+      toast.success("Project added!");
+    }
+  }
+
+  function handleDeleteProject(id: number) {
+    setProjects(projects.filter(project => project.id !== id));
+    toast.success("Project deleted!");
+  }
+
+  function handleUpdateSocialLinks(data: any) {
+    setSocialLinks(data);
+    toast.success("Social links updated!");
+  }
+
+  function handleUpdateJobPreferences(data: any) {
+    setJobPreferences({
+      ...jobPreferences,
+      ...data
+    });
+    toast.success("Job preferences updated!");
+  }
+
+  function handleUpdateEqualEmployment(data: any) {
+    setEqualEmploymentData(data);
+    toast.success("Equal employment data updated!");
+  }
 };
 
 export default ProfilePage;
