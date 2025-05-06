@@ -95,7 +95,7 @@ export const JobDetailView = ({
   
   // Create a mock user profile that matches the expected format for ResumeGenerator
   const mockUserProfile: MockUserProfile = {
-    name: userProfile.firstName ? `${userProfile.firstName} ${userProfile.lastName || ''}` : "Alex Johnson",
+    name: userProfile.name || "Alex Johnson",
     email: userProfile.email || "alex.johnson@example.com",
     phone: userProfile.phone || "555-123-4567",
     location: userProfile.location || "San Francisco, CA",

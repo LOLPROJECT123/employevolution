@@ -1,15 +1,14 @@
 
 /**
- * JobMatchCalculator - Calculates match percentage between resume and job requirements
+ * Job Match Calculator - Calculate match percentage between job and resume
  */
-import { Job } from "@/types/job";
-import { ParsedResume } from "@/types/resume";
-import { JobRequirementsAnalyzer, JobRequirements } from "./JobRequirementsAnalyzer";
-import { ResumeSkillsExtractor, ExtractedSkill } from "./ResumeSkillsExtractor";
+
+import { Job } from '@/types/job';
+import { ParsedResume } from '@/types/resume';
+import { ResumeSkillsExtractor, ExtractedSkill } from './ResumeSkillsExtractor';
 
 export interface SkillMatch {
-  jobSkill: string;
-  resumeSkill: string | null;
+  skill: string;
   matched: boolean;
 }
 
@@ -23,343 +22,295 @@ export interface JobMatchResult {
     softSkillsScore: number;
     educationScore: number;
     experienceScore: number;
-  };
+    locationScore?: number;
+  }
 }
 
 export class JobMatchCalculator {
-  private requirementsAnalyzer: JobRequirementsAnalyzer;
   private skillsExtractor: ResumeSkillsExtractor;
-
+  
   constructor() {
-    this.requirementsAnalyzer = new JobRequirementsAnalyzer();
     this.skillsExtractor = new ResumeSkillsExtractor();
   }
-
+  
   /**
-   * Calculate match percentage between a resume and a job posting
+   * Calculate match percentage between a job and a resume
+   * @param job The job to match against
+   * @param resume The parsed resume to match
+   * @returns The match result with percentage and details
    */
-  public calculateMatchPercentage(job: Job, resume: ParsedResume): JobMatchResult {
+  calculateMatchPercentage(job: Job, resume: ParsedResume): JobMatchResult {
     // Extract job requirements
-    const jobRequirements = this.requirementsAnalyzer.analyzeJob(job);
+    const requiredSkills = job.skills || [];
+    const jobTitle = job.title || '';
+    const jobLevel = job.level || 'mid';
+    const jobLocation = job.location || '';
     
     // Extract resume skills
-    const resumeSkills = this.skillsExtractor.extractSkillsFromResume(resume);
+    const resumeSkills = resume.skills || [];
     
-    // Match technical skills
-    const technicalSkillsResult = this.matchSkills(
-      jobRequirements.technical.map(req => req.skill),
-      resumeSkills.filter(s => s.category === 'technical').map(s => s.skill)
-    );
+    // Calculate skill matches
+    const { 
+      matchedSkills, 
+      missingSkills, 
+      extraSkills, 
+      skillsScore 
+    } = this.calculateSkillsScore(requiredSkills, resumeSkills);
     
-    // Match soft skills
-    const softSkillsResult = this.matchSkills(
-      jobRequirements.soft.map(req => req.skill),
-      resumeSkills.filter(s => s.category === 'soft').map(s => s.skill)
-    );
+    // Calculate education match
+    const educationScore = this.calculateEducationScore(job, resume);
     
-    // Calculate education score
-    const educationScore = this.calculateEducationScore(jobRequirements, resume);
+    // Calculate experience match
+    const experienceScore = this.calculateExperienceScore(job, resume);
     
-    // Calculate experience score
-    const experienceScore = this.calculateExperienceScore(jobRequirements, resume);
+    // Calculate location match
+    const locationScore = this.calculateLocationScore(job, resume);
     
-    // Combined skill matches
-    const skillMatches = [...technicalSkillsResult.matches, ...softSkillsResult.matches];
-    
-    // List of missing skills (required by job but not in resume)
-    const missingSkills = [
-      ...jobRequirements.technical
-        .filter(req => req.required)
-        .map(req => req.skill)
-        .filter(skill => !resumeSkills.some(s => s.skill.toLowerCase() === skill.toLowerCase())),
-      ...jobRequirements.soft
-        .filter(req => req.required)
-        .map(req => req.skill)
-        .filter(skill => !resumeSkills.some(s => s.skill.toLowerCase() === skill.toLowerCase()))
-    ];
-    
-    // List of extra skills (in resume but not required by job)
-    const extraSkills = resumeSkills
-      .map(skill => skill.skill)
-      .filter(skill => 
-        !jobRequirements.technical.some(req => req.skill.toLowerCase() === skill.toLowerCase()) &&
-        !jobRequirements.soft.some(req => req.skill.toLowerCase() === skill.toLowerCase())
-      );
-    
-    // Calculate weighted overall score
+    // Calculate overall match percentage with weighted components
     const weights = {
-      technicalSkills: 0.6,  // 60% of score from technical skills
-      softSkills: 0.1,       // 10% of score from soft skills
-      education: 0.15,       // 15% of score from education
-      experience: 0.15       // 15% of score from experience
+      skills: 0.5,
+      education: 0.2,
+      experience: 0.25,
+      location: 0.05
     };
     
-    // Get scores (make sure we don't divide by zero)
-    const technicalSkillsScore = technicalSkillsResult.score;
-    const softSkillsScore = softSkillsResult.score;
-    
-    // Calculate final match percentage (0-100)
     const overallScore = 
-      (technicalSkillsScore * weights.technicalSkills) +
-      (softSkillsScore * weights.softSkills) +
+      (skillsScore * weights.skills) +
       (educationScore * weights.education) +
-      (experienceScore * weights.experience);
+      (experienceScore * weights.experience) +
+      (locationScore * weights.location);
     
-    // Round to nearest integer
-    const matchPercentage = Math.round(overallScore);
+    // Create skill matches array for UI
+    const skillMatches: SkillMatch[] = requiredSkills.map(skill => ({
+      skill,
+      matched: matchedSkills.includes(skill)
+    }));
     
     return {
-      matchPercentage,
+      matchPercentage: Math.round(overallScore * 100),
       skillMatches,
       missingSkills,
       extraSkills,
       details: {
-        technicalSkillsScore,
-        softSkillsScore,
-        educationScore,
-        experienceScore
+        technicalSkillsScore: skillsScore * 100,
+        softSkillsScore: 75, // Placeholder, would need more advanced analysis
+        educationScore: educationScore * 100,
+        experienceScore: experienceScore * 100,
+        locationScore: locationScore * 100
       }
     };
   }
-
+  
   /**
-   * Match skills between job requirements and resume
+   * Calculate skill match score
    */
-  private matchSkills(
-    jobSkills: string[], 
+  private calculateSkillsScore(
+    requiredSkills: string[], 
     resumeSkills: string[]
   ): { 
-    score: number, 
-    matches: SkillMatch[] 
+    matchedSkills: string[]; 
+    missingSkills: string[]; 
+    extraSkills: string[];
+    skillsScore: number;
   } {
-    // No required skills means perfect match
-    if (jobSkills.length === 0) {
-      return { score: 100, matches: [] };
-    }
+    const normalizedRequiredSkills = requiredSkills.map(s => s.toLowerCase());
+    const normalizedResumeSkills = resumeSkills.map(s => s.toLowerCase());
     
-    const matches: SkillMatch[] = [];
-    let matchedCount = 0;
+    // Find matched skills
+    const matchedSkills = normalizedRequiredSkills.filter(skill => 
+      normalizedResumeSkills.some(resumeSkill => resumeSkill.includes(skill) || skill.includes(resumeSkill))
+    );
     
-    // Check each job skill against resume skills
-    jobSkills.forEach(jobSkill => {
-      // Find a matching skill in the resume (case insensitive)
-      const matchingResumeSkill = resumeSkills.find(
-        resumeSkill => resumeSkill.toLowerCase() === jobSkill.toLowerCase()
-      );
-      
-      // Add to matches array
-      matches.push({
-        jobSkill,
-        resumeSkill: matchingResumeSkill || null,
-        matched: !!matchingResumeSkill
-      });
-      
-      // Count matches
-      if (matchingResumeSkill) {
-        matchedCount++;
-      }
-    });
+    // Find missing skills
+    const missingSkills = normalizedRequiredSkills.filter(skill => 
+      !normalizedResumeSkills.some(resumeSkill => resumeSkill.includes(skill) || skill.includes(resumeSkill))
+    );
     
-    // Calculate score as percentage of matched skills
-    const score = Math.round((matchedCount / jobSkills.length) * 100);
+    // Find extra skills in resume
+    const extraSkills = normalizedResumeSkills.filter(skill => 
+      !normalizedRequiredSkills.some(reqSkill => reqSkill.includes(skill) || skill.includes(reqSkill))
+    );
     
-    return { score, matches };
+    // Calculate score - empty required skills should return 1.0 (full match)
+    const skillsScore = normalizedRequiredSkills.length === 0 ? 
+      1.0 : 
+      matchedSkills.length / normalizedRequiredSkills.length;
+    
+    return {
+      matchedSkills: matchedSkills.map(s => this.capitalizeFirstLetter(s)),
+      missingSkills: missingSkills.map(s => this.capitalizeFirstLetter(s)),
+      extraSkills: extraSkills.map(s => this.capitalizeFirstLetter(s)),
+      skillsScore
+    };
   }
-
+  
   /**
    * Calculate education match score
    */
-  private calculateEducationScore(jobRequirements: JobRequirements, resume: ParsedResume): number {
-    if (jobRequirements.education.length === 0) {
-      return 100; // No education requirements means perfect score
+  private calculateEducationScore(job: Job, resume: ParsedResume): number {
+    if (!job.education || job.education.length === 0 || !resume.education || resume.education.length === 0) {
+      // No education requirements or no education in resume
+      return 0.5; // Neutral score
     }
     
-    // Get highest level of education from resume
-    const resumeEducationLevels = this.getEducationLevels(resume);
-    if (resumeEducationLevels.length === 0) {
-      return 0; // No education in resume
-    }
-    
-    const highestResumeLevel = Math.max(...resumeEducationLevels);
-    
-    // Find required education levels from job
-    const requiredLevels = jobRequirements.education
-      .filter(edu => edu.required)
-      .map(edu => this.getEducationLevelValue(edu.level));
-    
-    // Find preferred education levels from job
-    const preferredLevels = jobRequirements.education
-      .filter(edu => edu.preferred && !edu.required)
-      .map(edu => this.getEducationLevelValue(edu.level));
-    
-    if (requiredLevels.length > 0) {
-      // Check if resume meets the highest required education level
-      const highestRequiredLevel = Math.max(...requiredLevels);
-      
-      if (highestResumeLevel >= highestRequiredLevel) {
-        return 100; // Meets or exceeds required education
-      } else {
-        // Partial credit if close to required level
-        return Math.round((highestResumeLevel / highestRequiredLevel) * 80);
-      }
-    } else if (preferredLevels.length > 0) {
-      // Check against preferred levels
-      const highestPreferredLevel = Math.max(...preferredLevels);
-      
-      if (highestResumeLevel >= highestPreferredLevel) {
-        return 100; // Meets or exceeds preferred education
-      } else {
-        // Still give high score since these are just preferences
-        return 80;
-      }
-    }
-    
-    return 100; // No specific required or preferred levels
-  }
-
-  /**
-   * Get education levels from resume
-   */
-  private getEducationLevels(resume: ParsedResume): number[] {
-    if (!resume.education || resume.education.length === 0) {
-      return [];
-    }
-    
-    return resume.education.map(edu => {
-      const degree = edu.degree.toLowerCase();
-      
-      if (degree.includes('phd') || degree.includes('doctor')) {
-        return this.getEducationLevelValue('Doctorate');
-      } else if (degree.includes('master')) {
-        return this.getEducationLevelValue('Master');
-      } else if (degree.includes('bachelor')) {
-        return this.getEducationLevelValue('Bachelor');
-      } else if (degree.includes('associate')) {
-        return this.getEducationLevelValue('Associate');
-      } else if (degree.includes('certificate') || degree.includes('certification')) {
-        return this.getEducationLevelValue('Certificate');
-      } else if (degree.includes('high school')) {
-        return this.getEducationLevelValue('HighSchool');
-      }
-      
-      return 1; // Default to some education
+    // Basic implementation - matches for presence of degree keywords
+    const hasRelevantDegree = job.education.some(requiredEdu => {
+      return resume.education.some(resumeEdu => {
+        const degreeField = resumeEdu.degree.toLowerCase();
+        return requiredEdu.toLowerCase().includes(degreeField) || 
+               degreeField.includes(requiredEdu.toLowerCase());
+      });
     });
-  }
-
-  /**
-   * Convert education level string to numeric value for comparison
-   */
-  private getEducationLevelValue(level: string): number {
-    const levels: Record<string, number> = {
-      'Doctorate': 6,
-      'Master': 5,
-      'Bachelor': 4,
-      'Associate': 3,
-      'Certificate': 2,
-      'HighSchool': 1,
-      'None': 0
-    };
     
-    return levels[level] || 0;
+    return hasRelevantDegree ? 0.9 : 0.3;
   }
-
+  
   /**
    * Calculate experience match score
    */
-  private calculateExperienceScore(jobRequirements: JobRequirements, resume: ParsedResume): number {
-    if (jobRequirements.experience.length === 0) {
-      return 100; // No experience requirements means perfect score
-    }
+  private calculateExperienceScore(job: Job, resume: ParsedResume): number {
+    // Calculate total years of experience from work experiences
+    let totalYearsExperience = 0;
     
-    // Calculate years of experience from resume
-    const yearsOfExperience = this.calculateYearsOfExperience(resume);
-    
-    // Find highest required years of experience
-    const requiredExperience = jobRequirements.experience
-      .filter(exp => exp.required && exp.years !== undefined)
-      .map(exp => exp.years as number);
-    
-    if (requiredExperience.length > 0) {
-      const maxRequiredYears = Math.max(...requiredExperience);
-      
-      if (yearsOfExperience >= maxRequiredYears) {
-        return 100; // Meets or exceeds required experience
-      } else if (yearsOfExperience >= maxRequiredYears * 0.8) {
-        return 90; // Close to required experience (80% or more)
-      } else if (yearsOfExperience >= maxRequiredYears * 0.6) {
-        return 70; // Has majority of required experience
-      } else if (yearsOfExperience >= maxRequiredYears * 0.4) {
-        return 50; // Has some of required experience
-      } else {
-        return 30; // Has less than 40% of required experience
-      }
-    }
-    
-    // If no explicit year requirements, check experience level
-    const requiredLevels = jobRequirements.experience
-      .filter(exp => exp.required && exp.level !== undefined)
-      .map(exp => {
-        // Convert level to equivalent years
-        const level = exp.level?.toLowerCase() || '';
-        if (level.includes('senior')) return 5;
-        if (level.includes('mid')) return 3;
-        if (level.includes('junior')) return 1;
-        if (level.includes('entry')) return 0;
-        return 2; // Default
-      });
-    
-    if (requiredLevels.length > 0) {
-      const maxRequiredLevel = Math.max(...requiredLevels);
-      
-      if (yearsOfExperience >= maxRequiredLevel) {
-        return 100; // Meets or exceeds required level
-      } else if (yearsOfExperience >= maxRequiredLevel * 0.7) {
-        return 80; // Close to required level
-      } else {
-        return 60; // Below required level
-      }
-    }
-    
-    // Default score if no specific requirements found
-    return Math.min(100, Math.max(60, yearsOfExperience * 10));
-  }
-
-  /**
-   * Calculate total years of experience from resume
-   */
-  private calculateYearsOfExperience(resume: ParsedResume): number {
-    if (!resume.workExperiences || resume.workExperiences.length === 0) {
-      return 0;
-    }
-    
-    const now = new Date();
-    let totalMonths = 0;
-    
-    resume.workExperiences.forEach(job => {
-      try {
-        const startDate = new Date(job.startDate);
+    if (resume.workExperiences && resume.workExperiences.length > 0) {
+      resume.workExperiences.forEach(job => {
+        // Convert date strings to Date objects
+        let startDate: Date;
         let endDate: Date;
         
-        // Handle current jobs
-        if (job.endDate.toLowerCase() === 'present' || !job.endDate) {
-          endDate = now;
-        } else {
-          endDate = new Date(job.endDate);
+        try {
+          startDate = new Date(job.startDate);
+          
+          if (job.endDate.toLowerCase().includes('present')) {
+            endDate = new Date(); // Current date
+          } else {
+            endDate = new Date(job.endDate);
+          }
+          
+          // Calculate years difference
+          const yearsDiff = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 365);
+          
+          if (!isNaN(yearsDiff) && yearsDiff > 0) {
+            totalYearsExperience += yearsDiff;
+          }
+        } catch (e) {
+          // Skip this job if dates can't be parsed
         }
-        
-        // Calculate months between dates
-        const months = (endDate.getFullYear() - startDate.getFullYear()) * 12 + 
-                      (endDate.getMonth() - startDate.getMonth());
-        
-        if (!isNaN(months) && months > 0) {
-          totalMonths += months;
-        }
-      } catch (e) {
-        // Skip jobs with invalid dates
-      }
-    });
+      });
+    }
     
-    // Convert months to years (rounded to 1 decimal place)
-    return Math.round((totalMonths / 12) * 10) / 10;
+    // Map job level to required years of experience
+    const requiredYears = this.getRequiredYearsFromLevel(job.level || 'mid');
+    
+    // Calculate score based on difference between required and actual experience
+    if (totalYearsExperience >= requiredYears) {
+      // Has enough experience
+      return 1.0;
+    } else if (totalYearsExperience >= requiredYears * 0.7) {
+      // Has most of the required experience
+      return 0.8;
+    } else if (totalYearsExperience >= requiredYears * 0.4) {
+      // Has some of the required experience
+      return 0.5;
+    } else {
+      // Has much less experience than required
+      return 0.2;
+    }
+  }
+  
+  /**
+   * Calculate location match score
+   */
+  private calculateLocationScore(job: Job, resume: ParsedResume): number {
+    if (!job.location || !resume.personalInfo.location) {
+      return 0.5; // Neutral score if location info missing
+    }
+    
+    // Simple text matching - would be better with geocoding
+    const jobLocation = job.location.toLowerCase();
+    const candidateLocation = resume.personalInfo.location.toLowerCase();
+    
+    if (job.remote === true) {
+      return 1.0; // Perfect match for remote jobs
+    }
+    
+    // Check for exact or partial location matches
+    if (jobLocation === candidateLocation) {
+      return 1.0; // Exact match
+    } else if (this.locationsSimilar(jobLocation, candidateLocation)) {
+      return 0.8; // Similar locations
+    }
+    
+    // Extract cities and check
+    const jobCity = this.extractCity(jobLocation);
+    const candidateCity = this.extractCity(candidateLocation);
+    
+    if (jobCity && candidateCity && jobCity === candidateCity) {
+      return 0.9; // Same city but described differently
+    }
+    
+    return 0.3; // Different locations
+  }
+  
+  /**
+   * Determines if two location strings are similar
+   */
+  private locationsSimilar(loc1: string, loc2: string): boolean {
+    // Check if either contains the other
+    if (loc1.includes(loc2) || loc2.includes(loc1)) {
+      return true;
+    }
+    
+    // Split by common delimiters and check parts
+    const parts1 = loc1.split(/[,\s]+/);
+    const parts2 = loc2.split(/[,\s]+/);
+    
+    // Check for any matching non-trivial parts
+    return parts1.some(p1 => 
+      p1.length > 2 && parts2.some(p2 => p2.length > 2 && p1 === p2)
+    );
+  }
+  
+  /**
+   * Extract city from location string
+   */
+  private extractCity(location: string): string | null {
+    // Simple extraction of likely city name
+    // Would be better with geocoding and structured location data
+    
+    // Split by common delimiters and take first part over 3 chars that's not a state code
+    const parts = location.split(/[,\s]+/);
+    for (const part of parts) {
+      if (part.length > 3 && !/^[A-Z]{2}$/i.test(part)) {
+        return part.toLowerCase();
+      }
+    }
+    
+    return null;
+  }
+  
+  /**
+   * Map job level to required years of experience
+   */
+  private getRequiredYearsFromLevel(level: string): number {
+    switch (level.toLowerCase()) {
+      case 'intern': return 0;
+      case 'entry': return 1;
+      case 'junior': return 1;
+      case 'mid': return 3;
+      case 'senior': return 5;
+      case 'lead': return 7;
+      case 'manager': return 5;
+      case 'director': return 8;
+      case 'executive': return 10;
+      default: return 3; // Default to mid-level
+    }
+  }
+  
+  /**
+   * Helper to capitalize first letter for display
+   */
+  private capitalizeFirstLetter(string: string): string {
+    return string.charAt(0).toUpperCase() + string.slice(1);
   }
 }

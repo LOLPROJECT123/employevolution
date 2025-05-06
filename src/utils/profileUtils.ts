@@ -1,210 +1,157 @@
 
 /**
- * Utilities for working with user profiles and resume data
+ * Utility functions for user profile operations
  */
 
-// Define the UserProfile interface
 export interface UserProfile {
+  name: string;
   firstName?: string;
   lastName?: string;
-  email?: string;
-  phone?: string;
-  location?: string;
+  email: string;
+  phone: string;
+  location: string;
   title?: string;
   summary?: string;
-  skills?: string[];
+  skills: string[];
   languages?: string[];
-  experience?: Array<{
-    title: string;
-    company: string;
-    location: string;
-    startDate: string;
-    endDate: string;
-    current: boolean;
-    description: string;
-  }>;
-  education?: Array<{
-    degree: string;
-    institution: string;
-    location: string;
-    startDate: string;
-    endDate: string;
-    current: boolean;
-    description: string;
-  }>;
+  experience?: any[];
+  education?: any[];
+  projects?: any[];
   socialLinks?: {
     linkedin?: string;
     github?: string;
-    website?: string;
     portfolio?: string;
-    twitter?: string;
+    website?: string;
+    other?: string;
   };
-  projects?: Array<{
-    name: string;
-    description: string;
-    startDate?: string;
-    endDate?: string;
-    skills?: string[];
-  }>;
   resumeSnapshots?: any[];
 }
 
-// Simple mock profile for development purposes
-export const getUserProfile = (): UserProfile => {
-  // Try to get profile from localStorage
-  try {
-    const storedProfile = localStorage.getItem('userProfile');
-    if (storedProfile) {
-      return JSON.parse(storedProfile);
+// Default mock profile for demo purposes
+const defaultProfile: UserProfile = {
+  name: "John Doe",
+  firstName: "John",
+  lastName: "Doe",
+  email: "john.doe@example.com",
+  phone: "+1 (555) 123-4567",
+  location: "San Francisco, CA",
+  title: "Frontend Developer",
+  summary: "Experienced frontend developer with 5 years of experience in React and TypeScript.",
+  skills: ["React", "TypeScript", "JavaScript", "HTML", "CSS", "Redux", "Node.js"],
+  languages: ["English", "Spanish"],
+  experience: [
+    {
+      company: "Tech Company",
+      position: "Senior Frontend Developer",
+      startDate: "2020-01",
+      endDate: "Present",
+      description: "Building and maintaining frontend applications using React and TypeScript."
     }
-  } catch (e) {
-    console.error('Error parsing stored profile:', e);
-  }
-
-  // Return default profile if nothing in localStorage
-  return {
-    firstName: 'Alex',
-    lastName: 'Johnson',
-    email: 'alex.johnson@example.com',
-    phone: '555-123-4567',
-    location: 'San Francisco, CA',
-    title: 'Frontend Developer',
-    summary: 'Passionate frontend developer with experience in React, TypeScript, and modern web development.',
-    skills: [
-      'JavaScript', 'TypeScript', 'React', 'HTML', 'CSS', 'Node.js',
-      'GraphQL', 'Git', 'Responsive Design', 'UI/UX', 'Redux', 'Jest'
-    ],
-    experience: [
-      {
-        title: 'Frontend Developer',
-        company: 'TechCorp Inc.',
-        location: 'San Francisco, CA',
-        startDate: '2021-05',
-        endDate: '2023-03',
-        current: false,
-        description: 'Developed responsive web applications using React and TypeScript.'
-      },
-      {
-        title: 'Junior Web Developer',
-        company: 'WebSolutions LLC',
-        location: 'Oakland, CA',
-        startDate: '2019-08',
-        endDate: '',
-        current: true,
-        description: 'Built and maintained client websites using modern web technologies.'
-      }
-    ],
-    education: [
-      {
-        degree: 'Bachelor of Science in Computer Science',
-        institution: 'University of California, Berkeley',
-        location: 'Berkeley, CA',
-        startDate: '2015-09',
-        endDate: '2019-05',
-        current: false,
-        description: ''
-      }
-    ]
-  };
-};
-
-/**
- * Save user profile to localStorage
- */
-export const saveUserProfile = (profile: UserProfile): void => {
-  try {
-    localStorage.setItem('userProfile', JSON.stringify(profile));
-    
-    // Dispatch event for components to react to profile changes
-    const event = new CustomEvent('profileUpdated', {
-      detail: profile
-    });
-    window.dispatchEvent(event);
-  } catch (error) {
-    console.error('Error saving profile:', error);
+  ],
+  education: [
+    {
+      school: "University of California",
+      degree: "Computer Science",
+      startDate: "2014",
+      endDate: "2018"
+    }
+  ],
+  socialLinks: {
+    linkedin: "https://linkedin.com/in/johndoe",
+    github: "https://github.com/johndoe"
   }
 };
 
 /**
- * Get user initials from profile
+ * Get user profile data
  */
-export const getUserInitials = (profile?: UserProfile): string => {
-  const userProfile = profile || getUserProfile();
-  
-  if (userProfile.firstName && userProfile.lastName) {
-    return `${userProfile.firstName[0]}${userProfile.lastName[0]}`;
-  }
-  
-  if (userProfile.firstName) {
-    return userProfile.firstName.substring(0, 2);
-  }
-  
-  return 'U';
-};
+export function getUserProfile(): UserProfile {
+  // In a real application, this would retrieve from localStorage, API, etc.
+  return defaultProfile;
+}
 
 /**
- * Get user full name from profile
+ * Save user profile data
  */
-export const getUserFullName = (profile?: UserProfile): string => {
+export function saveUserProfile(profile: UserProfile): void {
+  // In a real application, this would save to localStorage, API, etc.
+  console.log("Profile saved:", profile);
+}
+
+/**
+ * Get user initials for avatar
+ */
+export function getUserInitials(): string {
+  const profile = getUserProfile();
+  return profile.name
+    .split(' ')
+    .map(part => part[0])
+    .join('')
+    .toUpperCase()
+    .substring(0, 2);
+}
+
+/**
+ * Get user's full name
+ */
+export function getUserFullName(profile?: UserProfile): string {
   const userProfile = profile || getUserProfile();
   
   if (userProfile.firstName && userProfile.lastName) {
     return `${userProfile.firstName} ${userProfile.lastName}`;
   }
   
-  if (userProfile.firstName) {
-    return userProfile.firstName;
-  }
-  
-  return 'User';
-};
+  return userProfile.name || "User";
+}
 
 /**
- * Convert our user profile format to ParsedResume format for job matching
+ * Get parsed resume data from user profile
  */
-export const convertProfileToResumeFormat = (profile: any) => {
+export function getParsedResumeFromProfile() {
+  const profile = getUserProfile();
+  
   return {
     personalInfo: {
-      name: `${profile.firstName} ${profile.lastName}`,
+      name: profile.name,
       email: profile.email,
       phone: profile.phone,
       location: profile.location
     },
-    workExperiences: profile.experience?.map((exp: any) => ({
-      role: exp.title,
-      company: exp.company,
-      location: exp.location,
-      startDate: exp.startDate,
-      endDate: exp.current ? 'present' : (exp.endDate || ''),
-      description: [exp.description]
-    })) || [],
-    education: profile.education?.map((edu: any) => ({
-      school: edu.institution || edu.school,
-      degree: edu.degree,
-      startDate: edu.startDate,
-      endDate: edu.endDate
-    })) || [],
-    projects: profile.projects?.map((proj: any) => ({
-      name: proj.name,
-      startDate: proj.startDate || '',
-      endDate: proj.endDate || '',
-      description: Array.isArray(proj.description) ? proj.description : [proj.description || '']
-    })) || [],
     skills: profile.skills || [],
     languages: profile.languages || [],
-    socialLinks: {
-      linkedin: profile.socialLinks?.linkedin || '',
-      github: profile.socialLinks?.github || '',
-      portfolio: profile.socialLinks?.portfolio || profile.socialLinks?.website || '',
-      other: ''
-    }
+    workExperiences: profile.experience || [],
+    education: profile.education || [],
+    projects: profile.projects || [],
+    socialLinks: profile.socialLinks || {}
   };
-};
+}
 
 /**
- * Get the parsed resume format from the user's profile
+ * Parse resume file (PDF, DOCX)
  */
-export const getParsedResumeFromProfile = () => {
-  const profile = getUserProfile();
-  return convertProfileToResumeFormat(profile);
-};
+export async function parseResume(file: File) {
+  // In a real application, this would use a resume parsing API or library
+  // For now, just return the default profile data
+  console.log("Resume parsing requested for file:", file.name);
+  
+  // Simulate async parsing
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
+  return getParsedResumeFromProfile();
+}
+
+// Mock for resume data type
+export interface ParsedResume {
+  personalInfo: {
+    name: string;
+    email: string;
+    phone: string;
+    location: string;
+  };
+  skills: string[];
+  languages: string[];
+  workExperiences: any[];
+  education: any[];
+  projects: any[];
+  socialLinks: any;
+}
