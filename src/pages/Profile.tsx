@@ -1,102 +1,29 @@
 
-import React, { useState, useRef, ChangeEvent } from "react";
-import Navbar from "@/components/Navbar";
-import MobileHeader from "@/components/MobileHeader";
-import { useMobile } from "@/hooks/use-mobile";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import {
-  BarChartBig,
-  Building2,
-  Calendar,
-  Clock,
-  DollarSign,
-  Edit3,
-  FileText,
-  GraduationCap,
-  Github,
-  Globe,
-  Link as LinkIcon,
-  Linkedin,
-  Mail,
-  MapPin,
-  PenLine,
-  Phone,
-  Plus,
-  Settings,
-  Upload,
-  Users,
-  Sparkles,
-  Wrench,
-  Briefcase,
-  Zap,
-  UserRound
-} from 'lucide-react';
+import React, { useState } from "react";
+import ProfileHeader from "@/components/profile/ProfileHeader";
+import ProfileTabs, { TabPanel } from "@/components/profile/ProfileTabs";
+import ResumeSection from "@/components/profile/ResumeSection";
+import WorkExperienceSection from "@/components/profile/WorkExperienceSection";
+import EducationSection from "@/components/profile/EducationSection";
+import ProjectsSection from "@/components/profile/ProjectsSection";
+import SocialLinksSection from "@/components/profile/SocialLinksSection";
+import JobPreferencesSection from "@/components/profile/JobPreferencesSection";
+import EqualEmploymentSection from "@/components/profile/EqualEmploymentSection";
+import SettingsSection from "@/components/profile/SettingsSection";
+import SkillsSection from "@/components/profile/SkillsSection";
+import LanguagesSection from "@/components/profile/LanguagesSection";
 
-// Import edit components
-import EditProfileHeader from "@/components/profile/EditProfileHeader";
-import EditContactInfo from "@/components/profile/EditContactInfo";
-import EditWorkExperience from "@/components/profile/EditWorkExperience";
-import EditEducation from "@/components/profile/EditEducation";
-import EditProject from "@/components/profile/EditProject";
-import EditSocialLinks from "@/components/profile/EditSocialLinks";
-import EditJobPreferences from "@/components/profile/EditJobPreferences";
-import EditEqualEmployment from "@/components/profile/EditEqualEmployment";
+// Mock data - in a real app, this would come from your backend or state management
+const Profile = () => {
+  // User profile data
+  const [userData, setUserData] = useState({
+    name: "John Smith",
+    jobStatus: "Actively looking",
+    profileStrength: 65,
+  });
 
-// Import resume parser
-import { parseResume, ParsedResume } from "@/utils/resumeParser";
-
-const ProfilePage = () => {
-  const isMobile = useMobile();
-  const [activeTab, setActiveTab] = useState('contact');
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Edit modal states
-  const [profileHeaderModalOpen, setProfileHeaderModalOpen] = useState(false);
-  const [contactModalOpen, setContactModalOpen] = useState(false);
-  const [workExperienceModalOpen, setWorkExperienceModalOpen] = useState(false);
-  const [editingWorkExperience, setEditingWorkExperience] = useState<any>(null);
-  const [educationModalOpen, setEducationModalOpen] = useState(false);
-  const [editingEducation, setEditingEducation] = useState<any>(null);
-  const [projectModalOpen, setProjectModalOpen] = useState(false);
-  const [editingProject, setEditingProject] = useState<any>(null);
-  const [socialLinksModalOpen, setSocialLinksModalOpen] = useState(false);
-  const [roleExperienceModalOpen, setRoleExperienceModalOpen] = useState(false);
-  const [industriesModalOpen, setIndustriesModalOpen] = useState(false);
-  const [compensationModalOpen, setCompensationModalOpen] = useState(false);
-  const [locationModalOpen, setLocationModalOpen] = useState(false);
-  const [jobTypesModalOpen, setJobTypesModalOpen] = useState(false);
-  const [skillsModalOpen, setSkillsModalOpen] = useState(false);
-  const [workAuthModalOpen, setWorkAuthModalOpen] = useState(false);
-  const [equalEmploymentModalOpen, setEqualEmploymentModalOpen] = useState(false);
-
-  // Profile data states
-  const [name, setName] = useState("Varun Veluri");
-  const [jobStatus, setJobStatus] = useState("Actively looking");
-  const [showToRecruiters, setShowToRecruiters] = useState(true);
-  const [showJobSearchStatus, setShowJobSearchStatus] = useState(true);
-  
-  // Contact info
-  const [email, setEmail] = useState("vveluri6@gmail.com");
-  const [phone, setPhone] = useState("+1 (469) 551-9662");
-  const [dateOfBirth, setDateOfBirth] = useState("06/19/2006");
-  const [location, setLocation] = useState("Atlanta, GA, USA");
-  
   // Work experiences
-  const [workExperiences, setWorkExperiences] = useState([
+  const [experiences, setExperiences] = useState([
     {
       id: 1,
       role: "Software Engineer Intern/ Co-Lead",
@@ -108,7 +35,7 @@ const ProfilePage = () => {
         "Creating a solution to simulate and calculate the optimal path for installing and removing the wire and the installation and removal of a flexible wire from an electrical cabinet",
         "Using the A* algorithm, PythonOCC, Blender, FreeCAD, CAD, and an RL model to help take into account real-world constraints like collisions with other components and bending behavior of the flexible material and showing the output in animation",
         "The future purpose is to use the script we developed in robots to help build the electrical aspects of houses"
-      ]
+      ],
     },
     {
       id: 2,
@@ -120,19 +47,20 @@ const ProfilePage = () => {
       description: [
         "Personal Portfolio (HTML/CSS): Used to showcase individual talents, skills and experience",
         "Pantry Tracker (Next.js, Material UI, React, GCP, Vercel, CI/CD, and Firebase): Built inventory management system with next.js, react, and Firebase, enabling real-time tracking of 1000+ products across 5 warehouses, increasing efficiency by 30%"
-      ]
-    }
+      ],
+    },
   ]);
 
-  // Education
-  const [education, setEducation] = useState([
+  // Educations
+  const [educations, setEducations] = useState([
     {
       id: 1,
       school: "Georgia Institute of Technology",
-      degree: "Bachelor's, Computer Science",
+      degree: "Bachelor's",
+      field: "Computer Science",
       startDate: "Aug 2023",
-      endDate: "May 2027"
-    }
+      endDate: "May 2027",
+    },
   ]);
 
   // Projects
@@ -145,7 +73,7 @@ const ProfilePage = () => {
       description: [
         "Serves as a tool to ensure your emails are not corrupting the user's device",
         "It uses Python, a Gmail import tool, and an IMAP port to take emails and scan them for malware and viruses"
-      ]
+      ],
     },
     {
       id: 2,
@@ -154,8 +82,8 @@ const ProfilePage = () => {
       endDate: "Present",
       description: [
         "Serves as a tool to help study trends of the stock markets and company and world issues and success and their impacts on stocks to make trading more predictable and help with better trade outcomes"
-      ]
-    }
+      ],
+    },
   ]);
 
   // Social links
@@ -163,7 +91,21 @@ const ProfilePage = () => {
     linkedin: "https://www.linkedin.com/in/varun-veluri-6698a628a/",
     github: "",
     portfolio: "",
-    other: ""
+    other: "",
+  });
+
+  // Job preferences
+  const [jobPreferences, setJobPreferences] = useState({
+    desiredRoles: ["Software Engineer", "Full Stack Developer", "Data Scientist"],
+    experienceLevel: "Entry",
+    industries: ["Technology", "Finance", "Healthcare"],
+    companySize: ["Startup", "Mid-size"],
+    salary: "USD 80,000 - 120,000 per yearly",
+    benefits: ["Health Insurance", "401k", "Remote Work", "Professional Development"],
+    locations: ["New York, NY", "San Francisco, CA", "Remote"],
+    workModel: "Hybrid",
+    jobTypes: ["Full-time", "Internship", "Contract"],
+    skills: ["JavaScript", "React", "Node.js", "Python", "SQL"],
   });
 
   // Equal employment data
@@ -176,1406 +118,190 @@ const ProfilePage = () => {
     gender: "Male",
     lgbtq: "Not specified",
     disability: "Not specified",
-    veteran: "Not specified"
+    veteran: "Not specified",
   });
 
-  // Settings
-  const [settings, setSettings] = useState({
-    emailPreferences: {
-      jobAlerts: true,
-      newsletters: false,
-      accountUpdates: true
-    },
-    skills: ["React", "TypeScript", "JavaScript", "Node.js", "Python"],
-    languages: ["English", "Spanish", "Hindi"]
+  // Email preferences
+  const [emailPreferences, setEmailPreferences] = useState({
+    jobAlerts: true,
+    newsletters: false,
+    accountUpdates: true,
   });
 
-  // Progress tracking
-  const [profileCompletionPercentage, setProfileCompletionPercentage] = useState(65);
-  
-  // Job preferences
-  const [jobPreferences, setJobPreferences] = useState({
-    jobTypes: ["full-time", "internship", "contract"],
-    preferredLocations: ["New York, NY", "San Francisco, CA", "Remote"],
-    salary: {
-      currency: "USD",
-      min: 80000,
-      max: 120000,
-      period: "yearly"
-    },
-    remotePreference: "hybrid",
-    experienceLevel: "entry",
-    industries: ["Technology", "Finance", "Healthcare"],
-    roles: ["Software Engineer", "Full Stack Developer", "Data Scientist"],
-    skills: ["JavaScript", "React", "Node.js", "Python", "SQL"],
-    benefits: ["Health Insurance", "401k", "Remote Work", "Professional Development"],
-    companySize: ["Startup", "Mid-size"],
-    workAuthorization: {
-      authorized: true,
-      needSponsorship: false,
-      countries: ["United States"]
-    }
-  });
+  // Skills and languages
+  const [skills, setSkills] = useState(["React", "TypeScript", "JavaScript", "Node.js", "Python"]);
+  const [languages, setLanguages] = useState(["English", "Spanish", "Hindi"]);
 
-  // Resume upload handling
-  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    try {
-      toast.loading("Parsing resume...");
-      const parsedData: ParsedResume = await parseResume(file);
-      
-      // Apply parsed data to the profile
-      if (parsedData.personalInfo.name) setName(parsedData.personalInfo.name);
-      if (parsedData.personalInfo.email) setEmail(parsedData.personalInfo.email);
-      if (parsedData.personalInfo.phone) setPhone(parsedData.personalInfo.phone);
-      if (parsedData.personalInfo.location) setLocation(parsedData.personalInfo.location);
-      
-      if (parsedData.workExperiences.length > 0) {
-        setWorkExperiences(
-          parsedData.workExperiences.map((exp, i) => ({ ...exp, id: i + 1 }))
-        );
-      }
-      
-      if (parsedData.education.length > 0) {
-        setEducation(
-          parsedData.education.map((edu, i) => ({ ...edu, id: i + 1 }))
-        );
-      }
-      
-      if (parsedData.projects.length > 0) {
-        setProjects(
-          parsedData.projects.map((project, i) => ({ ...project, id: i + 1 }))
-        );
-      }
-      
-      if (parsedData.skills.length > 0) {
-        setSettings({
-          ...settings,
-          skills: parsedData.skills
-        });
-      }
-      
-      if (parsedData.languages.length > 0) {
-        setSettings({
-          ...settings,
-          languages: parsedData.languages
-        });
-      }
-      
-      if (parsedData.socialLinks.linkedin) {
-        setSocialLinks({
-          ...socialLinks,
-          ...parsedData.socialLinks
-        });
-      }
-
-      // Update profile completion
-      const newCompletionPercentage = calculateProfileCompletion();
-      setProfileCompletionPercentage(newCompletionPercentage);
-      
-      toast.success("Resume parsed successfully!");
-    } catch (error) {
-      toast.error("Error parsing resume. Please try again or enter information manually.");
-      console.error("Resume parsing error:", error);
-    }
+  // Resume handlers
+  const handleResumeUpload = (file: File) => {
+    console.log("Uploaded resume:", file.name);
+    // In a real app, you would upload the file to your backend
   };
 
-  // Trigger file input click
-  const handleBrowseFiles = () => {
-    fileInputRef.current?.click();
+  // Work experience handlers
+  const handleAddExperience = (experience: any) => {
+    setExperiences([...experiences, experience]);
   };
 
-  // Calculate profile completion percentage
-  const calculateProfileCompletion = () => {
-    let score = 0;
-    const totalFields = 10;
-    
-    if (name) score++;
-    if (email) score++;
-    if (phone) score++;
-    if (location) score++;
-    if (workExperiences.length > 0) score++;
-    if (education.length > 0) score++;
-    if (projects.length > 0) score++;
-    if (settings.skills.length > 0) score++;
-    if (settings.languages.length > 0) score++;
-    if (socialLinks.linkedin || socialLinks.github || socialLinks.portfolio || socialLinks.other) score++;
-    
-    return Math.round((score / totalFields) * 100);
+  const handleEditExperience = (updatedExperience: any) => {
+    setExperiences(
+      experiences.map((exp) =>
+        exp.id === updatedExperience.id ? updatedExperience : exp
+      )
+    );
   };
 
-  // Handler functions for modals
-  const handleUpdateProfileHeader = (data: { name: string; jobStatus: string }) => {
-    setName(data.name);
-    setJobStatus(data.jobStatus);
-    toast.success("Profile updated successfully!");
+  const handleDeleteExperience = (id: number) => {
+    setExperiences(experiences.filter((exp) => exp.id !== id));
   };
 
-  const handleUpdateContactInfo = (data: { email: string; phone: string; dateOfBirth: string; location: string }) => {
-    setEmail(data.email);
-    setPhone(data.phone);
-    setDateOfBirth(data.dateOfBirth);
-    setLocation(data.location);
-    toast.success("Contact information updated successfully!");
+  // Education handlers
+  const handleAddEducation = (education: any) => {
+    setEducations([...educations, education]);
   };
 
-  const handleAddWorkExperience = () => {
-    setEditingWorkExperience(null);
-    setWorkExperienceModalOpen(true);
-  };
-
-  const handleEditWorkExperience = (experience: any) => {
-    setEditingWorkExperience(experience);
-    setWorkExperienceModalOpen(true);
-  };
-
-  const handleSaveWorkExperience = (experience: any) => {
-    if (editingWorkExperience) {
-      // Update existing experience
-      setWorkExperiences(workExperiences.map(exp => 
-        exp.id === experience.id ? experience : exp
-      ));
-      toast.success("Work experience updated!");
-    } else {
-      // Add new experience
-      setWorkExperiences([...workExperiences, experience]);
-      toast.success("Work experience added!");
-    }
-  };
-
-  const handleDeleteWorkExperience = (id: number) => {
-    setWorkExperiences(workExperiences.filter(exp => exp.id !== id));
-    toast.success("Work experience deleted!");
-  };
-
-  const handleAddEducation = () => {
-    setEditingEducation(null);
-    setEducationModalOpen(true);
-  };
-
-  const handleEditEducation = (edu: any) => {
-    setEditingEducation(edu);
-    setEducationModalOpen(true);
-  };
-
-  const handleSaveEducation = (edu: any) => {
-    if (editingEducation) {
-      // Update existing education
-      setEducation(education.map(item => 
-        item.id === edu.id ? edu : item
-      ));
-      toast.success("Education updated!");
-    } else {
-      // Add new education
-      setEducation([...education, edu]);
-      toast.success("Education added!");
-    }
+  const handleEditEducation = (updatedEducation: any) => {
+    setEducations(
+      educations.map((edu) =>
+        edu.id === updatedEducation.id ? updatedEducation : edu
+      )
+    );
   };
 
   const handleDeleteEducation = (id: number) => {
-    setEducation(education.filter(edu => edu.id !== id));
-    toast.success("Education deleted!");
+    setEducations(educations.filter((edu) => edu.id !== id));
   };
 
-  const handleAddProject = () => {
-    setEditingProject(null);
-    setProjectModalOpen(true);
+  // Project handlers
+  const handleAddProject = (project: any) => {
+    setProjects([...projects, project]);
   };
 
-  const handleEditProject = (project: any) => {
-    setEditingProject(project);
-    setProjectModalOpen(true);
-  };
-
-  const handleSaveProject = (project: any) => {
-    if (editingProject) {
-      // Update existing project
-      setProjects(projects.map(item => 
-        item.id === project.id ? project : item
-      ));
-      toast.success("Project updated!");
-    } else {
-      // Add new project
-      setProjects([...projects, project]);
-      toast.success("Project added!");
-    }
+  const handleEditProject = (updatedProject: any) => {
+    setProjects(
+      projects.map((proj) =>
+        proj.id === updatedProject.id ? updatedProject : proj
+      )
+    );
   };
 
   const handleDeleteProject = (id: number) => {
-    setProjects(projects.filter(project => project.id !== id));
-    toast.success("Project deleted!");
+    setProjects(projects.filter((proj) => proj.id !== id));
   };
 
-  const handleUpdateSocialLinks = (data: any) => {
-    setSocialLinks(data);
-    toast.success("Social links updated!");
+  // Settings handlers
+  const handleUpdateEmail = async (newEmail: string, password: string) => {
+    console.log("Updating email:", newEmail);
+    // In a real app, you would call your backend API
   };
 
-  const handleUpdateJobPreferences = (data: any) => {
-    setJobPreferences({
-      ...jobPreferences,
-      ...data
-    });
-    toast.success("Job preferences updated!");
+  const handleUpdatePassword = async (currentPassword: string, newPassword: string) => {
+    console.log("Updating password");
+    // In a real app, you would call your backend API
   };
 
-  const handleUpdateEqualEmployment = (data: any) => {
-    setEqualEmploymentData(data);
-    toast.success("Equal employment data updated!");
+  // Skills and languages handlers
+  const handleAddSkill = (skill: string) => {
+    setSkills([...skills, skill]);
   };
 
-  // Render profile card
-  const renderProfileCard = () => (
-    <Card className="mb-6 shadow-none border rounded-lg">
-      <CardContent className="p-6">
-        <div className={`flex ${isMobile ? 'flex-col' : 'items-start gap-6'}`}>
-          <div className="relative mb-4">
-            <div className="h-24 w-24 rounded-full bg-gray-200 flex items-center justify-center text-2xl font-semibold text-gray-500">
-              {name.split(' ').map(n => n[0]).join('')}
-            </div>
-          </div>
-          <div className="flex-1 w-full">
-            <div className="flex justify-between">
-              <div>
-                <h1 className="text-2xl font-bold">{name}</h1>
-                <p className="text-sm text-muted-foreground mb-1">Job Search Status</p>
-                <div className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
-                  {jobStatus}
-                </div>
-              </div>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-8 w-8"
-                onClick={() => setProfileHeaderModalOpen(true)}
-              >
-                <PenLine className="h-4 w-4" />
-              </Button>
-            </div>
+  const handleRemoveSkill = (skill: string) => {
+    setSkills(skills.filter((s) => s !== skill));
+  };
 
-            <div className="mt-4 grid grid-cols-1 gap-4">
-              <div className="flex items-center border rounded-md p-2">
-                <Zap className="h-4 w-4 mr-2 text-amber-500" />
-                <span className="text-sm">Show Profile to Recruiters</span>
-                <div className="ml-auto flex items-center gap-2">
-                  <Switch 
-                    checked={showToRecruiters} 
-                    onCheckedChange={setShowToRecruiters} 
-                    className="data-[state=checked]:bg-blue-500"
-                  />
-                </div>
-              </div>
-              <div className="flex items-center border rounded-md p-2">
-                <Briefcase className="h-4 w-4 mr-2 text-blue-500" />
-                <span className="text-sm">Job Search Status</span>
-                <div className="ml-auto flex items-center gap-2">
-                  <Switch 
-                    checked={showJobSearchStatus} 
-                    onCheckedChange={setShowJobSearchStatus} 
-                    className="data-[state=checked]:bg-blue-500"
-                  />
-                </div>
-              </div>
-            </div>
+  const handleAddLanguage = (language: string) => {
+    setLanguages([...languages, language]);
+  };
 
-            <div className="mt-4 text-sm text-muted-foreground">
-              <p>Get discovered by companies</p>
-              <p>Your current employer can't see you</p>
-            </div>
-            
-            {/* Profile Completion Progress */}
-            <div className="mt-4">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium">Profile Completion</span>
-                <span className="text-sm font-medium">{profileCompletionPercentage}%</span>
-              </div>
-              <Progress value={profileCompletionPercentage} className="h-2" />
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  // Render contact section
-  const renderContactContent = () => (
-    <Card className="shadow-none border rounded-lg">
-      <CardHeader className="flex flex-row items-center justify-between p-6">
-        <CardTitle>Contact</CardTitle>
-        <Button 
-          variant="ghost" 
-          size="icon"
-          onClick={() => setContactModalOpen(true)}
-        >
-          <PenLine className="h-4 w-4" />
-        </Button>
-      </CardHeader>
-      <CardContent className="p-6 pt-0 space-y-4">
-        <div className="flex items-center gap-3">
-          <Mail className="h-5 w-5 text-muted-foreground" />
-          <span>{email}</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <Phone className="h-5 w-5 text-muted-foreground" />
-          <span>{phone}</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <Calendar className="h-5 w-5 text-muted-foreground" />
-          <span>{dateOfBirth}</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <MapPin className="h-5 w-5 text-muted-foreground" />
-          <span>{location}</span>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  // Render resume section
-  const renderResumeContent = () => (
-    <>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Resume</h2>
-        <Button variant="outline" onClick={() => handleBrowseFiles()}>
-          <Upload className="h-4 w-4 mr-2" />
-          Upload Resume
-        </Button>
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          className="hidden"
-          accept=".pdf,.doc,.docx,.txt"
-        />
-      </div>
-
-      <div 
-        className="border-2 border-dashed rounded-lg p-12 flex flex-col items-center justify-center mb-6 cursor-pointer hover:bg-muted/50 transition-colors"
-        onClick={() => handleBrowseFiles()}
-      >
-        <Upload className="h-12 w-12 text-muted-foreground mb-4" />
-        <p className="text-center mb-1">Drag & drop your resume here</p>
-        <p className="text-sm text-muted-foreground text-center mb-4">Supports PDF, DOC, DOCX formats</p>
-        <Button variant="outline" size="sm">Browse Files</Button>
-      </div>
-      
-      <div className="flex justify-between items-center mt-8 mb-4">
-        <h2 className="text-xl font-bold">Work Experience</h2>
-        <Button variant="outline" onClick={handleAddWorkExperience}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Experience
-        </Button>
-      </div>
-      
-      <div className="space-y-6 mb-8">
-        {workExperiences.map((experience) => (
-          <div key={experience.id} className="bg-card rounded-lg border p-4">
-            <div className="flex">
-              <div className="bg-blue-100 p-2 rounded-md mr-4">
-                <Briefcase className="h-5 w-5 text-blue-500" />
-              </div>
-              <div className="flex-1">
-                <div className="flex justify-between">
-                  <h3 className="text-lg font-semibold">{experience.role}</h3>
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={() => handleEditWorkExperience(experience)}
-                  >
-                    <PenLine className="h-4 w-4" />
-                  </Button>
-                </div>
-                <p className="text-muted-foreground font-medium">{experience.company}</p>
-                <p className="text-muted-foreground text-sm">{experience.location}</p>
-                <p className="text-muted-foreground text-sm">{experience.startDate} - {experience.endDate}</p>
-                <div className="mt-3 space-y-2">
-                  {experience.description.map((item, index) => (
-                    <p key={index} className="text-sm">{item}</p>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-      
-      <div className="flex justify-between items-center mt-8 mb-4">
-        <h2 className="text-xl font-bold">Education</h2>
-        <Button variant="outline" onClick={handleAddEducation}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Education
-        </Button>
-      </div>
-      
-      <div className="space-y-6 mb-8">
-        {education.map((edu) => (
-          <div key={edu.id} className="bg-card rounded-lg border p-4">
-            <div className="flex">
-              <div className="bg-blue-100 p-2 rounded-md mr-4">
-                <GraduationCap className="h-5 w-5 text-blue-500" />
-              </div>
-              <div className="flex-1">
-                <div className="flex justify-between">
-                  <h3 className="text-lg font-semibold">{edu.school}</h3>
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={() => handleEditEducation(edu)}
-                  >
-                    <PenLine className="h-4 w-4" />
-                  </Button>
-                </div>
-                <p className="text-muted-foreground">{edu.degree}</p>
-                <p className="text-muted-foreground text-sm">{edu.startDate} - {edu.endDate}</p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-      
-      <div className="flex justify-between items-center mt-8 mb-4">
-        <h2 className="text-xl font-bold">Projects</h2>
-        <Button variant="outline" onClick={handleAddProject}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Project
-        </Button>
-      </div>
-      
-      <div className="space-y-6 mb-8">
-        {projects.map((project) => (
-          <div key={project.id} className="bg-card rounded-lg border p-4">
-            <div className="flex">
-              <div className="bg-blue-100 p-2 rounded-md mr-4">
-                <Wrench className="h-5 w-5 text-blue-500" />
-              </div>
-              <div className="flex-1">
-                <div className="flex justify-between">
-                  <h3 className="text-lg font-semibold">{project.name}</h3>
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={() => handleEditProject(project)}
-                  >
-                    <PenLine className="h-4 w-4" />
-                  </Button>
-                </div>
-                <p className="text-muted-foreground text-sm">{project.startDate} - {project.endDate}</p>
-                <div className="mt-3 space-y-2">
-                  {project.description.map((item, index) => (
-                    <p key={index} className="text-sm">{item}</p>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-      
-      <div className="mt-8 mb-4">
-        <h2 className="text-xl font-bold">Social Links</h2>
-      </div>
-      
-      <div className="space-y-4 mb-6">
-        <div className="flex items-center">
-          <div className="h-10 w-10 bg-blue-500 rounded-full flex items-center justify-center mr-3">
-            <Linkedin className="h-5 w-5 text-white" />
-          </div>
-          <div className="flex-1">
-            <p className="font-medium">LinkedIn URL</p>
-            <p className="text-sm text-muted-foreground">{socialLinks.linkedin || "Not provided"}</p>
-          </div>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => setSocialLinksModalOpen(true)}
-          >
-            <PenLine className="h-4 w-4" />
-          </Button>
-        </div>
-        
-        <div className="flex items-center">
-          <div className="h-10 w-10 bg-black rounded-full flex items-center justify-center mr-3">
-            <Github className="h-5 w-5 text-white" />
-          </div>
-          <div className="flex-1">
-            <p className="font-medium">GitHub URL</p>
-            <p className="text-sm text-muted-foreground">{socialLinks.github || "Not provided"}</p>
-          </div>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => setSocialLinksModalOpen(true)}
-          >
-            <PenLine className="h-4 w-4" />
-          </Button>
-        </div>
-        
-        <div className="flex items-center">
-          <div className="h-10 w-10 bg-pink-500 rounded-full flex items-center justify-center mr-3">
-            <Globe className="h-5 w-5 text-white" />
-          </div>
-          <div className="flex-1">
-            <p className="font-medium">Portfolio URL</p>
-            <p className="text-sm text-muted-foreground">{socialLinks.portfolio || "Not provided"}</p>
-          </div>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => setSocialLinksModalOpen(true)}
-          >
-            <PenLine className="h-4 w-4" />
-          </Button>
-        </div>
-        
-        <div className="flex items-center">
-          <div className="h-10 w-10 bg-blue-500 rounded-full flex items-center justify-center mr-3">
-            <LinkIcon className="h-5 w-5 text-white" />
-          </div>
-          <div className="flex-1">
-            <p className="font-medium">Other URL</p>
-            <p className="text-sm text-muted-foreground">{socialLinks.other || "Not provided"}</p>
-          </div>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => setSocialLinksModalOpen(true)}
-          >
-            <PenLine className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-    </>
-  );
+  const handleRemoveLanguage = (language: string) => {
+    setLanguages(languages.filter((l) => l !== language));
+  };
 
   return (
-    <>
-      {!isMobile && <Navbar />}
-      {isMobile && <MobileHeader showLogo={true} />}
-      
-      <div className={`container mx-auto ${isMobile ? 'px-4 pt-16' : 'py-8 px-4'} max-w-5xl`}>
-        {/* Profile Header */}
-        {renderProfileCard()}
+    <div className="container mx-auto py-6 px-4 max-w-7xl">
+      <ProfileHeader
+        name={userData.name}
+        jobStatus={userData.jobStatus}
+        profileStrength={userData.profileStrength}
+        onProfileUpdate={(data) => setUserData({ ...userData, ...data })}
+      />
 
-        {/* Profile Tabs */}
-        <Tabs 
-          value={activeTab} 
-          onValueChange={setActiveTab}
-          className="w-full"
-        >
-          <div className="overflow-auto">
-            {isMobile ? (
-              <>
-                <TabsList className="grid grid-cols-3 w-full mb-2">
-                  <TabsTrigger value="contact" className="text-xs md:text-sm data-[state=active]:bg-background">
-                    Contact
-                  </TabsTrigger>
-                  <TabsTrigger value="resume" className="text-xs md:text-sm data-[state=active]:bg-background">
-                    Resume
-                  </TabsTrigger>
-                  <TabsTrigger value="jobPreferences" className="text-xs md:text-sm data-[state=active]:bg-background">
-                    Job Preferences
-                  </TabsTrigger>
-                </TabsList>
-                <TabsList className="grid grid-cols-2 w-full mb-6">
-                  <TabsTrigger value="equalEmployment" className="text-xs md:text-sm data-[state=active]:bg-background">
-                    Equal Employment
-                  </TabsTrigger>
-                  <TabsTrigger value="settings" className="text-xs md:text-sm data-[state=active]:bg-background">
-                    Settings
-                  </TabsTrigger>
-                </TabsList>
-              </>
-            ) : (
-              <TabsList className="w-full bg-muted/50 rounded-none mb-6">
-                <TabsTrigger value="contact" className="text-xs md:text-sm data-[state=active]:bg-background">
-                  Contact
-                </TabsTrigger>
-                <TabsTrigger value="resume" className="text-xs md:text-sm data-[state=active]:bg-background">
-                  Resume
-                </TabsTrigger>
-                <TabsTrigger value="jobPreferences" className="text-xs md:text-sm data-[state=active]:bg-background">
-                  Job Preferences
-                </TabsTrigger>
-                <TabsTrigger value="equalEmployment" className="text-xs md:text-sm data-[state=active]:bg-background">
-                  Equal Employment
-                </TabsTrigger>
-                <TabsTrigger value="settings" className="text-xs md:text-sm data-[state=active]:bg-background">
-                  Settings
-                </TabsTrigger>
-              </TabsList>
-            )}
-          </div>
-
-          {/* Contact Tab */}
-          <TabsContent value="contact" className="mt-0">
-            {renderContactContent()}
-          </TabsContent>
-
-          <TabsContent value="resume" className="mt-0">
-            {renderResumeContent()}
-          </TabsContent>
-
-          {/* Job Preferences Tab */}
-          <TabsContent value="jobPreferences" className="mt-0">
-            <Card className="mb-6">
-              <CardHeader className="p-6">
-                <CardTitle>Job Preferences</CardTitle>
-                <CardDescription>Set your job preferences to find the perfect match</CardDescription>
-              </CardHeader>
-              <CardContent className="p-6 pt-0 space-y-6">
-                {/* Profile Strength */}
-                <div className="bg-muted/30 rounded-lg p-4 mb-6">
-                  <div className="flex justify-between items-center mb-2">
-                    <h3 className="font-medium">Profile Strength</h3>
-                    <span className="text-sm font-medium">65%</span>
-                  </div>
-                  <Progress value={65} className="h-2" />
-                  <div className="mt-3 text-sm text-muted-foreground">
-                    Complete your profile to increase your chances of finding the perfect job
-                  </div>
-                </div>
-                
-                {/* Role & Experience Section */}
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-medium flex items-center">
-                      <UserRound className="mr-2 h-5 w-5 text-blue-500" />
-                      Role & Experience
-                    </h3>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => setRoleExperienceModalOpen(true)}
-                    >
-                      <PenLine className="h-4 w-4 mr-1" /> Edit
-                    </Button>
-                  </div>
-                  
-                  <div className="bg-card rounded-lg border p-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Desired Roles</p>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {jobPreferences.roles.map((role, index) => (
-                            <div key={index} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">
-                              {role}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <p className="text-sm text-muted-foreground">Experience Level</p>
-                        <p className="mt-2 capitalize">{jobPreferences.experienceLevel}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Industries & Companies Section */}
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-medium flex items-center">
-                      <Building2 className="mr-2 h-5 w-5 text-blue-500" />
-                      Industries & Companies
-                    </h3>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => setIndustriesModalOpen(true)}
-                    >
-                      <PenLine className="h-4 w-4 mr-1" /> Edit
-                    </Button>
-                  </div>
-                  
-                  <div className="bg-card rounded-lg border p-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Industries</p>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {jobPreferences.industries.map((industry, index) => (
-                            <div key={index} className="bg-secondary px-3 py-1 rounded-full text-sm">
-                              {industry}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <p className="text-sm text-muted-foreground">Company Size</p>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {jobPreferences.companySize.map((size, index) => (
-                            <div key={index} className="bg-secondary px-3 py-1 rounded-full text-sm">
-                              {size}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Compensation Section */}
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-medium flex items-center">
-                      <DollarSign className="mr-2 h-5 w-5 text-blue-500" />
-                      Compensation
-                    </h3>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => setCompensationModalOpen(true)}
-                    >
-                      <PenLine className="h-4 w-4 mr-1" /> Edit
-                    </Button>
-                  </div>
-                  
-                  <div className="bg-card rounded-lg border p-4">
-                    <div className="grid grid-cols-1 gap-4">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Salary Expectation</p>
-                        <p className="mt-2">{jobPreferences.salary.currency} {jobPreferences.salary.min.toLocaleString()} - {jobPreferences.salary.max.toLocaleString()} per {jobPreferences.salary.period}</p>
-                      </div>
-                      
-                      <div>
-                        <p className="text-sm text-muted-foreground">Benefits</p>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {jobPreferences.benefits.map((benefit, index) => (
-                            <div key={index} className="bg-secondary px-3 py-1 rounded-full text-sm">
-                              {benefit}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Location & Work Model Section */}
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-medium flex items-center">
-                      <MapPin className="mr-2 h-5 w-5 text-blue-500" />
-                      Location & Work Model
-                    </h3>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => setLocationModalOpen(true)}
-                    >
-                      <PenLine className="h-4 w-4 mr-1" /> Edit
-                    </Button>
-                  </div>
-                  
-                  <div className="bg-card rounded-lg border p-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Preferred Locations</p>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {jobPreferences.preferredLocations.map((loc, index) => (
-                            <div key={index} className="bg-secondary px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                              {loc}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <p className="text-sm text-muted-foreground">Work Model</p>
-                        <p className="mt-2 capitalize">{jobPreferences.remotePreference}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Job Types Section */}
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-medium flex items-center">
-                      <Clock className="mr-2 h-5 w-5 text-blue-500" />
-                      Job Types
-                    </h3>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => setJobTypesModalOpen(true)}
-                    >
-                      <PenLine className="h-4 w-4 mr-1" /> Edit
-                    </Button>
-                  </div>
-                  
-                  <div className="bg-card rounded-lg border p-4">
-                    <div className="flex flex-wrap gap-2">
-                      {jobPreferences.jobTypes.map((type, index) => (
-                        <div key={index} className="bg-secondary px-3 py-1 rounded-full text-sm">
-                          {type.charAt(0).toUpperCase() + type.slice(1)}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Skills & Qualifications Section */}
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-medium flex items-center">
-                      <Sparkles className="mr-2 h-5 w-5 text-blue-500" />
-                      Skills & Qualifications
-                    </h3>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => setSkillsModalOpen(true)}
-                    >
-                      <PenLine className="h-4 w-4 mr-1" /> Edit
-                    </Button>
-                  </div>
-                  
-                  <div className="bg-card rounded-lg border p-4">
-                    <div className="grid grid-cols-1 gap-4">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Skills</p>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {jobPreferences.skills.map((skill, index) => (
-                            <div key={index} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">
-                              {skill}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Work Authorization Section */}
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-medium flex items-center">
-                      <Users className="mr-2 h-5 w-5 text-blue-500" />
-                      Work Authorization
-                    </h3>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => setWorkAuthModalOpen(true)}
-                    >
-                      <PenLine className="h-4 w-4 mr-1" /> Edit
-                    </Button>
-                  </div>
-                  
-                  <div className="bg-card rounded-lg border p-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Authorized to work in</p>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {jobPreferences.workAuthorization.countries.map((country, index) => (
-                            <div key={index} className="bg-secondary px-3 py-1 rounded-full text-sm">
-                              {country}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <p className="text-sm text-muted-foreground">Need sponsorship for work authorization</p>
-                        <p className="mt-2">{jobPreferences.workAuthorization.needSponsorship ? "Yes" : "No"}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="pt-4">
-                  <Button className="w-full bg-blue-500 hover:bg-blue-600">Update Job Preferences</Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Equal Employment Tab */}
-          <TabsContent value="equalEmployment" className="mt-0">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between p-6">
-                <CardTitle>Equal Employment</CardTitle>
-                <Button 
-                  variant="outline"
-                  onClick={() => setEqualEmploymentModalOpen(true)}
-                >
-                  <PenLine className="h-4 w-4 mr-2" />
-                  Edit Data
-                </Button>
-              </CardHeader>
-              <CardContent className="p-6 pt-0 space-y-6">
-                <div>
-                  <h3 className="font-medium mb-2">Ethnicity</h3>
-                  <div className="inline-block bg-secondary px-3 py-1 rounded-md text-sm">
-                    {equalEmploymentData.ethnicity}
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="font-medium mb-3">Work Authorization</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex justify-between items-center">
-                      <p>Authorized to work in the US</p>
-                      <Button 
-                        variant={equalEmploymentData.workAuthUS ? "default" : "outline"}
-                        size="sm"
-                        className={equalEmploymentData.workAuthUS ? "bg-blue-500 hover:bg-blue-600" : ""}
-                      >
-                        {equalEmploymentData.workAuthUS ? "Yes" : "No"}
-                      </Button>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <p>Authorized to work in Canada</p>
-                      <Button 
-                        variant={equalEmploymentData.workAuthCanada ? "default" : "outline"}
-                        size="sm"
-                        className={equalEmploymentData.workAuthCanada ? "bg-blue-500 hover:bg-blue-600" : ""}
-                      >
-                        {equalEmploymentData.workAuthCanada ? "Yes" : "No"}
-                      </Button>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <p>Authorized to work in the UK</p>
-                      <Button 
-                        variant={equalEmploymentData.workAuthUK ? "default" : "outline"}
-                        size="sm"
-                        className={equalEmploymentData.workAuthUK ? "bg-blue-500 hover:bg-blue-600" : ""}
-                      >
-                        {equalEmploymentData.workAuthUK ? "Yes" : "No"}
-                      </Button>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <p>Need sponsorship for work authorization</p>
-                      <Button 
-                        variant={equalEmploymentData.needsSponsorship ? "default" : "outline"}
-                        size="sm"
-                        className={equalEmploymentData.needsSponsorship ? "bg-blue-500 hover:bg-blue-600" : ""}
-                      >
-                        {equalEmploymentData.needsSponsorship ? "Yes" : "No"}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="font-medium mb-3">Demographic Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex justify-between items-center">
-                      <p>Gender</p>
-                      <div className="text-right">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="rounded-full"
-                        >
-                          {equalEmploymentData.gender}
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <p>LGBTQ+</p>
-                      <div className="text-right">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="rounded-full"
-                        >
-                          {equalEmploymentData.lgbtq}
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <p>Person with a disability</p>
-                      <div className="text-right">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="rounded-full"
-                        >
-                          {equalEmploymentData.disability}
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <p>Veteran status</p>
-                      <div className="text-right">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="rounded-full"
-                        >
-                          {equalEmploymentData.veteran}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-muted/50 p-4 rounded-md mt-4 flex items-start gap-3">
-                  <div className="text-muted-foreground mt-1">ⓘ</div>
-                  <div className="text-sm text-muted-foreground">
-                    Equal Employment Opportunity (EEO) information is collected for statistical purposes only. This information will be kept separate from your 
-                    application and will not be used in the hiring decision.
-                    <br /><br />
-                    Providing this information is voluntary and declining to provide it will not subject you to any adverse treatment.
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Settings Tab */}
-          <TabsContent value="settings" className="mt-0">
-            <Card className="mb-6">
-              <CardHeader className="p-6">
-                <CardTitle>Email Preferences</CardTitle>
-                <CardDescription>Manage the emails you want to receive</CardDescription>
-              </CardHeader>
-              <CardContent className="p-6 pt-0 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Job Alerts</p>
-                    <p className="text-sm text-muted-foreground">Get notified about new jobs matching your preferences</p>
-                  </div>
-                  <Switch 
-                    checked={settings.emailPreferences.jobAlerts} 
-                    onCheckedChange={(checked) => 
-                      setSettings({
-                        ...settings, 
-                        emailPreferences: {
-                          ...settings.emailPreferences,
-                          jobAlerts: checked
-                        }
-                      })
-                    }
-                    className="data-[state=checked]:bg-blue-500"
+      <div className="mt-8">
+        <ProfileTabs defaultTab="resume">
+          <TabPanel value="contact">
+            <div className="space-y-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <SocialLinksSection
+                  socialLinks={socialLinks}
+                  onUpdateSocialLinks={setSocialLinks}
+                />
+                <div className="space-y-8">
+                  <SkillsSection
+                    skills={skills}
+                    onAddSkill={handleAddSkill}
+                    onRemoveSkill={handleRemoveSkill}
+                  />
+                  <LanguagesSection
+                    languages={languages}
+                    onAddLanguage={handleAddLanguage}
+                    onRemoveLanguage={handleRemoveLanguage}
                   />
                 </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Newsletters</p>
-                    <p className="text-sm text-muted-foreground">Receive our weekly newsletter with career tips</p>
-                  </div>
-                  <Switch 
-                    checked={settings.emailPreferences.newsletters} 
-                    onCheckedChange={(checked) => 
-                      setSettings({
-                        ...settings, 
-                        emailPreferences: {
-                          ...settings.emailPreferences,
-                          newsletters: checked
-                        }
-                      })
-                    }
-                    className="data-[state=checked]:bg-blue-500"
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Account Updates</p>
-                    <p className="text-sm text-muted-foreground">Get important updates about your account</p>
-                  </div>
-                  <Switch 
-                    checked={settings.emailPreferences.accountUpdates} 
-                    onCheckedChange={(checked) => 
-                      setSettings({
-                        ...settings, 
-                        emailPreferences: {
-                          ...settings.emailPreferences,
-                          accountUpdates: checked
-                        }
-                      })
-                    }
-                    className="data-[state=checked]:bg-blue-500"
-                  />
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
+          </TabPanel>
 
-            <Card className="mb-6">
-              <CardHeader className="p-6">
-                <CardTitle>Change Password</CardTitle>
-                <CardDescription>Update your password to keep your account secure</CardDescription>
-              </CardHeader>
-              <CardContent className="p-6 pt-0 space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Current Password</label>
-                  <input 
-                    type="password" 
-                    className="w-full rounded-md border border-input bg-background px-3 py-2"
-                    placeholder="Enter your current password"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">New Password</label>
-                  <input 
-                    type="password" 
-                    className="w-full rounded-md border border-input bg-background px-3 py-2"
-                    placeholder="Enter your new password"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Confirm New Password</label>
-                  <input 
-                    type="password" 
-                    className="w-full rounded-md border border-input bg-background px-3 py-2"
-                    placeholder="Confirm your new password"
-                  />
-                </div>
-                <Button className="bg-cyan-500 hover:bg-cyan-600 w-full mt-2">Update Password</Button>
-              </CardContent>
-            </Card>
+          <TabPanel value="resume">
+            <div className="space-y-8">
+              <ResumeSection onResumeUpload={handleResumeUpload} />
+              <WorkExperienceSection
+                experiences={experiences}
+                onAddExperience={handleAddExperience}
+                onEditExperience={handleEditExperience}
+                onDeleteExperience={handleDeleteExperience}
+              />
+              <EducationSection
+                educations={educations}
+                onAddEducation={handleAddEducation}
+                onEditEducation={handleEditEducation}
+                onDeleteEducation={handleDeleteEducation}
+              />
+              <ProjectsSection
+                projects={projects}
+                onAddProject={handleAddProject}
+                onEditProject={handleEditProject}
+                onDeleteProject={handleDeleteProject}
+              />
+            </div>
+          </TabPanel>
 
-            <Card className="mb-6">
-              <CardHeader className="p-6">
-                <CardTitle>Change Email</CardTitle>
-                <CardDescription>Update your email address</CardDescription>
-              </CardHeader>
-              <CardContent className="p-6 pt-0 space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Current Email</label>
-                  <input 
-                    type="email" 
-                    className="w-full rounded-md border border-input bg-background px-3 py-2"
-                    value={email}
-                    disabled
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">New Email</label>
-                  <input 
-                    type="email" 
-                    className="w-full rounded-md border border-input bg-background px-3 py-2"
-                    placeholder="Enter your new email address"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Password</label>
-                  <input 
-                    type="password" 
-                    className="w-full rounded-md border border-input bg-background px-3 py-2"
-                    placeholder="Enter your password to confirm"
-                  />
-                </div>
-                <Button className="bg-cyan-500 hover:bg-cyan-600 w-full mt-2">Update Email</Button>
-              </CardContent>
-            </Card>
+          <TabPanel value="job-preferences">
+            <JobPreferencesSection
+              preferences={jobPreferences}
+              onEdit={() => console.log("Edit job preferences")}
+            />
+          </TabPanel>
 
-            <Card className="mb-6">
-              <CardHeader className="p-6">
-                <CardTitle>Skills</CardTitle>
-                <CardDescription>Add or remove skills from your profile</CardDescription>
-              </CardHeader>
-              <CardContent className="p-6 pt-0">
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {settings.skills.map((skill, index) => (
-                    <div key={index} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                      {skill}
-                      <button 
-                        className="text-primary hover:text-primary/80"
-                        onClick={() => {
-                          const newSkills = [...settings.skills];
-                          newSkills.splice(index, 1);
-                          setSettings({...settings, skills: newSkills});
-                        }}
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <input 
-                    type="text" 
-                    className="flex-1 rounded-md border border-input bg-background px-3 py-2"
-                    placeholder="Add a new skill"
-                    id="newSkill"
-                  />
-                  <Button 
-                    className="bg-cyan-500 hover:bg-cyan-600"
-                    onClick={() => {
-                      const input = document.getElementById('newSkill') as HTMLInputElement;
-                      if (input.value.trim()) {
-                        setSettings({
-                          ...settings, 
-                          skills: [...settings.skills, input.value.trim()]
-                        });
-                        input.value = '';
-                      }
-                    }}
-                  >
-                    Add
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+          <TabPanel value="equal-employment">
+            <EqualEmploymentSection
+              data={equalEmploymentData}
+              onUpdate={setEqualEmploymentData}
+            />
+          </TabPanel>
 
-            <Card>
-              <CardHeader className="p-6">
-                <CardTitle>Languages</CardTitle>
-                <CardDescription>Add or remove languages you speak</CardDescription>
-              </CardHeader>
-              <CardContent className="p-6 pt-0">
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {settings.languages.map((language, index) => (
-                    <div key={index} className="bg-secondary px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                      {language}
-                      <button 
-                        className="text-muted-foreground hover:text-foreground"
-                        onClick={() => {
-                          const newLanguages = [...settings.languages];
-                          newLanguages.splice(index, 1);
-                          setSettings({...settings, languages: newLanguages});
-                        }}
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <input 
-                    type="text" 
-                    className="flex-1 rounded-md border border-input bg-background px-3 py-2"
-                    placeholder="Add a new language"
-                    id="newLanguage"
-                  />
-                  <Button 
-                    className="bg-cyan-500 hover:bg-cyan-600"
-                    onClick={() => {
-                      const input = document.getElementById('newLanguage') as HTMLInputElement;
-                      if (input.value.trim()) {
-                        setSettings({
-                          ...settings, 
-                          languages: [...settings.languages, input.value.trim()]
-                        });
-                        input.value = '';
-                      }
-                    }}
-                  >
-                    Add
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+          <TabPanel value="settings">
+            <SettingsSection
+              email="vveluri6@gmail.com"
+              emailPreferences={emailPreferences}
+              onUpdateEmail={handleUpdateEmail}
+              onUpdatePassword={handleUpdatePassword}
+              onUpdateEmailPreferences={setEmailPreferences}
+            />
+          </TabPanel>
+        </ProfileTabs>
       </div>
-
-      {/* All edit modals */}
-      <EditProfileHeader
-        open={profileHeaderModalOpen}
-        onClose={() => setProfileHeaderModalOpen(false)}
-        initialData={{ name, jobStatus }}
-        onSave={handleUpdateProfileHeader}
-      />
-
-      <EditContactInfo
-        open={contactModalOpen}
-        onClose={() => setContactModalOpen(false)}
-        initialData={{ email, phone, dateOfBirth, location }}
-        onSave={handleUpdateContactInfo}
-      />
-
-      <EditWorkExperience
-        open={workExperienceModalOpen}
-        onClose={() => setWorkExperienceModalOpen(false)}
-        experience={editingWorkExperience}
-        onSave={handleSaveWorkExperience}
-        onDelete={handleDeleteWorkExperience}
-      />
-
-      <EditEducation
-        open={educationModalOpen}
-        onClose={() => setEducationModalOpen(false)}
-        education={editingEducation}
-        onSave={handleSaveEducation}
-        onDelete={handleDeleteEducation}
-      />
-
-      <EditProject
-        open={projectModalOpen}
-        onClose={() => setProjectModalOpen(false)}
-        project={editingProject}
-        onSave={handleSaveProject}
-        onDelete={handleDeleteProject}
-      />
-
-      <EditSocialLinks
-        open={socialLinksModalOpen}
-        onClose={() => setSocialLinksModalOpen(false)}
-        initialData={socialLinks}
-        onSave={handleUpdateSocialLinks}
-      />
-
-      <EditJobPreferences
-        open={roleExperienceModalOpen}
-        onClose={() => setRoleExperienceModalOpen(false)}
-        section="roles"
-        initialData={jobPreferences}
-        onSave={handleUpdateJobPreferences}
-      />
-
-      <EditJobPreferences
-        open={industriesModalOpen}
-        onClose={() => setIndustriesModalOpen(false)}
-        section="industries"
-        initialData={jobPreferences}
-        onSave={handleUpdateJobPreferences}
-      />
-
-      <EditJobPreferences
-        open={compensationModalOpen}
-        onClose={() => setCompensationModalOpen(false)}
-        section="compensation"
-        initialData={jobPreferences}
-        onSave={handleUpdateJobPreferences}
-      />
-
-      <EditJobPreferences
-        open={locationModalOpen}
-        onClose={() => setLocationModalOpen(false)}
-        section="location"
-        initialData={jobPreferences}
-        onSave={handleUpdateJobPreferences}
-      />
-
-      <EditJobPreferences
-        open={jobTypesModalOpen}
-        onClose={() => setJobTypesModalOpen(false)}
-        section="jobTypes"
-        initialData={jobPreferences}
-        onSave={handleUpdateJobPreferences}
-      />
-
-      <EditJobPreferences
-        open={skillsModalOpen}
-        onClose={() => setSkillsModalOpen(false)}
-        section="skills"
-        initialData={jobPreferences}
-        onSave={handleUpdateJobPreferences}
-      />
-
-      <EditJobPreferences
-        open={workAuthModalOpen}
-        onClose={() => setWorkAuthModalOpen(false)}
-        section="workAuth"
-        initialData={jobPreferences}
-        onSave={handleUpdateJobPreferences}
-      />
-
-      <EditEqualEmployment
-        open={equalEmploymentModalOpen}
-        onClose={() => setEqualEmploymentModalOpen(false)}
-        initialData={equalEmploymentData}
-        onSave={handleUpdateEqualEmployment}
-      />
-    </>
+    </div>
   );
 };
 
-export default ProfilePage;
+export default Profile;

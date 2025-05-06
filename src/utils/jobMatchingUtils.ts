@@ -92,3 +92,29 @@ export const getRecommendedActions = (matchPercentage: number) => {
   
   return ["Focus on better matches", "Develop missing skills", "Look for more suitable roles"];
 };
+
+// Additional exported functions to fix build errors
+export interface MatchScoreLevel {
+  label: string;
+  color: string;
+  range: [number, number];
+}
+
+export const getDetailedMatch = (job: any, profile: any) => {
+  // Implementation would depend on your app's logic
+  return {
+    overall: 75,
+    skills: 80,
+    experience: 70,
+    location: 90,
+    education: 65
+  };
+};
+
+export const getMatchExplanation = (score: number) => {
+  if (score >= 80) return "Your profile is an excellent match for this job.";
+  if (score >= 70) return "Your profile is a strong match for this job.";
+  if (score >= 60) return "Your profile is a good match for this job.";
+  if (score >= 50) return "Your profile is a fair match for this job.";
+  return "Your profile is a partial match for this job.";
+};

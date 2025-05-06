@@ -7,9 +7,9 @@ export const isMobileApp = (): boolean => {
     typeof window !== 'undefined' &&
     (window.hasOwnProperty('Capacitor') || 
      document.URL.includes('http://localhost') && (
-       navigator.userAgent.match(/iPhone/i) ||
-       navigator.userAgent.match(/iPad/i) ||
-       navigator.userAgent.match(/Android/i)
+       navigator.userAgent.match(/iPhone/i) !== null ||
+       navigator.userAgent.match(/iPad/i) !== null ||
+       navigator.userAgent.match(/Android/i) !== null
      ))
   );
 };
@@ -28,10 +28,10 @@ export const isIOS = (): boolean => {
   return (
     typeof navigator !== 'undefined' &&
     (
-      navigator.userAgent.match(/iPhone/i) ||
-      navigator.userAgent.match(/iPad/i) ||
-      navigator.userAgent.match(/iPod/i)
-    ) !== null
+      navigator.userAgent.match(/iPhone/i) !== null ||
+      navigator.userAgent.match(/iPad/i) !== null ||
+      navigator.userAgent.match(/iPod/i) !== null
+    )
   );
 };
 
