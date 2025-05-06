@@ -1,133 +1,55 @@
 
-// Utility functions for job application scraper and form
+import { normalizeJobUrl, extractJobIdFromUrl } from "@/utils/jobValidationUtils";
 
-/**
- * Validates a job URL and returns a corrected version if needed
- */
-export const validateUrl = (url: string): string | boolean => {
-  if (!url.trim()) {
-    return false;
-  }
-
-  // Add https:// if missing
-  if (!url.startsWith('http://') && !url.startsWith('https://')) {
-    return `https://${url}`;
-  }
-
+// Validate and potentially fix URL
+export const validateUrl = (url: string): boolean | string => {
+  if (!url) return false;
+  
   try {
+    // Try to create a URL object to validate
     new URL(url);
-    return url;
+    return true;
   } catch (e) {
+    // If it fails, check if it might be missing the protocol
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      try {
+        new URL('https://' + url);
+        return 'https://' + url;
+      } catch (e) {
+        return false;
+      }
+    }
     return false;
   }
 };
 
-/**
- * Extracts a job ID from a job URL
- */
+// Extract job ID from URL if present
 export const extractJobId = (url: string): string | null => {
-  try {
-    const parsedUrl = new URL(url);
-    
-    // For LinkedIn
-    if (url.includes('linkedin.com')) {
-      const pathSegments = parsedUrl.pathname.split('/');
-      // LinkedIn job IDs are usually the last segment in the URL
-      return pathSegments[pathSegments.length - 1] || null;
-    }
-    
-    // For Indeed
-    if (url.includes('indeed.com')) {
-      // Indeed uses jk parameter in the URL
-      return parsedUrl.searchParams.get('jk') || null;
-    }
-    
-    // For Greenhouse
-    if (url.includes('greenhouse.io')) {
-      const pathSegments = parsedUrl.pathname.split('/');
-      // Usually the job ID is the last segment
-      return pathSegments[pathSegments.length - 1] || null;
-    }
-    
-    // For Lever
-    if (url.includes('lever.co')) {
-      const pathSegments = parsedUrl.pathname.split('/');
-      // Lever typically has the job ID in the format /company/job-id
-      return pathSegments.length > 2 ? pathSegments[pathSegments.length - 1] : null;
-    }
-    
-    // Default: try to find any numeric ID in the path
-    const match = parsedUrl.pathname.match(/\d+/);
-    return match ? match[0] : null;
-    
-  } catch (error) {
-    console.error("Error extracting job ID:", error);
-    return null;
-  }
+  return extractJobIdFromUrl(url);
 };
 
-/**
- * Determines if a job URL is from a supported platform
- */
-export const isSupportedJobPlatform = (url: string): boolean => {
-  const supportedDomains = [
-    'linkedin.com',
-    'indeed.com',
-    'glassdoor.com',
-    'monster.com',
-    'ziprecruiter.com',
-    'dice.com',
-    'lever.co',
-    'greenhouse.io',
-    'workday.com',
-    'taleo.',
-    'jobvite.com',
-    'icims.com',
-    'smartrecruiters.com'
-  ];
-  
-  return supportedDomains.some(domain => url.includes(domain));
+// Clean and normalize job application URL
+export const cleanJobUrl = (url: string): string => {
+  return normalizeJobUrl(url);
 };
 
-/**
- * Counts keyword matches between a job description and a resume
- */
-export const countKeywordMatches = (
-  jobDescription: string,
-  resumeText: string,
-  keywords: string[] = []
-): { count: number, total: number, matches: string[] } => {
-  if (!jobDescription || !resumeText) {
-    return { count: 0, total: 0, matches: [] };
+// Generate a unique job ID if one doesn't exist
+export const generateJobId = (company: string, title: string, url?: string): string => {
+  if (url) {
+    const extractedId = extractJobId(url);
+    if (extractedId) return extractedId;
   }
   
-  // Default keywords to look for if none provided
-  const defaultKeywords = [
-    'javascript', 'python', 'react', 'node', 'typescript', 'angular', 'vue',
-    'java', 'c#', 'c++', 'ruby', 'go', 'rust', 'swift', 'kotlin', 'php',
-    'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'serverless', 'devops',
-    'frontend', 'backend', 'fullstack', 'api', 'rest', 'graphql', 'database',
-    'sql', 'nosql', 'mongodb', 'postgresql', 'mysql', 'redis', 'agile', 'scrum'
-  ];
+  // Create a deterministic ID from job info
+  const baseString = `${company}-${title}-${url || ''}`;
+  let hash = 0;
   
-  const keywordsToCheck = keywords.length > 0 ? keywords : defaultKeywords;
-  const jobDescLower = jobDescription.toLowerCase();
-  const resumeLower = resumeText.toLowerCase();
+  for (let i = 0; i < baseString.length; i++) {
+    const char = baseString.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
   
-  let count = 0;
-  const matches: string[] = [];
-  
-  keywordsToCheck.forEach(keyword => {
-    const keywordLower = keyword.toLowerCase();
-    if (jobDescLower.includes(keywordLower) && resumeLower.includes(keywordLower)) {
-      count++;
-      matches.push(keyword);
-    }
-  });
-  
-  return {
-    count,
-    total: keywordsToCheck.length,
-    matches
-  };
+  // Convert to a positive hex string
+  return Math.abs(hash).toString(16);
 };

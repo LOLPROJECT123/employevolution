@@ -1,8 +1,8 @@
 
-import React from "react";
+import React, { useMemo } from "react";
 import { getDetailedMatch, getMatchExplanation, getMatchColor, MatchScoreLevel } from "@/utils/jobMatchingUtils";
 import { Job } from "@/types/job";
-import { Check, X, AlertCircle, Sparkles } from "lucide-react";
+import { Check, X, Sparkles } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
@@ -15,8 +15,9 @@ interface JobMatchDetailsProps {
 }
 
 export const JobMatchDetails = ({ job, userSkills = [], compact = false }: JobMatchDetailsProps) => {
-  const match = getDetailedMatch(job, userSkills);
-  const explanation = getMatchExplanation(match);
+  // Memoize match calculation to prevent unnecessary recalculations
+  const match = useMemo(() => getDetailedMatch(job, userSkills), [job.id, userSkills.join(',')]);
+  const explanation = useMemo(() => getMatchExplanation(match), [match.overallScore]);
   
   // Define color scheme based on match level
   const getColorByLevel = (level: MatchScoreLevel) => {
@@ -66,16 +67,14 @@ export const JobMatchDetails = ({ job, userSkills = [], compact = false }: JobMa
             {match.overallScore}%
           </div>
         </div>
-        
-        <Progress 
-          value={match.overallScore} 
+        <Progress
+          value={match.overallScore}
           className="h-2"
         />
-        
         <p className="text-sm text-muted-foreground">{explanation}</p>
       </div>
-      
-      <Accordion type="single" collapsible className="w-full">
+
+      <Accordion type="single" collapsible className="w-full" defaultValue="skills">
         <AccordionItem value="skills">
           <AccordionTrigger className="hover:no-underline">
             <div className="flex items-center justify-between w-full pr-2">
@@ -92,7 +91,7 @@ export const JobMatchDetails = ({ job, userSkills = [], compact = false }: JobMa
                   <h4 className="text-sm font-medium">Matching Skills</h4>
                   <div className="flex flex-wrap gap-1.5">
                     {match.skills.matched.map((skill, index) => (
-                      <Badge 
+                      <Badge
                         key={index}
                         variant="outline"
                         className={cn(
@@ -108,13 +107,13 @@ export const JobMatchDetails = ({ job, userSkills = [], compact = false }: JobMa
                   </div>
                 </div>
               )}
-              
+
               {match.skills.missing.length > 0 && (
                 <div className="space-y-1.5">
                   <h4 className="text-sm font-medium">Missing Skills</h4>
                   <div className="flex flex-wrap gap-1.5">
                     {match.skills.missing.map((skill, index) => (
-                      <Badge 
+                      <Badge
                         key={index}
                         variant="outline"
                         className="bg-red-50 text-red-800 dark:bg-red-900/30 dark:text-red-300 flex items-center gap-1"
@@ -126,20 +125,33 @@ export const JobMatchDetails = ({ job, userSkills = [], compact = false }: JobMa
                   </div>
                 </div>
               )}
+
+              {match.skills.extras.length > 0 && (
+                <div className="space-y-1.5">
+                  <h4 className="text-sm font-medium">Additional Skills</h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {match.skills.extras.map((skill, index) => (
+                      <Badge
+                        key={index}
+                        variant="outline"
+                        className="bg-purple-50 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300"
+                      >
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </AccordionContent>
         </AccordionItem>
-        
+
         <AccordionItem value="experience">
           <AccordionTrigger className="hover:no-underline">
             <div className="flex items-center justify-between w-full pr-2">
               <div>Experience Match</div>
               <div className={getMatchColor(match.experience.matchPercentage)}>
-                {match.experience.matched ? (
-                  <Check className="h-4 w-4" />
-                ) : (
-                  <AlertCircle className="h-4 w-4" />
-                )}
+                {match.experience.matchPercentage}%
               </div>
             </div>
           </AccordionTrigger>
@@ -152,12 +164,8 @@ export const JobMatchDetails = ({ job, userSkills = [], compact = false }: JobMa
           <AccordionTrigger className="hover:no-underline">
             <div className="flex items-center justify-between w-full pr-2">
               <div>Education Match</div>
-              <div className={match.education.matched ? "text-green-500" : "text-amber-500"}>
-                {match.education.matched ? (
-                  <Check className="h-4 w-4" />
-                ) : (
-                  <AlertCircle className="h-4 w-4" />
-                )}
+              <div className="text-green-500">
+                <Check className="h-4 w-4" />
               </div>
             </div>
           </AccordionTrigger>
@@ -170,12 +178,8 @@ export const JobMatchDetails = ({ job, userSkills = [], compact = false }: JobMa
           <AccordionTrigger className="hover:no-underline">
             <div className="flex items-center justify-between w-full pr-2">
               <div>Location Match</div>
-              <div className={match.location.matched ? "text-green-500" : "text-red-500"}>
-                {match.location.matched ? (
-                  <Check className="h-4 w-4" />
-                ) : (
-                  <X className="h-4 w-4" />
-                )}
+              <div className="text-green-500">
+                <Check className="h-4 w-4" />
               </div>
             </div>
           </AccordionTrigger>
