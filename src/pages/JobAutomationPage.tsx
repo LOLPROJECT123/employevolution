@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
@@ -237,7 +238,8 @@ const JobAutomationPage: React.FC = () => {
   const onFormSubmit = (values: z.infer<typeof formSchema>) => {
     console.log(values);
     toast({
-      description: "Job details have been saved.",
+      title: "Job details saved",
+      description: "Your job details have been saved successfully."
     });
   };
 
