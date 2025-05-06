@@ -54,7 +54,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { toast } from "sonner";
-import { JobFilters as JobFiltersType } from "@/types/job";
+import { JobFilters } from "@/types/job";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 type JobFunctionType = string;
@@ -63,14 +63,14 @@ type CompanyType = string;
 type JobTitleType = string;
 
 interface JobFiltersSectionProps {
-  onApplyFilters?: (filters: JobFiltersType) => void;
+  onApplyFilters?: (filters: JobFilters) => void;
 }
 
 // Storage key for persisting filters
 const FILTER_STORAGE_KEY = 'jobSearchFilters';
 
 // Helper function to load filters from localStorage
-const loadSavedFilters = (): JobFiltersType | null => {
+const loadSavedFilters = (): JobFilters | null => {
   try {
     const savedFilters = localStorage.getItem(FILTER_STORAGE_KEY);
     if (savedFilters) {
@@ -83,7 +83,7 @@ const loadSavedFilters = (): JobFiltersType | null => {
 };
 
 // Helper function to save filters to localStorage
-const saveFilters = (filters: JobFiltersType) => {
+const saveFilters = (filters: JobFilters) => {
   try {
     localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(filters));
   } catch (error) {
@@ -211,7 +211,7 @@ export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) =>
       .filter(([_, selected]) => selected)
       .map(([level]) => level);
     
-    const filters: JobFiltersType = {
+    const filters: JobFilters = {
       search: "",
       location: location,
       jobType: selectedJobTypes,
@@ -540,7 +540,7 @@ export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) =>
                 <AccordionItem value="experience" className="border-0 py-2">
                   <AccordionTrigger className="py-2 text-base font-medium hover:bg-gray-50 dark:hover:bg-gray-800 px-2 rounded-md transition-colors">
                     <span className="flex items-center gap-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-orange-500"><path d="M20 7h-3a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M9 18a2 2 0 0 1-2-2v-2a2 2 0 0 0-2-2H2"/><path d="M12 12V2h7a2 2 0 0 1 2 2v7"/><path d="M12 12h4a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-9a2 2 0 0 1-2-2v-3"/></svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-orange-500"><path d="M20 7h-3a2 2 0 0 1-2-2V2"/><path d="M9 18a2 2 0 0 1-2-2v-2a2 2 0 0 0-2-2H2"/><path d="M12 12V2h7a2 2 0 0 1 2 2v7"/><path d="M12 12h4a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-9a2 2 0 0 1-2-2v-3"/></svg>
                       Experience Level
                     </span>
                   </AccordionTrigger>
@@ -704,7 +704,7 @@ export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) =>
                 <AccordionItem value="companies" className="border-0 py-2">
                   <AccordionTrigger className="py-2 text-base font-medium hover:bg-gray-50 dark:hover:bg-gray-800 px-2 rounded-md transition-colors">
                     <span className="flex items-center gap-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-500"><path d="M3 9h18v10a2 2 0 0 1-2 2V9Z"/><path d="M3 9V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4"/><path d="M12 14v3"/><path d="M8 14v1"/><path d="M16 14v1"/></svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-500"><path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"/><path d="M3 9V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4"/><path d="M12 14v3"/><path d="M8 14v1"/><path d="M16 14v1"/></svg>
                       Companies
                     </span>
                   </AccordionTrigger>
@@ -849,6 +849,3 @@ export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) =>
     </Card>
   );
 };
-
-// Export JobFiltersSection as default named export
-export default JobFiltersSection;
