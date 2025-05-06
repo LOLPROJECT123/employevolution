@@ -15,67 +15,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-import { jobScraperService, JobScraperConfig, JobSource } from '@/services/jobScraper/scraperManager';
+import { useJobScraper, convertScrapedToJob } from '@/services/jobScraper/scraperManager';
+import { JobScraperConfig, JobSource } from '@/services/jobScraper/types';
 import { ExtendedJob } from '@/types/jobExtensions';
+import { useToast } from '@/hooks/use-toast';
 import { getParsedResumeFromProfile } from '@/utils/profileUtils';
 import { enhanceJobWithMatchData } from '@/utils/jobMatching';
-
-// Create our own hook to replace the missing useJobScraper
-const useJobScraping = () => {
-  const [isRunning, setIsRunning] = useState(false);
-  const [isComplete, setIsComplete] = useState(false);
-  const [progress, setProgress] = useState({ jobsProcessed: 0, jobsFound: 0 });
-  const [results, setResults] = useState<{jobs: ExtendedJob[]} | null>(null);
-  const [filters, setFilters] = useState({ keywords: [], location: '', remote: false, jobType: [] });
-
-  const startScraping = async (config: JobScraperConfig) => {
-    setIsRunning(true);
-    setIsComplete(false);
-    setProgress({ jobsProcessed: 0, jobsFound: 0 });
-
-    try {
-      // Simulate progress
-      const totalJobs = Math.floor(Math.random() * 20) + 10;
-      setProgress({ jobsProcessed: 0, jobsFound: totalJobs });
-      
-      for (let i = 0; i < totalJobs; i++) {
-        await new Promise(resolve => setTimeout(resolve, 150));
-        setProgress(prev => ({ ...prev, jobsProcessed: i + 1 }));
-      }
-
-      // Use the service to get jobs
-      const jobs = await jobScraperService.searchJobs(
-        config.filters.keywords.join(' '),
-        config.filters.location || '',
-        config.sources as JobSource[],
-        config.filters
-      );
-      
-      setResults({ jobs });
-      setIsComplete(true);
-    } catch (error) {
-      console.error(error);
-      toast.error("Error scraping jobs");
-    } finally {
-      setIsRunning(false);
-    }
-  };
-
-  return {
-    isRunning,
-    isComplete,
-    progress,
-    results,
-    filters,
-    setFilters,
-    startScraping
-  };
-};
-
-// Create our own conversion function to replace the missing convertScrapedToJob
-const convertScrapedToJob = (job: ExtendedJob): ExtendedJob => {
-  return job;
-};
 
 const SUPPORTED_SOURCES: JobSource[] = [
   'LinkedIn',
@@ -97,15 +42,18 @@ const JobScraperPanel = () => {
   const [matchedJobs, setMatchedJobs] = useState<boolean>(false);
   const [maxResults, setMaxResults] = useState<string>("25");
 
-  const { filters, setFilters, progress, results, startScraping, isRunning, isComplete } = useJobScraping();
+  const { filters, setFilters, progress, results, startScraping, isRunning, isComplete } = useJobScraper();
 
   useEffect(() => {
     // When scraping is complete, process the results
     if (isComplete && results) {
+      // Convert scraped jobs to application format
+      const convertedJobs = results.jobs.map(job => convertScrapedToJob(job));
+      
       // If match to resume is enabled, enhance jobs with match data
       if (matchedJobs) {
         const resumeData = getParsedResumeFromProfile();
-        const enhanced = results.jobs.map(job => enhanceJobWithMatchData(job, resumeData));
+        const enhanced = convertedJobs.map(job => enhanceJobWithMatchData(job, resumeData));
         setEnhancedJobs(enhanced);
         
         // Sort by match percentage
@@ -115,7 +63,7 @@ const JobScraperPanel = () => {
         
         setJobsFound(sorted);
       } else {
-        setJobsFound(results.jobs);
+        setJobsFound(convertedJobs);
       }
       
       // Move to results tab
@@ -372,7 +320,7 @@ const JobScraperPanel = () => {
                           
                           <div className="flex justify-between text-sm text-muted-foreground">
                             <span>
-                              {job.salary && job.salary.min > 0 && job.salary.max > 0
+                              {job.salary.min > 0 && job.salary.max > 0
                                 ? `$${Math.round(job.salary.min / 1000)}k - $${Math.round(job.salary.max / 1000)}k`
                                 : "Salary not disclosed"}
                             </span>
