@@ -5,8 +5,6 @@
 
 export interface UserProfile {
   name: string;
-  firstName?: string;
-  lastName?: string;
   email: string;
   phone: string;
   location: string;
@@ -21,17 +19,13 @@ export interface UserProfile {
     linkedin?: string;
     github?: string;
     portfolio?: string;
-    website?: string;
     other?: string;
   };
-  resumeSnapshots?: any[];
 }
 
 // Default mock profile for demo purposes
 const defaultProfile: UserProfile = {
   name: "John Doe",
-  firstName: "John",
-  lastName: "Doe",
   email: "john.doe@example.com",
   phone: "+1 (555) 123-4567",
   location: "San Francisco, CA",
@@ -89,19 +83,6 @@ export function getUserInitials(): string {
     .join('')
     .toUpperCase()
     .substring(0, 2);
-}
-
-/**
- * Get user's full name
- */
-export function getUserFullName(profile?: UserProfile): string {
-  const userProfile = profile || getUserProfile();
-  
-  if (userProfile.firstName && userProfile.lastName) {
-    return `${userProfile.firstName} ${userProfile.lastName}`;
-  }
-  
-  return userProfile.name || "User";
 }
 
 /**
