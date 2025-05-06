@@ -1,5 +1,5 @@
 
-// Types for job scraper and application functionality
+export type JobApplicationTab = 'manual' | 'auto' | 'scraper';
 
 export interface ScrapedJob {
   id: string;
@@ -10,10 +10,10 @@ export interface ScrapedJob {
   source: string;
   datePosted: string;
   description: string;
-  applyUrl?: string;
-  matchPercentage?: number;
-  requirements?: string[];
+  applyUrl: string;
   verified?: boolean;
+  matchPercentage?: number;
+  matchKeywords?: string[];
   keywordMatch?: {
     score: number;
     total: number;
@@ -29,54 +29,32 @@ export interface ScrapedJob {
       total: number;
     };
   };
+  requirements?: string[];
 }
 
-export interface JobSource {
+export interface ResumeTemplate {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  previewUrl: string;
+  downloadUrl: string;
+  company: string;
+  role: string;
+  roleType?: string;
+  rating: number;
+  downloads: number;
+  tags: string[];
+  source?: string;
+  attribution?: string;
+  licenseType?: 'free' | 'premium' | 'attribution-required';
+}
+
+export interface TemplateSource {
+  id: string;
   name: string;
-  supported: boolean;
-  icon?: React.ReactNode;
-  description?: string;
-}
-
-export interface JobScraperSettings {
-  maxResults: number;
-  useProxy: boolean;
-  proxyConfig: {
-    url: string;
-    enabled: boolean;
-  };
-  selectedSources: string[];
-  keywords: string[];
-  locations: string[];
-}
-
-export interface ApplicationCredentials {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  linkedin: string;
-  website: string;
-  yearsOfExperience: number;
-  workAuthorization: string;
-  education: {
-    school: string;
-    degree: string;
-    field: string;
-    graduationDate: string;
-  };
-}
-
-export interface AutofillConfig {
-  enabled: boolean;
-  credentials: ApplicationCredentials;
-  preferences: {
-    skipAssessments: boolean;
-    skipCoverLetter: boolean;
-    skipFutureEmails: boolean;
-  };
+  url: string;
+  apiKey?: string;
+  isActive: boolean;
+  attribution: string;
 }

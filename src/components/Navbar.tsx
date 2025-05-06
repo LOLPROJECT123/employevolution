@@ -16,12 +16,11 @@ import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { 
   User, 
-  BarChartIcon,
-  BriefcaseIcon, 
-  FileText,
   BookOpen, 
+  BriefcaseIcon, 
+  DollarSign, 
+  FileText,
   Users,
-  DollarSign,
   Network
 } from "lucide-react";
 
@@ -75,7 +74,7 @@ const Navbar = () => {
                     "flex items-center px-3 py-2 text-sm font-medium transition-colors",
                     isActive("/dashboard") ? "text-primary" : "text-muted-foreground hover:text-foreground"
                   )}>
-                    <BarChartIcon className="mr-2 h-4 w-4" />
+                    <BriefcaseIcon className="mr-2 h-4 w-4" />
                     Dashboard
                   </div>
                 </Link>
