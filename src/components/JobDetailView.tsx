@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Job } from "@/types/job";
 import { getMatchBgColor, getMatchColor, getMatchLabel } from "@/utils/jobMatchingUtils";
@@ -38,9 +37,7 @@ export const JobDetailView = ({
     if (job.applyUrl) {
       // Check if job is available before proceeding
       if (!job.applicationDetails?.isAvailable) {
-        toast({
-          variant: "destructive", 
-          title: "Job no longer available",
+        toast.error("Job no longer available", {
           description: "This job posting is no longer active. It may have been filled or removed by the employer."
         });
         return;
@@ -63,9 +60,7 @@ export const JobDetailView = ({
         onApply(job);
       }
     } else {
-      toast({
-        variant: "destructive", 
-        title: "Application URL not available",
+      toast.error("Application URL not available", {
         description: "This job doesn't have an application link."
       });
       onApply(job);
@@ -74,20 +69,16 @@ export const JobDetailView = ({
   
   const handleViewJob = () => {
     if (!job.applyUrl) {
-      toast({
-        title: "Job URL not available",
-        description: "This job doesn't have a URL to view details.",
-        variant: "destructive",
+      toast.error("Job URL not available", {
+        description: "This job doesn't have a URL to view details."
       });
       return;
     }
     
     // Check if job is available before opening URL
     if (!job.applicationDetails?.isAvailable) {
-      toast({
-        title: "Job no longer available",
-        description: "This job posting is no longer active. It may have been filled or removed by the employer.",
-        variant: "destructive",
+      toast.error("Job no longer available", {
+        description: "This job posting is no longer active. It may have been filled or removed by the employer."
       });
       return;
     }

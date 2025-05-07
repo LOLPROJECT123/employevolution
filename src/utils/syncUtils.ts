@@ -1,4 +1,3 @@
-
 /**
  * Utilities for synchronizing data between the extension and web app
  */
@@ -23,17 +22,7 @@ interface Chrome {
 // Declare global window with chrome property
 declare global {
   interface Window {
-    chrome?: {
-      runtime?: {
-        sendMessage?: (
-          message: any,
-          responseCallback?: (response: any) => void
-        ) => void;
-        lastError?: {
-          message: string;
-        };
-      };
-    };
+    chrome?: Chrome;
   }
 }
 
