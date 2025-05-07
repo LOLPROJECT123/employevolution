@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Job } from "@/types/job";
 import { getMatchBgColor, getMatchColor, getMatchLabel } from "@/utils/jobMatchingUtils";
@@ -6,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { BookmarkIcon, ExternalLink, FileText, Zap, Users } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import AutoApplyModal from "@/components/AutoApplyModal";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 interface JobDetailViewProps {
   job: Job | null;
@@ -38,9 +39,9 @@ export const JobDetailView = ({
       // Check if job is available before proceeding
       if (!job.applicationDetails?.isAvailable) {
         toast({
+          variant: "destructive", 
           title: "Job no longer available",
-          description: "This job posting is no longer active. It may have been filled or removed by the employer.",
-          variant: "destructive",
+          description: "This job posting is no longer active. It may have been filled or removed by the employer."
         });
         return;
       }
@@ -63,9 +64,9 @@ export const JobDetailView = ({
       }
     } else {
       toast({
+        variant: "destructive", 
         title: "Application URL not available",
-        description: "This job doesn't have an application link.",
-        variant: "destructive",
+        description: "This job doesn't have an application link."
       });
       onApply(job);
     }

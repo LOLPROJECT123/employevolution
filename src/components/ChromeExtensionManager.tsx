@@ -12,7 +12,6 @@ declare global {
     chrome?: {
       runtime?: {
         sendMessage?: (
-          extensionId: string,
           message: any,
           callback?: (response: any) => void
         ) => void;
@@ -48,7 +47,6 @@ const ChromeExtensionManager = () => {
       // Attempt to message the extension
       if (typeof window !== "undefined" && window.chrome?.runtime?.sendMessage) {
         window.chrome.runtime.sendMessage(
-          EXTENSION_ID,
           { action: "getStatus" },
           function(response) {
             const isInstalled = !!response && !window.chrome?.runtime?.lastError;
@@ -104,7 +102,6 @@ const ChromeExtensionManager = () => {
     try {
       if (typeof window !== "undefined" && window.chrome?.runtime?.sendMessage) {
         window.chrome.runtime.sendMessage(
-          EXTENSION_ID,
           { action: "test" },
           function(response) {
             if (response && response.success) {

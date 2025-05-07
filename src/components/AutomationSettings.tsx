@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { 
   Dialog, 
@@ -329,11 +328,11 @@ export default function AutomationSettings() {
     let fileName = '';
     
     if (platform === 'handshake') {
-      scriptContent = getHandshakeAutomationScript(config);
-      fileName = 'handshake_automation.py';
+      scriptContent = getHandshakeAutomationScript('example.com', config);
+      fileName = 'handshake_automation.js';
     } else if (platform === 'indeed') {
-      scriptContent = getIndeedAutomationScript(config);
-      fileName = 'indeed_automation.py';
+      scriptContent = getIndeedAutomationScript('example.com', config);
+      fileName = 'indeed_automation.js';
     } else {
       toast.info("Script generation not implemented", {
         description: `Automation script for ${platform} is not yet implemented.`
