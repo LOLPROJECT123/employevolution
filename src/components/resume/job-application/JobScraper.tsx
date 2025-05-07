@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { searchJobsWithCrawl4AI } from "@/utils/crawl4ai";
 
 interface JobScraperProps {
   onJobsScraped: (jobs: ScrapedJob[]) => void;
@@ -28,6 +29,7 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
   const [isVerifyingJobs, setIsVerifyingJobs] = useState(false);
   const [verificationProgress, setVerificationProgress] = useState(0);
   const [maxResults, setMaxResults] = useState<string>("25");
+  const [searchMode, setSearchMode] = useState<"basic" | "advanced">("advanced");
 
   // Function to verify job URLs actually exist
   const verifyJobUrls = async (jobs: ScrapedJob[]): Promise<ScrapedJob[]> => {
@@ -117,7 +119,58 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
     };
   };
 
-  // Function to scrape jobs based on search criteria
+  // Function to scrape jobs using Crawl4AI
+  const handleCrawl4AIScrape = async () => {
+    if (!searchQuery.trim()) {
+      toast.error("Please enter a job title or keyword");
+      return;
+    }
+
+    setIsScrapingJobs(true);
+    
+    try {
+      // Convert our UI-friendly platform names to Crawl4AI platform keys
+      const platformMap: Record<string, string> = {
+        'LinkedIn': 'linkedin',
+        'Indeed': 'indeed',
+        'Glassdoor': 'glassdoor',
+        'ZipRecruiter': 'ziprecruiter',
+        'Monster': 'monster',
+      };
+      
+      // Map selected sources to Crawl4AI platform keys
+      const platforms = selectedSources
+        .map(source => platformMap[source])
+        .filter(Boolean);
+      
+      // Use the Crawl4AI implementation to search for jobs
+      const jobs = await searchJobsWithCrawl4AI(
+        searchQuery.trim(),
+        searchLocation.trim(),
+        platforms,
+        {
+          maxResults: parseInt(maxResults),
+          maxPages: 5
+        }
+      );
+      
+      if (jobs.length > 0) {
+        onJobsScraped(jobs);
+        toast.success(`Found ${jobs.length} jobs matching your search`);
+      } else {
+        toast.error("No valid jobs found matching your criteria. Try adjusting your search.");
+      }
+      
+    } catch (error) {
+      console.error("Error scraping jobs:", error);
+      toast.error("Failed to scrape jobs. Please try again.");
+    } finally {
+      setIsScrapingJobs(false);
+      setIsVerifyingJobs(false);
+    }
+  };
+
+  // Legacy function to scrape jobs (backup method)
   const handleScrapeJobs = async () => {
     if (!searchQuery.trim()) {
       toast.error("Please enter a job title or keyword");
@@ -275,11 +328,19 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
         </div>
         
         <div className="space-y-2">
-          <label className="text-sm font-medium">Advanced Options</label>
-          <Button variant="outline" className="w-full" disabled>
-            <Globe className="mr-2 h-4 w-4" />
-            Configure Proxy
-          </Button>
+          <label className="text-sm font-medium">Search Mode</label>
+          <Select 
+            defaultValue={searchMode} 
+            onValueChange={(value) => setSearchMode(value as "basic" | "advanced")}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Advanced (Crawl4AI)" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="advanced">Advanced (Crawl4AI)</SelectItem>
+              <SelectItem value="basic">Basic (Legacy)</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
       
@@ -324,7 +385,7 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
       
       <Button 
         type="button" 
-        onClick={handleScrapeJobs} 
+        onClick={searchMode === "advanced" ? handleCrawl4AIScrape : handleScrapeJobs} 
         disabled={isScrapingJobs || isVerifyingJobs || !searchQuery.trim()}
         className="w-full"
       >
@@ -336,7 +397,7 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
         ) : (
           <>
             <Search className="mr-2 h-4 w-4" />
-            Find Jobs
+            Find Jobs {searchMode === "advanced" ? "(Crawl4AI)" : ""}
           </>
         )}
       </Button>
@@ -345,6 +406,7 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
         <Check className="h-4 w-4" />
         <AlertDescription>
           Only verified job listings with valid application links will be shown.
+          {searchMode === "advanced" && " Using enhanced Crawl4AI technology for better results."}
         </AlertDescription>
       </Alert>
     </div>
@@ -352,3 +414,4 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
 };
 
 export default JobScraper;
+

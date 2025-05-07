@@ -1,6 +1,6 @@
 
 import React, { useMemo } from "react";
-import { getDetailedMatch, getMatchExplanation, getMatchColor, MatchScoreLevel } from "@/utils/jobMatchingUtils";
+import { getDetailedMatch, getMatchExplanation, getMatchColor, MatchScoreLevel, ComprehensiveMatch } from "@/utils/jobMatchingUtils";
 import { Job } from "@/types/job";
 import { Check, X, Sparkles } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
@@ -151,48 +151,54 @@ export const JobMatchDetails = ({ job, userSkills = [], compact = false }: JobMa
             <div className="flex items-center justify-between w-full pr-2">
               <div>Experience Match</div>
               <div className={getMatchColor(match.experience.matchPercentage)}>
-                {match.experience.matchPercentage}%
+                {match.experience.matched ? "Yes" : "No"}
               </div>
             </div>
           </AccordionTrigger>
           <AccordionContent>
-            <p className="text-sm">{match.experience.details}</p>
+            <p className="text-sm text-muted-foreground">
+              {match.experience.details}
+            </p>
           </AccordionContent>
         </AccordionItem>
-        
+
         <AccordionItem value="education">
           <AccordionTrigger className="hover:no-underline">
             <div className="flex items-center justify-between w-full pr-2">
               <div>Education Match</div>
-              <div className="text-green-500">
-                <Check className="h-4 w-4" />
+              <div className={getMatchColor(match.education.matched ? 100 : 0)}>
+                {match.education.matched ? "Yes" : "No"}
               </div>
             </div>
           </AccordionTrigger>
           <AccordionContent>
-            <p className="text-sm">{match.education.details}</p>
+            <p className="text-sm text-muted-foreground">
+              {match.education.details}
+            </p>
           </AccordionContent>
         </AccordionItem>
-        
+
         <AccordionItem value="location">
           <AccordionTrigger className="hover:no-underline">
             <div className="flex items-center justify-between w-full pr-2">
               <div>Location Match</div>
-              <div className="text-green-500">
-                <Check className="h-4 w-4" />
+              <div className={getMatchColor(match.location.matched ? 100 : 0)}>
+                {match.location.matched ? "Yes" : "No"}
               </div>
             </div>
           </AccordionTrigger>
           <AccordionContent>
-            <p className="text-sm">{match.location.details}</p>
-            {match.location.distance !== undefined && !job.remote && (
-              <p className="text-sm mt-1">
-                Distance: {match.location.distance} miles
-              </p>
-            )}
+            <p className="text-sm text-muted-foreground">
+              {match.location.details}
+              {match.location.distance !== undefined && match.location.distance > 0 && (
+                <> ({match.location.distance} miles)</>
+              )}
+            </p>
           </AccordionContent>
         </AccordionItem>
       </Accordion>
     </div>
   );
 };
+
+export default JobMatchDetails;

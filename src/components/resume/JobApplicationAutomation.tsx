@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -21,7 +22,10 @@ import JobScraper from "./job-application/JobScraper";
 import JobList from "./job-application/JobList";
 import ConfirmationModal from "./job-application/ConfirmationModal";
 import { JOB_TABS } from "./job-application/constants";
-import { ScrapedJob, JobApplicationTab } from "./job-application/types";
+import { ScrapedJob } from "./job-application/types";
+
+// Define the JobApplicationTab type
+type JobApplicationTab = 'manual' | 'auto' | 'scraper';
 
 const JobApplicationAutomation = () => {
   const [activeTab, setActiveTab] = useState<JobApplicationTab>("manual");
@@ -198,7 +202,7 @@ const JobApplicationAutomation = () => {
           
           <TabsContent value="manual" className="space-y-4 pt-4">
             <JobApplicationForm 
-              activeTab={activeTab} 
+              activeTab={activeTab as JobApplicationTab} 
               onNavigateToProfile={handleNavigateToProfile} 
               onSuccess={(jobUrl) => {
                 // Track successful manual applications
@@ -224,7 +228,7 @@ const JobApplicationAutomation = () => {
           
           <TabsContent value="auto" className="space-y-4 pt-4">
             <JobApplicationForm 
-              activeTab={activeTab} 
+              activeTab={activeTab as JobApplicationTab} 
               onNavigateToProfile={handleNavigateToProfile} 
               onSuccess={(jobUrl) => {
                 // Track successful auto applications
