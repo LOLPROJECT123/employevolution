@@ -1,20 +1,52 @@
 
 import { toast } from "sonner";
 
+export type AutomationPlatform = 'handshake' | 'linkedin' | 'indeed' | 'glassdoor';
+
 export interface AutomationCredentials {
   enabled: boolean;
-  username: string;
+  username?: string;
   password: string;
   email: string;
+  platform: AutomationPlatform;
 }
 
 export interface AutomationProfile {
   name: string;
-  title: string;
+  title?: string;
   location: string;
-  skills: string[];
-  experience: string[];
-  education: string[];
+  skills?: string[];
+  experience: string;
+  education?: string[];
+  email: string;
+  phone: string;
+  currentlyEmployed: boolean;
+  needVisa: boolean;
+  yearsOfCoding: number;
+  languagesKnown: string[];
+  codingLanguagesKnown: string[];
+  
+  // Extended profile fields
+  address?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  githubUrl?: string;
+  linkedinUrl?: string;
+  university?: string;
+  hasCriminalRecord?: boolean;
+  needsSponsorship?: boolean;
+  willingToRelocate?: boolean;
+  workAuthorized?: boolean;
+  isCitizen?: boolean;
+  educationLevel?: string;
+  salaryExpectation?: string;
+  gender?: 'Male' | 'Female' | 'Decline';
+  veteranStatus?: 'Yes' | 'No' | 'Decline';
+  disabilityStatus?: 'Yes' | 'No' | 'Decline';
+  canCommute?: boolean;
+  preferredShift?: 'Day shift' | 'Night shift' | 'Overnight shift';
+  availableForInterview?: string;
 }
 
 export interface IndeedSettings {
@@ -26,12 +58,41 @@ export interface IndeedSettings {
 export interface AutomationConfig {
   credentials: AutomationCredentials;
   profile: AutomationProfile;
-  indeed: IndeedSettings;
-  linkedin: {
+  indeed?: IndeedSettings;
+  linkedin?: {
     autoApplyEasyApply: boolean;
   };
-  handshake: {
+  handshake?: {
     autoApply: boolean;
+  };
+  platformSpecificSettings?: {
+    indeed?: {
+      experienceYears?: {
+        java?: string;
+        aws?: string;
+        python?: string;
+        analysis?: string;
+        django?: string;
+        php?: string;
+        react?: string;
+        node?: string;
+        angular?: string;
+        javascript?: string;
+        orm?: string;
+        sdet?: string;
+        selenium?: string;
+        testautomation?: string;
+        webdev?: string;
+        programming?: string;
+        teaching?: string;
+        default?: string;
+      };
+      applicationSettings?: {
+        loadDelay?: number;
+        hasDBS?: boolean;
+        hasValidCertificate?: boolean;
+      };
+    };
   };
 }
 
@@ -145,7 +206,7 @@ export const getIndeedAutomationScript = (url: string, config: AutomationConfig)
         }
         
         // Auto upload resume if enabled
-        if (${indeed.autoUploadResume}) {
+        if (${indeed?.autoUploadResume ?? false}) {
           const resumeUpload = document.querySelector('input[type="file"][accept*=".pdf"]');
           if (resumeUpload) {
             console.log("Found resume upload but need manual intervention");
@@ -154,7 +215,7 @@ export const getIndeedAutomationScript = (url: string, config: AutomationConfig)
         }
         
         // Skip assessments if enabled
-        if (${indeed.skipAssessments}) {
+        if (${indeed?.skipAssessments ?? false}) {
           const skipButtons = document.querySelectorAll('button:contains("Skip")');
           skipButtons.forEach(button => button.click());
           console.log("Attempted to skip assessments");

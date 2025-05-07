@@ -6,6 +6,22 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Download, AlertCircle, Check, X } from "lucide-react";
 import { toast } from "sonner";
 
+// Define Chrome API types for TypeScript support in non-extension environments
+declare global {
+  interface Window {
+    chrome?: {
+      runtime?: {
+        sendMessage?: (
+          extensionId: string,
+          message: any,
+          callback?: (response: any) => void
+        ) => void;
+        lastError?: any;
+      };
+    };
+  }
+}
+
 interface ExtensionStatus {
   installed: boolean;
   version?: string;
@@ -30,12 +46,12 @@ const ChromeExtensionManager = () => {
 
     try {
       // Attempt to message the extension
-      if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
-        chrome.runtime.sendMessage(
+      if (typeof window !== "undefined" && window.chrome?.runtime?.sendMessage) {
+        window.chrome.runtime.sendMessage(
           EXTENSION_ID,
           { action: "getStatus" },
           function(response) {
-            const isInstalled = !!response && !chrome.runtime.lastError;
+            const isInstalled = !!response && !window.chrome?.runtime?.lastError;
             
             setExtensionStatus({
               installed: isInstalled,
@@ -86,8 +102,8 @@ const ChromeExtensionManager = () => {
     });
 
     try {
-      if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
-        chrome.runtime.sendMessage(
+      if (typeof window !== "undefined" && window.chrome?.runtime?.sendMessage) {
+        window.chrome.runtime.sendMessage(
           EXTENSION_ID,
           { action: "test" },
           function(response) {
