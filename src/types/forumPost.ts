@@ -17,4 +17,9 @@ export type ForumPost = {
   company?: string;
   role?: string;
   position?: string;
+  skillsMatch?: {
+    score: number;
+    matched: string[];
+    missing: string[];
+  };
 };

@@ -100,6 +100,9 @@ export const getMatchLabel = (percentage?: number) => {
  * The overallScore is now exactly the percentage of job-required skills matched by userSkills.
  */
 export const getDetailedMatch = (job: Job, userSkills: string[] = []): ComprehensiveMatch => {
+  // First check if job already has a matchPercentage, and respect it if it exists
+  const hasExistingMatchScore = job.matchPercentage !== undefined;
+  
   // Normalize skills for case-insensitive comparison
   const normalizedUserSkills = userSkills.map(skill => skill.toLowerCase());
   const normalizedJobSkills = job.skills?.map(skill => skill.toLowerCase()) || [];
@@ -126,14 +129,21 @@ export const getDetailedMatch = (job: Job, userSkills: string[] = []): Comprehen
   }
 
   // Calculate skill score - percentage of required skills that the user has
-  const skillScore = job.skills && job.skills.length > 0
-    ? Math.round((skillMatches.length / job.skills.length) * 100)
-    : 100;
+  let skillScore: number;
+  if (job.skills && job.skills.length > 0) {
+    skillScore = Math.round((skillMatches.length / job.skills.length) * 100);
+  } else {
+    // If there are no skills to match against, use the existing score or default to 100
+    skillScore = hasExistingMatchScore ? job.matchPercentage! : 100;
+  }
 
-  // The following sections exist for display only; they all reflect the skill score
+  // Use job's matchPercentage if it exists, otherwise use calculated skillScore
+  const overallScore = hasExistingMatchScore ? job.matchPercentage! : skillScore;
+
+  // Derive experience match from overall score for consistency
   const experienceMatch: ExperienceMatch = {
     matched: true,
-    matchPercentage: skillScore, // Use the same score for consistency
+    matchPercentage: overallScore,
     details: "Experience match is based on your skills match."
   };
 
@@ -147,9 +157,6 @@ export const getDetailedMatch = (job: Job, userSkills: string[] = []): Comprehen
     distance: 0,
     details: "Location is not considered in this match calculation."
   };
-
-  // The overall score is now exactly the skill match percentage
-  const overallScore = skillScore;
 
   return {
     overallScore,
@@ -166,7 +173,7 @@ export const getDetailedMatch = (job: Job, userSkills: string[] = []): Comprehen
         );
         return originalCaseIndex >= 0 ? userSkills[originalCaseIndex] : skill;
       }),
-      score: skillScore
+      score: hasExistingMatchScore ? overallScore : skillScore
     },
     experience: experienceMatch,
     education: educationMatch,
