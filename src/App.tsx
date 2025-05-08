@@ -20,7 +20,12 @@ import ResumeTools from "./pages/ResumeTools";
 import LeetcodePatterns from "./pages/LeetcodePatterns";
 import SalaryNegotiations from "./pages/SalaryNegotiations";
 import Profile from "./pages/Profile";
-import NetworkingTools from "./pages/NetworkingTools"; // New import
+import NetworkingTools from "./pages/NetworkingTools";
+import ExtensionManager from "./pages/ExtensionManager";
+import ApplicationTracker from "./pages/ApplicationTracker";
+import ATSOptimizer from "./pages/ATSOptimizer";
+import Forums from "./pages/Forums";
+import Sidebar from "./components/Sidebar";
 
 const queryClient = new QueryClient();
 
@@ -62,22 +67,31 @@ const App = () => {
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/interview-practice" element={<InterviewPractice />} />
-                <Route path="/referrals" element={<Referrals />} />
-                <Route path="/jobs" element={isMobile ? <MobileJobs /> : <Jobs />} />
-                <Route path="/mobile-jobs" element={<MobileJobs />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/resume-tools" element={<ResumeTools />} />
-                <Route path="/leetcode-patterns" element={<LeetcodePatterns />} />
-                <Route path="/salary-negotiations" element={<SalaryNegotiations />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/networking" element={<NetworkingTools />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <div className="flex">
+                <Sidebar />
+                <main className="flex-1 ml-60">
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/interview-practice" element={<InterviewPractice />} />
+                    <Route path="/referrals" element={<Referrals />} />
+                    <Route path="/jobs" element={isMobile ? <MobileJobs /> : <Jobs />} />
+                    <Route path="/mobile-jobs" element={<MobileJobs />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/auth" element={<Auth />} />
+                    <Route path="/resume-tools" element={<ResumeTools />} />
+                    <Route path="/leetcode-patterns" element={<LeetcodePatterns />} />
+                    <Route path="/salary-negotiations" element={<SalaryNegotiations />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/networking" element={<NetworkingTools />} />
+                    <Route path="/extension-manager" element={<ExtensionManager />} />
+                    <Route path="/application-tracker" element={<ApplicationTracker />} />
+                    <Route path="/ats-optimizer" element={<ATSOptimizer />} />
+                    <Route path="/forums" element={<Forums />} />
+                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </main>
+              </div>
             </BrowserRouter>
           </JobApplicationProvider>
         </TooltipProvider>

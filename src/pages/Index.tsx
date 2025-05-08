@@ -101,170 +101,25 @@ const features = [
 ];
 
 const Index = () => {
-  const navigate = useNavigate();
-  const [animationReady, setAnimationReady] = useState(false);
-  const isMobile = useMobile();
-
-  useEffect(() => {
-    const timer = setTimeout(() => setAnimationReady(true), 100);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Now accepting a Job object instead of a string
-  const handleApply = (job: any) => {
-    navigate(`/auth?mode=signup&redirect=/jobs/${job.id}`);
-  };
-
   return (
-    <div className="min-h-screen flex flex-col">
-      {isMobile ? (
-        <MobileHeader title="Streamline" />
-      ) : (
-        <Navbar />
-      )}
-      
-      {/* Hero Section */}
-      <section className={`${isMobile ? 'pt-20' : 'pt-32'} pb-20 px-4 relative overflow-hidden`}>
-        <div className="absolute inset-0 bg-gradient-to-br from-accent/80 to-transparent z-0"></div>
-        <div className="container relative z-10">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className={`${animationReady ? 'slide-up' : 'opacity-0'} text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 transition-all duration-700`}>
-              Land Your Dream Tech Job With <span className="text-primary">Streamline</span>
-            </h1>
-            
-            <p className={`${animationReady ? 'slide-up' : 'opacity-0'} text-xl text-muted-foreground mb-8 transition-all duration-700 delay-100`}>
-              Get personalized job recommendations, resume feedback, and interview preparation with our comprehensive platform.
-            </p>
-            
-            <div className={`${animationReady ? 'slide-up' : 'opacity-0'} flex flex-col sm:flex-row justify-center gap-4 mb-12 transition-all duration-700 delay-200`}>
-              <Button 
-                size="lg"
-                onClick={() => navigate('/auth?mode=signup')}
-                className="bg-primary hover:bg-primary/90"
-              >
-                Get Started
-              </Button>
-              <Button 
-                variant="outline" 
-                size="lg"
-                onClick={() => navigate('/jobs')}
-              >
-                Browse Jobs
-              </Button>
-            </div>
-
-            <div className={`${animationReady ? 'slide-up' : 'opacity-0'} grid grid-cols-3 gap-6 max-w-3xl mx-auto mb-12 transition-all duration-700 delay-300`}>
-              <div className="text-center">
-                <div className="font-bold text-3xl text-primary mb-2">500K+</div>
-                <div className="text-muted-foreground">Active Jobs</div>
-              </div>
-              <div className="text-center">
-                <div className="font-bold text-3xl text-primary mb-2">50K+</div>
-                <div className="text-muted-foreground">Companies</div>
-              </div>
-              <div className="text-center">
-                <div className="font-bold text-3xl text-primary mb-2">1M+</div>
-                <div className="text-muted-foreground">Job Seekers</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="py-20">
-        <div className="container px-4">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className={`${animationReady ? 'slide-up' : 'opacity-0'} font-bold transition-all duration-700`}>
-              Everything You Need for Your Job Search
-            </h2>
-            <p className={`${animationReady ? 'slide-up' : 'opacity-0'} text-muted-foreground mt-4 transition-all duration-700 delay-100`}>
-              Our platform provides comprehensive tools to help you find and secure your dream job.
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <div 
-                key={index}
-                className={`${animationReady ? 'slide-up' : 'opacity-0'} glass-card rounded-xl p-6 transition-all duration-700 cursor-pointer hover:shadow-md`}
-                style={{ transitionDelay: `${parseInt(feature.delay)}ms` }}
-                onClick={() => navigate(feature.path)}
-              >
-                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                  <feature.icon className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="text-xl font-medium mb-2">{feature.title}</h3>
-                <p className="text-muted-foreground">{feature.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Jobs Section */}
-      <section className="py-20 bg-secondary/50">
-        <div className="container px-4">
-          <div className="text-center max-w-3xl mx-auto mb-12">
-            <h2 className="text-3xl font-bold mb-4">Featured Jobs</h2>
-            <p className="text-muted-foreground">
-              Discover opportunities at top tech companies
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-            {sampleJobs.map((job) => (
-              <JobCard key={job.id} job={job} onApply={handleApply} />
-            ))}
-          </div>
-
-          <div className="text-center mt-12">
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={() => navigate('/jobs')}
-            >
-              View All Jobs
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Call to Action */}
-      <section className="py-20 bg-gradient-to-br from-accent to-background">
-        <div className="container px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className={`${animationReady ? 'slide-up' : 'opacity-0'} font-bold mb-6 transition-all duration-700`}>
-              Ready to Accelerate Your Career?
-            </h2>
-            <p className={`${animationReady ? 'slide-up' : 'opacity-0'} text-xl text-muted-foreground mb-10 transition-all duration-700 delay-100`}>
-              Join thousands of professionals who are already using Streamline to find their dream jobs.
-            </p>
-            <Button 
-              size="lg" 
-              className={`${animationReady ? 'slide-up' : 'opacity-0'} bg-primary hover:bg-primary/90 button-hover transition-all duration-700 delay-200`}
-              onClick={() => navigate('/auth?mode=signup')}
-            >
-              Get Started Today
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="py-8 border-t">
-        <div className="container px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center space-x-2 mb-4 md:mb-0 cursor-pointer" onClick={() => navigate('/')}>
-              <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline Logo" className="w-6 h-6" />
-              <span className="font-medium">Streamline</span>
-            </div>
-            <div className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} Streamline. All rights reserved.
-            </div>
-          </div>
-        </div>
-      </footer>
+    <div className="p-12 pl-72">
+      <h1 className="text-4xl font-bold mb-6">Welcome to Streamline</h1>
+      <p className="mb-4 max-w-2xl">
+        Streamline is your all-in-one career platform: auto-fill job applications, optimize your resume/CV and cover letters, track your progress, practice interviews, join forums, research salaries, and network with recruiters.
+        <br />
+        <br />
+        Supercharge your job search with browser extension automation, job scraping from top sites, and AI tools for every stage of your career journey.
+      </p>
+      <ul className="list-disc pl-6 max-w-2xl">
+        <li>Auto-fill job applications and track your progress</li>
+        <li>Scrape jobs from LinkedIn, Indeed, GitHub Jobs, and more</li>
+        <li>Resume and Cover Letter Builder + ATS Optimizer</li>
+        <li>Interview Practice (coding and behavioral)</li>
+        <li>Forums for resume tips, salary negotiation, and networking</li>
+        <li>Salary research powered by levels.fyi, Glassdoor, etc.</li>
+        <li>Networking tools and recruiter finder</li>
+        <li>Extension Manager for easy setup</li>
+      </ul>
     </div>
   );
 };
