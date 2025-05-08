@@ -18,3 +18,11 @@ export type ForumPost = {
   role?: string;
   position?: string;
 };
+
+export type ForumComment = {
+  id: string;
+  author: string;
+  text: string;
+  timestamp: string;
+  isCurrentUser: boolean;
+};
