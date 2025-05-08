@@ -15,8 +15,25 @@ interface JobMatchDetailsProps {
 }
 
 export const JobMatchDetails = ({ job, userSkills = [], compact = false }: JobMatchDetailsProps) => {
-  // Memoize match calculation to prevent unnecessary recalculations
-  const match = useMemo(() => getDetailedMatch(job, userSkills), [job.id, userSkills.join(',')]);
+  // Use the job's match percentage if available, otherwise calculate it
+  const match = useMemo(() => {
+    if (job.matchPercentage !== undefined) {
+      // Create a match object based on the job's match percentage
+      const calculatedMatch = getDetailedMatch(job, userSkills);
+      // Override the overall score with the job's match percentage
+      return {
+        ...calculatedMatch,
+        overallScore: job.matchPercentage,
+        matchLevel: getMatchLevel(job.matchPercentage),
+        skills: {
+          ...calculatedMatch.skills,
+          score: job.matchPercentage
+        }
+      };
+    }
+    return getDetailedMatch(job, userSkills);
+  }, [job.id, job.matchPercentage, userSkills.join(',')]);
+  
   const explanation = useMemo(() => getMatchExplanation(match), [match.overallScore]);
   
   // Define color scheme based on match level

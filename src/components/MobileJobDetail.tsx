@@ -16,6 +16,7 @@ import {
   Users
 } from "lucide-react";
 import { CandidateMatchPreferences } from "@/components/CandidateMatchPreferences";
+import { getMatchBgColor, getMatchColor } from "@/utils/jobMatchingUtils";
 
 interface MobileJobDetailProps {
   job: Job | null;
@@ -167,7 +168,7 @@ export function MobileJobDetail({
                   }
                 </Badge>
                 
-                {job.matchPercentage && (
+                {job.matchPercentage !== undefined && (
                   <Badge variant="outline" className={`px-3 py-1.5 rounded-full ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)} text-sm font-bold shadow-sm flex items-center gap-1.5`}>
                     {job.matchPercentage}% Match
                   </Badge>
@@ -243,7 +244,7 @@ export function MobileJobDetail({
                 </div>
               </div>
               
-              {job.matchPercentage && (
+              {job.matchPercentage !== undefined && (
                 <div className={`mt-6 p-4 rounded-lg ${getMatchBgColor(job.matchPercentage)}`}>
                   <div className="flex items-center gap-2">
                     <div className={`text-xl font-bold ${getMatchColor(job.matchPercentage)}`}>{job.matchPercentage}%</div>
