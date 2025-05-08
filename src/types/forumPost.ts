@@ -14,4 +14,7 @@ export type ForumPost = {
   timestamp: string;
   isAnonymous: boolean;
   matchPercentage?: number;
+  company?: string;
+  role?: string;
+  position?: string;
 };

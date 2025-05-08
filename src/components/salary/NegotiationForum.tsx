@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,26 +8,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ThumbsUp, MessageCircle, Share2, Filter, PlusCircle } from "lucide-react";
-
-type ForumPost = {
-  id: string;
-  author: {
-    name: string;
-    avatar?: string;
-    initials: string;
-  };
-  title: string;
-  content: string;
-  tags: string[];
-  likes: number;
-  comments: number;
-  timestamp: string;
-  isAnonymous: boolean;
-  company?: string;
-  role?: string;
-  position?: string;
-};
+import { ThumbsUp, MessageCircle, Link, Filter, PlusCircle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { ForumPost } from "@/types/forumPost";
 
 interface NegotiationForumProps {
   filters?: {
@@ -39,6 +23,7 @@ interface NegotiationForumProps {
 }
 
 const NegotiationForum = ({ filters }: NegotiationForumProps) => {
+  const { toast } = useToast();
   const [posts, setPosts] = useState<ForumPost[]>([
     {
       id: "1",
@@ -96,6 +81,24 @@ const NegotiationForum = ({ filters }: NegotiationForumProps) => {
   ]);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [commentDialogOpen, setCommentDialogOpen] = useState(false);
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [newComment, setNewComment] = useState("");
+  const [likedPosts, setLikedPosts] = useState<{[key: string]: boolean}>({});
+  const [comments, setComments] = useState<{[key: string]: {author: string, text: string, timestamp: string}[]}>({
+    "1": [
+      {author: "TechManager", text: "Thank you for sharing! Could you elaborate on how you found comparable salary data?", timestamp: "1 day ago"},
+      {author: "SalaryExpert", text: "I used a similar approach and got a 15% increase. The key is having market data ready.", timestamp: "2 days ago"}
+    ],
+    "2": [
+      {author: "SeniorDev", text: "Always negotiate! The worst they can say is no. Be confident but respectful.", timestamp: "3 days ago"},
+      {author: "HiringManager", text: "I respect candidates who negotiate thoughtfully. Show you've done research.", timestamp: "4 days ago"}
+    ],
+    "3": [
+      {author: "RemoteWorker", text: "Did you ask for any additional stipend for home office setup?", timestamp: "5 days ago"},
+      {author: "WorkLifeBalance", text: "Remote work saved me 2 hours commuting daily. Worth every penny of the salary difference.", timestamp: "6 days ago"}
+    ]
+  });
   const [newPost, setNewPost] = useState({
     title: "",
     content: "",
@@ -130,6 +133,91 @@ const NegotiationForum = ({ filters }: NegotiationForumProps) => {
       isAnonymous: false
     });
     setIsDialogOpen(false);
+  };
+
+  const handleToggleLike = (postId: string) => {
+    setPosts(
+      posts.map(post => {
+        if (post.id === postId) {
+          // If already liked, unlike it
+          if (likedPosts[postId]) {
+            return { ...post, likes: post.likes - 1 };
+          } 
+          // If not liked, like it
+          else {
+            return { ...post, likes: post.likes + 1 };
+          }
+        }
+        return post;
+      })
+    );
+    
+    // Toggle like status for this post
+    setLikedPosts(prev => ({
+      ...prev,
+      [postId]: !prev[postId]
+    }));
+  };
+
+  const handleSubmitComment = () => {
+    if (!selectedPostId || !newComment.trim()) return;
+
+    // Add new comment to the comments state
+    setComments(prev => {
+      const postComments = prev[selectedPostId] || [];
+      return {
+        ...prev,
+        [selectedPostId]: [
+          ...postComments,
+          {
+            author: "You",
+            text: newComment,
+            timestamp: "Just now"
+          }
+        ]
+      };
+    });
+
+    // Update comment count in the post
+    setPosts(
+      posts.map(post => {
+        if (post.id === selectedPostId) {
+          return { ...post, comments: post.comments + 1 };
+        }
+        return post;
+      })
+    );
+
+    // Reset and close
+    setNewComment("");
+    setCommentDialogOpen(false);
+    toast({
+      title: "Comment Posted",
+      description: "Your comment has been added to the discussion."
+    });
+  };
+
+  const handleSharePost = (postId: string) => {
+    // Create a URL with post ID as parameter
+    const shareUrl = `${window.location.origin}/salary-negotiations?postId=${postId}`;
+    
+    // Try to use the clipboard API
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(shareUrl)
+        .then(() => {
+          toast({
+            title: "Link Copied",
+            description: "Post link has been copied to clipboard."
+          });
+        })
+        .catch(() => {
+          // Fallback: show the link in an alert
+          prompt("Copy this link to share:", shareUrl);
+        });
+    } else {
+      // Fallback for browsers that don't support clipboard API
+      prompt("Copy this link to share:", shareUrl);
+    }
   };
 
   const filteredPosts = React.useMemo(() => {
@@ -260,17 +348,76 @@ const NegotiationForum = ({ filters }: NegotiationForumProps) => {
               </CardContent>
               <CardFooter className="border-t pt-3 flex justify-between">
                 <div className="flex gap-3">
-                  <Button variant="ghost" size="sm" className="flex gap-1 text-muted-foreground">
-                    <ThumbsUp className="h-4 w-4" />
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className={`flex gap-1 ${likedPosts[post.id] ? "text-primary" : "text-muted-foreground"}`}
+                    onClick={() => handleToggleLike(post.id)}
+                  >
+                    <ThumbsUp className={`h-4 w-4 ${likedPosts[post.id] ? "fill-primary" : ""}`} />
                     <span>{post.likes}</span>
                   </Button>
-                  <Button variant="ghost" size="sm" className="flex gap-1 text-muted-foreground">
-                    <MessageCircle className="h-4 w-4" />
-                    <span>{post.comments}</span>
-                  </Button>
+                  <Dialog open={commentDialogOpen && selectedPostId === post.id} onOpenChange={(isOpen) => {
+                    setCommentDialogOpen(isOpen);
+                    if (isOpen) {
+                      setSelectedPostId(post.id);
+                    }
+                  }}>
+                    <DialogTrigger asChild>
+                      <Button variant="ghost" size="sm" className="flex gap-1 text-muted-foreground">
+                        <MessageCircle className="h-4 w-4" />
+                        <span>{post.comments}</span>
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[600px]">
+                      <DialogHeader>
+                        <DialogTitle>Comments on: {post.title}</DialogTitle>
+                      </DialogHeader>
+                      <div className="max-h-[400px] overflow-y-auto py-4">
+                        {comments[post.id] && comments[post.id].length > 0 ? (
+                          comments[post.id].map((comment, index) => (
+                            <div key={index} className="mb-4 border-b pb-4 last:border-0">
+                              <div className="flex items-center space-x-2 mb-2">
+                                <Avatar className="h-6 w-6">
+                                  <AvatarFallback>{comment.author.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <div className="text-sm font-medium">{comment.author}</div>
+                                  <div className="text-xs text-muted-foreground">{comment.timestamp}</div>
+                                </div>
+                              </div>
+                              <p className="text-sm pl-8">{comment.text}</p>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-muted-foreground text-center py-8">No comments yet. Be the first to comment!</p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 mt-2">
+                        <Textarea
+                          placeholder="Write your comment..."
+                          value={newComment}
+                          onChange={(e) => setNewComment(e.target.value)}
+                          className="flex-1"
+                        />
+                        <Button 
+                          size="icon" 
+                          onClick={handleSubmitComment}
+                          disabled={!newComment.trim()}
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
-                <Button variant="ghost" size="sm" className="text-muted-foreground">
-                  <Share2 className="h-4 w-4 mr-1" />
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-muted-foreground"
+                  onClick={() => handleSharePost(post.id)}
+                >
+                  <Link className="h-4 w-4 mr-1" />
                   Share
                 </Button>
               </CardFooter>

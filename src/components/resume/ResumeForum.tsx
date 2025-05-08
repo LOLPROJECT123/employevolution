@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardFooter, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogD
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { MessageSquarePlus, ThumbsUp, MessageCircle, Send, PlusCircle, Filter, SortDesc, SortAsc } from "lucide-react";
+import { MessageSquarePlus, ThumbsUp, MessageCircle, Share2, PlusCircle, Filter, SortDesc, SortAsc, Link } from "lucide-react";
 import { ResumePost, ResumeComment } from "@/types/resumePost";
 import {
   Select,
@@ -128,6 +127,9 @@ const ResumeForum = () => {
     role: null,
   });
 
+  // Track liked posts
+  const [likedPosts, setLikedPosts] = useState<{[key: string]: boolean}>({});
+
   // Get unique companies and roles from posts
   const getFilterOptions = () => {
     return {
@@ -236,15 +238,51 @@ const ResumeForum = () => {
     });
   };
 
-  const handleUpvote = (postId: string) => {
+  const handleToggleLike = (postId: string) => {
     setPosts(
       posts.map(post => {
         if (post.id === postId) {
-          return { ...post, upvotes: post.upvotes + 1 };
+          // If already liked, unlike it (decrease upvotes)
+          if (likedPosts[postId]) {
+            return { ...post, upvotes: post.upvotes - 1 };
+          } 
+          // If not liked, like it (increase upvotes)
+          else {
+            return { ...post, upvotes: post.upvotes + 1 };
+          }
         }
         return post;
       })
     );
+    
+    // Toggle like status for this post
+    setLikedPosts(prev => ({
+      ...prev,
+      [postId]: !prev[postId]
+    }));
+  };
+
+  const handleSharePost = (post: ResumePost) => {
+    // Create a URL with post ID as parameter
+    const shareUrl = `${window.location.origin}/resume-tools?postId=${post.id}`;
+    
+    // Try to use the clipboard API
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(shareUrl)
+        .then(() => {
+          toast({
+            title: "Link Copied",
+            description: "Post link has been copied to clipboard."
+          });
+        })
+        .catch(() => {
+          // Fallback: show the link in an alert
+          prompt("Copy this link to share:", shareUrl);
+        });
+    } else {
+      // Fallback for browsers that don't support clipboard API
+      prompt("Copy this link to share:", shareUrl);
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -565,11 +603,11 @@ const ResumeForum = () => {
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="flex gap-1 text-muted-foreground"
-                      onClick={() => handleUpvote(post.id)}
+                      className={`flex gap-1 ${likedPosts[post.id] ? "text-primary" : "text-muted-foreground"}`}
+                      onClick={() => handleToggleLike(post.id)}
                     >
-                      <ThumbsUp className="h-4 w-4" />
-                      {post.upvotes}
+                      <ThumbsUp className={`h-4 w-4 ${likedPosts[post.id] ? "fill-primary" : ""}`} />
+                      <span>{post.upvotes}</span>
                     </Button>
                     <Dialog open={selectedPost?.id === post.id && isReplyDialogOpen} onOpenChange={(open) => {
                       setIsReplyDialogOpen(open);
@@ -578,7 +616,7 @@ const ResumeForum = () => {
                       <DialogTrigger asChild>
                         <Button variant="ghost" size="sm" className="flex gap-1 text-muted-foreground">
                           <MessageCircle className="h-4 w-4" />
-                          {post.comments.length}
+                          <span>{post.comments.length}</span>
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="sm:max-w-[600px]">
@@ -624,12 +662,21 @@ const ResumeForum = () => {
                             onClick={handleSubmitComment}
                             disabled={!newComment.trim()}
                           >
-                            <Send className="h-4 w-4" />
+                            <Share2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </DialogContent>
                     </Dialog>
                   </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-muted-foreground"
+                    onClick={() => handleSharePost(post)}
+                  >
+                    <Link className="h-4 w-4 mr-1" />
+                    Share
+                  </Button>
                 </CardFooter>
               </Card>
             ))
