@@ -44,19 +44,14 @@ export const JobMatchDetails = ({ job, userSkills = [], compact = false }: JobMa
     }
   };
 
-  // Ensure that if job already has a matchPercentage, we use it
-  const overallScore = job.matchPercentage || match.overallScore;
-  // Ensure skill match score is consistent with overall score
-  const skillsScore = match.skills.score === 0 && overallScore > 0 ? overallScore : match.skills.score;
-
   if (compact) {
     return (
       <div className="rounded-lg border p-3 space-y-2">
         <div className="flex items-center gap-2">
           <div className={`text-lg font-semibold ${getColorByLevel(match.matchLevel)}`}>
-            {overallScore}%
+            {match.overallScore}%
           </div>
-          <Progress value={overallScore} className="h-2" />
+          <Progress value={match.overallScore} className="h-2" />
         </div>
         <p className="text-sm text-muted-foreground">{explanation}</p>
       </div>
@@ -69,11 +64,11 @@ export const JobMatchDetails = ({ job, userSkills = [], compact = false }: JobMa
         <div className="flex items-center justify-between">
           <h3 className="font-medium">Match Score</h3>
           <div className={`text-xl font-bold ${getColorByLevel(match.matchLevel)}`}>
-            {overallScore}%
+            {match.overallScore}%
           </div>
         </div>
         <Progress
-          value={overallScore}
+          value={match.overallScore}
           className="h-2"
         />
         <p className="text-sm text-muted-foreground">{explanation}</p>
@@ -84,8 +79,8 @@ export const JobMatchDetails = ({ job, userSkills = [], compact = false }: JobMa
           <AccordionTrigger className="hover:no-underline">
             <div className="flex items-center justify-between w-full pr-2">
               <div>Skills Match</div>
-              <div className={getMatchColor(skillsScore)}>
-                {skillsScore}%
+              <div className={getMatchColor(match.skills.score)}>
+                {match.skills.score}%
               </div>
             </div>
           </AccordionTrigger>
@@ -156,7 +151,7 @@ export const JobMatchDetails = ({ job, userSkills = [], compact = false }: JobMa
             <div className="flex items-center justify-between w-full pr-2">
               <div>Experience Match</div>
               <div className={getMatchColor(match.experience.matchPercentage)}>
-                {match.experience.matchPercentage}%
+                {match.experience.matched ? "Yes" : "No"}
               </div>
             </div>
           </AccordionTrigger>

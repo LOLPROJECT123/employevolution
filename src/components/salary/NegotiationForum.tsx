@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,13 +40,7 @@ const NegotiationForum = ({ filters }: NegotiationForumProps) => {
       isAnonymous: true,
       company: "Google",
       role: "Software Engineer",
-      position: "Senior",
-      matchPercentage: 85,
-      skillsMatch: {
-        score: 85,
-        matched: ["Negotiation", "Tech Industry", "Salary Research"],
-        missing: ["Contract Law"]
-      }
+      position: "Senior"
     },
     {
       id: "2",
@@ -63,13 +58,7 @@ const NegotiationForum = ({ filters }: NegotiationForumProps) => {
       isAnonymous: false,
       company: "Microsoft",
       role: "Software Engineer",
-      position: "Entry",
-      matchPercentage: 72,
-      skillsMatch: {
-        score: 72,
-        matched: ["Junior Developer", "Salary Research"],
-        missing: ["Negotiation Experience", "Industry Contacts"]
-      }
+      position: "Entry"
     },
     {
       id: "3",
@@ -87,13 +76,7 @@ const NegotiationForum = ({ filters }: NegotiationForumProps) => {
       isAnonymous: false,
       company: "Amazon",
       role: "Product Manager",
-      position: "Mid-level",
-      matchPercentage: 78,
-      skillsMatch: {
-        score: 78,
-        matched: ["Remote Work", "Equity Compensation", "Work-Life Balance"],
-        missing: ["Stock Options"]
-      }
+      position: "Mid-level"
     }
   ]);
 
@@ -274,23 +257,6 @@ const NegotiationForum = ({ filters }: NegotiationForumProps) => {
     }
   }, [filteredPosts, filters?.sortOrder]);
 
-  // Get match color based on percentage
-  const getMatchColor = (percentage?: number) => {
-    if (!percentage) return "";
-    if (percentage >= 85) return "text-emerald-500";
-    if (percentage >= 70) return "text-green-500";
-    if (percentage >= 50) return "text-amber-500";
-    return "text-red-500";
-  };
-
-  const getMatchBgColor = (percentage?: number) => {
-    if (!percentage) return "bg-gray-100 dark:bg-gray-800";
-    if (percentage >= 85) return "bg-emerald-50 dark:bg-emerald-900/30";
-    if (percentage >= 70) return "bg-green-50 dark:bg-green-900/30";
-    if (percentage >= 50) return "bg-amber-50 dark:bg-amber-900/30";
-    return "bg-red-50 dark:bg-red-900/30";
-  };
-
   return (
     <div className="space-y-6">
       <div className="space-y-4">
@@ -376,34 +342,9 @@ const NegotiationForum = ({ filters }: NegotiationForumProps) => {
                   </div>
                 </div>
                 <CardTitle className="text-lg mt-2">{post.title}</CardTitle>
-                {post.matchPercentage && (
-                  <div className={`mt-2 inline-flex items-center px-2 py-1 rounded-md ${getMatchBgColor(post.matchPercentage)}`}>
-                    <span className={`text-sm font-medium ${getMatchColor(post.matchPercentage)}`}>
-                      {post.matchPercentage}% Match
-                    </span>
-                  </div>
-                )}
               </CardHeader>
               <CardContent>
                 <p className="text-sm">{post.content}</p>
-                
-                {post.skillsMatch && (
-                  <div className="mt-3 pt-3 border-t">
-                    <h4 className="text-sm font-medium mb-1">Skills Match: {post.skillsMatch.score}%</h4>
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {post.skillsMatch.matched.map((skill, idx) => (
-                        <Badge key={idx} className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
-                          {skill}
-                        </Badge>
-                      ))}
-                      {post.skillsMatch.missing.map((skill, idx) => (
-                        <Badge key={idx} variant="outline" className="text-gray-500 border-gray-300">
-                          {skill}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </CardContent>
               <CardFooter className="border-t pt-3 flex justify-between">
                 <div className="flex gap-3">
