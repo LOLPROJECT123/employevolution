@@ -70,6 +70,7 @@ export interface AutoApplicatorConfig {
   screenshotFailures: boolean;
   maxWaitTime: number; // in milliseconds
   maxRetries: number;
+  automationMode: 'FULL_AUTOMATION' | 'USER_PRESENT'; // New: user can choose
 }
 
 export class AutoApplicator {
@@ -86,6 +87,7 @@ export class AutoApplicator {
       screenshotFailures: true,
       maxWaitTime: 30000,
       maxRetries: 3,
+      automationMode: 'USER_PRESENT', // default to user-present
       ...config
     };
   }
@@ -103,10 +105,27 @@ export class AutoApplicator {
     }
 
     console.log(`Beginning auto-apply process for ${job.title} at ${job.company}`);
+    console.log(`Automation mode: ${this.config.automationMode}`);
     
-    try {
-      // In a real implementation, we would launch a browser here
-      // For now, simulate the process for UI implementation
+    if (this.config.automationMode === 'FULL_AUTOMATION') {
+      // --- Backend-driven automation (Puppeteer/Playwright) ---
+      // TODO: Implement real browser automation using Puppeteer/Playwright
+      // Use this.profileData and job.applyUrl
+      // Simulate for now:
+      await this.simulateDelay(2000);
+      return {
+        status: 'paused',
+        reason: 'Backend headless automation not implemented yet.',
+        platform: this.detectPlatform(job.applyUrl),
+        timestamp: new Date().toISOString(),
+        jobTitle: job.title,
+        company: job.company
+      };
+    }
+
+    // --- Extension-based automation (user-present) ---
+    // Send a message/trigger to the extension (via websocket, polling, or API)
+    // For now, simulate the process for UI implementation
       
       // Step 1: Browser initialization & navigation
       console.log(`Initializing browser and navigating to ${job.applyUrl}`);

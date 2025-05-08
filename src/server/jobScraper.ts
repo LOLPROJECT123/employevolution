@@ -498,9 +498,29 @@ const customScraperRegistry: Record<
   (url: string, config: ScraperConfig) => Promise<ScrapedJobData[]>
 > = {};
 
-// Example usage:
-// customScraperRegistry['simplify'] = async (url, config) => { ...real scraping logic... };
+// Example usage (real implementation should use Cheerio/Puppeteer/Playwright as needed):
+customScraperRegistry['simplify'] = async (url, config) => {
+  // TODO: Use Cheerio for static, Puppeteer for dynamic scraping if needed
+  // Example: fetch(url), parse with Cheerio
+  // Return array of ScrapedJobData
+  return []; // Implement real logic
+};
 
+customScraperRegistry['jobright'] = async (url, config) => {
+  // TODO: Use JobRight.ai's API if available, or Puppeteer for dynamic scraping
+  return [];
+};
+
+customScraperRegistry['offerpilot'] = async (url, config) => {
+  // TODO: Use OfferPilot.ai's feed API, requires user auth/cookie, or Puppeteer
+  return [];
+};
+
+customScraperRegistry['handshake'] = async (url, config) => {
+  // TODO: Port Handshake bot logic from Python (AutomatedHandshake.py) to Node
+  // Use Puppeteer for interaction and quick apply
+  return [];
+};
 // TODO: Implement and register real scrapers for each site (Cheerio/Puppeteer/Playwright)
 // TODO: For Handshake, port the Python bot logic and register here
 
