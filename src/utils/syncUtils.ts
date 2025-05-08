@@ -1,3 +1,4 @@
+
 /**
  * Utilities for synchronizing data between the extension and web app
  */
@@ -15,14 +16,30 @@ interface ChromeRuntime {
   };
 }
 
+// Chrome interface definition that matches the existing global definition
 interface Chrome {
-  runtime?: ChromeRuntime;
+  runtime?: {
+    sendMessage?: (
+      message: any,
+      callback?: (response: any) => void
+    ) => void;
+    lastError?: any;
+  };
 }
 
 // Declare global window with chrome property
+// Use a merged interface approach to avoid conflicts
 declare global {
   interface Window {
-    chrome?: Chrome;
+    chrome?: {
+      runtime?: {
+        sendMessage?: (
+          message: any,
+          callback?: (response: any) => void
+        ) => void;
+        lastError?: any;
+      };
+    };
   }
 }
 
