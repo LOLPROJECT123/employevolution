@@ -290,10 +290,29 @@ chrome.notifications.onButtonClicked.addListener((notificationId, buttonIndex) =
 
 // Function to sync data with main web application
 function syncWithMainApplication() {
-  // This would typically make an API call to sync data
-  // For now, we'll just mark the last sync time
-  chrome.storage.local.set({
-    "lastSync": new Date().toISOString()
+  // TODO: Add secure authentication (token, user ID, etc.)
+  chrome.storage.local.get(["appliedJobs", "savedJobs", "lastSync", "userId"], (data) => {
+    fetch("http://localhost:4000/api/sync", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+        // Add Authorization header if using JWT or API key
+      },
+      body: JSON.stringify({
+        userId: data.userId || "demo-user",
+        appliedJobs: data.appliedJobs || [],
+        savedJobs: data.savedJobs || [],
+        lastSync: data.lastSync || new Date().toISOString()
+      })
+    })
+      .then((response) => response.json())
+      .then((result) => {
+        console.log("[SYNC] Extension sync result:", result);
+        chrome.storage.local.set({ lastSync: result.serverTime || new Date().toISOString() });
+      })
+      .catch((error) => {
+        console.error("[SYNC] Failed to sync with backend:", error);
+      });
   });
 }
 

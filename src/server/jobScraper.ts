@@ -106,6 +106,26 @@ export const SEARCH_CONFIG = {
     urlTemplate: 'https://github.com/search?q={query}&type=issues&p={page}',
     maxPages: 3,
     resultsPerPage: 10
+  },
+  'simplify': {
+    urlTemplate: 'https://simplify.jobs/search?q={query}&l={location}&page={page}',
+    maxPages: 3,
+    resultsPerPage: 20
+  },
+  'jobright': {
+    urlTemplate: 'https://jobright.ai/jobs/recommend?q={query}&location={location}&page={page}',
+    maxPages: 2,
+    resultsPerPage: 20
+  },
+  'offerpilot': {
+    urlTemplate: 'https://offerpilot.ai/user/personal/job-feed?job_id={query}&page={page}',
+    maxPages: 2,
+    resultsPerPage: 20
+  },
+  'handshake': {
+    urlTemplate: 'https://app.joinhandshake.com/api/v1/jobs?query={query}&location={location}&page={page}',
+    maxPages: 3,
+    resultsPerPage: 20
   }
 };
 
@@ -287,21 +307,33 @@ export class JobScraper {
       
       switch(platform.toLowerCase()) {
         case 'linkedin':
-          // LinkedIn specific parsing logic would go here
           return this.simulateLinkedInParsing(sourceUrl);
-          
+
         case 'indeed':
-          // Indeed specific parsing logic would go here
           return this.simulateIndeedParsing(sourceUrl);
-          
+
         case 'glassdoor':
-          // Glassdoor specific parsing logic would go here
           return this.simulateGlassdoorParsing(sourceUrl);
-          
+
         case 'github':
-          // GitHub specific parsing logic would go here
           return this.simulateGithubParsing(sourceUrl);
-          
+
+        case 'simplify':
+          // TODO: Implement real HTML parser for simplify.jobs (use Cheerio/Puppeteer)
+          return this.simulateSimplifyParsing(sourceUrl);
+
+        case 'jobright':
+          // TODO: Implement real HTML parser for jobright.ai (API is available)
+          return this.simulateJobRightParsing(sourceUrl);
+
+        case 'offerpilot':
+          // TODO: Implement real HTML parser for offerpilot.ai (API is available, requires auth)
+          return this.simulateOfferPilotParsing(sourceUrl);
+
+        case 'handshake':
+          // TODO: Port/implement handshake scraping logic (see AutomatedHandshake.py)
+          return this.simulateHandshakeParsing(sourceUrl);
+
         default:
           console.warn(`No specific parsing logic implemented for platform: ${platform}`);
           return [];
@@ -458,6 +490,47 @@ export class JobScraper {
     return jobs;
   }
   
+  // --- Modular scraper registry for real scraping ---
+
+// Register custom scrapers in this map for easy addition/maintenance
+const customScraperRegistry: Record<
+  string, 
+  (url: string, config: ScraperConfig) => Promise<ScrapedJobData[]>
+> = {};
+
+// Example usage:
+// customScraperRegistry['simplify'] = async (url, config) => { ...real scraping logic... };
+
+// TODO: Implement and register real scrapers for each site (Cheerio/Puppeteer/Playwright)
+// TODO: For Handshake, port the Python bot logic and register here
+
+  /**
+   * Simulate Simplify.jobs parsing (stub, replace with real implementation)
+   */
+  private simulateSimplifyParsing(sourceUrl: string): ScrapedJobData[] {
+    // TODO: Use Cheerio or Puppeteer to scrape real data
+    // If implemented, call: return await customScraperRegistry['simplify'](sourceUrl, this.config);
+    return [
+      {
+        id: `simplify-${Date.now()}`,
+        title: "Software Engineer (Simplify)",
+        company: "Simplify",
+        location: "Remote",
+        description: "Exciting remote job from Simplify.jobs...",
+        salary: { min: 95000, max: 130000, currency: "$" },
+        requirements: ["Python", "TypeScript", "Automation"],
+        skills: ["Python", "TypeScript", "Web Scraping"],
+        postedAt: new Date().toISOString(),
+        applyUrl: sourceUrl,
+        remote: true,
+        source: "Simplify.jobs",
+        url: sourceUrl
+      }
+    ];
+  }
+
+  // ...other parsing stubs unchanged...
+
   /**
    * Construct a URL from a template and parameters
    */
