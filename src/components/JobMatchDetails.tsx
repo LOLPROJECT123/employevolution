@@ -1,6 +1,6 @@
 
 import React, { useMemo } from "react";
-import { getDetailedMatch, getMatchExplanation, getMatchColor, MatchScoreLevel, ComprehensiveMatch } from "@/utils/jobMatchingUtils";
+import { getDetailedMatch, getMatchExplanation, getMatchColor, getMatchLevel, MatchScoreLevel, ComprehensiveMatch } from "@/utils/jobMatchingUtils";
 import { Job } from "@/types/job";
 import { Check, X, Sparkles } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
