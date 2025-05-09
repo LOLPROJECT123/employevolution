@@ -25,4 +25,6 @@ export type ForumComment = {
   text: string;
   timestamp: string;
   isCurrentUser: boolean;
+  likes?: number;
+  isLiked?: boolean;
 };

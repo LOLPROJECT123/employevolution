@@ -13,6 +13,7 @@ export interface ResumeComment {
   downvotes: number;
   createdAt: string;
   isCurrentUser?: boolean;
+  isLiked?: boolean;
 }
 
 export interface ResumePost {
