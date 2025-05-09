@@ -1,9 +1,8 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, AlertTriangle, Globe, Check } from "lucide-react";
+import { Loader2, Search, Check, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { SUPPORTED_JOB_SOURCES } from "./constants";
 import { ScrapedJob } from "./types";
@@ -154,7 +153,28 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
         }
       );
       
+      // Check if we already have jobs saved from previous searches
+      const savedJobsJson = localStorage.getItem('scrapedJobs');
+      let savedJobs: ScrapedJob[] = [];
+      
+      if (savedJobsJson) {
+        try {
+          savedJobs = JSON.parse(savedJobsJson);
+        } catch (error) {
+          console.error("Error parsing saved jobs:", error);
+        }
+      }
+      
       if (jobs.length > 0) {
+        // Combine new jobs with existing jobs, avoiding duplicates
+        const existingIds = new Set(savedJobs.map(job => job.id));
+        const uniqueNewJobs = jobs.filter(job => !existingIds.has(job.id));
+        
+        // Save the combined jobs list
+        const combinedJobs = [...savedJobs, ...uniqueNewJobs];
+        localStorage.setItem('scrapedJobs', JSON.stringify(combinedJobs));
+        
+        // Update the jobs display
         onJobsScraped(jobs);
         toast.success(`Found ${jobs.length} jobs matching your search`);
       } else {
@@ -263,6 +283,27 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
       
       // Verify job URLs exist
       const verifiedJobs = await verifyJobUrls(mockJobs);
+      
+      // Check if we already have jobs saved from previous searches
+      const savedJobsJson = localStorage.getItem('scrapedJobs');
+      let savedJobs: ScrapedJob[] = [];
+      
+      if (savedJobsJson) {
+        try {
+          savedJobs = JSON.parse(savedJobsJson);
+        } catch (error) {
+          console.error("Error parsing saved jobs:", error);
+        }
+      }
+      
+      // Combine new jobs with existing jobs, avoiding duplicates
+      const existingIds = new Set(savedJobs.map(job => job.id));
+      const uniqueVerifiedJobs = verifiedJobs.filter(job => !existingIds.has(job.id));
+      
+      const combinedJobs = [...savedJobs, ...uniqueVerifiedJobs];
+      
+      // Save to localStorage
+      localStorage.setItem('scrapedJobs', JSON.stringify(combinedJobs));
       
       onJobsScraped(verifiedJobs);
       
@@ -414,4 +455,3 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
 };
 
 export default JobScraper;
-
