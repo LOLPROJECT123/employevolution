@@ -336,8 +336,7 @@ export default function JobSourcesDisplay() {
       });
       
       // Ask if the user wants to scrape now
-      toast({
-        description: "Would you like to scrape for jobs now?",
+      toast("Would you like to scrape for jobs now?", {
         action: {
           label: "Scrape Now",
           onClick: () => handleStartScraping()
