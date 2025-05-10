@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -29,6 +30,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import JobAutomationPanel from "@/components/jobs/JobAutomationPanel";
 
 const generateSampleJobs = (count: number = 10): Job[] => {
+  const now = new Date();
+  
+  // Helper function to generate random date strings in the proper format
+  const getRandomDate = () => {
+    const days = Math.floor(Math.random() * 30); // Random number of days in the past (0-30)
+    const date = new Date();
+    date.setDate(date.getDate() - days);
+    
+    // Return a formatted date string or ISO string
+    return date.toISOString();
+  };
+  
   return Array.from({ length: count }, (_, i) => ({
     id: `sample-job-${i}`,
     title: `Software Engineer ${i}`,
@@ -43,7 +56,7 @@ const generateSampleJobs = (count: number = 10): Job[] => {
     level: 'mid',
     description: 'Exciting opportunity to work on cutting-edge technology.',
     requirements: ['5+ years of experience', 'BS in Computer Science'],
-    postedAt: '2 days ago',
+    postedAt: getRandomDate(),
     skills: ['JavaScript', 'React', 'Node.js'],
     matchPercentage: Math.floor(Math.random() * 100),
   }));

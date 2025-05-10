@@ -103,8 +103,10 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
     );
   }
 
+  // Safely format the postedAt field
+  const timeAgo = currentJob.postedAt ? formatRelativeTime(currentJob.postedAt) : 'Recently';
+  
   const formattedSalary = `${currentJob.salary.currency}${currentJob.salary.min.toLocaleString()} - ${currentJob.salary.currency}${currentJob.salary.max.toLocaleString()}`;
-  const timeAgo = formatRelativeTime(currentJob.postedAt);
 
   // Get match color based on percentage
   const getMatchColor = (percentage?: number) => {
