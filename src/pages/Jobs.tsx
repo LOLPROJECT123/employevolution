@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -152,6 +153,13 @@ const Jobs = () => {
     }
   };
 
+  // Create a skip function that matches the expected signature in SwipeJobsInterface
+  const handleSkipJob = () => {
+    // This function doesn't need parameters as specified by SwipeJobsInterface props
+    // We can add any skip-related functionality here if needed
+    toast.info("Job skipped");
+  };
+
   const filteredJobs = jobs.filter(job => {
     if (filters.search && !job.title.toLowerCase().includes(filters.search.toLowerCase()) && !job.description.toLowerCase().includes(filters.search.toLowerCase())) {
       return false;
@@ -192,7 +200,7 @@ const Jobs = () => {
               
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="md:col-span-1">
-                  <JobFiltersSection onApplyFilters={() => {}} />
+                  <JobFiltersSection onApplyFilters={handleFilterChange} />
                 </div>
                 <div className="md:col-span-3">
                   <div className="flex justify-between items-center mb-4">
@@ -210,7 +218,7 @@ const Jobs = () => {
                     <SwipeJobsInterface
                       jobs={filteredJobs}
                       onApply={handleApplyJob}
-                      onSkip={() => {}}
+                      onSkip={handleSkipJob}
                     />
                   ) : (
                     <div className="space-y-4">
