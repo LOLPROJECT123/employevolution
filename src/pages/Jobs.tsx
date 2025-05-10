@@ -145,18 +145,25 @@ const Jobs = () => {
     setShowSwipeInterface(false);
   };
 
-  const handleSwipeAction = (job: Job, action: 'save' | 'apply' | 'skip') => {
-    if (action === 'save') {
+  // MODIFIED: This function now handles individual actions rather than being called by SwipeJobsInterface
+  const handleSwipeAction = (action: 'save' | 'apply' | 'skip', job?: Job) => {
+    if (!job && (action === 'save' || action === 'apply')) {
+      return; // Can't save or apply without a job
+    }
+    
+    if (action === 'save' && job) {
       handleSaveJob(job);
-    } else if (action === 'apply') {
+    } else if (action === 'apply' && job) {
       handleApplyJob(job);
+    } else if (action === 'skip') {
+      // Skip logic doesn't need a job parameter
+      toast.info("Job skipped");
     }
   };
 
   // Create a skip function that matches the expected signature in SwipeJobsInterface
   const handleSkipJob = () => {
     // This function doesn't need parameters as specified by SwipeJobsInterface props
-    // We can add any skip-related functionality here if needed
     toast.info("Job skipped");
   };
 
@@ -228,9 +235,9 @@ const Jobs = () => {
                           job={job}
                           onSelect={handleJobSelect}
                           isSaved={savedJobIds.includes(job.id)}
-                          onSave={handleSaveJob}
+                          onSave={() => handleSaveJob(job)}
                           isApplied={appliedJobIds.includes(job.id)}
-                          onApply={handleApplyJob}
+                          onApply={() => handleApplyJob(job)}
                         />
                       ))}
                     </div>
