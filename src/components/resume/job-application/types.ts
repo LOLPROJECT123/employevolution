@@ -1,5 +1,5 @@
 
-export type JobApplicationTab = 'manual' | 'auto' | 'scraper';
+export type JobApplicationTab = 'manual' | 'auto' | 'scraper' | 'browse';
 
 export interface ScrapedJob {
   id: string;
@@ -18,12 +18,12 @@ export interface ScrapedJob {
     score: number;
     total: number;
     found: number;
-    highPriority: {
+    highPriority?: {
       keywords: string[];
       found: number;
       total: number;
     };
-    lowPriority: {
+    lowPriority?: {
       keywords: string[];
       found: number;
       total: number;
