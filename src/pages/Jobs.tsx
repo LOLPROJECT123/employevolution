@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -208,7 +207,7 @@ const Jobs = () => {
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'browse' | 'automation')} className="space-y-6">
             <TabsList className="w-full md:w-auto mb-2">
               <TabsTrigger value="browse" className="flex-1 md:flex-none">Browse Jobs</TabsTrigger>
-              <TabsTrigger value="automation" className="flex-1 md:flex-none">Job Automation</TabsTrigger>
+              <TabsTrigger value="automation" className="flex-1 md:flex-none">Application Automation</TabsTrigger>
             </TabsList>
             
             <TabsContent value="browse" className="space-y-6">
@@ -259,7 +258,7 @@ const Jobs = () => {
             </TabsContent>
             
             <TabsContent value="automation">
-              {/* Job automation content */}
+              {/* Application automation content - now using the unified panel */}
               <JobAutomationPanel />
             </TabsContent>
           </Tabs>

@@ -1,6 +1,4 @@
 
-export type JobApplicationTab = 'manual' | 'auto' | 'scraper';
-
 export interface ScrapedJob {
   id: string;
   title: string;
@@ -11,50 +9,21 @@ export interface ScrapedJob {
   datePosted: string;
   description: string;
   applyUrl: string;
-  verified?: boolean;
-  matchPercentage?: number;
-  matchKeywords?: string[];
-  keywordMatch?: {
-    score: number;
-    total: number;
-    found: number;
-    highPriority: {
-      keywords: string[];
-      found: number;
-      total: number;
-    };
-    lowPriority: {
-      keywords: string[];
-      found: number;
-      total: number;
-    };
-  };
+  verified: boolean;
+  salary?: string;
   requirements?: string[];
+  jobType?: string;
+  remote?: boolean;
+  level?: string;
 }
 
-export interface ResumeTemplate {
-  id: string;
-  title: string;
-  description: string;
-  imageUrl: string;
-  previewUrl: string;
-  downloadUrl: string;
-  company: string;
-  role: string;
-  roleType?: string;
-  rating: number;
-  downloads: number;
-  tags: string[];
-  source?: string;
-  attribution?: string;
-  licenseType?: 'free' | 'premium' | 'attribution-required';
-}
-
-export interface TemplateSource {
-  id: string;
-  name: string;
+export interface JobScrapeConfig {
   url: string;
-  apiKey?: string;
-  isActive: boolean;
-  attribution: string;
+  platform: string;
+  keywords?: string[];
+  locations?: string[];
+  excludeKeywords?: string[];
+  dateRange?: string;
+  experienceLevel?: string[];
+  remote?: boolean;
 }

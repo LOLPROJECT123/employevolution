@@ -67,7 +67,7 @@ const MobileJobs = () => {
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'browse' | 'automation')} className="space-y-4">
               <TabsList className="w-full grid grid-cols-2">
                 <TabsTrigger value="browse">Browse Jobs</TabsTrigger>
-                <TabsTrigger value="automation">Job Automation</TabsTrigger>
+                <TabsTrigger value="automation">Application Automation</TabsTrigger>
               </TabsList>
               
               <TabsContent value="browse" className="space-y-4">
