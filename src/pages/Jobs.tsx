@@ -10,8 +10,13 @@ import { useMobile } from "@/hooks/use-mobile";
 import SwipeJobsInterface from "@/components/SwipeJobsInterface";
 import { SavedAndAppliedJobs } from "@/components/SavedAndAppliedJobs";
 import { toast } from "sonner";
+import AutomationSettings from "@/components/AutomationSettings";
 import { Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { 
+  detectPlatform, 
+  startAutomation 
+} from '@/utils/automationUtils';
 import JobSourcesDisplay from "@/components/JobSourcesDisplay";
 import { 
   Select, 
@@ -23,7 +28,6 @@ import {
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import JobAutomationPanel from "@/components/jobs/JobAutomationPanel";
-import { ScrapedJob } from "@/components/resume/job-application/types";
 
 const generateSampleJobs = (count: number = 10): Job[] => {
   const now = new Date();
@@ -84,7 +88,7 @@ const Jobs = () => {
   const isMobile = useMobile();
   const detailViewRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<'browse' | 'automation'>('browse');
-  const [scrapedJobs, setScrapedJobs] = useState<ScrapedJob[]>([]);
+  
 
   useEffect(() => {
     const savedJobs = localStorage.getItem('savedJobs');
@@ -96,27 +100,6 @@ const Jobs = () => {
     if (appliedJobs) {
       setAppliedJobIds(JSON.parse(appliedJobs));
     }
-    
-    // Check for any scraped jobs that might be available in localStorage
-    const savedScrapedJobs = localStorage.getItem('scrapedJobs');
-    if (savedScrapedJobs) {
-      try {
-        const parsedJobs = JSON.parse(savedScrapedJobs);
-        if (parsedJobs.length > 0) {
-          setScrapedJobs(parsedJobs);
-          // Convert scraped jobs to regular job format
-          const convertedJobs = parsedJobs.map(convertScrapedJobToJob);
-          setJobs(prev => [...convertedJobs, ...prev]);
-          
-          toast.info(`${parsedJobs.length} previously scraped jobs available`, {
-            description: "These jobs have been added to your browse list",
-            duration: 3000
-          });
-        }
-      } catch (error) {
-        console.error('Error parsing scraped jobs:', error);
-      }
-    }
   }, []);
 
   useEffect(() => {
@@ -126,44 +109,6 @@ const Jobs = () => {
    useEffect(() => {
     localStorage.setItem('appliedJobs', JSON.stringify(appliedJobIds));
   }, [appliedJobIds]);
-
-  // Convert ScrapedJob to Job format for compatibility
-  const convertScrapedJobToJob = (scrapedJob: ScrapedJob): Job => {
-    return {
-      id: scrapedJob.id,
-      title: scrapedJob.title,
-      company: scrapedJob.company,
-      location: scrapedJob.location,
-      description: scrapedJob.description,
-      type: 'full-time', // Default value
-      level: 'mid', // Default value
-      postedAt: scrapedJob.datePosted,
-      requirements: scrapedJob.requirements || [],
-      skills: scrapedJob.matchKeywords || [],
-      matchPercentage: scrapedJob.matchPercentage,
-      salary: {
-        min: 0,
-        max: 0,
-        currency: 'USD'
-      },
-      keywordMatch: scrapedJob.keywordMatch,
-      applyUrl: scrapedJob.applyUrl,
-      source: scrapedJob.source
-    };
-  };
-  
-  // Handle job scraping results
-  const handleJobsScraped = (newScrapedJobs: ScrapedJob[]) => {
-    setScrapedJobs(newScrapedJobs);
-    
-    // Convert scraped jobs to regular jobs format for display
-    const convertedJobs = newScrapedJobs.map(convertScrapedJobToJob);
-    setJobs(prev => [...convertedJobs, ...prev]);
-    
-    toast.success(`Found ${newScrapedJobs.length} jobs`, {
-      description: "Jobs have been added to your browse list"
-    });
-  };
 
   const handleJobSelect = (job: Job) => {
     setSelectedJob(job);
@@ -212,7 +157,7 @@ const Jobs = () => {
     setShowSwipeInterface(false);
   };
 
-  // This function now handles individual actions rather than being called by SwipeJobsInterface
+  // MODIFIED: This function now handles individual actions rather than being called by SwipeJobsInterface
   const handleSwipeAction = (action: 'save' | 'apply' | 'skip', job?: Job) => {
     if (!job && (action === 'save' || action === 'apply')) {
       return; // Can't save or apply without a job
@@ -254,19 +199,22 @@ const Jobs = () => {
             <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
               Find Your Next Opportunity
             </h1>
+            <div className="hidden md:block">
+              <AutomationSettings />
+            </div>
           </div>
           
           {/* Tabs to switch between job browsing and job automation */}
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'browse' | 'automation')} className="space-y-6">
             <TabsList className="w-full md:w-auto mb-2">
               <TabsTrigger value="browse" className="flex-1 md:flex-none">Browse Jobs</TabsTrigger>
-              <TabsTrigger value="automation" className="flex-1 md:flex-none">Application Automation</TabsTrigger>
+              <TabsTrigger value="automation" className="flex-1 md:flex-none">Job Automation</TabsTrigger>
             </TabsList>
             
             <TabsContent value="browse" className="space-y-6">
               {/* Job browsing content */}
               <div className="w-full">
-                <JobSourcesDisplay onJobsScraped={handleJobsScraped} />
+                <JobSourcesDisplay />
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

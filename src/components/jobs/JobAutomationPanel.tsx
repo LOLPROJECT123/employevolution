@@ -13,50 +13,37 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Check, Info, ExternalLink } from "lucide-react";
+import { Check } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 
 // Import job automation components
+import JobApplicationForm from "../resume/job-application/JobApplicationForm";
+import JobScraper from "../resume/job-application/JobScraper";
 import JobList from "../resume/job-application/JobList";
 import ConfirmationModal from "../resume/job-application/ConfirmationModal";
-import { ScrapedJob, JobApplicationTab } from "../resume/job-application/types";
-import { validateUrl, extractJobId } from "../resume/job-application/utils";
+import { JOB_TABS } from "../resume/job-application/constants";
+import { ScrapedJob } from "../resume/job-application/types";
+
+// Define the JobApplicationTab type
+type JobApplicationTab = 'manual' | 'auto' | 'scraper';
 
 const JobAutomationPanel = () => {
   const [activeTab, setActiveTab] = useState<JobApplicationTab>("manual");
   const navigate = useNavigate();
   
-  // Form state
-  const [jobUrl, setJobUrl] = useState("");
-  const [resumeText, setResumeText] = useState("");
-  const [coverLetterText, setCoverLetterText] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isValidatingUrl, setIsValidatingUrl] = useState(false);
-  
-  // Job application state
+  // Job scraping state
+  const [scrapedJobs, setScrapedJobs] = useState<ScrapedJob[]>([]);
   const [selectedJob, setSelectedJob] = useState<ScrapedJob | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [recentApplications, setRecentApplications] = useState<ScrapedJob[]>([]);
 
-  // Load saved data from localStorage
+  // Load saved tab preference from localStorage
   useEffect(() => {
     try {
       const savedTab = localStorage.getItem('preferredApplicationTab') as JobApplicationTab | null;
-      if (savedTab && (savedTab === 'manual' || savedTab === 'auto')) {
+      if (savedTab && (savedTab === 'manual' || savedTab === 'auto' || savedTab === 'scraper')) {
         setActiveTab(savedTab);
-      }
-      
-      const savedResume = localStorage.getItem('userResume');
-      if (savedResume) {
-        setResumeText(savedResume);
-      }
-      
-      const savedCoverLetter = localStorage.getItem('userCoverLetter');
-      if (savedCoverLetter) {
-        setCoverLetterText(savedCoverLetter);
       }
       
       // Load recent applications
@@ -69,34 +56,7 @@ const JobAutomationPanel = () => {
     }
   }, []);
 
-  // Function to check if a URL is still valid
-  const checkUrlValidity = async (url: string): Promise<boolean> => {
-    setIsValidatingUrl(true);
-    
-    try {
-      // In a real implementation, this would make a server-side request
-      // to check if the URL returns a valid job posting
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // For demonstration: 90% of URLs are considered valid
-      const isValid = Math.random() > 0.1;
-      
-      if (!isValid) {
-        toast.error("The job posting appears to be no longer available", {
-          description: "This position may have been filled or removed by the employer."
-        });
-      }
-      
-      return isValid;
-    } catch (error) {
-      console.error("Error validating URL:", error);
-      return false;
-    } finally {
-      setIsValidatingUrl(false);
-    }
-  };
-
-  // Handle job selection for application from job list
+  // Handle job selection for application
   const handleSelectJob = (job: ScrapedJob) => {
     if (!job.verified) {
       toast("Cannot apply to unverified job listing", {
@@ -107,94 +67,6 @@ const JobAutomationPanel = () => {
     
     setSelectedJob(job);
     setShowConfirmation(true);
-  };
-
-  // Handle form submission for manual job application
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!jobUrl.trim()) {
-      toast.error("Please enter a job URL");
-      return;
-    }
-    
-    if (activeTab === "manual" && !resumeText.trim()) {
-      toast.error("Please enter your resume text");
-      return;
-    }
-    
-    // Validate and potentially fix the URL
-    const validatedUrl = validateUrl(jobUrl);
-    if (!validatedUrl) {
-      toast.error("Please enter a valid job URL", {
-        description: "The URL should start with http:// or https://"
-      });
-      return;
-    }
-    
-    // Use the fixed URL if needed
-    const finalUrl = typeof validatedUrl === 'string' ? validatedUrl : jobUrl;
-    setIsSubmitting(true);
-    
-    try {
-      // Check if the URL is still valid
-      const isUrlValid = await checkUrlValidity(finalUrl);
-      if (!isUrlValid) {
-        setIsSubmitting(false);
-        return;
-      }
-      
-      // Save the resume to localStorage for future use
-      if (resumeText.trim()) {
-        localStorage.setItem('userResume', resumeText);
-      }
-      
-      if (coverLetterText.trim()) {
-        localStorage.setItem('userCoverLetter', coverLetterText);
-      }
-      
-      // Save the active tab preference
-      localStorage.setItem('preferredApplicationTab', activeTab);
-      
-      // Extract job ID for potential future reference
-      const jobId = extractJobId(finalUrl);
-      console.log("Extracted job ID:", jobId);
-      
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // Add to recent applications
-      const newApplication: ScrapedJob = {
-        id: `manual-${Date.now()}`,
-        title: activeTab === "auto" ? "Automated Application" : "Custom Application",
-        company: activeTab === "auto" ? "Auto Entry" : "Manual Entry",
-        location: "Unknown",
-        url: finalUrl,
-        source: activeTab === "auto" ? "Auto" : "Manual",
-        datePosted: new Date().toLocaleDateString(),
-        description: activeTab === "auto" ? "Automatically submitted application" : "Manually submitted application",
-        applyUrl: finalUrl,
-        verified: true
-      };
-      
-      const updatedApplications = [newApplication, ...recentApplications].slice(0, 5);
-      setRecentApplications(updatedApplications);
-      localStorage.setItem('recentApplications', JSON.stringify(updatedApplications));
-      
-      toast.success("Application prepared successfully!", {
-        description: "Your application will open in a new tab"
-      });
-      
-      // Always open in a new tab for better user experience
-      window.open(finalUrl, '_blank', 'noopener,noreferrer');
-      
-      // Reset the form
-      setJobUrl("");
-      setIsSubmitting(false);
-    } catch (error) {
-      console.error("Error submitting application:", error);
-      toast.error("Failed to submit application. Please try again.");
-      setIsSubmitting(false);
-    }
   };
 
   // Enhanced auto-application with better verification
@@ -211,7 +83,7 @@ const JobAutomationPanel = () => {
       });
       
       // Verify that the job URL is still valid
-      const isValid = await checkUrlValidity(selectedJob.applyUrl);
+      const isValid = await verifyJobUrl(selectedJob.applyUrl);
       
       if (!isValid) {
         toast("Job listing is no longer available", {
@@ -229,14 +101,14 @@ const JobAutomationPanel = () => {
       });
       
       // Simulate API call for auto-application with improved feedback
-      await simulateJobApplication(selectedJob);
+      const result = await simulateJobApplication(selectedJob);
       
       // Add to recent applications
       const updatedApplications = [selectedJob, ...recentApplications].slice(0, 5);
       setRecentApplications(updatedApplications);
       localStorage.setItem('recentApplications', JSON.stringify(updatedApplications));
       
-      toast.success("Application submitted successfully!", {
+      toast("Application submitted successfully!", {
         description: `Your application to ${selectedJob.company} for ${selectedJob.title} has been sent.`
       });
       
@@ -281,121 +153,103 @@ const JobAutomationPanel = () => {
     return true;
   };
   
+  const verifyJobUrl = async (url: string): Promise<boolean> => {
+    // In real implementation, this would make a server-side request to check if URL is valid
+    toast("Verifying job listing availability...", {
+      duration: 800
+    });
+    
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    // Could check for redirect status, 404s, or listing removed text patterns
+    // For demo purposes, simulating validity check
+    const isValid = Math.random() < 0.95;
+    
+    if (!isValid) {
+      console.log("Job URL validation failed");
+    }
+    
+    return isValid;
+  };
+  
+  const handleNavigateToProfile = () => {
+    toast("Profile settings will open in a new tab");
+    navigate("/profile", { state: { returnTo: "/jobs" } });
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
         <CardTitle>Automated Job Application</CardTitle>
         <CardDescription>
-          Apply to jobs with automatic resume and profile submission
+          Scrape jobs from multiple sources and apply with your resume
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as JobApplicationTab)} className="w-full">
           <TabsList className="w-full">
-            <TabsTrigger value="manual" className="flex-1">Manual Apply</TabsTrigger>
-            <TabsTrigger value="auto" className="flex-1">Auto Fill</TabsTrigger>
+            {JOB_TABS.map(tab => (
+              <TabsTrigger key={tab.value} value={tab.value} className="flex-1">
+                {tab.label}
+              </TabsTrigger>
+            ))}
           </TabsList>
           
+          <TabsContent value="scraper" className="space-y-4 pt-4">
+            <JobScraper onJobsScraped={setScrapedJobs} />
+            <JobList jobs={scrapedJobs} onSelectJob={handleSelectJob} />
+          </TabsContent>
+          
           <TabsContent value="manual" className="space-y-4 pt-4">
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label htmlFor="job-url" className="text-sm font-medium">
-                    Job URL
-                  </label>
-                  <Input
-                    id="job-url"
-                    placeholder="https://www.example.com/job/12345"
-                    value={jobUrl}
-                    onChange={(e) => setJobUrl(e.target.value)}
-                  />
-                  <div className="flex items-center text-xs text-muted-foreground gap-1">
-                    <Info className="h-3 w-3" />
-                    <p>Paste the full URL of the job posting you want to apply to</p>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="resume" className="text-sm font-medium">
-                    Resume Text
-                  </label>
-                  <Textarea
-                    id="resume"
-                    placeholder="Paste your resume text here..."
-                    rows={8}
-                    value={resumeText}
-                    onChange={(e) => setResumeText(e.target.value)}
-                  />
-                </div>
+            <JobApplicationForm 
+              activeTab={activeTab} 
+              onNavigateToProfile={handleNavigateToProfile} 
+              onSuccess={(jobUrl) => {
+                // Track successful manual applications
+                const newApplication: ScrapedJob = {
+                  id: `manual-${Date.now()}`,
+                  title: "Custom Application",
+                  company: "Manual Entry",
+                  location: "Unknown",
+                  url: jobUrl,
+                  source: "Manual",
+                  datePosted: new Date().toLocaleDateString(),
+                  description: "Manually submitted application",
+                  applyUrl: jobUrl,
+                  verified: true
+                };
                 
-                <div className="space-y-2">
-                  <label htmlFor="cover-letter" className="text-sm font-medium">
-                    Cover Letter (Optional)
-                  </label>
-                  <Textarea
-                    id="cover-letter"
-                    placeholder="Paste your cover letter here..."
-                    rows={6}
-                    value={coverLetterText}
-                    onChange={(e) => setCoverLetterText(e.target.value)}
-                  />
-                </div>
-                
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={isSubmitting || isValidatingUrl}
-                >
-                  {isSubmitting || isValidatingUrl ? (
-                    <>
-                      <span className="loading loading-spinner loading-xs mr-2"></span>
-                      {isValidatingUrl ? "Validating..." : "Applying..."}
-                    </>
-                  ) : (
-                    <>Apply to Job <ExternalLink className="ml-2 h-4 w-4" /></>
-                  )}
-                </Button>
-              </div>
-            </form>
+                const updatedApplications = [newApplication, ...recentApplications].slice(0, 5);
+                setRecentApplications(updatedApplications);
+                localStorage.setItem('recentApplications', JSON.stringify(updatedApplications));
+              }}
+            />
           </TabsContent>
           
           <TabsContent value="auto" className="space-y-4 pt-4">
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label htmlFor="job-url-auto" className="text-sm font-medium">
-                    Job URL
-                  </label>
-                  <Input
-                    id="job-url-auto"
-                    placeholder="https://www.example.com/job/12345"
-                    value={jobUrl}
-                    onChange={(e) => setJobUrl(e.target.value)}
-                  />
-                </div>
+            <JobApplicationForm 
+              activeTab={activeTab} 
+              onNavigateToProfile={handleNavigateToProfile} 
+              onSuccess={(jobUrl) => {
+                // Track successful auto applications
+                const newApplication: ScrapedJob = {
+                  id: `auto-${Date.now()}`,
+                  title: "Automated Application",
+                  company: "Auto Entry",
+                  location: "Unknown",
+                  url: jobUrl,
+                  source: "Auto",
+                  datePosted: new Date().toLocaleDateString(),
+                  description: "Automatically submitted application",
+                  applyUrl: jobUrl,
+                  verified: true
+                };
                 
-                <div className="border border-dashed border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50">
-                  <p className="text-center text-sm text-gray-600 dark:text-gray-400">
-                    Auto-fill uses your saved profile information to apply to jobs without manual entry
-                  </p>
-                </div>
-                
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={isSubmitting || isValidatingUrl}
-                >
-                  {isSubmitting || isValidatingUrl ? (
-                    <>
-                      <span className="loading loading-spinner loading-xs mr-2"></span>
-                      {isValidatingUrl ? "Validating..." : "Applying..."}
-                    </>
-                  ) : (
-                    <>Apply to Job <ExternalLink className="ml-2 h-4 w-4" /></>
-                  )}
-                </Button>
-              </div>
-            </form>
+                const updatedApplications = [newApplication, ...recentApplications].slice(0, 5);
+                setRecentApplications(updatedApplications);
+                localStorage.setItem('recentApplications', JSON.stringify(updatedApplications));
+              }}
+            />
           </TabsContent>
         </Tabs>
         
