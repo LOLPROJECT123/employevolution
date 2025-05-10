@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -233,7 +232,7 @@ const Jobs = () => {
                         <JobCard
                           key={job.id}
                           job={job}
-                          onSelect={handleJobSelect}
+                          onClick={() => handleJobSelect(job)}
                           isSaved={savedJobIds.includes(job.id)}
                           onSave={() => handleSaveJob(job)}
                           isApplied={appliedJobIds.includes(job.id)}
