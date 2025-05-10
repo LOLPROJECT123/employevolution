@@ -10,10 +10,9 @@ import {
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Check, FileText, Clipboard, Cog } from "lucide-react";
+import { Check, FileText, Clipboard } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,11 +22,7 @@ import { ScrapedJob } from "../resume/job-application/types";
 import { validateUrl, extractJobId } from "../resume/job-application/utils";
 import { startAutomation } from "@/utils/automationUtils";
 
-// Define the JobApplicationTab type
-type JobApplicationTab = 'unified' | 'settings';
-
 const JobAutomationPanel = () => {
-  const [activeTab, setActiveTab] = useState<JobApplicationTab>("unified");
   const navigate = useNavigate();
   
   // Application form state
@@ -208,119 +203,85 @@ const JobAutomationPanel = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as JobApplicationTab)} className="w-full">
-          <TabsList className="w-full">
-            <TabsTrigger value="unified" className="flex-1">
-              Apply to Jobs
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="flex-1">
-              Automation Settings
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="unified" className="space-y-4 pt-4">
-            <form onSubmit={handleSubmitApplication} className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="job-url" className="text-sm font-medium">
-                  Job URL
-                </label>
-                <Input
-                  id="job-url"
-                  placeholder="https://www.example.com/job/12345"
-                  value={jobUrl}
-                  onChange={(e) => setJobUrl(e.target.value)}
-                  disabled={isSubmitting}
-                  className="mb-1"
-                />
-                <div className="flex items-start text-xs text-muted-foreground gap-1">
-                  <FileText className="h-3 w-3 mt-0.5" />
-                  <p>Paste the full URL of the job posting you want to apply to</p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label htmlFor="resume" className="text-sm font-medium">
-                    Resume Text
-                  </label>
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-6 text-xs" 
-                    onClick={handleNavigateToProfile}
-                  >
-                    <Clipboard className="h-3 w-3 mr-1" />
-                    Load from profile
-                  </Button>
-                </div>
-                <Textarea
-                  id="resume"
-                  placeholder="Paste your resume text here or load from your profile..."
-                  rows={6}
-                  value={resumeText}
-                  onChange={(e) => setResumeText(e.target.value)}
-                  disabled={isSubmitting}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label htmlFor="cover-letter" className="text-sm font-medium">
-                  Cover Letter (Optional)
-                </label>
-                <Textarea
-                  id="cover-letter"
-                  placeholder="Paste your cover letter here..."
-                  rows={4}
-                  value={coverLetterText}
-                  onChange={(e) => setCoverLetterText(e.target.value)}
-                  disabled={isSubmitting}
-                />
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Button 
-                  type="submit" 
-                  className="flex-1"
-                  disabled={isSubmitting || isValidatingUrl}
-                >
-                  {isSubmitting ? (
-                    <>Processing...</>
-                  ) : (
-                    <>Apply Now</>
-                  )}
-                </Button>
-              </div>
-              
-              <Alert variant="default" className="bg-blue-50 text-blue-800 border border-blue-200 mt-4">
-                <AlertDescription>
-                  Your application will be processed using either manual apply or auto-fill depending on your settings and the job platform.
-                </AlertDescription>
-              </Alert>
-            </form>
-          </TabsContent>
-          
-          <TabsContent value="settings" className="space-y-4 pt-4">
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Automation Preferences</h3>
-              
-              <div className="p-4 border rounded-md space-y-4">
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start" 
-                  onClick={handleNavigateToProfile}
-                >
-                  <Cog className="mr-2 h-4 w-4" />
-                  Configure Automation Settings
-                </Button>
-                
-                <p className="text-sm text-muted-foreground">
-                  Configure your automation preferences, credentials, and profile data to streamline your job application process.
-                </p>
-              </div>
+        <form onSubmit={handleSubmitApplication} className="space-y-4">
+          <div className="space-y-2">
+            <label htmlFor="job-url" className="text-sm font-medium">
+              Job URL
+            </label>
+            <Input
+              id="job-url"
+              placeholder="https://www.example.com/job/12345"
+              value={jobUrl}
+              onChange={(e) => setJobUrl(e.target.value)}
+              disabled={isSubmitting}
+              className="mb-1"
+            />
+            <div className="flex items-start text-xs text-muted-foreground gap-1">
+              <FileText className="h-3 w-3 mt-0.5" />
+              <p>Paste the full URL of the job posting you want to apply to</p>
             </div>
-          </TabsContent>
-        </Tabs>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label htmlFor="resume" className="text-sm font-medium">
+                Resume Text
+              </label>
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="sm" 
+                className="h-6 text-xs" 
+                onClick={handleNavigateToProfile}
+              >
+                <Clipboard className="h-3 w-3 mr-1" />
+                Load from profile
+              </Button>
+            </div>
+            <Textarea
+              id="resume"
+              placeholder="Paste your resume text here or load from your profile..."
+              rows={6}
+              value={resumeText}
+              onChange={(e) => setResumeText(e.target.value)}
+              disabled={isSubmitting}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <label htmlFor="cover-letter" className="text-sm font-medium">
+              Cover Letter (Optional)
+            </label>
+            <Textarea
+              id="cover-letter"
+              placeholder="Paste your cover letter here..."
+              rows={4}
+              value={coverLetterText}
+              onChange={(e) => setCoverLetterText(e.target.value)}
+              disabled={isSubmitting}
+            />
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button 
+              type="submit" 
+              className="flex-1"
+              disabled={isSubmitting || isValidatingUrl}
+            >
+              {isSubmitting ? (
+                <>Processing...</>
+              ) : (
+                <>Apply Now</>
+              )}
+            </Button>
+          </div>
+          
+          <Alert variant="default" className="bg-blue-50 text-blue-800 border border-blue-200 mt-4">
+            <AlertDescription>
+              Your application will be processed using either manual apply or auto-fill depending on your settings and the job platform.
+            </AlertDescription>
+          </Alert>
+        </form>
         
         {/* Recent Applications Section */}
         {recentApplications.length > 0 && (
