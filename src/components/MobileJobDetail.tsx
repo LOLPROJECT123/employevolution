@@ -3,12 +3,12 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Job } from "@/types/job";
 import { BookmarkIcon, ArrowLeft, XIcon, CheckIcon, BriefcaseIcon, MapPinIcon, CalendarIcon, BuildingIcon } from "lucide-react";
 import { toast } from "sonner";
 import { formatSalary } from "@/utils/formatters";
-import { JobKeywordMatch } from "@/components/JobKeywordMatch";
+import JobKeywordMatch from "@/components/JobKeywordMatch";
 import { JobAutomationControl } from "@/components/JobAutomationControl";
+import { Job } from "@/types/job";
 
 interface MobileJobDetailProps {
   job: Job | null;
@@ -189,7 +189,15 @@ export const MobileJobDetail = ({
           
           {/* Keyword Match */}
           {job.keywordMatch && (
-            <JobKeywordMatch keywordMatch={job.keywordMatch} />
+            <JobKeywordMatch 
+              matchScore={job.keywordMatch.score || 0}
+              keywordsFound={job.keywordMatch.found || 0}
+              keywordsTotal={job.keywordMatch.total || 0}
+              keywordsList={[
+                ...(job.keywordMatch.highPriority?.keywords || []),
+                ...(job.keywordMatch.lowPriority?.keywords || [])
+              ]}
+            />
           )}
         </div>
       </ScrollArea>
