@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -163,7 +162,6 @@ const Jobs = () => {
     return true;
   });
   
-
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900/30">
       {!isMobile && <Navbar />}
