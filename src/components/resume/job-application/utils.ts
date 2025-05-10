@@ -1,65 +1,55 @@
 
-/**
- * Validate and potentially fix a URL string
- */
-export const validateUrl = (url: string): string | boolean => {
-  if (!url.trim()) return false;
+import { normalizeJobUrl, extractJobIdFromUrl } from "@/utils/jobValidationUtils";
+
+// Validate and potentially fix URL
+export const validateUrl = (url: string): boolean | string => {
+  if (!url) return false;
   
   try {
-    // If the URL doesn't start with http:// or https://, add https://
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      url = 'https://' + url;
-    }
-    
     // Try to create a URL object to validate
     new URL(url);
-    return url;
-  } catch (error) {
-    console.error("Invalid URL:", error);
+    return true;
+  } catch (e) {
+    // If it fails, check if it might be missing the protocol
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      try {
+        new URL('https://' + url);
+        return 'https://' + url;
+      } catch (e) {
+        return false;
+      }
+    }
     return false;
   }
 };
 
-/**
- * Extract a job ID from various job platform URLs
- */
+// Extract job ID from URL if present
 export const extractJobId = (url: string): string | null => {
-  try {
-    const urlObj = new URL(url);
-    
-    // LinkedIn job URLs: /jobs/view/JOBID
-    if (urlObj.hostname.includes('linkedin.com')) {
-      const matches = urlObj.pathname.match(/\/jobs\/view\/(\d+)/);
-      if (matches && matches[1]) return `linkedin-${matches[1]}`;
-    }
-    
-    // Indeed job URLs: /viewjob?jk=JOBID
-    if (urlObj.hostname.includes('indeed.com')) {
-      const jk = urlObj.searchParams.get('jk');
-      if (jk) return `indeed-${jk}`;
-    }
-    
-    // Greenhouse job URLs: /j/JOBID
-    if (urlObj.hostname.includes('greenhouse.io')) {
-      const matches = urlObj.pathname.match(/\/j\/([^\/]+)/);
-      if (matches && matches[1]) return `greenhouse-${matches[1]}`;
-    }
-    
-    // Lever job URLs: /jobs/JOBID
-    if (urlObj.hostname.includes('lever.co')) {
-      const matches = urlObj.pathname.match(/\/jobs\/([^\/]+)/);
-      if (matches && matches[1]) return `lever-${matches[1]}`;
-    }
-    
-    // If no specific format matches, use the path as a fallback
-    const pathParts = urlObj.pathname.split('/').filter(Boolean);
-    if (pathParts.length > 0) {
-      return `job-${pathParts[pathParts.length - 1]}`;
-    }
-    
-    return null;
-  } catch (error) {
-    console.error("Error extracting job ID:", error);
-    return null;
+  return extractJobIdFromUrl(url);
+};
+
+// Clean and normalize job application URL
+export const cleanJobUrl = (url: string): string => {
+  return normalizeJobUrl(url);
+};
+
+// Generate a unique job ID if one doesn't exist
+export const generateJobId = (company: string, title: string, url?: string): string => {
+  if (url) {
+    const extractedId = extractJobId(url);
+    if (extractedId) return extractedId;
   }
+  
+  // Create a deterministic ID from job info
+  const baseString = `${company}-${title}-${url || ''}`;
+  let hash = 0;
+  
+  for (let i = 0; i < baseString.length; i++) {
+    const char = baseString.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  
+  // Convert to a positive hex string
+  return Math.abs(hash).toString(16);
 };

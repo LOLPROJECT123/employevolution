@@ -1,4 +1,6 @@
 
+export type JobApplicationTab = 'manual' | 'auto' | 'scraper';
+
 export interface ScrapedJob {
   id: string;
   title: string;
@@ -9,53 +11,50 @@ export interface ScrapedJob {
   datePosted: string;
   description: string;
   applyUrl: string;
-  verified: boolean;
-  salary?: string;
-  requirements?: string[];
-  jobType?: string;
-  remote?: boolean;
-  level?: string;
-  // Add missing properties that are causing TypeScript errors
+  verified?: boolean;
   matchPercentage?: number;
+  matchKeywords?: string[];
   keywordMatch?: {
-    score?: number;
-    found?: number;
-    total?: number;
-    highPriority?: {
-      keywords?: string[];
-      found?: number;
-      total?: number;
+    score: number;
+    total: number;
+    found: number;
+    highPriority: {
+      keywords: string[];
+      found: number;
+      total: number;
     };
-    lowPriority?: {
-      keywords?: string[];
-      found?: number;
-      total?: number;
+    lowPriority: {
+      keywords: string[];
+      found: number;
+      total: number;
     };
   };
+  requirements?: string[];
 }
 
-export interface JobScrapeConfig {
-  url: string;
-  platform: string;
-  keywords?: string[];
-  locations?: string[];
-  excludeKeywords?: string[];
-  dateRange?: string;
-  experienceLevel?: string[];
-  remote?: boolean;
-}
-
-// Add missing types for ResumeTemplate and TemplateSource
 export interface ResumeTemplate {
   id: string;
-  name: string;
+  title: string;
   description: string;
-  preview: string;
-  source: TemplateSource;
+  imageUrl: string;
+  previewUrl: string;
+  downloadUrl: string;
+  company: string;
+  role: string;
+  roleType?: string;
+  rating: number;
+  downloads: number;
+  tags: string[];
+  source?: string;
+  attribution?: string;
+  licenseType?: 'free' | 'premium' | 'attribution-required';
 }
 
-export enum TemplateSource {
-  DEFAULT = "default",
-  CUSTOM = "custom",
-  DOWNLOADED = "downloaded"
+export interface TemplateSource {
+  id: string;
+  name: string;
+  url: string;
+  apiKey?: string;
+  isActive: boolean;
+  attribution: string;
 }
