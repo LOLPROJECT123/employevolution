@@ -3,9 +3,8 @@ import { useState } from 'react';
 import MobileHeader from "@/components/MobileHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import JobAutomationPanel from "@/components/jobs/JobAutomationPanel";
-import MobileJobDetail from "@/components/MobileJobDetail";
+import { MobileJobDetail } from "@/components/MobileJobDetail";
 import { MobileJobList } from "@/components/MobileJobList";
-import { useSwipe } from "@/hooks/use-swipe";
 import { Job } from "@/types/job";
 
 const MobileJobs = () => {

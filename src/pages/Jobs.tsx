@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -193,7 +194,7 @@ const Jobs = () => {
               
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="md:col-span-1">
-                  <JobFiltersSection filters={filters} onChange={handleFilterChange} activeFilter={activeFilter} setActiveFilter={setActiveFilter} />
+                  <JobFiltersSection onApplyFilters={() => {}} />
                 </div>
                 <div className="md:col-span-3">
                   <div className="flex justify-between items-center mb-4">
@@ -210,8 +211,8 @@ const Jobs = () => {
                   {showSwipeInterface ? (
                     <SwipeJobsInterface
                       jobs={filteredJobs}
-                      onClose={handleCloseSwipeInterface}
-                      onSwipe={handleSwipeAction}
+                      onApply={handleApplyJob}
+                      onSkip={() => {}}
                     />
                   ) : (
                     <div className="space-y-4">

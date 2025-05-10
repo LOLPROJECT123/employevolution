@@ -30,7 +30,7 @@ const ResumeTools = () => {
           
           <Tabs defaultValue="ats-optimizer" className="space-y-8">
             {isMobile ? (
-              <div className="pb-16">  {/* Increased padding at bottom from 10 to 16 */}
+              <div className="pb-16">
                 <TabsList className="w-full mb-2 grid grid-cols-2 gap-x-2 gap-y-2">
                   <TabsTrigger value="ats-optimizer" className="p-2 text-sm whitespace-normal h-auto">ATS Optimizer</TabsTrigger>
                   <TabsTrigger value="ai-resume-creator" className="p-2 text-sm whitespace-normal h-auto">AI Resume Creator</TabsTrigger>
