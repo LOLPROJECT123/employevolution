@@ -20,13 +20,21 @@ import ResumeTools from "./pages/ResumeTools";
 import LeetcodePatterns from "./pages/LeetcodePatterns";
 import SalaryNegotiations from "./pages/SalaryNegotiations";
 import Profile from "./pages/Profile";
-import NetworkingTools from "./pages/NetworkingTools"; // New import
+import NetworkingTools from "./pages/NetworkingTools";
+import ExtensionManager from "./pages/ExtensionManager";
+import ApplicationTracker from "./pages/ApplicationTracker";
+import ATSOptimizer from "./pages/ATSOptimizer";
+import Forums from "./pages/Forums";
+import Sidebar from "./components/Sidebar";
+import OnboardingModal from "./components/OnboardingModal";
+import NotificationProvider from "./components/NotificationProvider";
 
 const queryClient = new QueryClient();
 
 const App = () => {
   const [environment, setEnvironment] = useState<'web' | 'mobile' | 'extension'>('web');
   const [isMobile, setIsMobile] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     // Detect what environment we're running in
@@ -49,6 +57,11 @@ const App = () => {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     
+    // Show onboarding if not dismissed
+    if (!localStorage.getItem("streamline_onboarding_complete")) {
+      setShowOnboarding(true);
+    }
+
     return () => {
       window.removeEventListener('resize', checkMobile);
     };
@@ -59,26 +72,38 @@ const App = () => {
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
         <TooltipProvider>
           <JobApplicationProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/interview-practice" element={<InterviewPractice />} />
-                <Route path="/referrals" element={<Referrals />} />
-                <Route path="/jobs" element={isMobile ? <MobileJobs /> : <Jobs />} />
-                <Route path="/mobile-jobs" element={<MobileJobs />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/resume-tools" element={<ResumeTools />} />
-                <Route path="/leetcode-patterns" element={<LeetcodePatterns />} />
-                <Route path="/salary-negotiations" element={<SalaryNegotiations />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/networking" element={<NetworkingTools />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
+            <NotificationProvider>
+              {showOnboarding && <OnboardingModal onClose={() => setShowOnboarding(false)} />}
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <div className="flex">
+                  <Sidebar />
+                  <main className="flex-1 ml-60">
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/interview-practice" element={<InterviewPractice />} />
+                      <Route path="/referrals" element={<Referrals />} />
+                      <Route path="/jobs" element={isMobile ? <MobileJobs /> : <Jobs />} />
+                      <Route path="/mobile-jobs" element={<MobileJobs />} />
+                      <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/auth" element={<Auth />} />
+                      <Route path="/resume-tools" element={<ResumeTools />} />
+                      <Route path="/leetcode-patterns" element={<LeetcodePatterns />} />
+                      <Route path="/salary-negotiations" element={<SalaryNegotiations />} />
+                      <Route path="/profile" element={<Profile />} />
+                      <Route path="/networking" element={<NetworkingTools />} />
+                      <Route path="/extension-manager" element={<ExtensionManager />} />
+                      <Route path="/application-tracker" element={<ApplicationTracker />} />
+                      <Route path="/ats-optimizer" element={<ATSOptimizer />} />
+                      <Route path="/forums" element={<Forums />} />
+                      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </main>
+                </div>
+              </BrowserRouter>
+            </NotificationProvider>
           </JobApplicationProvider>
         </TooltipProvider>
       </ThemeProvider>

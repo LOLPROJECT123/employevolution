@@ -1,48 +1,67 @@
+# Streamline
 
-**Use your preferred IDE**
+Streamline is a fullstack platform and browser extension designed to revolutionize your job search and application process. Its mission is to automate, optimize, and support every step of your career journey.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+---
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Features
 
-Follow these steps:
+### Chrome Extension
+- **Auto-fill job applications** on supported sites (LinkedIn, Indeed, GitHub Jobs, Handshake, etc.)
+- **Optimize resume and cover letters** based on job requirements
+- **Track applied jobs** and sync with the main app
+- **Detect job postings** automatically
+- **Extension manager** (ChromeExtensionManager) in the web app for easy install/management
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Web App
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+#### Profile & Resume
+- ProfileHeader, Resume, Work Experience, Education, Projects, Social Links, Languages, Skills, Preferences, Equal Employment, Settings
 
-# Step 3: Install the necessary dependencies.
-npm i
+#### Job Search & Application
+- Scrape jobs from LinkedIn, Indeed, GitHub jobs, simplify.jobs, offerpilot.ai, jobright.ai, Handshake (using [crawl4ai](https://github.com/unclecode/crawl4ai) and [AutomatedHandshake.py](https://github.com/Pernell43/HandShake-QuickApply-Bot/blob/main/AutomatedHandshake.py))
+- Track applied jobs
+- One-click apply (with extension)
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+#### Interview Practice
+- Coding practice (LeetCode-style: 2 easy, 2 medium, 2 hard per data structure/algorithm)
+- Behavioral interviews (video/screen share)
 
-**Edit a file directly in GitHub**
+#### Resume Tools
+- Resume templates
+- Resume forum for feedback/tips
+- ATS (Applicant Tracking System) Optimization
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+#### Salary & Negotiation
+- Forum for negotiation advice
+- Salary data from levels.fyi, glassdoor, and other databases
 
-**Use GitHub Codespaces**
+#### Networking
+- Recruiter/researcher discovery
+- Networking forum/tab
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+---
 
-## What technologies are used for this project?
+## Architecture
 
-This project is built with .
+- **Frontend:** React + TypeScript (see `/src/frontend/components`)
+- **Backend:** Node.js + Express + TypeScript (`/src/backend`)
+- **Browser Extension:** Manifest v3, JS/TS (`/src/extension`)
+- **Job Scraping:** Integrates crawl4ai and Handshake bot
+- **Data Sync:** Extension <-> Web app via API and local storage
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+---
 
- If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+## Development
+
+1. Install dependencies: `npm install`
+2. Start frontend: `npm run dev`
+3. Start backend: `npm run start:backend`
+4. Build extension: `npm run build:extension`
+5. See `/src/frontend/components` for UI, `/src/backend/api` for endpoints.
+
+---
+
+## Contribution
+
+- Open an issue or pull request for feedback or features!

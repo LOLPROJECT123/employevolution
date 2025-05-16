@@ -20,8 +20,8 @@ function extractJobData() {
       skills: [],
       formFields: null
     };
-    
-    // Different extraction logic based on the current site
+
+    // Platform-specific extraction logic
     if (window.location.hostname.includes("linkedin.com")) {
       extractLinkedInJobData(jobData);
     } 
@@ -37,19 +37,31 @@ function extractJobData() {
     else if (window.location.hostname.includes("workday")) {
       extractWorkdayJobData(jobData);
     }
+    // Add support for new platforms
+    else if (window.location.hostname.includes("simplify.jobs")) {
+      extractSimplifyJobData(jobData);
+    }
+    else if (window.location.hostname.includes("jobright.ai")) {
+      extractJobRightJobData(jobData);
+    }
+    else if (window.location.hostname.includes("offerpilot.ai")) {
+      extractOfferPilotJobData(jobData);
+    }
+    else if (window.location.hostname.includes("joinhandshake.com")) {
+      extractHandshakeJobData(jobData);
+    }
     else {
-      // Generic extraction for unsupported sites
       extractGenericJobData(jobData);
     }
-    
+
     // Extract resume upload fields if on an application page
     jobData.formFields = detectFormFields();
-    
+
     // Get actual apply URL with better detection
     if (!jobData.applyUrl) {
       jobData.applyUrl = findApplyUrl();
     }
-    
+
     return jobData;
   } catch (error) {
     console.error("Error extracting job data:", error);
@@ -58,6 +70,108 @@ function extractJobData() {
       applyUrl: window.location.href,
       error: error.message
     };
+  }
+}
+
+// --- TODO: Add extraction logic for new platforms ---
+
+function extractSimplifyJobData(jobData) {
+  // TODO: Implement extraction for simplify.jobs
+  jobData.title = document.title || "Simplify.jobs position";
+}
+
+function extractJobRightJobData(jobData) {
+  // TODO: Implement extraction for jobright.ai
+  jobData.title = document.title || "JobRight.ai position";
+}
+
+function extractOfferPilotJobData(jobData) {
+  // TODO: Implement extraction for offerpilot.ai
+  jobData.title = document.title || "OfferPilot.ai position";
+}
+
+function extractHandshakeJobData(jobData) {
+  // TODO: Implement extraction for joinhandshake.com
+  jobData.title = document.title || "Handshake position";
+}
+
+// --- Robust autofill dispatcher for all supported platforms ---
+
+window.addEventListener("message", (event) => {
+  // Only accept messages from this window
+  if (event.source !== window) return;
+
+  // Check for autofill request
+  if (event.data && event.data.type === "STREAMLINE_AUTOFILL_REQUEST") {
+    try {
+      const profileData = event.data.profileData;
+      const formFields = detectFormFields();
+      const status = tryAutofillForm(profileData, formFields);
+
+      window.postMessage({
+        type: "STREAMLINE_AUTOFILL_RESULT",
+        status
+      }, "*");
+    } catch (error) {
+      window.postMessage({
+        type: "STREAMLINE_AUTOFILL_RESULT",
+        status: { success: false, error: error.message }
+      }, "*");
+    }
+  }
+});
+
+// Attempt to autofill detected form fields with profile data
+function tryAutofillForm(profile, formFields) {
+  let successCount = 0;
+  let failCount = 0;
+  const failedFields = [];
+
+  try {
+    if (!formFields) return { success: false, error: "No form fields detected" };
+
+    // Map profile fields to form fields
+    const mapping = [
+      ["firstName", profile.personal?.firstName],
+      ["lastName", profile.personal?.lastName],
+      ["email", profile.personal?.email],
+      ["phone", profile.personal?.phone],
+      ["address", profile.personal?.address],
+      ["city", profile.personal?.city],
+      ["state", profile.personal?.state],
+      ["zip", profile.personal?.zipCode],
+      ["country", profile.personal?.country],
+      ["linkedin", profile.personal?.linkedin],
+      ["website", profile.personal?.website],
+      ["resume", profile.resumePath],
+      ["coverLetter", profile.coverLetterPath]
+    ];
+
+    mapping.forEach(([key, value]) => {
+      const input = formFields[key];
+      if (input && value) {
+        try {
+          input.value = value;
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+          input.dispatchEvent(new Event("change", { bubbles: true }));
+          successCount++;
+        } catch (e) {
+          failCount++;
+          failedFields.push(key);
+        }
+      }
+    });
+
+    // TODO: Fill education and experience if present
+
+    return {
+      success: failCount === 0,
+      filled: successCount,
+      failed: failCount,
+      failedFields
+    };
+  } catch (error) {
+    return { success: false, error: error.message };
   }
 }
 
