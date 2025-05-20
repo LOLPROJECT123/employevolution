@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { JobFilters } from "@/types/job";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, X, Check, SlidersHorizontal, BookmarkCheck, SortAscending } from "lucide-react";
+import { ChevronDown, X, Check, SlidersHorizontal, BookmarkCheck, ArrowUpAZ } from "lucide-react";
 import { 
   Sheet,
   SheetContent,
@@ -128,7 +128,7 @@ export const MobileJobFilters = ({
               size="sm"
               className="rounded-full border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 h-9"
             >
-              <SortAscending className="h-4 w-4 mr-1.5" />
+              <ArrowUpAZ className="h-4 w-4 mr-1.5" />
               {getSortLabel()}
               <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
             </Button>
