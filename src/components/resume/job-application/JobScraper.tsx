@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,68 @@ interface JobScraperProps {
   onJobsScraped: (jobs: ScrapedJob[]) => void;
 }
 
+// Enhanced list of companies with career pages
+const COMPANY_CAREER_PAGES = [
+  { name: "WorldQuant", url: "https://www.worldquant.com/career-listing/" },
+  { name: "Schonfield Advisors", url: "https://job-boards.greenhouse.io/schonfeld" },
+  { name: "Voleon Group", url: "https://jobs.lever.co/voleon" },
+  { name: "Radix Trading (University)", url: "https://job-boards.greenhouse.io/radixuniversity" },
+  { name: "Radix Trading (Experienced)", url: "https://job-boards.greenhouse.io/radixexperienced" },
+  { name: "IMC Financial Markets", url: "https://www.imc.com/eu/search-careers" },
+  { name: "Jane Street (Experienced)", url: "https://www.janestreet.com/join-jane-street/open-roles/?type=experienced-candidates&location=all-locations" },
+  { name: "Jane Street (New Grads)", url: "https://www.janestreet.com/join-jane-street/open-roles/?type=students-and-new-grads&location=all-locations" },
+  { name: "Jump Trading", url: "https://www.jumptrading.com/careers/" },
+  { name: "Optiver", url: "https://optiver.com/working-at-optiver/career-opportunities/?numberposts=10&paged=2" },
+  { name: "PDT Partners", url: "https://job-boards.greenhouse.io/pdtpartners" },
+  { name: "Peak6", url: "https://peak6.com/careers/?q=intern" },
+  { name: "Rentec", url: "https://www.rentec.com/Careers.action?jobs=true" },
+  { name: "Stevens Capital Management (Internships)", url: "https://www.scm-lp.com/internships" },
+  { name: "Stevens Capital Management", url: "https://www.scm-lp.com/careers" },
+  { name: "Susquehanna", url: "https://careers.sig.com/search-results" },
+  { name: "Tower Research Capital", url: "https://tower-research.com/roles/" },
+  { name: "Two Sigma", url: "https://careers.twosigma.com/" },
+  { name: "Virtu Fiancial", url: "https://job-boards.greenhouse.io/virtu" },
+  { name: "Hudson River Trading", url: "https://boards.greenhouse.io/embed/job_board?for=wehrtyou" },
+  { name: "Geneva Trading", url: "https://job-boards.greenhouse.io/genevatrading" },
+  { name: "Ganda Capital Partners", url: "https://job-boards.greenhouse.io/gardacp" },
+  { name: "Point72", url: "https://careers.point72.com/" },
+  { name: "Balyasny Asset Management", url: "https://bambusdev.my.site.com/s/" },
+  { name: "Bluefin Capital Management", url: "https://www.bfcm.com/careers/" },
+  { name: "BlueCrest Capital Management", url: "https://job-boards.greenhouse.io/bluecrestcapitalmanagement" },
+  { name: "Bridgewater Associates", url: "https://job-boards.greenhouse.io/bridgewater89" },
+  { name: "Flow Traders", url: "https://job-boards.greenhouse.io/flowtraders" },
+  { name: "Citadel", url: "https://www.citadel.com/careers/open-opportunities/" },
+  { name: "Cubist", url: "https://jobs.ashbyhq.com/cubist" },
+  { name: "De Shaw", url: "https://www.deshaw.com/careers/choose-your-path" },
+  { name: "DRW", url: "https://job-boards.greenhouse.io/drweng" },
+  { name: "DV Trading", url: "https://job-boards.greenhouse.io/dvtrading/" },
+  { name: "Five Rings", url: "https://job-boards.greenhouse.io/fiveringsllc" },
+  { name: "Wolverine Trading", url: "https://www.wolve.com/open-positions" },
+  { name: "Netflix", url: "https://explore.jobs.netflix.net/careers?domain=netflix.com&sort_by=relevance&jobIndex=9&job_index=9" },
+  { name: "Stripe", url: "https://stripe.com/jobs/search" },
+  { name: "OpenAI", url: "https://openai.com/careers/search/" },
+  { name: "Apple", url: "https://jobs.apple.com/en-us/search" },
+  { name: "Nvidia", url: "https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite" },
+  { name: "Google", url: "https://www.google.com/about/careers/applications/jobs/results" },
+  { name: "Microsoft", url: "https://jobs.careers.microsoft.com/global/en/search?l=en_us&pg=1&pgSz=20&o=Relevance&flt=true&ref=cms" },
+  { name: "Amazon", url: "https://www.amazon.jobs/en/search?base_query=&loc_query=&latitude=&longitude=&loc_group_id=&invalid_location=false&country=&city=&region=&county=" },
+  { name: "Meta", url: "https://www.metacareers.com/jobs" },
+  { name: "Tesla", url: "https://www.tesla.com/careers/search/?site=US" },
+  { name: "3M Company", url: "https://3m.wd1.myworkdayjobs.com/en-US/Search" },
+  { name: "Abbott Laboratories", url: "https://www.jobs.abbott/us/en/c/information-technology-jobs" },
+  { name: "Abercrombie & Fitch Co.", url: "https://corporate.abercrombie.com/careers/search-jobs/?" },
+  { name: "ABM", url: "https://eiqg.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/jobs?sortBy=RELEVANCY" },
+  { name: "ABLE", url: "https://jobs.lever.co/ableserve" },
+  { name: "ACE Hardware", url: "https://careers.acehardware.com/job-search/?career_area=Corporate&spage=1" },
+  { name: "ACT", url: "https://careers-act.icims.com/jobs/search?ss=1" },
+  { name: "Commscope", url: "https://jobs.commscope.com/search/?createNewAlert=false&q=&locationsearch=&optionsFacetsDD_title=&optionsFacetsDD_department=&optionsFacetsDD_location=" },
+  { name: "Insperity", url: "https://careers.insperity.com/jobs/?_search=software&wpnonce=d7ae06f2f2&_city_state_or_zip&_jobtype" },
+  { name: "Adobe", url: "https://adobe.wd5.myworkdayjobs.com/external_experienced" },
+  { name: "Molson Coors", url: "https://jobs.molsoncoors.com/search/?q=&sortColumn=referencedate&sortDirection=desc&startrow=50" },
+  { name: "Advance Auto Parts", url: "https://jobs.advanceautoparts.com/us/en/search-results?keywords=" },
+  { name: "AMD", url: "https://careers.amd.com/careers-home/jobs?categories=Engineering&page=1" }
+];
+
 const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchLocation, setSearchLocation] = useState("");
@@ -29,7 +91,8 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
   const [isVerifyingJobs, setIsVerifyingJobs] = useState(false);
   const [verificationProgress, setVerificationProgress] = useState(0);
   const [maxResults, setMaxResults] = useState<string>("25");
-  const [searchMode, setSearchMode] = useState<"basic" | "advanced">("advanced");
+  const [searchMode, setSearchMode] = useState<"basic" | "advanced" | "companies">("advanced");
+  const [selectedCompanies, setSelectedCompanies] = useState<string[]>([]);
 
   // Function to verify job URLs actually exist
   const verifyJobUrls = async (jobs: ScrapedJob[]): Promise<ScrapedJob[]> => {
@@ -121,7 +184,7 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
 
   // Function to scrape jobs using Crawl4AI
   const handleCrawl4AIScrape = async () => {
-    if (!searchQuery.trim()) {
+    if (!searchQuery.trim() && searchMode !== "companies") {
       toast.error("Please enter a job title or keyword");
       return;
     }
@@ -138,29 +201,33 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
         'Monster': 'monster',
       };
       
-      // Map selected sources to Crawl4AI platform keys
-      const platforms = selectedSources
-        .map(source => platformMap[source])
-        .filter(Boolean);
-      
-      // Use the Crawl4AI implementation to search for jobs
-      const jobs = await searchJobsWithCrawl4AI(
-        searchQuery.trim(),
-        searchLocation.trim(),
-        platforms,
-        {
-          maxResults: parseInt(maxResults),
-          maxPages: 5
-        }
-      );
-      
-      if (jobs.length > 0) {
-        onJobsScraped(jobs);
-        toast.success(`Found ${jobs.length} jobs matching your search`);
+      // Use company-specific scraping if in company mode
+      if (searchMode === "companies") {
+        await scrapeCompanyCareerPages();
       } else {
-        toast.error("No valid jobs found matching your criteria. Try adjusting your search.");
+        // Map selected sources to Crawl4AI platform keys
+        const platforms = selectedSources
+          .map(source => platformMap[source])
+          .filter(Boolean);
+        
+        // Use the Crawl4AI implementation to search for jobs
+        const jobs = await searchJobsWithCrawl4AI(
+          searchQuery.trim(),
+          searchLocation.trim(),
+          platforms,
+          {
+            maxResults: parseInt(maxResults),
+            maxPages: 5
+          }
+        );
+        
+        if (jobs.length > 0) {
+          onJobsScraped(jobs);
+          toast.success(`Found ${jobs.length} jobs matching your search`);
+        } else {
+          toast.error("No valid jobs found matching your criteria. Try adjusting your search.");
+        }
       }
-      
     } catch (error) {
       console.error("Error scraping jobs:", error);
       toast.error("Failed to scrape jobs. Please try again.");
@@ -170,203 +237,221 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
     }
   };
 
-  // Legacy function to scrape jobs (backup method)
-  const handleScrapeJobs = async () => {
-    if (!searchQuery.trim()) {
-      toast.error("Please enter a job title or keyword");
+  // Function to scrape jobs from company career pages
+  const scrapeCompanyCareerPages = async () => {
+    // Use all companies if none are specifically selected
+    const companiesToScrape = selectedCompanies.length > 0 
+      ? COMPANY_CAREER_PAGES.filter(c => selectedCompanies.includes(c.name))
+      : COMPANY_CAREER_PAGES.slice(0, 8); // Just use first 8 by default
+    
+    if (companiesToScrape.length === 0) {
+      toast.error("Please select at least one company to scrape");
+      setIsScrapingJobs(false);
       return;
     }
-
-    setIsScrapingJobs(true);
     
-    try {
-      // Simulate API call to scrape jobs
-      await new Promise(resolve => setTimeout(resolve, 2000));
+    toast.loading(`Scraping ${companiesToScrape.length} company career pages`, {
+      description: "This process may take a few moments",
+      duration: 2000
+    });
+    
+    const allJobs: ScrapedJob[] = [];
+    
+    for (let i = 0; i < companiesToScrape.length; i++) {
+      const company = companiesToScrape[i];
       
-      // Generate mock job results
-      const generateMockJobs = (): ScrapedJob[] => {
-        const companies = ['Google', 'Microsoft', 'Apple', 'Amazon', 'Meta', 'Netflix', 'Spotify', 'Airbnb', 'Uber', 'Twitter'];
-        const locations = ['San Francisco, CA', 'New York, NY', 'Seattle, WA', 'Austin, TX', 'Remote', 'Boston, MA', 'Chicago, IL'];
-        const sources = selectedSources.length > 0 ? selectedSources : ['LinkedIn', 'Indeed', 'Levels.fyi', 'Handshake', 'Company Website'];
+      try {
+        // Extract domain for the search
+        const url = new URL(company.url);
+        const domain = url.hostname;
         
-        const titlePrefix = searchQuery.trim();
-        
-        // Generate requirements for jobs
-        const generateRequirements = () => {
-          const commonRequirements = [
-            "Bachelor's degree in Computer Science or related field",
-            "3+ years of experience with web development",
-            "Experience with modern JavaScript frameworks",
-            "Strong understanding of data structures and algorithms",
-            "Experience with cloud platforms (AWS, Azure, GCP)",
-            "Excellent communication and collaboration skills"
-          ];
-          
-          const shuffled = [...commonRequirements].sort(() => 0.5 - Math.random());
-          const count = Math.floor(Math.random() * 3) + 3; // 3-6 requirements
-          return shuffled.slice(0, count);
-        };
-        
-        // Real job portal URLs
-        const jobPortalUrls = [
-          'https://careers.google.com/jobs',
-          'https://www.microsoft.com/en-us/careers',
-          'https://www.apple.com/careers',
-          'https://www.amazon.jobs',
-          'https://careers.meta.com',
-          'https://jobs.netflix.com',
-          'https://www.uber.com/us/en/careers',
-          'https://careers.airbnb.com',
-          'https://careers.twitter.com',
-          'https://careers.linkedin.com'
-        ];
-        
-        // Generate job count based on maxResults setting
-        const jobCount = parseInt(maxResults);
-        
-        return Array(jobCount).fill(0).map((_, index) => {
-          const company = companies[Math.floor(Math.random() * companies.length)];
-          const location = searchLocation.trim() || locations[Math.floor(Math.random() * locations.length)];
-          const source = sources[Math.floor(Math.random() * sources.length)];
-          const daysAgo = Math.floor(Math.random() * 14) + 1;
-          
-          // Add match percentage
-          const matchPercentage = Math.floor(Math.random() * 31) + 70; // 70-100%
-          
-          // Use a real job portal URL
-          const portalUrl = jobPortalUrls[Math.floor(Math.random() * jobPortalUrls.length)];
-          const applyUrl = `${portalUrl}/${company.toLowerCase().replace(/\s/g, '-')}/${Math.random().toString(36).substring(7)}`;
-          
-          return {
-            id: `job-${index + 1}`,
-            title: `${titlePrefix} ${['Engineer', 'Developer', 'Specialist', 'Analyst', 'Manager'][Math.floor(Math.random() * 5)]}`,
-            company,
-            location,
-            url: `${portalUrl}/view/${company.toLowerCase().replace(/\s/g, '-')}/${index + 1}`,
-            source,
-            datePosted: `${daysAgo} days ago`,
-            description: "This is a sample job description that would contain details about the role, responsibilities, and requirements.",
-            applyUrl,
-            matchPercentage,
-            requirements: generateRequirements(),
-            verified: false
-          };
+        // Show progress for each company
+        toast.loading(`Scraping ${company.name} (${i + 1}/${companiesToScrape.length})`, {
+          duration: 1500
         });
-      };
-      
-      let mockJobs = generateMockJobs();
-      
-      // Filter by selected sources
-      mockJobs = selectedSources.length > 0 
-        ? mockJobs.filter(job => selectedSources.some(source => job.source.includes(source)))
-        : mockJobs;
-      
+        
+        // Use Crawl4AI to scrape this company
+        const jobs = await searchJobsWithCrawl4AI(
+          searchQuery.trim() || "software engineer",
+          searchLocation.trim(),
+          [domain],
+          { maxResults: 10, maxPages: 2 }
+        );
+        
+        if (jobs.length > 0) {
+          // Ensure the company name is set correctly
+          const companyJobs = jobs.map(job => ({
+            ...job,
+            company: company.name
+          }));
+          
+          allJobs.push(...companyJobs);
+          console.log(`Found ${jobs.length} jobs from ${company.name}`);
+        }
+        
+        // Add a small delay between companies to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 800));
+      } catch (error) {
+        console.error(`Error scraping ${company.name}:`, error);
+      }
+    }
+    
+    if (allJobs.length > 0) {
       // Verify job URLs exist
-      const verifiedJobs = await verifyJobUrls(mockJobs);
+      toast.loading("Verifying job listings...", {
+        description: "Making sure job listings are still active",
+        duration: 1500
+      });
       
-      onJobsScraped(verifiedJobs);
+      const verifiedJobs = await verifyJobUrls(allJobs);
       
       if (verifiedJobs.length > 0) {
-        toast.success(`Found ${verifiedJobs.length} verified jobs matching your search`);
+        onJobsScraped(verifiedJobs);
+        toast.success(`Found ${verifiedJobs.length} jobs from ${companiesToScrape.length} companies`);
       } else {
-        toast.error("No valid jobs found matching your criteria. Try adjusting your search.");
+        toast.warning("No valid jobs found after verification", {
+          description: "Try selecting different companies or adjusting your search"
+        });
       }
-    } catch (error) {
-      console.error("Error scraping jobs:", error);
-      toast.error("Failed to scrape jobs. Please try again.");
-    } finally {
-      setIsScrapingJobs(false);
-      setIsVerifyingJobs(false);
+    } else {
+      toast.error("No jobs found from the selected companies", {
+        description: "Try selecting different companies or adjusting your search"
+      });
     }
   };
 
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <label htmlFor="search-query" className="text-sm font-medium">
-          Job Title or Keywords
-        </label>
-        <Input
-          id="search-query"
-          placeholder="Software Engineer, Data Scientist, etc."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
+      <div className="flex space-x-2 mb-4">
+        <Button
+          variant={searchMode === "advanced" ? "default" : "outline"}
+          onClick={() => setSearchMode("advanced")}
+          className="flex-1"
+        >
+          <Search className="h-4 w-4 mr-2" /> Job Search
+        </Button>
+        <Button
+          variant={searchMode === "companies" ? "default" : "outline"}
+          onClick={() => setSearchMode("companies")}
+          className="flex-1"
+        >
+          <Globe className="h-4 w-4 mr-2" /> Company Pages
+        </Button>
       </div>
 
-      <div className="space-y-2">
-        <label htmlFor="search-location" className="text-sm font-medium">
-          Location (Optional)
-        </label>
-        <Input
-          id="search-location"
-          placeholder="San Francisco, Remote, etc."
-          value={searchLocation}
-          onChange={(e) => setSearchLocation(e.target.value)}
-        />
-      </div>
-      
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <label className="text-sm font-medium">
-            Maximum Results
-          </label>
-          <Select 
-            defaultValue={maxResults} 
-            onValueChange={setMaxResults}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="25" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="10">10 results</SelectItem>
-              <SelectItem value="25">25 results</SelectItem>
-              <SelectItem value="50">50 results</SelectItem>
-              <SelectItem value="100">100 results</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Search Mode</label>
-          <Select 
-            defaultValue={searchMode} 
-            onValueChange={(value) => setSearchMode(value as "basic" | "advanced")}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Advanced (Crawl4AI)" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="advanced">Advanced (Crawl4AI)</SelectItem>
-              <SelectItem value="basic">Basic (Legacy)</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      
-      <div className="space-y-2">
-        <label className="text-sm font-medium">
-          Job Sources
-        </label>
-        <div className="flex flex-wrap gap-2">
-          {SUPPORTED_JOB_SOURCES.map(source => (
-            <Badge
-              key={source.name}
-              variant={selectedSources.includes(source.name) ? "default" : "outline"}
-              className="cursor-pointer"
-              onClick={() => {
-                if (selectedSources.includes(source.name)) {
-                  setSelectedSources(selectedSources.filter(s => s !== source.name));
-                } else {
-                  setSelectedSources([...selectedSources, source.name]);
-                }
-              }}
-            >
-              {source.name}
-            </Badge>
-          ))}
-        </div>
-      </div>
+      {searchMode !== "companies" ? (
+        <>
+          <div className="space-y-2">
+            <label htmlFor="search-query" className="text-sm font-medium">
+              Job Title or Keywords
+            </label>
+            <Input
+              id="search-query"
+              placeholder="Software Engineer, Data Scientist, etc."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="search-location" className="text-sm font-medium">
+              Location (Optional)
+            </label>
+            <Input
+              id="search-location"
+              placeholder="San Francisco, Remote, etc."
+              value={searchLocation}
+              onChange={(e) => setSearchLocation(e.target.value)}
+            />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                Maximum Results
+              </label>
+              <Select 
+                defaultValue={maxResults} 
+                onValueChange={setMaxResults}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="25" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10 results</SelectItem>
+                  <SelectItem value="25">25 results</SelectItem>
+                  <SelectItem value="50">50 results</SelectItem>
+                  <SelectItem value="100">100 results</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Job Platforms</label>
+              <Select 
+                defaultValue={selectedSources[0]} 
+                onValueChange={(value) => setSelectedSources([value])}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Advanced (Crawl4AI)" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SUPPORTED_JOB_SOURCES.map(source => (
+                    <SelectItem key={source.name} value={source.name}>{source.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">
+              Filter (Optional)
+            </label>
+            <Input
+              placeholder="Software, Quant, Engineer, etc."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Leave blank to find all positions at selected companies
+            </p>
+          </div>
+          
+          <div className="space-y-2">
+            <label className="text-sm font-medium">
+              Select Companies
+            </label>
+            <div className="border rounded-md p-2 h-40 overflow-y-auto">
+              <div className="flex flex-wrap gap-2">
+                {COMPANY_CAREER_PAGES.map(company => (
+                  <Badge
+                    key={company.name}
+                    variant={selectedCompanies.includes(company.name) ? "default" : "outline"}
+                    className="cursor-pointer m-1"
+                    onClick={() => {
+                      if (selectedCompanies.includes(company.name)) {
+                        setSelectedCompanies(selectedCompanies.filter(c => c !== company.name));
+                      } else {
+                        setSelectedCompanies([...selectedCompanies, company.name]);
+                      }
+                    }}
+                  >
+                    {company.name}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {selectedCompanies.length === 0 
+                ? "Select companies or leave blank to search the first 8 companies" 
+                : `Selected ${selectedCompanies.length} companies`}
+            </p>
+          </div>
+        </>
+      )}
 
       {isVerifyingJobs && (
         <div className="space-y-2">
@@ -385,8 +470,8 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
       
       <Button 
         type="button" 
-        onClick={searchMode === "advanced" ? handleCrawl4AIScrape : handleScrapeJobs} 
-        disabled={isScrapingJobs || isVerifyingJobs || !searchQuery.trim()}
+        onClick={handleCrawl4AIScrape} 
+        disabled={isScrapingJobs || isVerifyingJobs || (searchMode !== "companies" && !searchQuery.trim())}
         className="w-full"
       >
         {isScrapingJobs || isVerifyingJobs ? (
@@ -397,7 +482,7 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
         ) : (
           <>
             <Search className="mr-2 h-4 w-4" />
-            Find Jobs {searchMode === "advanced" ? "(Crawl4AI)" : ""}
+            {searchMode === "companies" ? `Find Jobs at ${selectedCompanies.length || 8} Companies` : "Find Jobs"}
           </>
         )}
       </Button>
@@ -414,4 +499,3 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
 };
 
 export default JobScraper;
-

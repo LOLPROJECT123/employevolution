@@ -1,5 +1,5 @@
 
-export type JobApplicationTab = 'manual' | 'auto' | 'scraper';
+export type JobApplicationTab = 'manual' | 'auto' | 'scraper' | 'linkedin';
 
 export interface ScrapedJob {
   id: string;
@@ -14,6 +14,7 @@ export interface ScrapedJob {
   verified?: boolean;
   matchPercentage?: number;
   matchKeywords?: string[];
+  remote?: boolean;
   keywordMatch?: {
     score: number;
     total: number;
@@ -57,4 +58,27 @@ export interface TemplateSource {
   apiKey?: string;
   isActive: boolean;
   attribution: string;
+}
+
+export interface SwipeJobsInterfaceProps {
+  jobs: any[];
+  onApply: (job: any) => void;
+  onSkip: () => void;
+  onSave: (job: any) => void;
+  onClose: () => void;
+}
+
+export interface JobCardProps {
+  job: any;
+  onClick: () => void;
+  isSaved: boolean;
+  onSave: () => void;
+  isApplied: boolean;
+  onApply: () => void;
+  showMatchScore: boolean;
+}
+
+export interface LinkedInContactFinderProps {
+  job?: any;
+  university?: string;
 }

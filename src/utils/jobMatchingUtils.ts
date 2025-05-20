@@ -1,4 +1,3 @@
-
 import { Job } from "@/types/job";
 
 /**
@@ -97,7 +96,6 @@ export const getMatchLabel = (percentage?: number) => {
 
 /**
  * Get detailed match information
- * The overallScore is now exactly the percentage of job-required skills matched by userSkills.
  */
 export const getDetailedMatch = (job: Job, userSkills: string[] = []): ComprehensiveMatch => {
   // If the job already has a match percentage, use that instead of recalculating

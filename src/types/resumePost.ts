@@ -30,4 +30,31 @@ export interface ResumePost {
   role?: string;
   position?: string;
   matchPercentage?: number;
+  linkedInData?: {
+    recruiters?: LinkedInContact[];
+    alumni?: LinkedInContact[];
+  };
+}
+
+export interface LinkedInContact {
+  id: string;
+  name: string;
+  title: string;
+  company: string;
+  profileUrl: string;
+  avatar?: string;
+  connectionDegree: 1 | 2 | 3;
+  mutualConnections?: number;
+  isAlumni?: boolean;
+  graduationYear?: string;
+  emailAddress?: string;
+}
+
+export interface OutreachTemplate {
+  id: string;
+  name: string;
+  subject: string;
+  body: string;
+  type: 'recruiter' | 'alumni' | 'hiring-manager' | 'referral';
+  variables: string[];
 }

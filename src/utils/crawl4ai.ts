@@ -189,6 +189,7 @@ export class Crawl4AI {
       const jobUrlPath = `${titlePrefix.toLowerCase().replace(/\s+/g, '-')}-at-${company.toLowerCase().replace(/\s+/g, '-')}-${id}`;
       const jobUrl = `${config.baseUrl}/jobs/${jobUrlPath}`;
       const applyUrl = `${config.baseUrl}/jobs/apply/${jobUrlPath}`;
+      const isRemote = Math.random() > 0.5;
       
       results.push({
         id,
@@ -202,6 +203,7 @@ export class Crawl4AI {
         applyUrl,
         verified: Math.random() > 0.1, // 90% chance of being verified
         matchPercentage: Math.floor(Math.random() * 31) + 70, // 70-100%
+        remote: isRemote,
         requirements: [
           'Bachelor\'s degree in Computer Science or related field',
           `3+ years of experience with ${query}`,
@@ -268,6 +270,14 @@ export class Crawl4AI {
     };
     
     return enhancedJob;
+  }
+  
+  /**
+   * Helper function to get a random work model that's type-safe
+   */
+  private getRandomWorkModel(): "remote" | "hybrid" | "onsite" {
+    const models: ["remote", "hybrid", "onsite"] = ["remote", "hybrid", "onsite"];
+    return models[Math.floor(Math.random() * models.length)];
   }
 }
 

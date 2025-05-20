@@ -1,62 +1,55 @@
 
-// Job source sites supported for scraping
-export const SUPPORTED_JOB_SOURCES = [
-  { name: "LinkedIn", supported: true },
-  { name: "Levels.fyi", supported: true },
-  { name: "Handshake", supported: true },
-  { name: "OfferPilotAI", supported: true },
-  { name: "Simplify.jobs", supported: true },
-  { name: "Jobright.ai", supported: true },
-  { name: "Indeed", supported: true },
-  { name: "Glassdoor", supported: true },
-  { name: "Greenhouse", supported: true },
-  { name: "Lever", supported: true },
-  { name: "Workday", supported: true },
-  { name: "Taleo", supported: true },
-  { name: "iCims", supported: true },
-  { name: "BrassRing", supported: true },
-  { name: "SmartRecruiters", supported: true },
-  { name: "Jobvite", supported: true },
-  { name: "Wellfound", supported: true },
-  { name: "Dice", supported: true },
-  { name: "ZipRecruiter", supported: true },
-  { name: "Monster", supported: true },
-  { name: "CareerBuilder", supported: true },
-  { name: "Company websites", supported: true },
-];
+import { JobApplicationTab } from "./types";
 
-// Job Application Sources Tabs
 export const JOB_TABS = [
-  { value: "manual", label: "Manual Apply" },
-  { value: "auto", label: "Auto Fill" },
-  { value: "scraper", label: "Job Scraper" },
+  {
+    value: "manual" as JobApplicationTab,
+    label: "Manual Apply"
+  },
+  {
+    value: "auto" as JobApplicationTab,
+    label: "Auto Apply"
+  },
+  {
+    value: "scraper" as JobApplicationTab,
+    label: "Job Scraper"
+  },
+  {
+    value: "linkedin" as JobApplicationTab,
+    label: "LinkedIn"
+  }
 ];
 
-// Common form field identifiers for auto-filling
-export const FORM_FIELD_IDENTIFIERS = {
-  firstName: ["first name", "firstname", "given name", "first"],
-  lastName: ["last name", "lastname", "surname", "family name", "last"],
-  fullName: ["full name", "name", "your name"],
-  email: ["email", "e-mail", "email address"],
-  phone: ["phone", "mobile", "telephone", "cell", "phone number"],
-  address: ["address", "street address", "mailing address"],
-  city: ["city", "town"],
-  state: ["state", "province", "region"],
-  zipCode: ["zip", "postal code", "postcode", "zip code"],
-  country: ["country", "nation"],
-  resume: ["resume", "cv", "curriculum vitae", "upload resume"],
-  coverLetter: ["cover letter", "covering letter", "motivation letter"],
-  linkedin: ["linkedin", "linkedin url", "linkedin profile"],
-  website: ["website", "personal website", "portfolio", "blog"],
-  github: ["github", "github url", "github profile"],
-  education: ["education", "school", "university", "college", "degree"],
-  experience: ["experience", "work experience", "employment history", "work history"],
-  skills: ["skills", "abilities", "competencies"],
-  languages: ["languages", "spoken languages"],
-  references: ["references", "referees"],
-  salary: ["salary", "compensation", "expected salary", "desired salary"],
-  availableDate: ["available", "start date", "availability"],
-  relocation: ["relocation", "willing to relocate"],
-  citizenship: ["citizenship", "work authorization", "visa", "eligible to work"],
-  security: ["security clearance", "clearance"]
-};
+export const SUPPORTED_JOB_SOURCES = [
+  { name: "LinkedIn", logo: "/logos/linkedin.svg" },
+  { name: "Indeed", logo: "/logos/indeed.svg" },
+  { name: "Glassdoor", logo: "/logos/glassdoor.svg" },
+  { name: "ZipRecruiter", logo: "/logos/ziprecruiter.svg" },
+  { name: "Monster", logo: "/logos/monster.svg" }
+];
+
+export const DEFAULT_APPLICATION_STATUS = "saved";
+
+export const APPLICATION_STATUSES = [
+  { value: "saved", label: "Saved" },
+  { value: "applied", label: "Applied" },
+  { value: "phone_screen", label: "Phone Screen" },
+  { value: "interview", label: "Interview" },
+  { value: "assessment", label: "Assessment" },
+  { value: "offer", label: "Offer" },
+  { value: "accepted", label: "Accepted" },
+  { value: "rejected", label: "Rejected" },
+  { value: "declined", label: "Declined" },
+  { value: "withdrawn", label: "Withdrawn" }
+];
+
+export const INTERVIEW_TYPES = [
+  { value: "phone", label: "Phone" },
+  { value: "video", label: "Video" },
+  { value: "onsite", label: "Onsite" },
+  { value: "technical", label: "Technical" },
+  { value: "behavioral", label: "Behavioral" }
+];
+
+export const DEFAULT_RESUME_NAME = "MyResume.pdf";
+export const DEFAULT_COVER_LETTER_NAME = "CoverLetter.pdf";

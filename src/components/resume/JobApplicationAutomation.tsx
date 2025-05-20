@@ -13,7 +13,7 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Check } from "lucide-react";
+import { AlertTriangle, Check, Linkedin, UserRound } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Import components
@@ -21,11 +21,13 @@ import JobApplicationForm from "./job-application/JobApplicationForm";
 import JobScraper from "./job-application/JobScraper";
 import JobList from "./job-application/JobList";
 import ConfirmationModal from "./job-application/ConfirmationModal";
+import LinkedInContactFinder from "./job-application/LinkedInContactFinder";
 import { JOB_TABS } from "./job-application/constants";
 import { ScrapedJob } from "./job-application/types";
+import { LinkedInContact, OutreachTemplate } from "@/types/resumePost";
 
 // Define the JobApplicationTab type
-type JobApplicationTab = 'manual' | 'auto' | 'scraper';
+type JobApplicationTab = 'manual' | 'auto' | 'scraper' | 'linkedin';
 
 const JobApplicationAutomation = () => {
   const [activeTab, setActiveTab] = useState<JobApplicationTab>("manual");
@@ -37,12 +39,34 @@ const JobApplicationAutomation = () => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [recentApplications, setRecentApplications] = useState<ScrapedJob[]>([]);
+  
+  // LinkedIn integration state
+  const [linkedInContacts, setLinkedInContacts] = useState<LinkedInContact[]>([]);
+  const [isScrapingLinkedIn, setIsScrapingLinkedIn] = useState(false);
+  const [outreachTemplates, setOutreachTemplates] = useState<OutreachTemplate[]>([
+    {
+      id: "template-1",
+      name: "Alumni Referral Request",
+      subject: "Fellow [University] Alumnus Seeking Advice on [Company] Application",
+      body: "Hi [Name],\n\nI hope this message finds you well. I noticed that you're a fellow [University] alumnus currently working at [Company]. I recently applied for the [Position] role and I'm very excited about the opportunity.\n\nWould you be open to a quick chat about your experience at [Company] or possibly helping with an internal referral? Any insights you could share would be greatly appreciated.\n\nThank you for your time!\n\nBest regards,\n[Your Name]",
+      type: "alumni",
+      variables: ["University", "Company", "Position", "Name", "Your Name"]
+    },
+    {
+      id: "template-2",
+      name: "Recruiter Outreach",
+      subject: "Following Up on [Position] Application at [Company]",
+      body: "Hello [Name],\n\nI recently applied for the [Position] position at [Company] and wanted to follow up personally. I'm particularly excited about [specific aspect of the company] and believe my background in [relevant skill/experience] aligns well with what you're looking for.\n\nI'd love to discuss the role further and learn more about the team's current priorities. Would you have 15 minutes for a call in the coming week?\n\nThank you for your consideration!\n\nBest regards,\n[Your Name]",
+      type: "recruiter",
+      variables: ["Position", "Company", "Name", "specific aspect of the company", "relevant skill/experience", "Your Name"]
+    }
+  ]);
 
   // Load saved tab preference from localStorage
   useEffect(() => {
     try {
       const savedTab = localStorage.getItem('preferredApplicationTab') as JobApplicationTab | null;
-      if (savedTab && (savedTab === 'manual' || savedTab === 'auto' || savedTab === 'scraper')) {
+      if (savedTab && ['manual', 'auto', 'scraper', 'linkedin'].includes(savedTab)) {
         setActiveTab(savedTab);
       }
       
@@ -50,6 +74,12 @@ const JobApplicationAutomation = () => {
       const savedApplications = localStorage.getItem('recentApplications');
       if (savedApplications) {
         setRecentApplications(JSON.parse(savedApplications));
+      }
+      
+      // Load outreach templates
+      const savedTemplates = localStorage.getItem('outreachTemplates');
+      if (savedTemplates) {
+        setOutreachTemplates(JSON.parse(savedTemplates));
       }
     } catch (error) {
       console.error("Error loading preferences:", error);
@@ -69,7 +99,94 @@ const JobApplicationAutomation = () => {
     setShowConfirmation(true);
   };
 
-  // Enhanced auto-application with better verification
+  // Find LinkedIn contacts for the selected job
+  const findLinkedInContacts = async (job: ScrapedJob) => {
+    setIsScrapingLinkedIn(true);
+    
+    try {
+      toast.loading("Finding LinkedIn contacts...", {
+        description: `Searching for recruiters and alumni at ${job.company}`,
+        duration: 2500
+      });
+      
+      // Wait for the toast to show before continuing
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Simulate API call to LinkedIn scraper
+      // In a real implementation, this would query LinkedIn via a backend API
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Generate mock LinkedIn contacts
+      const mockContacts = generateMockLinkedInContacts(job.company);
+      setLinkedInContacts(mockContacts);
+      
+      toast.success("LinkedIn contacts found", {
+        description: `Found ${mockContacts.filter(c => c.title.toLowerCase().includes('recruit')).length} recruiters and ${mockContacts.filter(c => c.isAlumni).length} alumni at ${job.company}`
+      });
+      
+      // Switch to LinkedIn tab to show contacts
+      setActiveTab('linkedin');
+    } catch (error) {
+      console.error("Error finding LinkedIn contacts:", error);
+      toast.error("Failed to find LinkedIn contacts", {
+        description: "There was an error searching LinkedIn. Please try again later."
+      });
+    } finally {
+      setIsScrapingLinkedIn(false);
+    }
+  };
+  
+  // Generate mock LinkedIn contacts for demonstration
+  const generateMockLinkedInContacts = (company: string): LinkedInContact[] => {
+    const titles = [
+      'Technical Recruiter', 'Senior Recruiter', 'Talent Acquisition Specialist',
+      'Software Engineer', 'Engineering Manager', 'Product Manager',
+      'HR Specialist', 'Hiring Manager', 'Technical Sourcer'
+    ];
+    
+    const universities = ['Stanford University', 'MIT', 'UC Berkeley', 'Harvard', 'UCLA'];
+    const userUniversity = 'Stanford University'; // Pretend this is the user's university
+    
+    const contacts: LinkedInContact[] = [];
+    
+    // Generate 3-5 recruiters
+    const recruiterCount = Math.floor(Math.random() * 3) + 3;
+    for (let i = 0; i < recruiterCount; i++) {
+      contacts.push({
+        id: `recruiter-${i}`,
+        name: `Recruiter ${i + 1}`,
+        title: titles[Math.floor(Math.random() * 3)], // Get a recruiting title
+        company,
+        profileUrl: `https://linkedin.com/in/recruiter-${i}`,
+        avatar: `https://randomuser.me/api/portraits/${i % 2 === 0 ? 'women' : 'men'}/${i + 10}.jpg`,
+        connectionDegree: Math.random() > 0.7 ? 2 : 3,
+        mutualConnections: Math.floor(Math.random() * 10),
+        isAlumni: Math.random() > 0.8,
+        graduationYear: Math.random() > 0.8 ? `${2010 + Math.floor(Math.random() * 12)}` : undefined
+      });
+    }
+    
+    // Generate 2-6 alumni
+    const alumniCount = Math.floor(Math.random() * 5) + 2;
+    for (let i = 0; i < alumniCount; i++) {
+      contacts.push({
+        id: `alumni-${i}`,
+        name: `Alumni ${i + 1}`,
+        title: titles[Math.floor(Math.random() * 9)], // Get any title
+        company,
+        profileUrl: `https://linkedin.com/in/alumni-${i}`,
+        avatar: `https://randomuser.me/api/portraits/${i % 2 === 0 ? 'men' : 'women'}/${i + 20}.jpg`,
+        connectionDegree: Math.random() > 0.5 ? 2 : 3,
+        mutualConnections: Math.floor(Math.random() * 15) + 1,
+        isAlumni: true,
+        graduationYear: `${2010 + Math.floor(Math.random() * 12)}`
+      });
+    }
+    
+    return contacts;
+  };
+
+  // Enhanced auto-application with LinkedIn integration
   const handleAutoApply = async () => {
     if (!selectedJob) return;
     
@@ -111,6 +228,9 @@ const JobApplicationAutomation = () => {
       toast.success("Application submitted successfully!", {
         description: `Your application to ${selectedJob.company} for ${selectedJob.title} has been sent.`
       });
+      
+      // After successful application, find LinkedIn contacts
+      await findLinkedInContacts(selectedJob);
       
       // Reset form
       setSelectedJob(null);
@@ -193,6 +313,9 @@ const JobApplicationAutomation = () => {
                 {tab.label}
               </TabsTrigger>
             ))}
+            <TabsTrigger value="linkedin" className="flex-1">
+              <Linkedin className="h-4 w-4 mr-1" /> LinkedIn
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="scraper" className="space-y-4 pt-4">
@@ -248,6 +371,32 @@ const JobApplicationAutomation = () => {
                 const updatedApplications = [newApplication, ...recentApplications].slice(0, 5);
                 setRecentApplications(updatedApplications);
                 localStorage.setItem('recentApplications', JSON.stringify(updatedApplications));
+              }}
+            />
+          </TabsContent>
+          
+          <TabsContent value="linkedin" className="space-y-4 pt-4">
+            <LinkedInContactFinder 
+              contacts={linkedInContacts}
+              isLoading={isScrapingLinkedIn}
+              templates={outreachTemplates}
+              onSaveTemplate={(template) => {
+                const updatedTemplates = outreachTemplates.map(t => 
+                  t.id === template.id ? template : t
+                );
+                setOutreachTemplates(updatedTemplates);
+                localStorage.setItem('outreachTemplates', JSON.stringify(updatedTemplates));
+                toast.success("Template saved successfully");
+              }}
+              onCreateTemplate={(template) => {
+                const newTemplate = {
+                  ...template,
+                  id: `template-${Date.now()}`
+                };
+                const updatedTemplates = [...outreachTemplates, newTemplate];
+                setOutreachTemplates(updatedTemplates);
+                localStorage.setItem('outreachTemplates', JSON.stringify(updatedTemplates));
+                toast.success("New template created successfully");
               }}
             />
           </TabsContent>
