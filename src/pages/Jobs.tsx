@@ -17,6 +17,7 @@ import { ScrapedJob } from "@/components/resume/job-application/types";
 import JobScraper from "@/components/resume/job-application/JobScraper";
 import JobAutomationPanel from "@/components/jobs/JobAutomationPanel";
 import { startAutomation } from "@/utils/automationUtils";
+import { isMobileApp } from "@/utils/mobileUtils";
 
 const generateSampleJobs = (count: number = 10): Job[] => {
   const now = new Date();
@@ -81,8 +82,17 @@ const Jobs = () => {
   const [automationEnabled, setAutomationEnabled] = useState<boolean>(false);
   const [automationConfig, setAutomationConfig] = useState<any>(null);
   const [showAutomationPanel, setShowAutomationPanel] = useState<boolean>(false);
+  const [isNativeMobileApp, setIsNativeMobileApp] = useState<boolean>(false);
 
   useEffect(() => {
+    // Check if this is running in a native mobile app
+    const checkMobileApp = async () => {
+      const mobileAppStatus = await isMobileApp();
+      setIsNativeMobileApp(mobileAppStatus);
+    };
+    
+    checkMobileApp();
+    
     // Load saved and applied jobs
     const savedJobs = localStorage.getItem('savedJobs');
     if (savedJobs) {
@@ -265,6 +275,7 @@ const Jobs = () => {
 
         if (bestMatch && bestMatch.applyUrl && bestMatch.matchPercentage && bestMatch.matchPercentage > 85) {
           toast({
+            title: "High Match Found",
             description: `${bestMatch.title} at ${bestMatch.company} is a ${bestMatch.matchPercentage}% match.`,
             action: {
               label: "Auto Apply",
@@ -354,14 +365,15 @@ const Jobs = () => {
                 <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">
                   {filteredJobs.length} Opportunities
                 </h2>
-                {filteredJobs.length > 3 && (
+                {/* Only show swipe view button on mobile app */}
+                {filteredJobs.length > 3 && isNativeMobileApp && (
                   <Button variant="outline" onClick={handleShowSwipeInterface}>
                     Try Swipe View
                   </Button>
                 )}
               </div>
 
-              {showSwipeInterface ? (
+              {showSwipeInterface && isNativeMobileApp ? (
                 <SwipeJobsInterface
                   jobs={filteredJobs}
                   onApply={handleApplyJob}

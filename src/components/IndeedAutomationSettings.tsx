@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Control } from 'react-hook-form';
 import { 
@@ -12,7 +11,36 @@ import {
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { IndeedSettings } from '@/utils/automationUtils';
+import { AutomationConfig } from '@/utils/automationUtils';
+
+// Define local IndeedSettings type since we're not exporting it from automationUtils
+interface IndeedSettings {
+  experienceYears?: {
+    java?: string;
+    aws?: string;
+    python?: string;
+    analysis?: string;
+    django?: string;
+    php?: string;
+    react?: string;
+    node?: string;
+    angular?: string;
+    javascript?: string;
+    orm?: string;
+    sdet?: string;
+    selenium?: string;
+    testautomation?: string;
+    webdev?: string;
+    programming?: string;
+    teaching?: string;
+    default?: string;
+  };
+  applicationSettings?: {
+    loadDelay?: number;
+    hasDBS?: boolean;
+    hasValidCertificate?: boolean;
+  };
+}
 
 interface IndeedAutomationSettingsProps {
   form: any; // Form context from parent

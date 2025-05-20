@@ -9,14 +9,32 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { AlertCircle, Check, Loader2 } from "lucide-react";
-import { getAutomationConfig, saveAutomationConfig, checkExtensionInstalled } from "@/utils/automationUtils";
+import { getAutomationConfig, saveAutomationConfig, checkExtensionInstalled, AutomationConfig } from "@/utils/automationUtils";
 
 export default function AutomationSettings() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isExtensionInstalled, setIsExtensionInstalled] = useState<boolean>(false);
   
-  const [config, setConfig] = useState({
+  const [config, setConfig] = useState<AutomationConfig>({
+    credentials: {
+      platform: 'indeed',
+      email: '',
+      password: '',
+      enabled: true
+    },
+    profile: {
+      name: '',
+      email: '',
+      phone: '',
+      location: '',
+      currentlyEmployed: false,
+      needVisa: false,
+      yearsOfCoding: 0,
+      experience: '',
+      languagesKnown: [],
+      codingLanguagesKnown: []
+    },
     name: "",
     email: "",
     phone: "",
