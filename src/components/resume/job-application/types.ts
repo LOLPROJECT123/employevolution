@@ -41,6 +41,7 @@ export interface ScrapedJob {
   requirements?: string[];
   jobType?: string;
   workModel?: 'onsite' | 'remote' | 'hybrid';
+  remote?: boolean; // Add missing remote property
   experienceLevel?: string;
   education?: string[];
   benefits?: string[];

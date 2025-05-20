@@ -1,4 +1,3 @@
-
 import { ScrapedJob } from "@/components/resume/job-application/types";
 import { toast } from "sonner";
 import { searchJobsWithCrawl4AI } from "@/utils/crawl4ai";
@@ -874,8 +873,8 @@ export class JobScraperService {
   /**
    * Get a random work model
    */
-  private getRandomWorkModel(): string {
-    const models = ['onsite', 'remote', 'hybrid'];
+  private getRandomWorkModel(): 'onsite' | 'remote' | 'hybrid' {
+    const models: ('onsite' | 'remote' | 'hybrid')[] = ['onsite', 'remote', 'hybrid'];
     const weights = [0.3, 0.3, 0.4]; // Weighted probabilities
     
     // Weighted random selection

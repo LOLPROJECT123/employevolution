@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Job } from "@/types/job";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -11,7 +12,9 @@ import { Badge } from "@/components/ui/badge";
 interface SwipeJobsInterfaceProps {
   jobs: Job[];
   onApply: (job: Job) => void;
-  onSkip: () => void; // Changed to match the calling signature in Jobs.tsx
+  onSkip: () => void;
+  onSave: (job: Job) => void; // Add missing onSave prop
+  onClose: () => void; // Add missing onClose prop
 }
 
 const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) => {

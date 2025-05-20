@@ -1,4 +1,3 @@
-
 import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
 import { BookmarkIcon, Building2, MapPin, Clock, CheckCircle, ArrowRight, Zap } from "lucide-react";
@@ -14,6 +13,7 @@ interface JobCardProps {
   onClick?: () => void;
   onSave?: () => void;
   variant?: 'list' | 'grid' | 'detailed';
+  showMatchScore?: boolean; // Add missing showMatchScore prop
 }
 
 export function JobCard({
@@ -24,7 +24,8 @@ export function JobCard({
   onApply,
   onClick,
   onSave,
-  variant = 'list'
+  variant = 'list',
+  showMatchScore = false
 }: JobCardProps) {
   // Safely format the postedAt field
   const timeAgo = job.postedAt ? formatRelativeTime(job.postedAt) : 'Recently';

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { X, Filter, ArrowUpAZ } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -39,6 +38,7 @@ export function JobFiltersSection({ onApplyFilters }: JobFiltersSectionProps) {
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [isOpen, setIsOpen] = useState(true);
 
+  // Fix the function with proper type for value
   const handleFilterChange = <K extends keyof JobFilters>(
     key: K,
     value: JobFilters[K]
@@ -270,7 +270,7 @@ export function JobFiltersSection({ onApplyFilters }: JobFiltersSectionProps) {
               <AccordionContent>
                 <RadioGroup 
                   value={filters.sort || 'relevance'}
-                  onValueChange={(value) => handleFilterChange('sort', value)}
+                  onValueChange={(value) => handleFilterChange('sort', value as JobFilters['sort'])}
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="relevance" id="sort-relevance" />
