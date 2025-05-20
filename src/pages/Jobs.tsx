@@ -179,9 +179,7 @@ const Jobs = () => {
     
     // If already applied, show notification
     if (appliedJobIds.includes(jobId)) {
-      toast("You have already applied for this job!", {
-        duration: 4000,
-      });
+      toast("You have already applied for this job!");
       return;
     }
     
@@ -275,7 +273,6 @@ const Jobs = () => {
 
         if (bestMatch && bestMatch.applyUrl && bestMatch.matchPercentage && bestMatch.matchPercentage > 85) {
           toast({
-            title: "High Match Found",
             description: `${bestMatch.title} at ${bestMatch.company} is a ${bestMatch.matchPercentage}% match.`,
             action: {
               label: "Auto Apply",
