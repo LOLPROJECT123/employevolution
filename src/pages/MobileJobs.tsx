@@ -1,19 +1,21 @@
-
 import { useState, useEffect } from 'react';
 import MobileHeader from "@/components/MobileHeader";
 import { MobileJobDetail } from "@/components/MobileJobDetail";
 import { MobileJobList } from "@/components/MobileJobList";
 import { Job } from "@/types/job";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import JobAutomationPanel from "@/components/jobs/JobAutomationPanel";
+import { Settings } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const MobileJobs = () => {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [showDetail, setShowDetail] = useState(false);
-  
-  // Sample jobs or fetch from API
   const [jobs, setJobs] = useState<Job[]>([]);
   const [savedJobIds, setSavedJobIds] = useState<string[]>([]);
   const [appliedJobIds, setAppliedJobIds] = useState<string[]>([]);
+  const [showAutomationDialog, setShowAutomationDialog] = useState(false);
   
   // Load saved jobs on component mount
   useEffect(() => {
@@ -88,6 +90,11 @@ const MobileJobs = () => {
     }
   };
 
+  // Toggle automation dialog
+  const toggleAutomationDialog = () => {
+    setShowAutomationDialog(!showAutomationDialog);
+  };
+
   // Helper function to generate sample jobs
   const generateSampleJobs = (count: number): Job[] => {
     const now = new Date();
@@ -129,6 +136,14 @@ const MobileJobs = () => {
           />
         ) : (
           <div className="container px-4 py-4">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Available Positions</h2>
+              <Button variant="outline" size="sm" onClick={toggleAutomationDialog} className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                Application Automation
+              </Button>
+            </div>
+            
             <MobileJobList 
               jobs={jobs}
               savedJobIds={savedJobIds}
@@ -139,6 +154,16 @@ const MobileJobs = () => {
             />
           </div>
         )}
+        
+        {/* Application Automation Dialog */}
+        <Dialog open={showAutomationDialog} onOpenChange={setShowAutomationDialog}>
+          <DialogContent className="sm:max-w-[95%] md:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Application Automation</DialogTitle>
+            </DialogHeader>
+            <JobAutomationPanel />
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );

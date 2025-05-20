@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -18,6 +17,7 @@ import { ScrapedJob } from "@/components/resume/job-application/types";
 import JobScraper from "@/components/resume/job-application/JobScraper";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import JobAutomationPanel from "@/components/jobs/JobAutomationPanel";
+import { Settings } from "lucide-react";
 
 const generateSampleJobs = (count: number = 10): Job[] => {
   const now = new Date();
@@ -224,7 +224,8 @@ const Jobs = () => {
               Find Your Next Opportunity
             </h1>
             <div>
-              <Button variant="outline" onClick={toggleAutomationDialog}>
+              <Button variant="outline" onClick={toggleAutomationDialog} className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
                 Application Automation
               </Button>
             </div>

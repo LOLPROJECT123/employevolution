@@ -12,13 +12,21 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Check } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Check, FileText } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Import job automation components
 import JobApplicationForm from "../resume/job-application/JobApplicationForm";
 import ConfirmationModal from "../resume/job-application/ConfirmationModal";
 import { ScrapedJob } from "../resume/job-application/types";
+import { FileUploadZone } from "./FileUploadZone";
+
+// Define types for the uploaded files
+interface UploadedFiles {
+  resume: File | null;
+  coverLetter: File | null;
+}
 
 const JobAutomationPanel = () => {
   const navigate = useNavigate();
@@ -28,6 +36,11 @@ const JobAutomationPanel = () => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [recentApplications, setRecentApplications] = useState<ScrapedJob[]>([]);
+  const [activeTab, setActiveTab] = useState<string>("manual");
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFiles>({
+    resume: null,
+    coverLetter: null
+  });
 
   // Load saved tab preference from localStorage
   useEffect(() => {
@@ -36,6 +49,12 @@ const JobAutomationPanel = () => {
       const savedApplications = localStorage.getItem('recentApplications');
       if (savedApplications) {
         setRecentApplications(JSON.parse(savedApplications));
+      }
+      
+      // Load preferred tab
+      const savedTab = localStorage.getItem('preferredApplicationTab');
+      if (savedTab) {
+        setActiveTab(savedTab);
       }
     } catch (error) {
       console.error("Error loading preferences:", error);
@@ -96,6 +115,23 @@ const JobAutomationPanel = () => {
     }
   };
   
+  // Handle file uploads
+  const handleFileUpload = (file: File, type: 'resume' | 'cover_letter') => {
+    setUploadedFiles(prev => ({
+      ...prev,
+      [type === 'resume' ? 'resume' : 'coverLetter']: file
+    }));
+    
+    // Save file reference to localStorage
+    localStorage.setItem(
+      type === 'resume' ? 'uploadedResumeFileName' : 'uploadedCoverLetterFileName', 
+      file.name
+    );
+    
+    // In a real implementation, you would handle file storage/processing here
+    console.log(`${type === 'resume' ? 'Resume' : 'Cover letter'} uploaded:`, file);
+  };
+  
   const simulateJobApplication = async (job: ScrapedJob) => {
     // Simulate the application process with better feedback
     toast("Filling out application form...", {
@@ -153,29 +189,88 @@ const JobAutomationPanel = () => {
   return (
     <Card className="w-full border-0 shadow-none">
       <CardContent className="space-y-4 pt-4">
-        <JobApplicationForm 
-          activeTab="manual"
-          onNavigateToProfile={handleNavigateToProfile} 
-          onSuccess={(jobUrl) => {
-            // Track successful manual applications
-            const newApplication: ScrapedJob = {
-              id: `manual-${Date.now()}`,
-              title: "Custom Application",
-              company: "Manual Entry",
-              location: "Unknown",
-              url: jobUrl,
-              source: "Manual",
-              datePosted: new Date().toLocaleDateString(),
-              description: "Manually submitted application",
-              applyUrl: jobUrl,
-              verified: true
-            };
-            
-            const updatedApplications = [newApplication, ...recentApplications].slice(0, 5);
-            setRecentApplications(updatedApplications);
-            localStorage.setItem('recentApplications', JSON.stringify(updatedApplications));
-          }}
-        />
+        <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid grid-cols-2 mb-4">
+            <TabsTrigger value="manual">Manual Application</TabsTrigger>
+            <TabsTrigger value="auto">Auto Application</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="manual" className="space-y-4">
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Resume Upload</h3>
+              <FileUploadZone 
+                onFileSelect={(file) => handleFileUpload(file, 'resume')}
+                fileType="resume"
+              />
+              
+              <h3 className="text-lg font-medium mt-6">Cover Letter Upload</h3>
+              <FileUploadZone 
+                onFileSelect={(file) => handleFileUpload(file, 'cover_letter')}
+                fileType="cover_letter"
+              />
+              
+              <div className="pt-4">
+                <JobApplicationForm 
+                  activeTab="manual"
+                  onNavigateToProfile={handleNavigateToProfile} 
+                  onSuccess={(jobUrl) => {
+                    // Track successful manual applications
+                    const newApplication: ScrapedJob = {
+                      id: `manual-${Date.now()}`,
+                      title: "Custom Application",
+                      company: "Manual Entry",
+                      location: "Unknown",
+                      url: jobUrl,
+                      source: "Manual",
+                      datePosted: new Date().toLocaleDateString(),
+                      description: "Manually submitted application",
+                      applyUrl: jobUrl,
+                      verified: true
+                    };
+                    
+                    const updatedApplications = [newApplication, ...recentApplications].slice(0, 5);
+                    setRecentApplications(updatedApplications);
+                    localStorage.setItem('recentApplications', JSON.stringify(updatedApplications));
+                  }}
+                />
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="auto" className="space-y-4">
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Resume Upload</h3>
+              <FileUploadZone 
+                onFileSelect={(file) => handleFileUpload(file, 'resume')}
+                fileType="resume"
+              />
+              
+              <JobApplicationForm 
+                activeTab="auto"
+                onNavigateToProfile={handleNavigateToProfile} 
+                onSuccess={(jobUrl) => {
+                  // Track successful auto applications
+                  const newApplication: ScrapedJob = {
+                    id: `auto-${Date.now()}`,
+                    title: "Automated Application",
+                    company: "Auto Entry",
+                    location: "Unknown",
+                    url: jobUrl,
+                    source: "Auto",
+                    datePosted: new Date().toLocaleDateString(),
+                    description: "Automatically submitted application",
+                    applyUrl: jobUrl,
+                    verified: true
+                  };
+                  
+                  const updatedApplications = [newApplication, ...recentApplications].slice(0, 5);
+                  setRecentApplications(updatedApplications);
+                  localStorage.setItem('recentApplications', JSON.stringify(updatedApplications));
+                }}
+              />
+            </div>
+          </TabsContent>
+        </Tabs>
         
         {/* Recent Applications Section */}
         {recentApplications.length > 0 && (
