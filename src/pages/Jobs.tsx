@@ -15,9 +15,6 @@ import JobSourcesDisplay from "@/components/JobSourcesDisplay";
 import { Card } from "@/components/ui/card";
 import { ScrapedJob } from "@/components/resume/job-application/types";
 import JobScraper from "@/components/resume/job-application/JobScraper";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import JobAutomationPanel from "@/components/jobs/JobAutomationPanel";
-import { Settings } from "lucide-react";
 
 const generateSampleJobs = (count: number = 10): Job[] => {
   const now = new Date();
@@ -79,7 +76,6 @@ const Jobs = () => {
   const detailViewRef = useRef<HTMLDivElement>(null);
   const [showJobScraperInterface, setShowJobScraperInterface] = useState(false);
   const [scrapedJobs, setScrapedJobs] = useState<ScrapedJob[]>([]);
-  const [showAutomationDialog, setShowAutomationDialog] = useState(false);
 
   useEffect(() => {
     const savedJobs = localStorage.getItem('savedJobs');
@@ -199,10 +195,6 @@ const Jobs = () => {
     }
   };
 
-  const toggleAutomationDialog = () => {
-    setShowAutomationDialog(!showAutomationDialog);
-  };
-
   const filteredJobs = jobs.filter(job => {
     if (filters.search && !job.title.toLowerCase().includes(filters.search.toLowerCase()) && !job.description.toLowerCase().includes(filters.search.toLowerCase())) {
       return false;
@@ -223,10 +215,13 @@ const Jobs = () => {
             <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
               Find Your Next Opportunity
             </h1>
-            <div>
-              <Button variant="outline" onClick={toggleAutomationDialog} className="flex items-center gap-2">
-                <Settings className="h-4 w-4" />
-                Application Automation
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                className="group flex items-center gap-2"
+                onClick={() => window.open(chrome.runtime?.id ? chrome.runtime.getURL("index.html") : "https://chrome.google.com/webstore/detail/streamline-extension", "_blank")}
+              >
+                <span>Chrome Extension</span>
               </Button>
             </div>
           </div>
@@ -292,16 +287,6 @@ const Jobs = () => {
               )}
             </div>
           </div>
-          
-          {/* Application Automation Dialog */}
-          <Dialog open={showAutomationDialog} onOpenChange={setShowAutomationDialog}>
-            <DialogContent className="sm:max-w-[800px]">
-              <DialogHeader>
-                <DialogTitle>Application Automation</DialogTitle>
-              </DialogHeader>
-              <JobAutomationPanel />
-            </DialogContent>
-          </Dialog>
         </div>
       </main>
     </div>

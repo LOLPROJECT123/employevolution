@@ -7,7 +7,6 @@ import { BookmarkIcon, ArrowLeft, XIcon, CheckIcon, BriefcaseIcon, MapPinIcon, C
 import { toast } from "sonner";
 import { formatSalary } from "@/utils/formatters";
 import JobKeywordMatch from "@/components/JobKeywordMatch";
-import { JobAutomationControl } from "@/components/JobAutomationControl";
 import { Job } from "@/types/job";
 
 interface MobileJobDetailProps {
@@ -227,8 +226,24 @@ export const MobileJobDetail = ({
             )}
           </Button>
           
-          {/* Add the JobAutomationControl component */}
-          <JobAutomationControl job={job} isApplied={isApplied} />
+          {/* Chrome Extension note */}
+          {!isApplied && job.applyUrl && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-2"
+              onClick={() => {
+                toast.info("Install our Chrome extension to enable auto-applying", {
+                  action: {
+                    label: "Install",
+                    onClick: () => window.open("https://chrome.google.com/webstore/detail/streamline-extension", "_blank")
+                  }
+                });
+              }}
+            >
+              Use Extension
+            </Button>
+          )}
         </div>
       </div>
     </div>
