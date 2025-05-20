@@ -13,15 +13,11 @@ import { toast } from "sonner";
 import { Search, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import JobSourcesDisplay from "@/components/JobSourcesDisplay";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import JobAutomationPanel from "@/components/jobs/JobAutomationPanel";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Check } from "lucide-react";
 import { ScrapedJob } from "@/components/resume/job-application/types";
 import JobScraper from "@/components/resume/job-application/JobScraper";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import JobAutomationPanel from "@/components/jobs/JobAutomationPanel";
 
 const generateSampleJobs = (count: number = 10): Job[] => {
   const now = new Date();
@@ -81,9 +77,9 @@ const Jobs = () => {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const isMobile = useMobile();
   const detailViewRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState<'browse' | 'automation'>('browse');
   const [showJobScraperInterface, setShowJobScraperInterface] = useState(false);
   const [scrapedJobs, setScrapedJobs] = useState<ScrapedJob[]>([]);
+  const [showAutomationDialog, setShowAutomationDialog] = useState(false);
 
   useEffect(() => {
     const savedJobs = localStorage.getItem('savedJobs');
@@ -203,6 +199,10 @@ const Jobs = () => {
     }
   };
 
+  const toggleAutomationDialog = () => {
+    setShowAutomationDialog(!showAutomationDialog);
+  };
+
   const filteredJobs = jobs.filter(job => {
     if (filters.search && !job.title.toLowerCase().includes(filters.search.toLowerCase()) && !job.description.toLowerCase().includes(filters.search.toLowerCase())) {
       return false;
@@ -223,89 +223,84 @@ const Jobs = () => {
             <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
               Find Your Next Opportunity
             </h1>
-            <div className="hidden md:block">
-              <Button variant="outline" onClick={() => setActiveTab(activeTab === 'browse' ? 'automation' : 'browse')}>
-                {activeTab === 'browse' ? 'Application Automation' : 'Browse Jobs'}
+            <div>
+              <Button variant="outline" onClick={toggleAutomationDialog}>
+                Application Automation
               </Button>
             </div>
           </div>
           
-          {/* Tabs to switch between job browsing and job automation */}
-          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'browse' | 'automation')} className="space-y-6">
-            <TabsList className="w-full md:w-auto mb-2">
-              <TabsTrigger value="browse" className="flex-1 md:flex-none">Browse Jobs</TabsTrigger>
-              <TabsTrigger value="automation" className="flex-1 md:flex-none">Application Automation</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="browse" className="space-y-6">
-              {/* Job Sources */}
-              <div className="w-full">
-                <JobSourcesDisplay />
+          {/* Job Sources */}
+          <div className="w-full mb-6">
+            <JobSourcesDisplay />
+          </div>
+          
+          {/* Job Scraper Toggle */}
+          <div className="flex justify-end mb-4">
+            <Button 
+              variant={showJobScraperInterface ? "default" : "outline"} 
+              onClick={() => setShowJobScraperInterface(!showJobScraperInterface)}
+            >
+              {showJobScraperInterface ? "Hide Job Search" : "Search Jobs"}
+            </Button>
+          </div>
+          
+          {/* Job Scraper Interface */}
+          {showJobScraperInterface && (
+            <Card className="mb-6 p-4">
+              <JobScraper onJobsScraped={handleJobsScraped} />
+            </Card>
+          )}
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="md:col-span-1">
+              <JobFiltersSection onApplyFilters={handleFilterChange} />
+            </div>
+            <div className="md:col-span-3">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">
+                  {filteredJobs.length} Opportunities
+                </h2>
+                {filteredJobs.length > 3 && (
+                  <Button variant="outline" onClick={handleShowSwipeInterface}>
+                    Try Swipe View
+                  </Button>
+                )}
               </div>
-              
-              {/* Job Scraper Toggle */}
-              <div className="flex justify-end">
-                <Button 
-                  variant={showJobScraperInterface ? "default" : "outline"} 
-                  onClick={() => setShowJobScraperInterface(!showJobScraperInterface)}
-                >
-                  {showJobScraperInterface ? "Hide Job Search" : "Search Jobs"}
-                </Button>
-              </div>
-              
-              {/* Job Scraper Interface */}
-              {showJobScraperInterface && (
-                <Card className="mb-6 p-4">
-                  <JobScraper onJobsScraped={handleJobsScraped} />
-                </Card>
-              )}
-              
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="md:col-span-1">
-                  <JobFiltersSection onApplyFilters={handleFilterChange} />
-                </div>
-                <div className="md:col-span-3">
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">
-                      {filteredJobs.length} Opportunities
-                    </h2>
-                    {filteredJobs.length > 3 && (
-                      <Button variant="outline" onClick={handleShowSwipeInterface}>
-                        Try Swipe View
-                      </Button>
-                    )}
-                  </div>
 
-                  {showSwipeInterface ? (
-                    <SwipeJobsInterface
-                      jobs={filteredJobs}
-                      onApply={handleApplyJob}
-                      onSkip={handleSkipJob}
+              {showSwipeInterface ? (
+                <SwipeJobsInterface
+                  jobs={filteredJobs}
+                  onApply={handleApplyJob}
+                  onSkip={handleSkipJob}
+                />
+              ) : (
+                <div className="space-y-4">
+                  {filteredJobs.map(job => (
+                    <JobCard
+                      key={job.id}
+                      job={job}
+                      onClick={() => handleJobSelect(job)}
+                      isSaved={savedJobIds.includes(job.id)}
+                      onSave={() => handleSaveJob(job)}
+                      isApplied={appliedJobIds.includes(job.id)}
+                      onApply={() => handleApplyJob(job)}
                     />
-                  ) : (
-                    <div className="space-y-4">
-                      {filteredJobs.map(job => (
-                        <JobCard
-                          key={job.id}
-                          job={job}
-                          onClick={() => handleJobSelect(job)}
-                          isSaved={savedJobIds.includes(job.id)}
-                          onSave={() => handleSaveJob(job)}
-                          isApplied={appliedJobIds.includes(job.id)}
-                          onApply={() => handleApplyJob(job)}
-                        />
-                      ))}
-                    </div>
-                  )}
+                  ))}
                 </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="automation">
-              {/* Job automation content */}
+              )}
+            </div>
+          </div>
+          
+          {/* Application Automation Dialog */}
+          <Dialog open={showAutomationDialog} onOpenChange={setShowAutomationDialog}>
+            <DialogContent className="sm:max-w-[800px]">
+              <DialogHeader>
+                <DialogTitle>Application Automation</DialogTitle>
+              </DialogHeader>
               <JobAutomationPanel />
-            </TabsContent>
-          </Tabs>
+            </DialogContent>
+          </Dialog>
         </div>
       </main>
     </div>

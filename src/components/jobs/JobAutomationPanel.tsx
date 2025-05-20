@@ -10,7 +10,6 @@ import {
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Check } from "lucide-react";
@@ -21,11 +20,7 @@ import JobApplicationForm from "../resume/job-application/JobApplicationForm";
 import ConfirmationModal from "../resume/job-application/ConfirmationModal";
 import { ScrapedJob } from "../resume/job-application/types";
 
-// Define application tabs type
-type ApplicationTab = 'manual' | 'auto-fill';
-
 const JobAutomationPanel = () => {
-  const [activeTab, setActiveTab] = useState<ApplicationTab>("manual");
   const navigate = useNavigate();
   
   // Job application state
@@ -37,11 +32,6 @@ const JobAutomationPanel = () => {
   // Load saved tab preference from localStorage
   useEffect(() => {
     try {
-      const savedTab = localStorage.getItem('preferredApplicationTab') as ApplicationTab | null;
-      if (savedTab && (savedTab === 'manual' || savedTab === 'auto-fill')) {
-        setActiveTab(savedTab);
-      }
-      
       // Load recent applications
       const savedApplications = localStorage.getItem('recentApplications');
       if (savedApplications) {
@@ -161,72 +151,31 @@ const JobAutomationPanel = () => {
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Application Automation</CardTitle>
-        <CardDescription>
-          Apply to job postings with your resume automatically
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as ApplicationTab)} className="w-full">
-          <TabsList className="w-full grid grid-cols-2">
-            <TabsTrigger value="manual">Manual Apply</TabsTrigger>
-            <TabsTrigger value="auto-fill">Auto-Fill</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="manual" className="space-y-4 pt-4">
-            <JobApplicationForm 
-              activeTab="manual"
-              onNavigateToProfile={handleNavigateToProfile} 
-              onSuccess={(jobUrl) => {
-                // Track successful manual applications
-                const newApplication: ScrapedJob = {
-                  id: `manual-${Date.now()}`,
-                  title: "Custom Application",
-                  company: "Manual Entry",
-                  location: "Unknown",
-                  url: jobUrl,
-                  source: "Manual",
-                  datePosted: new Date().toLocaleDateString(),
-                  description: "Manually submitted application",
-                  applyUrl: jobUrl,
-                  verified: true
-                };
-                
-                const updatedApplications = [newApplication, ...recentApplications].slice(0, 5);
-                setRecentApplications(updatedApplications);
-                localStorage.setItem('recentApplications', JSON.stringify(updatedApplications));
-              }}
-            />
-          </TabsContent>
-          
-          <TabsContent value="auto-fill" className="space-y-4 pt-4">
-            <JobApplicationForm 
-              activeTab="auto"
-              onNavigateToProfile={handleNavigateToProfile} 
-              onSuccess={(jobUrl) => {
-                // Track successful auto applications
-                const newApplication: ScrapedJob = {
-                  id: `auto-${Date.now()}`,
-                  title: "Automated Application",
-                  company: "Auto Entry",
-                  location: "Unknown",
-                  url: jobUrl,
-                  source: "Auto",
-                  datePosted: new Date().toLocaleDateString(),
-                  description: "Automatically submitted application",
-                  applyUrl: jobUrl,
-                  verified: true
-                };
-                
-                const updatedApplications = [newApplication, ...recentApplications].slice(0, 5);
-                setRecentApplications(updatedApplications);
-                localStorage.setItem('recentApplications', JSON.stringify(updatedApplications));
-              }}
-            />
-          </TabsContent>
-        </Tabs>
+    <Card className="w-full border-0 shadow-none">
+      <CardContent className="space-y-4 pt-4">
+        <JobApplicationForm 
+          activeTab="manual"
+          onNavigateToProfile={handleNavigateToProfile} 
+          onSuccess={(jobUrl) => {
+            // Track successful manual applications
+            const newApplication: ScrapedJob = {
+              id: `manual-${Date.now()}`,
+              title: "Custom Application",
+              company: "Manual Entry",
+              location: "Unknown",
+              url: jobUrl,
+              source: "Manual",
+              datePosted: new Date().toLocaleDateString(),
+              description: "Manually submitted application",
+              applyUrl: jobUrl,
+              verified: true
+            };
+            
+            const updatedApplications = [newApplication, ...recentApplications].slice(0, 5);
+            setRecentApplications(updatedApplications);
+            localStorage.setItem('recentApplications', JSON.stringify(updatedApplications));
+          }}
+        />
         
         {/* Recent Applications Section */}
         {recentApplications.length > 0 && (

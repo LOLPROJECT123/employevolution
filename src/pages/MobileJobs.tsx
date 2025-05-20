@@ -1,17 +1,12 @@
 
 import { useState, useEffect } from 'react';
 import MobileHeader from "@/components/MobileHeader";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import JobAutomationPanel from "@/components/jobs/JobAutomationPanel";
 import { MobileJobDetail } from "@/components/MobileJobDetail";
 import { MobileJobList } from "@/components/MobileJobList";
-import { Button } from "@/components/ui/button";
 import { Job } from "@/types/job";
 import { toast } from "sonner";
-import { Settings } from "lucide-react";
 
 const MobileJobs = () => {
-  const [activeTab, setActiveTab] = useState<'browse' | 'automation'>('browse');
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   
@@ -134,27 +129,14 @@ const MobileJobs = () => {
           />
         ) : (
           <div className="container px-4 py-4">
-            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'browse' | 'automation')} className="space-y-4">
-              <TabsList className="w-full grid grid-cols-2">
-                <TabsTrigger value="browse">Browse Jobs</TabsTrigger>
-                <TabsTrigger value="automation">Application Automation</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="browse" className="space-y-4">
-                <MobileJobList 
-                  jobs={jobs}
-                  savedJobIds={savedJobIds}
-                  appliedJobIds={appliedJobIds}
-                  onSelect={handleJobSelect}
-                  onSave={handleSaveJob}
-                  onApply={handleApplyJob}
-                />
-              </TabsContent>
-              
-              <TabsContent value="automation">
-                <JobAutomationPanel />
-              </TabsContent>
-            </Tabs>
+            <MobileJobList 
+              jobs={jobs}
+              savedJobIds={savedJobIds}
+              appliedJobIds={appliedJobIds}
+              onSelect={handleJobSelect}
+              onSave={handleSaveJob}
+              onApply={handleApplyJob}
+            />
           </div>
         )}
       </main>
