@@ -14,6 +14,11 @@ export interface ScrapedJob {
   applyUrl: string;
   verified?: boolean;
   salary?: string;
+  salaryRange?: {
+    min: number;
+    max: number;
+    currency: string;
+  };
   matchPercentage?: number;
   matchKeywords?: string[];
   requiredSkills?: string[];
@@ -34,6 +39,17 @@ export interface ScrapedJob {
     };
   };
   requirements?: string[];
+  jobType?: string;
+  workModel?: 'onsite' | 'remote' | 'hybrid';
+  experienceLevel?: string;
+  education?: string[];
+  benefits?: string[];
+  applicationCount?: number;
+  companyLogo?: string;
+  companySize?: string;
+  companyIndustry?: string;
+  responsibilities?: string[];
+  applicationStatus?: string;
 }
 
 export interface ResumeTemplate {

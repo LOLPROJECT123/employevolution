@@ -36,6 +36,7 @@ interface SavedAndAppliedJobsProps {
   onApply?: (job: Job) => void;
   onSave?: (job: Job) => void;
   hideTitle?: boolean; // New prop to hide the title
+  variant?: 'default' | 'standalone'; // Whether this is a standalone component or part of another page
 }
 
 export function SavedAndAppliedJobs({
@@ -45,7 +46,8 @@ export function SavedAndAppliedJobs({
   appliedJobs: propAppliedJobs,
   onApply: propOnApply,
   onSave: propOnSave,
-  hideTitle = false // Default to false
+  hideTitle = false, // Default to false
+  variant = 'default'
 }: SavedAndAppliedJobsProps) {
   const [activeTab, setActiveTab] = useState<string>("saved");
   
@@ -71,7 +73,119 @@ export function SavedAndAppliedJobs({
       updateApplicationStatus(application.id, status);
     }
   };
+
+  // For standalone variant, use a different layout
+  if (variant === 'standalone') {
+    return (
+      <div className="container mx-auto max-w-5xl px-4 py-6">
+        <div className="mb-4">
+          <h1 className="text-2xl font-bold mb-1">My Jobs</h1>
+          <p className="text-gray-600">Saved and Applied Positions</p>
+        </div>
+        
+        <Card className="shadow-sm">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <div className="border-b">
+              <TabsList className="w-full justify-start h-auto bg-transparent p-0 rounded-none">
+                <TabsTrigger value="saved" className="py-3 px-6 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none data-[state=active]:shadow-none text-base">
+                  Saved Jobs ({savedJobs.length})
+                </TabsTrigger>
+                <TabsTrigger value="applied" className="py-3 px-6 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none data-[state=active]:shadow-none text-base">
+                  Applied Jobs ({appliedJobs.length})
+                </TabsTrigger>
+              </TabsList>
+            </div>
+            
+            <TabsContent value="saved" className="pt-4">
+              {savedJobs.length === 0 ? (
+                <div className="p-10 text-center">
+                  <p className="text-xl font-medium mb-2">
+                    You Haven't Saved Any Jobs Yet.
+                  </p>
+                  <p className="text-gray-600 mb-6">
+                    Save jobs to keep track of positions you're interested in.
+                  </p>
+                  <Button>Browse Jobs</Button>
+                </div>
+              ) : (
+                <div className="divide-y">
+                  {savedJobs.map(job => (
+                    <JobCard 
+                      key={job.id}
+                      job={job}
+                      onApply={() => applyToJob(job)}
+                      isSelected={selectedJobId === job.id}
+                      isSaved={true}
+                      isApplied={appliedJobs.some(j => j.id === job.id)}
+                      onClick={() => onSelect(job)}
+                      onSave={() => saveJob(job)}
+                      variant="detailed"
+                    />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="applied" className="pt-4">
+              {appliedJobs.length === 0 ? (
+                <div className="p-10 text-center">
+                  <p className="text-xl font-medium mb-2">
+                    You Haven't Applied To Any Jobs Yet.
+                  </p>
+                  <p className="text-gray-600 mb-6">
+                    Apply to jobs to track your application progress.
+                  </p>
+                  <Button>Find Jobs</Button>
+                </div>
+              ) : (
+                <div className="divide-y">
+                  {appliedJobs.map(job => {
+                    const application = getApplicationByJobId(job.id);
+                    return (
+                      <div key={job.id} className="relative">
+                        <JobCard 
+                          job={job}
+                          onApply={() => applyToJob(job)}
+                          isSelected={selectedJobId === job.id}
+                          isSaved={savedJobs.some(j => j.id === job.id)}
+                          isApplied={true}
+                          onClick={() => onSelect(job)}
+                          onSave={() => saveJob(job)}
+                          variant="detailed"
+                        />
+                        <div className="px-6 py-3 border-t flex items-center justify-between bg-gray-50 dark:bg-gray-800/50">
+                          <span className="text-sm">
+                            Status: <span className="font-medium capitalize">{application?.status || "applied"}</span>
+                          </span>
+                          <Select
+                            value={application?.status || "applied"}
+                            onValueChange={(value) => handleStatusChange(job.id, value as JobStatus)}
+                          >
+                            <SelectTrigger className="w-[160px] h-8">
+                              <SelectValue placeholder="Update status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="applied">Applied</SelectItem>
+                              <SelectItem value="interviewing">Interviewing</SelectItem>
+                              <SelectItem value="offered">Offered</SelectItem>
+                              <SelectItem value="rejected">Rejected</SelectItem>
+                              <SelectItem value="accepted">Accepted</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </Card>
+      </div>
+    );
+  }
   
+  // Default variant - used in sidebar
   return (
     <Card className="h-full shadow-none border-0 sm:border sm:shadow-sm overflow-hidden">
       {!hideTitle && (

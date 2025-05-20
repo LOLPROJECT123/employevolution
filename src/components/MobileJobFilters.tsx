@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { JobFilters } from "@/types/job";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, X, Check, SlidersHorizontal } from "lucide-react";
+import { ChevronDown, X, Check, SlidersHorizontal, BookmarkCheck, SortAscending } from "lucide-react";
 import { 
   Sheet,
   SheetContent,
@@ -11,17 +11,31 @@ import {
   SheetTrigger
 } from "@/components/ui/sheet";
 import { MobileJobFiltersSection } from "@/components/MobileJobFiltersSection";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 
 interface MobileJobFiltersProps {
   onApply: (filters: JobFilters) => void;
   onClose: () => void;
+  onSort: (sort: JobFilters['sort']) => void;
   activeFilterCount?: number;
+  totalJobs?: number;
+  visibleJobs?: number;
+  currentSort?: JobFilters['sort'];
 }
 
 export const MobileJobFilters = ({ 
   onApply, 
   onClose, 
-  activeFilterCount = 0 
+  onSort,
+  activeFilterCount = 0,
+  totalJobs = 0,
+  visibleJobs = 0,
+  currentSort = 'relevance'
 }: MobileJobFiltersProps) => {
   const [location, setLocation] = useState("");
   const [remote, setRemote] = useState(false);
@@ -35,6 +49,18 @@ export const MobileJobFilters = ({
   const handleResetAll = () => {
     // Reset all filters
     onClose();
+  };
+
+  const sortOptions = [
+    { value: 'relevance', label: 'Relevance' },
+    { value: 'date-newest', label: 'Date: Newest First' },
+    { value: 'date-oldest', label: 'Date: Oldest First' },
+    { value: 'salary-highest', label: 'Salary: Highest First' },
+    { value: 'salary-lowest', label: 'Salary: Lowest First' }
+  ];
+
+  const getSortLabel = () => {
+    return sortOptions.find(option => option.value === currentSort)?.label || 'Sort';
   };
   
   return (
@@ -91,8 +117,37 @@ export const MobileJobFilters = ({
           size="sm"
           className="rounded-full border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 h-9"
         >
+          <BookmarkCheck className="h-4 w-4 mr-1.5" />
           Save Search
         </Button>
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 h-9"
+            >
+              <SortAscending className="h-4 w-4 mr-1.5" />
+              {getSortLabel()}
+              <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            {sortOptions.map((option) => (
+              <DropdownMenuItem 
+                key={option.value}
+                className={currentSort === option.value ? "bg-gray-100 dark:bg-gray-800" : ""}
+                onClick={() => onSort(option.value as JobFilters['sort'])}
+              >
+                <div className="flex items-center w-full">
+                  {option.label}
+                  {currentSort === option.value && <Check className="ml-auto h-4 w-4" />}
+                </div>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
         
         <Button
           variant="outline"
@@ -107,12 +162,12 @@ export const MobileJobFilters = ({
       {/* Job count and sort */}
       <div className="flex items-center justify-between py-1.5 border-t border-b border-gray-200 dark:border-gray-700">
         <span className="text-xs text-gray-600 dark:text-gray-400">
-          Showing 25 of 25 Jobs
+          Showing {visibleJobs} of {totalJobs} Jobs
         </span>
         
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-600 dark:text-gray-400">
-            Most recent
+            {getSortLabel()}
           </span>
         </div>
       </div>
