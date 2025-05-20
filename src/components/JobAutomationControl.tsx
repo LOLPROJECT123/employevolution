@@ -49,7 +49,7 @@ export function JobAutomationControl({ job, isApplied }: JobAutomationControlPro
       });
       
       // Start the automation process
-      startAutomation(job.applyUrl, automationConfig);
+      startAutomation(job.applyUrl || '', automationConfig);
       
       toast("Application automation started", {
         description: "Browser extension will handle the rest of the process",
@@ -69,8 +69,8 @@ export function JobAutomationControl({ job, isApplied }: JobAutomationControlPro
     }
   };
 
-  if (isApplied) {
-    return null; // Don't show automation option for already applied jobs
+  if (isApplied || !job.applyUrl) {
+    return null; // Don't show automation option for already applied jobs or if no apply URL
   }
 
   return (

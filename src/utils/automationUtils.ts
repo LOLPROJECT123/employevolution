@@ -1,5 +1,10 @@
 
+/**
+ * Utility functions for job application automation
+ */
+
 import { toast } from "sonner";
+import { detectJobPlatform } from "./jobUrlUtils";
 
 export type AutomationPlatform = 'handshake' | 'linkedin' | 'indeed' | 'glassdoor';
 
@@ -97,36 +102,28 @@ export interface AutomationConfig {
 }
 
 /**
- * Detect which platform a job URL belongs to
- */
-export const detectPlatform = (url: string): string | null => {
-  if (!url) return null;
-  
-  try {
-    const hostname = new URL(url).hostname;
-    
-    if (hostname.includes('indeed.com')) return 'Indeed';
-    if (hostname.includes('linkedin.com')) return 'LinkedIn';
-    if (hostname.includes('handshake.com') || hostname.includes('joinhandshake.com')) return 'Handshake';
-    if (hostname.includes('ziprecruiter.com')) return 'ZipRecruiter';
-    if (hostname.includes('monster.com')) return 'Monster';
-    if (hostname.includes('glassdoor.com')) return 'Glassdoor';
-    
-    return null;
-  } catch (error) {
-    console.error('Error parsing URL:', error);
-    return null;
-  }
-};
-
-/**
  * Start automation process for a specific job URL
  */
 export const startAutomation = (url: string, config: AutomationConfig) => {
-  const platform = detectPlatform(url);
+  const platform = detectJobPlatform(url);
   
   if (!platform) {
     toast.error('Unsupported platform for automation');
+    return;
+  }
+  
+  // Check if browser extension is available
+  const extensionAvailable = typeof chrome !== 'undefined' && chrome.runtime?.id;
+  
+  if (!extensionAvailable) {
+    toast({
+      title: "Browser extension not detected",
+      description: "Please install the Streamline extension to enable automation",
+      action: {
+        label: "Get Extension",
+        onClick: () => window.open("https://chrome.google.com/webstore/detail/streamline-extension", "_blank")
+      }
+    });
     return;
   }
   
@@ -139,13 +136,20 @@ export const startAutomation = (url: string, config: AutomationConfig) => {
       
     case 'LinkedIn':
       console.log('Running LinkedIn automation script');
-      // LinkedIn automation logic would go here
+      const linkedinScript = getLinkedInAutomationScript(url, config);
+      executeAutomationScript(linkedinScript);
       break;
       
     case 'Handshake':
       console.log('Running Handshake automation script');
       const handshakeScript = getHandshakeAutomationScript(url, config);
       executeAutomationScript(handshakeScript);
+      break;
+      
+    case 'Glassdoor':
+      console.log('Running Glassdoor automation script');
+      const glassdoorScript = getGlassdoorAutomationScript(url, config);
+      executeAutomationScript(glassdoorScript);
       break;
       
     default:
@@ -230,6 +234,79 @@ export const getIndeedAutomationScript = (url: string, config: AutomationConfig)
 };
 
 /**
+ * Generate LinkedIn automation script
+ */
+export const getLinkedInAutomationScript = (url: string, config: AutomationConfig): string => {
+  const { credentials, profile, linkedin } = config;
+  
+  return `
+    // LinkedIn Automation Script
+    // URL: ${url}
+    // Config: ${JSON.stringify({ credentials, profile, linkedin })}
+    
+    (async () => {
+      try {
+        console.log("Starting LinkedIn application automation");
+        
+        // Navigate to job page
+        window.location.href = "${url}";
+        
+        // Wait for page to load
+        await new Promise(resolve => setTimeout(resolve, 2500));
+        
+        // Check if this is an Easy Apply job
+        const easyApplyButton = document.querySelector('.jobs-apply-button');
+        if (easyApplyButton) {
+          easyApplyButton.click();
+          console.log("Clicked Easy Apply button");
+          
+          // Wait for modal to open
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          
+          // Let the extension know we're on an Easy Apply form
+          window.postMessage({
+            type: 'LINKEDIN_EASY_APPLY',
+            profile: ${JSON.stringify(profile)}
+          }, '*');
+          
+          // Fill in phone number if needed
+          const phoneInput = document.querySelector('input[name="phoneNumber"]');
+          if (phoneInput) {
+            phoneInput.value = "${profile.phone}";
+            phoneInput.dispatchEvent(new Event('input', { bubbles: true }));
+            phoneInput.dispatchEvent(new Event('change', { bubbles: true }));
+            console.log("Filled in phone number");
+          }
+          
+          // Click continue/submit buttons
+          const continueButtons = Array.from(document.querySelectorAll('button')).filter(
+            button => button.textContent?.includes('Continue') || button.textContent?.includes('Submit')
+          );
+          
+          if (continueButtons.length > 0) {
+            continueButtons[0].click();
+            console.log("Clicked continue button");
+          }
+        } else {
+          console.log("Not an Easy Apply job, redirecting to external application");
+          
+          // Find and click the apply button (which might redirect to external site)
+          const applyButton = document.querySelector('button[data-control-name="jobdetails_apply"]');
+          if (applyButton) {
+            applyButton.click();
+            console.log("Clicked external apply button");
+          }
+        }
+        
+        console.log("LinkedIn automation completed");
+      } catch (error) {
+        console.error("Error during LinkedIn automation:", error);
+      }
+    })();
+  `;
+};
+
+/**
  * Generate Handshake automation script
  */
 export const getHandshakeAutomationScript = (url: string, config: AutomationConfig): string => {
@@ -272,13 +349,81 @@ export const getHandshakeAutomationScript = (url: string, config: AutomationConf
 };
 
 /**
+ * Generate Glassdoor automation script
+ */
+export const getGlassdoorAutomationScript = (url: string, config: AutomationConfig): string => {
+  const { credentials, profile } = config;
+  
+  return `
+    // Glassdoor Automation Script
+    // URL: ${url}
+    // Config: ${JSON.stringify({ credentials, profile })}
+    
+    (async () => {
+      try {
+        console.log("Starting Glassdoor application automation");
+        
+        // Navigate to job page
+        window.location.href = "${url}";
+        
+        // Wait for page to load
+        await new Promise(resolve => setTimeout(resolve, 2500));
+        
+        // Find and click apply button
+        const applyButton = document.querySelector('button[data-test="apply-button"], a[data-test="apply-button"]');
+        if (applyButton) {
+          applyButton.click();
+          console.log("Clicked apply button");
+        } else {
+          console.error("Could not find apply button");
+          return;
+        }
+        
+        // Wait for application form to load or redirect
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        
+        // Check if we're still on Glassdoor (Easy Apply) or redirected
+        const isRedirected = !window.location.href.includes('glassdoor.com');
+        
+        if (!isRedirected) {
+          // Fill in form fields for Glassdoor Easy Apply
+          const nameInput = document.querySelector('input[name="fullName"]');
+          if (nameInput) {
+            nameInput.value = "${profile.name}";
+            nameInput.dispatchEvent(new Event('input', { bubbles: true }));
+            nameInput.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+          
+          const emailInput = document.querySelector('input[name="email"]');
+          if (emailInput) {
+            emailInput.value = "${profile.email}";
+            emailInput.dispatchEvent(new Event('input', { bubbles: true }));
+            emailInput.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+          
+          const phoneInput = document.querySelector('input[name="phoneNumber"]');
+          if (phoneInput) {
+            phoneInput.value = "${profile.phone}";
+            phoneInput.dispatchEvent(new Event('input', { bubbles: true }));
+            phoneInput.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        }
+        
+        console.log("Glassdoor automation completed");
+      } catch (error) {
+        console.error("Error during Glassdoor automation:", error);
+      }
+    })();
+  `;
+};
+
+/**
  * Execute automation script
  */
 const executeAutomationScript = (script: string) => {
   try {
     // In a real implementation, this would communicate with a browser extension
-    // For demo purposes, we'll just log the script
-    console.log("Automation script to execute:", script);
+    console.log("Sending automation script to extension");
     
     // Simulate sending to extension
     window.postMessage({

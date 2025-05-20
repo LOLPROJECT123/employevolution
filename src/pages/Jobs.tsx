@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -15,6 +16,8 @@ import JobSourcesDisplay from "@/components/JobSourcesDisplay";
 import { Card } from "@/components/ui/card";
 import { ScrapedJob } from "@/components/resume/job-application/types";
 import JobScraper from "@/components/resume/job-application/JobScraper";
+import JobAutomationPanel from "@/components/jobs/JobAutomationPanel";
+import { startAutomation } from "@/utils/automationUtils";
 
 const generateSampleJobs = (count: number = 10): Job[] => {
   const now = new Date();
@@ -76,8 +79,12 @@ const Jobs = () => {
   const detailViewRef = useRef<HTMLDivElement>(null);
   const [showJobScraperInterface, setShowJobScraperInterface] = useState(false);
   const [scrapedJobs, setScrapedJobs] = useState<ScrapedJob[]>([]);
+  const [automationEnabled, setAutomationEnabled] = useState<boolean>(false);
+  const [automationConfig, setAutomationConfig] = useState<any>(null);
+  const [showAutomationPanel, setShowAutomationPanel] = useState<boolean>(false);
 
   useEffect(() => {
+    // Load saved and applied jobs
     const savedJobs = localStorage.getItem('savedJobs');
     if (savedJobs) {
       setSavedJobIds(JSON.parse(savedJobs));
@@ -87,13 +94,47 @@ const Jobs = () => {
     if (appliedJobs) {
       setAppliedJobIds(JSON.parse(appliedJobs));
     }
+
+    // Load automation configuration if available
+    const automationConfigStr = localStorage.getItem('automationConfig');
+    if (automationConfigStr) {
+      try {
+        setAutomationConfig(JSON.parse(automationConfigStr));
+        setAutomationEnabled(true);
+      } catch (error) {
+        console.error("Error parsing automation config:", error);
+      }
+    }
+
+    // Setup message listener for Chrome extension communication
+    const handleExtensionMessage = (event: MessageEvent) => {
+      // Check if the message is from our extension
+      if (event.data && event.data.type === 'EXTENSION_INSTALLED') {
+        setAutomationEnabled(true);
+        toast.success("Job Automation Extension connected");
+      }
+      
+      // Handle automation status updates
+      if (event.data && event.data.type === 'AUTOMATION_STATUS') {
+        toast(event.data.status, {
+          description: event.data.message || "Job application automation in progress",
+        });
+      }
+    };
+
+    window.addEventListener('message', handleExtensionMessage);
+
+    return () => {
+      window.removeEventListener('message', handleExtensionMessage);
+    };
   }, []);
 
   useEffect(() => {
+    // Save jobs to localStorage when they change
     localStorage.setItem('savedJobs', JSON.stringify(savedJobIds));
   }, [savedJobIds]);
 
-   useEffect(() => {
+  useEffect(() => {
     localStorage.setItem('appliedJobs', JSON.stringify(appliedJobIds));
   }, [appliedJobIds]);
 
@@ -125,14 +166,37 @@ const Jobs = () => {
   };
 
   const handleApplyJob = (job: Job) => {
-     const jobId = job.id;
+    const jobId = job.id;
+    
+    // If already applied, show notification
     if (appliedJobIds.includes(jobId)) {
-       toast("You have already applied for this job!", {
+      toast("You have already applied for this job!", {
         duration: 4000,
       });
+      return;
+    }
+    
+    // Check if automation is enabled and config is available
+    if (automationEnabled && automationConfig && job.applyUrl) {
+      // Try to start automation process
+      try {
+        startAutomation(job.applyUrl, automationConfig);
+        
+        // Add to applied jobs
+        setAppliedJobIds(prev => [...prev, jobId]);
+        toast.success("Application process started", {
+          description: "The browser extension will handle the application process"
+        });
+      } catch (error) {
+        console.error("Error starting automation:", error);
+        // Fall back to manual apply
+        setAppliedJobIds(prev => [...prev, jobId]);
+        toast.success("Job applied!");
+      }
     } else {
+      // Regular apply process
       setAppliedJobIds(prev => [...prev, jobId]);
-       toast.success("Job applied!");
+      toast.success("Job applied!");
     }
   };
 
@@ -192,6 +256,45 @@ const Jobs = () => {
       
       setJobs(convertedJobs);
       toast.success(`Found ${convertedJobs.length} jobs matching your criteria`);
+
+      // If automation is enabled, check for auto-apply opportunities
+      if (automationEnabled && automationConfig && automationConfig.autoApplyEnabled) {
+        // Find the best matching job
+        const bestMatch = convertedJobs.sort((a, b) => 
+          (b.matchPercentage || 0) - (a.matchPercentage || 0)
+        )[0];
+
+        if (bestMatch && bestMatch.applyUrl && bestMatch.matchPercentage && bestMatch.matchPercentage > 85) {
+          toast({
+            title: "High match job found!",
+            description: `${bestMatch.title} at ${bestMatch.company} is a ${bestMatch.matchPercentage}% match.`,
+            action: {
+              label: "Auto Apply",
+              onClick: () => handleApplyJob(bestMatch)
+            },
+            duration: 8000
+          });
+        }
+      }
+    }
+  };
+  
+  // Handle URL validation and verification
+  const verifyJobUrl = async (job: Job) => {
+    if (!job.applyUrl) return;
+    
+    try {
+      const { checkJobUrlStatus } = await import('@/utils/jobUrlUtils');
+      const status = await checkJobUrlStatus(job.applyUrl);
+      
+      if (!status.valid) {
+        toast.warning("This job posting may no longer be available", {
+          description: "The company may have removed this job listing",
+          duration: 5000
+        });
+      }
+    } catch (error) {
+      console.error("Error verifying job URL:", error);
     }
   };
 
@@ -222,28 +325,33 @@ const Jobs = () => {
             <JobSourcesDisplay />
           </div>
           
-          {/* Job Scraper Toggle */}
-          <div className="flex justify-end mb-4">
-            <Button 
-              variant={showJobScraperInterface ? "default" : "outline"} 
-              onClick={() => setShowJobScraperInterface(!showJobScraperInterface)}
-            >
-              {showJobScraperInterface ? "Hide Job Search" : "Search Jobs"}
-            </Button>
-          </div>
-          
-          {/* Job Scraper Interface */}
-          {showJobScraperInterface && (
-            <Card className="mb-6 p-4">
-              <JobScraper onJobsScraped={handleJobsScraped} />
-            </Card>
-          )}
-          
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="md:col-span-1">
-              <JobFiltersSection onApplyFilters={handleFilterChange} />
+              <div className="space-y-6">
+                <JobFiltersSection onApplyFilters={handleFilterChange} />
+                
+                {/* Job Automation Panel */}
+                <JobAutomationPanel />
+              </div>
             </div>
             <div className="md:col-span-3">
+              {/* Job Scraper Toggle */}
+              <div className="flex justify-end mb-4">
+                <Button 
+                  variant={showJobScraperInterface ? "default" : "outline"} 
+                  onClick={() => setShowJobScraperInterface(!showJobScraperInterface)}
+                >
+                  {showJobScraperInterface ? "Hide Job Search" : "Search Jobs"}
+                </Button>
+              </div>
+              
+              {/* Job Scraper Interface */}
+              {showJobScraperInterface && (
+                <Card className="mb-6 p-4">
+                  <JobScraper onJobsScraped={handleJobsScraped} />
+                </Card>
+              )}
+
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">
                   {filteredJobs.length} Opportunities
