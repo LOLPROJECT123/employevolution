@@ -60,22 +60,6 @@ export interface Job {
     status: 'scheduled' | 'completed' | 'cancelled';
     notes?: string;
   }>;
-  keywordMatch?: {
-    score: number;
-    found: number;
-    total: number;
-    highPriority?: {
-      keywords: string[];
-      found: number;
-      total: number;
-    };
-    lowPriority?: {
-      keywords: string[];
-      found: number;
-      total: number;
-    };
-  };
-  sortScore?: number;
 }
 
 export type JobStatus = 'applied' | 'interviewing' | 'offered' | 'rejected' | 'accepted';
@@ -111,6 +95,7 @@ export interface SavedSearch {
 export interface JobFilters {
   search: string;
   location: string;
+  locationRadius?: number;
   jobType: string[];
   remote: boolean;
   experienceLevels: string[];
@@ -120,21 +105,18 @@ export interface JobFilters {
   companyTypes: string[];
   companySize: string[];
   benefits: string[];
-  sort?: 'relevance' | 'date-newest' | 'date-oldest' | 'salary-highest' | 'salary-lowest';
+  datePosted?: string;
+  excludedSkills?: string[];
   jobFunction?: string[];
+  workModel?: string[];
+  experienceYears?: [number, number];
+  sponsorH1b?: boolean;
+  categories?: string[];
   companies?: string[];
-  title?: string;
-}
-
-export interface JobCardProps {
-  job: Job;
-  view?: 'list' | 'grid' | 'detailed'; // Updated to include 'detailed' view
-  onClick?: () => void;
-  onSave?: () => void;
-  onApply?: () => void;
-  isSaved?: boolean;
-  isApplied?: boolean;
-  showMatchScore?: boolean;
+  excludeStaffingAgency?: boolean;
+  companyStage?: string[];
+  roleType?: string[];
+  title?: string[];
 }
 
 export interface CoverLetterTemplate {

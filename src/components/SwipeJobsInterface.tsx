@@ -12,9 +12,7 @@ import { Badge } from "@/components/ui/badge";
 interface SwipeJobsInterfaceProps {
   jobs: Job[];
   onApply: (job: Job) => void;
-  onSkip: () => void;
-  onSave: (job: Job) => void; // Add missing onSave prop
-  onClose: () => void; // Add missing onClose prop
+  onSkip: (job: Job) => void;
 }
 
 const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) => {
@@ -72,8 +70,6 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
 
   const handleApply = () => {
     // Display success message and call the onApply callback
-    if (!currentJob) return;
-    
     toast({
       title: "Applied Successfully!",
       description: `Your Application To ${currentJob.company} For ${currentJob.title} Has Been Submitted.`,
@@ -84,14 +80,12 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
 
   const handleSkip = () => {
     // Display info message and call the onSkip callback
-    if (!currentJob) return;
-    
     toast({
       title: "Job Skipped",
       description: `You Skipped ${currentJob.title} At ${currentJob.company}`,
       variant: "default",
     });
-    onSkip(); // Call the onSkip function without arguments
+    onSkip(currentJob);
   };
 
   if (!currentJob) {
@@ -106,10 +100,8 @@ const SwipeJobsInterface = ({ jobs, onApply, onSkip }: SwipeJobsInterfaceProps) 
     );
   }
 
-  // Safely format the postedAt field
-  const timeAgo = currentJob.postedAt ? formatRelativeTime(currentJob.postedAt) : 'Recently';
-  
   const formattedSalary = `${currentJob.salary.currency}${currentJob.salary.min.toLocaleString()} - ${currentJob.salary.currency}${currentJob.salary.max.toLocaleString()}`;
+  const timeAgo = formatRelativeTime(currentJob.postedAt);
 
   // Get match color based on percentage
   const getMatchColor = (percentage?: number) => {

@@ -1,5 +1,4 @@
 
-// Define available tabs for job application workflow
 export type JobApplicationTab = 'manual' | 'auto' | 'scraper';
 
 export interface ScrapedJob {
@@ -13,50 +12,24 @@ export interface ScrapedJob {
   description: string;
   applyUrl: string;
   verified?: boolean;
-  salary?: string;
-  salaryRange?: {
-    min: number;
-    max: number;
-    currency: string;
-  };
   matchPercentage?: number;
   matchKeywords?: string[];
-  requiredSkills?: string[];
-  matchedSkills?: string[];
   keywordMatch?: {
     score: number;
     total: number;
     found: number;
-    highPriority?: {
+    highPriority: {
       keywords: string[];
       found: number;
       total: number;
     };
-    lowPriority?: {
+    lowPriority: {
       keywords: string[];
       found: number;
       total: number;
     };
   };
   requirements?: string[];
-  jobType?: string;
-  workModel?: 'onsite' | 'remote' | 'hybrid';
-  remote?: boolean; // Add missing remote property
-  experienceLevel?: string;
-  education?: string[];
-  benefits?: string[];
-  applicationCount?: number;
-  companyLogo?: string;
-  companySize?: string;
-  companyIndustry?: string;
-  responsibilities?: string[];
-  applicationStatus?: string;
-  matchCriteria?: {
-    skills?: boolean;
-    experience?: boolean;
-    education?: boolean;
-    location?: boolean;
-  };
 }
 
 export interface ResumeTemplate {
@@ -84,15 +57,4 @@ export interface TemplateSource {
   apiKey?: string;
   isActive: boolean;
   attribution: string;
-}
-
-export interface JobSourceMetadata {
-  name: string;
-  url: string;
-  type: string;
-  jobCount?: number;
-  logo?: string;
-  status?: 'active' | 'inactive' | 'error';
-  lastScraped?: string;
-  description?: string;
 }

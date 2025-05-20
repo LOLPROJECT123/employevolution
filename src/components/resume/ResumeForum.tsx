@@ -130,9 +130,8 @@ const ResumeForum = () => {
   });
   const [linkCopiedAlert, setLinkCopiedAlert] = useState(false);
 
-  // Track liked posts and comments
+  // Track liked posts
   const [likedPosts, setLikedPosts] = useState<{[key: string]: boolean}>({});
-  const [likedComments, setLikedComments] = useState<{[key: string]: boolean}>({});
 
   // Get unique companies and roles from posts
   const getFilterOptions = () => {
@@ -292,45 +291,6 @@ const ResumeForum = () => {
       ...prev,
       [postId]: !prev[postId]
     }));
-  };
-
-  const handleToggleCommentLike = (postId: string, commentId: string) => {
-    const commentKey = `${postId}-${commentId}`;
-    const isLiked = likedComments[commentKey] || false;
-    
-    setPosts(prevPosts => 
-      prevPosts.map(post => {
-        if (post.id === postId) {
-          return {
-            ...post,
-            comments: post.comments.map(comment => {
-              if (comment.id === commentId) {
-                return {
-                  ...comment,
-                  upvotes: isLiked ? comment.upvotes - 1 : comment.upvotes + 1
-                };
-              }
-              return comment;
-            })
-          };
-        }
-        return post;
-      })
-    );
-    
-    // Toggle like status for this comment
-    setLikedComments(prev => ({
-      ...prev,
-      [commentKey]: !isLiked
-    }));
-
-    if (!isLiked) {
-      toast({
-        title: "Comment Liked",
-        description: "You liked this comment.",
-        duration: 3000 // 3 seconds
-      });
-    }
   };
 
   const handleEditComment = (postId: string, commentId: string) => {
@@ -753,60 +713,50 @@ const ResumeForum = () => {
                           {post.comments.length === 0 ? (
                             <p className="text-muted-foreground text-center py-8">No replies yet. Be the first to respond!</p>
                           ) : (
-                            post.comments.map((comment) => {
-                              const commentKey = `${post.id}-${comment.id}`;
-                              const isLiked = likedComments[commentKey] || false;
-                              
-                              return (
-                                <div key={comment.id} className="mb-4 border-b pb-4 last:border-0">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center space-x-2">
-                                      <Avatar className="h-6 w-6">
-                                        {comment.author.avatar && <AvatarImage src={comment.author.avatar} />}
-                                        <AvatarFallback>{comment.author.name.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                      </Avatar>
-                                      <div>
-                                        <div className="text-sm font-medium">{comment.author.name}</div>
-                                        <div className="text-xs text-muted-foreground">{comment.createdAt}</div>
-                                      </div>
+                            post.comments.map((comment) => (
+                              <div key={comment.id} className="mb-4 border-b pb-4 last:border-0">
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center space-x-2">
+                                    <Avatar className="h-6 w-6">
+                                      {comment.author.avatar && <AvatarImage src={comment.author.avatar} />}
+                                      <AvatarFallback>{comment.author.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                      <div className="text-sm font-medium">{comment.author.name}</div>
+                                      <div className="text-xs text-muted-foreground">{comment.createdAt}</div>
                                     </div>
-                                    
-                                    {comment.isCurrentUser && (
-                                      <div className="flex items-center gap-1">
-                                        <Button 
-                                          variant="ghost" 
-                                          size="icon" 
-                                          className="h-6 w-6" 
-                                          onClick={() => handleEditComment(post.id, comment.id)}
-                                        >
-                                          <Pencil className="h-3 w-3" />
-                                        </Button>
-                                        <Button 
-                                          variant="ghost" 
-                                          size="icon" 
-                                          className="h-6 w-6 text-destructive hover:text-destructive" 
-                                          onClick={() => handleDeleteComment(post.id, comment.id)}
-                                        >
-                                          <Trash2 className="h-3 w-3" />
-                                        </Button>
-                                      </div>
-                                    )}
                                   </div>
-                                  <p className="text-sm pl-8">{comment.content}</p>
-                                  <div className="flex gap-2 mt-2 pl-8">
-                                    <Button 
-                                      variant="ghost" 
-                                      size="sm" 
-                                      className={`h-6 px-2 text-xs flex items-center gap-1 ${isLiked ? "text-primary" : ""}`}
-                                      onClick={() => handleToggleCommentLike(post.id, comment.id)}
-                                    >
-                                      <ThumbsUp className={`h-3 w-3 ${isLiked ? "fill-primary" : ""}`} />
-                                      {comment.upvotes}
-                                    </Button>
-                                  </div>
+                                  
+                                  {comment.isCurrentUser && (
+                                    <div className="flex items-center gap-1">
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-6 w-6" 
+                                        onClick={() => handleEditComment(post.id, comment.id)}
+                                      >
+                                        <Pencil className="h-3 w-3" />
+                                      </Button>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-6 w-6 text-destructive hover:text-destructive" 
+                                        onClick={() => handleDeleteComment(post.id, comment.id)}
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  )}
                                 </div>
-                              );
-                            })
+                                <p className="text-sm pl-8">{comment.content}</p>
+                                <div className="flex gap-2 mt-2 pl-8">
+                                  <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
+                                    <ThumbsUp className="h-3 w-3 mr-1" />
+                                    {comment.upvotes}
+                                  </Button>
+                                </div>
+                              </div>
+                            ))
                           )}
                         </div>
                         <div className="flex items-center gap-2 mt-2">

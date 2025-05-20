@@ -87,19 +87,18 @@ const NegotiationForum = ({ filters }: NegotiationForumProps) => {
   const [newComment, setNewComment] = useState("");
   const [editingComment, setEditingComment] = useState<{id: string, text: string} | null>(null);
   const [likedPosts, setLikedPosts] = useState<{[key: string]: boolean}>({});
-  const [likedComments, setLikedComments] = useState<{[key: string]: boolean}>({});
   const [comments, setComments] = useState<{[key: string]: ForumComment[]}>({
     "1": [
-      {id: "1-1", author: "TechManager", text: "Thank you for sharing! Could you elaborate on how you found comparable salary data?", timestamp: "1 day ago", isCurrentUser: false, likes: 5},
-      {id: "1-2", author: "SalaryExpert", text: "I used a similar approach and got a 15% increase. The key is having market data ready.", timestamp: "2 days ago", isCurrentUser: false, likes: 8}
+      {id: "1-1", author: "TechManager", text: "Thank you for sharing! Could you elaborate on how you found comparable salary data?", timestamp: "1 day ago", isCurrentUser: false},
+      {id: "1-2", author: "SalaryExpert", text: "I used a similar approach and got a 15% increase. The key is having market data ready.", timestamp: "2 days ago", isCurrentUser: false}
     ],
     "2": [
-      {id: "2-1", author: "SeniorDev", text: "Always negotiate! The worst they can say is no. Be confident but respectful.", timestamp: "3 days ago", isCurrentUser: false, likes: 10},
-      {id: "2-2", author: "HiringManager", text: "I respect candidates who negotiate thoughtfully. Show you've done research.", timestamp: "4 days ago", isCurrentUser: false, likes: 6}
+      {id: "2-1", author: "SeniorDev", text: "Always negotiate! The worst they can say is no. Be confident but respectful.", timestamp: "3 days ago", isCurrentUser: false},
+      {id: "2-2", author: "HiringManager", text: "I respect candidates who negotiate thoughtfully. Show you've done research.", timestamp: "4 days ago", isCurrentUser: false}
     ],
     "3": [
-      {id: "3-1", author: "RemoteWorker", text: "Did you ask for any additional stipend for home office setup?", timestamp: "5 days ago", isCurrentUser: false, likes: 3},
-      {id: "3-2", author: "WorkLifeBalance", text: "Remote work saved me 2 hours commuting daily. Worth every penny of the salary difference.", timestamp: "6 days ago", isCurrentUser: false, likes: 12}
+      {id: "3-1", author: "RemoteWorker", text: "Did you ask for any additional stipend for home office setup?", timestamp: "5 days ago", isCurrentUser: false},
+      {id: "3-2", author: "WorkLifeBalance", text: "Remote work saved me 2 hours commuting daily. Worth every penny of the salary difference.", timestamp: "6 days ago", isCurrentUser: false}
     ]
   });
   const [newPost, setNewPost] = useState({
@@ -161,40 +160,6 @@ const NegotiationForum = ({ filters }: NegotiationForumProps) => {
       ...prev,
       [postId]: !prev[postId]
     }));
-  };
-
-  const handleToggleCommentLike = (postId: string, commentId: string) => {
-    const commentKey = `${postId}-${commentId}`;
-    const isLiked = likedComments[commentKey] || false;
-    
-    setComments(prev => {
-      const postComments = prev[postId] || [];
-      return {
-        ...prev,
-        [postId]: postComments.map(comment => {
-          if (comment.id === commentId) {
-            // Update likes count
-            const updatedLikes = (comment.likes || 0) + (isLiked ? -1 : 1);
-            return { ...comment, likes: updatedLikes };
-          }
-          return comment;
-        })
-      };
-    });
-    
-    // Toggle like status for this comment
-    setLikedComments(prev => ({
-      ...prev,
-      [commentKey]: !isLiked
-    }));
-
-    if (!isLiked) {
-      toast({
-        title: "Comment Liked",
-        description: "You liked this comment.",
-        duration: 3000 // 3 seconds
-      });
-    }
   };
 
   const handleSubmitComment = () => {
@@ -490,59 +455,43 @@ const NegotiationForum = ({ filters }: NegotiationForumProps) => {
                       </DialogHeader>
                       <div className="max-h-[400px] overflow-y-auto py-4">
                         {comments[post.id] && comments[post.id].length > 0 ? (
-                          comments[post.id].map((comment, index) => {
-                            const commentKey = `${post.id}-${comment.id}`;
-                            const isLiked = likedComments[commentKey] || false;
-                            
-                            return (
-                              <div key={index} className="mb-4 border-b pb-4 last:border-0">
-                                <div className="flex items-center justify-between mb-2">
-                                  <div className="flex items-center space-x-2">
-                                    <Avatar className="h-6 w-6">
-                                      <AvatarFallback>{comment.author.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                      <div className="text-sm font-medium">{comment.author}</div>
-                                      <div className="text-xs text-muted-foreground">{comment.timestamp}</div>
-                                    </div>
+                          comments[post.id].map((comment, index) => (
+                            <div key={index} className="mb-4 border-b pb-4 last:border-0">
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center space-x-2">
+                                  <Avatar className="h-6 w-6">
+                                    <AvatarFallback>{comment.author.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                  </Avatar>
+                                  <div>
+                                    <div className="text-sm font-medium">{comment.author}</div>
+                                    <div className="text-xs text-muted-foreground">{comment.timestamp}</div>
                                   </div>
-                                  
-                                  {comment.isCurrentUser && (
-                                    <div className="flex items-center gap-1">
-                                      <Button 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        className="h-6 w-6" 
-                                        onClick={() => handleEditComment(post.id, comment.id)}
-                                      >
-                                        <Pencil className="h-3 w-3" />
-                                      </Button>
-                                      <Button 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        className="h-6 w-6 text-destructive hover:text-destructive" 
-                                        onClick={() => handleDeleteComment(post.id, comment.id)}
-                                      >
-                                        <Trash2 className="h-3 w-3" />
-                                      </Button>
-                                    </div>
-                                  )}
                                 </div>
-                                <p className="text-sm pl-8">{comment.text}</p>
-                                <div className="flex gap-2 mt-2 pl-8">
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm" 
-                                    className={`h-6 px-2 text-xs flex items-center gap-1 ${isLiked ? "text-primary" : ""}`}
-                                    onClick={() => handleToggleCommentLike(post.id, comment.id)}
-                                  >
-                                    <ThumbsUp className={`h-3 w-3 ${isLiked ? "fill-primary" : ""}`} />
-                                    {comment.likes || 0}
-                                  </Button>
-                                </div>
+                                
+                                {comment.isCurrentUser && (
+                                  <div className="flex items-center gap-1">
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      className="h-6 w-6" 
+                                      onClick={() => handleEditComment(post.id, comment.id)}
+                                    >
+                                      <Pencil className="h-3 w-3" />
+                                    </Button>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      className="h-6 w-6 text-destructive hover:text-destructive" 
+                                      onClick={() => handleDeleteComment(post.id, comment.id)}
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                )}
                               </div>
-                            );
-                          })
+                              <p className="text-sm pl-8">{comment.text}</p>
+                            </div>
+                          ))
                         ) : (
                           <p className="text-muted-foreground text-center py-8">No comments yet. Be the first to comment!</p>
                         )}
