@@ -29,4 +29,5 @@ export interface ResumePost {
   company?: string;
   role?: string;
   position?: string;
+  matchPercentage?: number;
 }
