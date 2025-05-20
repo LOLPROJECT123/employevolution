@@ -18,21 +18,17 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Import job automation components
 import JobApplicationForm from "../resume/job-application/JobApplicationForm";
-import JobScraper from "../resume/job-application/JobScraper";
-import JobList from "../resume/job-application/JobList";
 import ConfirmationModal from "../resume/job-application/ConfirmationModal";
-import { JOB_TABS } from "../resume/job-application/constants";
 import { ScrapedJob } from "../resume/job-application/types";
 
-// Define the JobApplicationTab type
-type JobApplicationTab = 'manual' | 'auto' | 'scraper';
+// Define application tabs type
+type ApplicationTab = 'manual' | 'auto-fill';
 
 const JobAutomationPanel = () => {
-  const [activeTab, setActiveTab] = useState<JobApplicationTab>("manual");
+  const [activeTab, setActiveTab] = useState<ApplicationTab>("manual");
   const navigate = useNavigate();
   
-  // Job scraping state
-  const [scrapedJobs, setScrapedJobs] = useState<ScrapedJob[]>([]);
+  // Job application state
   const [selectedJob, setSelectedJob] = useState<ScrapedJob | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,8 +37,8 @@ const JobAutomationPanel = () => {
   // Load saved tab preference from localStorage
   useEffect(() => {
     try {
-      const savedTab = localStorage.getItem('preferredApplicationTab') as JobApplicationTab | null;
-      if (savedTab && (savedTab === 'manual' || savedTab === 'auto' || savedTab === 'scraper')) {
+      const savedTab = localStorage.getItem('preferredApplicationTab') as ApplicationTab | null;
+      if (savedTab && (savedTab === 'manual' || savedTab === 'auto-fill')) {
         setActiveTab(savedTab);
       }
       
@@ -55,19 +51,6 @@ const JobAutomationPanel = () => {
       console.error("Error loading preferences:", error);
     }
   }, []);
-
-  // Handle job selection for application
-  const handleSelectJob = (job: ScrapedJob) => {
-    if (!job.verified) {
-      toast("Cannot apply to unverified job listing", {
-        description: "This job listing could not be verified and may no longer be available."
-      });
-      return;
-    }
-    
-    setSelectedJob(job);
-    setShowConfirmation(true);
-  };
 
   // Enhanced auto-application with better verification
   const handleAutoApply = async () => {
@@ -180,29 +163,21 @@ const JobAutomationPanel = () => {
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Automated Job Application</CardTitle>
+        <CardTitle>Application Automation</CardTitle>
         <CardDescription>
-          Scrape jobs from multiple sources and apply with your resume
+          Apply to job postings with your resume automatically
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as JobApplicationTab)} className="w-full">
-          <TabsList className="w-full">
-            {JOB_TABS.map(tab => (
-              <TabsTrigger key={tab.value} value={tab.value} className="flex-1">
-                {tab.label}
-              </TabsTrigger>
-            ))}
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as ApplicationTab)} className="w-full">
+          <TabsList className="w-full grid grid-cols-2">
+            <TabsTrigger value="manual">Manual Apply</TabsTrigger>
+            <TabsTrigger value="auto-fill">Auto-Fill</TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="scraper" className="space-y-4 pt-4">
-            <JobScraper onJobsScraped={setScrapedJobs} />
-            <JobList jobs={scrapedJobs} onSelectJob={handleSelectJob} />
-          </TabsContent>
           
           <TabsContent value="manual" className="space-y-4 pt-4">
             <JobApplicationForm 
-              activeTab={activeTab} 
+              activeTab="manual"
               onNavigateToProfile={handleNavigateToProfile} 
               onSuccess={(jobUrl) => {
                 // Track successful manual applications
@@ -226,9 +201,9 @@ const JobAutomationPanel = () => {
             />
           </TabsContent>
           
-          <TabsContent value="auto" className="space-y-4 pt-4">
+          <TabsContent value="auto-fill" className="space-y-4 pt-4">
             <JobApplicationForm 
-              activeTab={activeTab} 
+              activeTab="auto"
               onNavigateToProfile={handleNavigateToProfile} 
               onSuccess={(jobUrl) => {
                 // Track successful auto applications

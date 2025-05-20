@@ -10,24 +10,18 @@ import { useMobile } from "@/hooks/use-mobile";
 import SwipeJobsInterface from "@/components/SwipeJobsInterface";
 import { SavedAndAppliedJobs } from "@/components/SavedAndAppliedJobs";
 import { toast } from "sonner";
-import AutomationSettings from "@/components/AutomationSettings";
-import { Zap } from "lucide-react";
+import { Search, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { 
-  detectPlatform, 
-  startAutomation 
-} from '@/utils/automationUtils';
 import JobSourcesDisplay from "@/components/JobSourcesDisplay";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import JobAutomationPanel from "@/components/jobs/JobAutomationPanel";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Check } from "lucide-react";
+import { ScrapedJob } from "@/components/resume/job-application/types";
+import JobScraper from "@/components/resume/job-application/JobScraper";
 
 const generateSampleJobs = (count: number = 10): Job[] => {
   const now = new Date();
@@ -88,7 +82,8 @@ const Jobs = () => {
   const isMobile = useMobile();
   const detailViewRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<'browse' | 'automation'>('browse');
-  
+  const [showJobScraperInterface, setShowJobScraperInterface] = useState(false);
+  const [scrapedJobs, setScrapedJobs] = useState<ScrapedJob[]>([]);
 
   useEffect(() => {
     const savedJobs = localStorage.getItem('savedJobs');
@@ -157,7 +152,6 @@ const Jobs = () => {
     setShowSwipeInterface(false);
   };
 
-  // MODIFIED: This function now handles individual actions rather than being called by SwipeJobsInterface
   const handleSwipeAction = (action: 'save' | 'apply' | 'skip', job?: Job) => {
     if (!job && (action === 'save' || action === 'apply')) {
       return; // Can't save or apply without a job
@@ -173,10 +167,40 @@ const Jobs = () => {
     }
   };
 
-  // Create a skip function that matches the expected signature in SwipeJobsInterface
   const handleSkipJob = () => {
     // This function doesn't need parameters as specified by SwipeJobsInterface props
     toast.info("Job skipped");
+  };
+  
+  const handleJobsScraped = (newScrapedJobs: ScrapedJob[]) => {
+    setScrapedJobs(newScrapedJobs);
+    
+    // Convert ScrapedJob objects to Job objects
+    if (newScrapedJobs.length > 0) {
+      const convertedJobs = newScrapedJobs.map((scrapedJob): Job => ({
+        id: scrapedJob.id,
+        title: scrapedJob.title,
+        company: scrapedJob.company,
+        location: scrapedJob.location,
+        description: scrapedJob.description,
+        postedAt: scrapedJob.datePosted,
+        applyUrl: scrapedJob.applyUrl,
+        salary: {
+          min: 0,
+          max: 0,
+          currency: 'USD',
+        },
+        type: 'full-time',
+        level: 'mid',
+        matchPercentage: scrapedJob.matchPercentage || Math.floor(Math.random() * 40) + 60,
+        requirements: scrapedJob.requirements || [],
+        skills: scrapedJob.matchKeywords || ['JavaScript', 'React', 'Node.js'],
+        workModel: 'hybrid'
+      }));
+      
+      setJobs(convertedJobs);
+      toast.success(`Found ${convertedJobs.length} jobs matching your criteria`);
+    }
   };
 
   const filteredJobs = jobs.filter(job => {
@@ -200,7 +224,9 @@ const Jobs = () => {
               Find Your Next Opportunity
             </h1>
             <div className="hidden md:block">
-              <AutomationSettings />
+              <Button variant="outline" onClick={() => setActiveTab(activeTab === 'browse' ? 'automation' : 'browse')}>
+                {activeTab === 'browse' ? 'Application Automation' : 'Browse Jobs'}
+              </Button>
             </div>
           </div>
           
@@ -208,14 +234,31 @@ const Jobs = () => {
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'browse' | 'automation')} className="space-y-6">
             <TabsList className="w-full md:w-auto mb-2">
               <TabsTrigger value="browse" className="flex-1 md:flex-none">Browse Jobs</TabsTrigger>
-              <TabsTrigger value="automation" className="flex-1 md:flex-none">Job Automation</TabsTrigger>
+              <TabsTrigger value="automation" className="flex-1 md:flex-none">Application Automation</TabsTrigger>
             </TabsList>
             
             <TabsContent value="browse" className="space-y-6">
-              {/* Job browsing content */}
+              {/* Job Sources */}
               <div className="w-full">
                 <JobSourcesDisplay />
               </div>
+              
+              {/* Job Scraper Toggle */}
+              <div className="flex justify-end">
+                <Button 
+                  variant={showJobScraperInterface ? "default" : "outline"} 
+                  onClick={() => setShowJobScraperInterface(!showJobScraperInterface)}
+                >
+                  {showJobScraperInterface ? "Hide Job Search" : "Search Jobs"}
+                </Button>
+              </div>
+              
+              {/* Job Scraper Interface */}
+              {showJobScraperInterface && (
+                <Card className="mb-6 p-4">
+                  <JobScraper onJobsScraped={handleJobsScraped} />
+                </Card>
+              )}
               
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="md:col-span-1">

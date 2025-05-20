@@ -1,4 +1,5 @@
 
+// Define available tabs for job application workflow
 export type JobApplicationTab = 'manual' | 'auto' | 'scraper';
 
 export interface ScrapedJob {
