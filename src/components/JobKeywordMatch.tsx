@@ -1,122 +1,66 @@
 
-import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { getMatchColor, getMatchBgColor } from "@/utils/jobMatchingUtils";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, HelpCircle, Info } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { Progress } from "@/components/ui/progress";
 
 interface JobKeywordMatchProps {
   matchScore: number;
-  keywordsFound?: number;
-  keywordsTotal?: number;
-  keywordsList?: string[];
-  className?: string;
+  keywordsFound: number;
+  keywordsTotal: number;
+  keywordsList: string[];
+  compact?: boolean;
 }
 
-const JobKeywordMatch = ({ 
-  matchScore = 0,
-  keywordsFound = 0,
-  keywordsTotal = 0, 
-  keywordsList = [],
-  className = ""
+const JobKeywordMatch = ({
+  matchScore,
+  keywordsFound,
+  keywordsTotal,
+  keywordsList,
+  compact = false
 }: JobKeywordMatchProps) => {
-  const [isOptimizing, setIsOptimizing] = useState(false);
-  const { toast } = useToast();
-  
-  const getScoreColor = () => {
-    if (matchScore >= 80) return "text-green-500";
-    if (matchScore >= 60) return "text-amber-500";
-    return "text-red-500";
-  };
-  
-  const getProgressColor = () => {
-    if (matchScore >= 80) return "bg-green-500";
-    if (matchScore >= 60) return "bg-amber-500";
-    return "text-red-500";
-  };
-  
-  const getMatchText = () => {
-    if (matchScore >= 80) return "Strong";
-    if (matchScore >= 60) return "Moderate";
-    return "Weak";
-  };
-  
-  const handleOptimize = () => {
-    setIsOptimizing(true);
-    
-    setTimeout(() => {
-      setIsOptimizing(false);
-      
-      toast({
-        title: "Resume optimizer opened",
-        description: "We've opened the ATS Optimizer with this job's keywords pre-loaded.",
-      });
-      
-      // In a real application, this would navigate to the resume optimizer
-      // with the job's keywords pre-loaded
-    }, 1000);
-  };
-
   return (
-    <Card className={`overflow-hidden ${className}`}>
-      <CardContent className="p-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h3 className="font-medium text-sm">Keyword Match</h3>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <HelpCircle className="h-4 w-4 text-muted-foreground" />
-                </TooltipTrigger>
-                <TooltipContent className="w-[200px] text-xs p-2">
-                  This shows how well your resume matches the keywords in this job posting.
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+    <div className={`${compact ? "" : "space-y-3"}`}>
+      <h3 className={`font-medium ${compact ? "text-sm" : ""}`}>
+        Skills Match
+      </h3>
+
+      <div className="flex items-center gap-2">
+        <div className={`${compact ? "text-base" : "text-xl"} font-bold ${getMatchColor(matchScore)}`}>
+          {matchScore}%
+        </div>
+        <div className="text-sm text-gray-600">
+          {keywordsFound} of {keywordsTotal} matched
+        </div>
+      </div>
+
+      <Progress value={matchScore} className="h-1.5 mt-1" />
+
+      {!compact && (
+        <div className="mt-2">
+          <h4 className="text-sm font-medium mb-2">Matched Keywords</h4>
+          <div className="flex flex-wrap gap-2">
+            {keywordsList.slice(0, Math.min(10, keywordsList.length)).map((keyword, index) => (
+              <Badge
+                key={index}
+                className={`${
+                  index < keywordsFound
+                    ? "bg-green-50 text-green-700 border-green-200"
+                    : "bg-gray-50 text-gray-600 border-gray-200"
+                } dark:bg-opacity-20 border`}
+              >
+                {keyword}
+              </Badge>
+            ))}
+            
+            {keywordsList.length > 10 && (
+              <Badge variant="outline">
+                +{keywordsList.length - 10} more
+              </Badge>
+            )}
           </div>
-          <span className={`font-medium ${getScoreColor()}`}>
-            {getMatchText()} - {keywordsFound} of {keywordsTotal} found
-          </span>
         </div>
-        
-        <Progress value={matchScore} className="h-2 w-full" />
-        
-        <div className="flex flex-wrap gap-1.5 mt-2">
-          {keywordsList.map((keyword, index) => (
-            <Badge 
-              key={index}
-              variant="outline"
-              className="text-xs py-0.5"
-            >
-              {keyword}
-            </Badge>
-          ))}
-        </div>
-        
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="w-full mt-2 text-xs"
-          onClick={handleOptimize}
-          disabled={isOptimizing}
-        >
-          {isOptimizing ? (
-            <>
-              <div className="mr-2 h-3 w-3 animate-spin rounded-full border border-current border-t-transparent"></div>
-              Optimizing...
-            </>
-          ) : (
-            <>
-              <Info className="mr-1 h-3 w-3" />
-              Optimize Resume for This Job
-            </>
-          )}
-        </Button>
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 };
 

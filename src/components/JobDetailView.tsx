@@ -1,12 +1,12 @@
+
 import { useState } from "react";
 import { Job } from "@/types/job";
-import { getMatchBgColor, getMatchColor, getMatchLabel } from "@/utils/jobMatchingUtils";
-import { JobMatchDetails } from "@/components/JobMatchDetails";
 import { Button } from "@/components/ui/button";
 import { BookmarkIcon, ExternalLink, FileText, Zap, Users } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import AutoApplyModal from "@/components/AutoApplyModal";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 
 interface JobDetailViewProps {
   job: Job | null;
@@ -32,6 +32,21 @@ export const JobDetailView = ({
       </div>
     );
   }
+
+  // Helper function to determine match colors
+  const getMatchColor = (percentage?: number) => {
+    if (!percentage) return "";
+    if (percentage >= 80) return "text-green-500";
+    if (percentage >= 60) return "text-amber-500";
+    return "text-red-500";
+  };
+
+  const getMatchBgColor = (percentage?: number) => {
+    if (!percentage) return "bg-gray-100 dark:bg-gray-800";
+    if (percentage >= 80) return "bg-green-50 dark:bg-green-900/30";
+    if (percentage >= 60) return "bg-amber-50 dark:bg-amber-900/30";
+    return "bg-red-50 dark:bg-red-900/30";
+  };
 
   const handleApply = () => {
     if (job.applyUrl) {
@@ -123,14 +138,11 @@ export const JobDetailView = ({
             <div className="flex items-center gap-2">
               <div className={`text-xl font-bold ${getMatchColor(job.matchPercentage)}`}>{job.matchPercentage}%</div>
               <div className={`font-semibold ${getMatchColor(job.matchPercentage)}`}>
-                {getMatchLabel(job.matchPercentage)}
+                {job.matchPercentage >= 80 ? "Excellent Match" : 
+                 job.matchPercentage >= 60 ? "Good Match" : "Low Match"}
               </div>
             </div>
             <p className="text-sm mt-1">Based on your profile, skills, and experience</p>
-            
-            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-              <JobMatchDetails job={job} compact={true} />
-            </div>
           </div>
         )}
         
@@ -215,9 +227,9 @@ export const JobDetailView = ({
             <h2 className="text-xl font-semibold mb-2">Required Skills</h2>
             <div className="flex flex-wrap gap-2">
               {job.skills.map((skill, index) => (
-                <span key={index} className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-sm">
+                <Badge key={index} className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-sm">
                   {skill}
-                </span>
+                </Badge>
               ))}
             </div>
           </div>
@@ -226,16 +238,82 @@ export const JobDetailView = ({
         {job.matchPercentage !== undefined && (
           <div className="mt-8 border-t pt-6">
             <h2 className="text-xl font-semibold mb-3">Detailed Match Analysis</h2>
-            <JobMatchDetails job={job} />
+            
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <h3 className="font-medium">Match Score</h3>
+                <div className="flex items-center gap-2">
+                  <div className={`text-xl font-bold ${getMatchColor(job.matchPercentage)}`}>{job.matchPercentage}%</div>
+                  {job.matchCriteria && (
+                    <div className="text-sm text-gray-600">
+                      {Object.values(job.matchCriteria).filter(Boolean).length} criteria matched
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {job.matchCriteria && (
+                <div>
+                  <h3 className="font-medium mb-2">Match Details</h3>
+                  <div className="space-y-2">
+                    {Object.entries(job.matchCriteria).map(([key, value]) => (
+                      <div key={key} className="flex items-center gap-2">
+                        <div className={`w-5 h-5 rounded-full flex items-center justify-center ${value ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                          {value ? '✓' : '✗'}
+                        </div>
+                        <div className="text-sm capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {job.keywordMatch && (
+                <div>
+                  <h3 className="font-medium mb-2">Skills Match</h3>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className={`text-xl font-bold ${getMatchColor(job.keywordMatch.score)}`}>{job.keywordMatch.score}%</div>
+                    <div className="text-sm text-gray-600">
+                      {job.keywordMatch.found} of {job.keywordMatch.total} skills matched
+                    </div>
+                  </div>
+                  
+                  {job.keywordMatch.highPriority && (
+                    <div className="mt-2">
+                      <h4 className="text-sm font-medium">High Priority Skills</h4>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {job.keywordMatch.highPriority.keywords.map((keyword, index) => (
+                          <Badge key={index} className="bg-blue-50 text-blue-700 border border-blue-200">
+                            {keyword}
+                          </Badge>
+                        ))}
+                      </div>
+                      <p className="text-xs mt-1 text-gray-500">
+                        {job.keywordMatch.highPriority.found} of {job.keywordMatch.highPriority.total} matched
+                      </p>
+                    </div>
+                  )}
+                  
+                  {job.keywordMatch.lowPriority && (
+                    <div className="mt-2">
+                      <h4 className="text-sm font-medium">Other Skills</h4>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {job.keywordMatch.lowPriority.keywords.map((keyword, index) => (
+                          <Badge key={index} variant="outline">
+                            {keyword}
+                          </Badge>
+                        ))}
+                      </div>
+                      <p className="text-xs mt-1 text-gray-500">
+                        {job.keywordMatch.lowPriority.found} of {job.keywordMatch.lowPriority.total} matched
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         )}
-        
-        <AutoApplyModal
-          job={job}
-          open={showAutoApplyModal}
-          onClose={() => setShowAutoApplyModal(false)}
-          onSuccess={onApply}
-        />
       </div>
     </ScrollArea>
   );

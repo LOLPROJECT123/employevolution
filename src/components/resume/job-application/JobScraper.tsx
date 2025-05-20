@@ -1,8 +1,9 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, Check, Globe } from "lucide-react";
+import { Loader2, Search, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { SUPPORTED_JOB_SOURCES } from "./constants";
 import { ScrapedJob } from "./types";
@@ -14,8 +15,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { searchJobsWithCrawl4AI } from "@/utils/crawl4ai";
-import { startAutomation } from "@/utils/automationUtils";
+import { jobScraper, JOB_SOURCES } from "@/utils/jobScraperService";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface JobScraperProps {
   onJobsScraped: (jobs: ScrapedJob[]) => void;
@@ -24,506 +26,240 @@ interface JobScraperProps {
 const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchLocation, setSearchLocation] = useState("");
-  const [selectedSources, setSelectedSources] = useState<string[]>(["LinkedIn", "Indeed"]);
+  const [selectedSources, setSelectedSources] = useState<string[]>(["All"]);
   const [isScrapingJobs, setIsScrapingJobs] = useState(false);
-  const [isVerifyingJobs, setIsVerifyingJobs] = useState(false);
-  const [verificationProgress, setVerificationProgress] = useState(0);
-  const [maxResults, setMaxResults] = useState<string>("25");
-  const [searchMode, setSearchMode] = useState<"basic" | "advanced">("advanced");
-  const [enableAutoApply, setEnableAutoApply] = useState(false);
-
-  // Function to verify job URLs actually exist
-  const verifyJobUrls = async (jobs: ScrapedJob[]): Promise<ScrapedJob[]> => {
-    setIsVerifyingJobs(true);
-    setVerificationProgress(0);
-    
-    const verifiedJobs: ScrapedJob[] = [];
-    let validCount = 0;
-    
-    for (let i = 0; i < jobs.length; i++) {
-      const job = jobs[i];
-      
-      try {
-        // Simulate API call to verify URL existence
-        // In a real implementation, this would use a server-side API to check URL status
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        // For demo purposes, we'll consider ~85% of jobs as valid
-        const isValid = Math.random() > 0.15;
-        
-        if (isValid) {
-          // Add keyword matching data to the job
-          const keywordMatchData = generateKeywordMatchData();
-          
-          verifiedJobs.push({
-            ...job,
-            verified: true,
-            keywordMatch: keywordMatchData
-          });
-          validCount++;
-        }
-        
-        // Update progress
-        const progress = Math.floor(((i + 1) / jobs.length) * 100);
-        setVerificationProgress(progress);
-      } catch (error) {
-        console.error(`Error verifying job ${job.id}:`, error);
-      }
-    }
-    
-    setIsVerifyingJobs(false);
-    
-    if (validCount < jobs.length) {
-      toast.info(`Filtered out ${jobs.length - validCount} invalid job listings`);
-    }
-    
-    return verifiedJobs;
-  };
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
+  const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
   
-  // Generate keyword match data for a job
-  const generateKeywordMatchData = () => {
-    // Create mock high priority keywords
-    const highPriorityKeywords = ["Python", "JavaScript", "React", "AWS", "Docker", "Node.js", "TypeScript", "MongoDB", "Git", "CI/CD", "Kubernetes"];
-    const highPriorityCount = Math.floor(Math.random() * 5) + 6; // 6-11 keywords
-    const highPrioritySelected = highPriorityKeywords.slice(0, highPriorityCount);
-    const highPriorityFound = Math.floor(Math.random() * highPriorityCount);
-    
-    // Create mock low priority keywords
-    const lowPriorityKeywords = ["Agile", "Scrum", "REST API", "GraphQL", "Testing", "DevOps", "Linux", "SQL", "NoSQL"];
-    const lowPriorityCount = Math.floor(Math.random() * 5) + 4; // 4-9 keywords
-    const lowPrioritySelected = lowPriorityKeywords.slice(0, lowPriorityCount);
-    const lowPriorityFound = Math.floor(Math.random() * lowPriorityCount);
-    
-    const totalKeywords = highPriorityCount + lowPriorityCount;
-    const foundKeywords = highPriorityFound + lowPriorityFound;
-    
-    // Weight high priority keywords more than low priority
-    const score = Math.round(
-      ((highPriorityFound * 1.5) + (lowPriorityFound * 0.5)) / 
-      ((highPriorityCount * 1.5) + (lowPriorityCount * 0.5)) * 100
-    );
-    
-    return {
-      score,
-      total: totalKeywords,
-      found: foundKeywords,
-      highPriority: {
-        keywords: highPrioritySelected,
-        found: highPriorityFound,
-        total: highPriorityCount
-      },
-      lowPriority: {
-        keywords: lowPrioritySelected,
-        found: lowPriorityFound,
-        total: lowPriorityCount
-      }
-    };
-  };
-
-  // Function to scrape jobs using Crawl4AI
-  const handleCrawl4AIScrape = async () => {
-    if (!searchQuery.trim()) {
-      toast("Please enter a job title or keyword");
-      return;
-    }
-
-    setIsScrapingJobs(true);
-    
-    try {
-      // Convert our UI-friendly platform names to Crawl4AI platform keys
-      const platformMap: Record<string, string> = {
-        'LinkedIn': 'linkedin',
-        'Indeed': 'indeed',
-        'Glassdoor': 'glassdoor',
-        'ZipRecruiter': 'ziprecruiter',
-        'Monster': 'monster',
-      };
+  // Function to handle location input
+  const handleLocationInput = (input: string) => {
+    setSearchLocation(input);
+    if (input.length >= 2) {
+      // Generate suggestions based on input
+      const cities = [
+        "San Francisco, CA",
+        "New York, NY",
+        "Seattle, WA",
+        "Austin, TX",
+        "Los Angeles, CA",
+        "Chicago, IL",
+        "Boston, MA",
+        "Denver, CO",
+        "Atlanta, GA",
+        "Dallas, TX",
+        "Dallas, GA",
+        "Houston, TX",
+        "Phoenix, AZ",
+        "Portland, OR",
+        "Miami, FL",
+        "Nashville, TN",
+        "San Diego, CA",
+        "San Jose, CA",
+        "San Antonio, TX",
+        "Philadelphia, PA"
+      ];
       
-      // Map selected sources to Crawl4AI platform keys
-      const platforms = selectedSources
-        .map(source => platformMap[source])
-        .filter(Boolean);
-      
-      // Use the Crawl4AI implementation to search for jobs
-      const jobs = await searchJobsWithCrawl4AI(
-        searchQuery.trim(),
-        searchLocation.trim(),
-        platforms,
-        {
-          maxResults: parseInt(maxResults),
-          maxPages: 5
-        }
+      const filteredCities = cities.filter(city => 
+        city.toLowerCase().includes(input.toLowerCase())
       );
       
-      // Check if we already have jobs saved from previous searches
-      const savedJobsJson = localStorage.getItem('scrapedJobs');
-      let savedJobs: ScrapedJob[] = [];
-      
-      if (savedJobsJson) {
-        try {
-          savedJobs = JSON.parse(savedJobsJson);
-        } catch (error) {
-          console.error("Error parsing saved jobs:", error);
-        }
-      }
-      
-      if (jobs.length > 0) {
-        // Check if auto-apply is enabled
-        if (enableAutoApply) {
-          handleAutoApply(jobs[0]);
-        }
-        
-        // Combine new jobs with existing jobs, avoiding duplicates
-        const existingIds = new Set(savedJobs.map(job => job.id));
-        const uniqueNewJobs = jobs.filter(job => !existingIds.has(job.id));
-        
-        // Save the combined jobs list
-        const combinedJobs = [...savedJobs, ...uniqueNewJobs];
-        localStorage.setItem('scrapedJobs', JSON.stringify(combinedJobs));
-        
-        // Update the jobs display
-        onJobsScraped(jobs);
-        toast(`Found ${jobs.length} jobs matching your search`);
-      } else {
-        toast("No valid jobs found matching your criteria. Try adjusting your search.");
-      }
-      
-    } catch (error) {
-      console.error("Error scraping jobs:", error);
-      toast("Failed to scrape jobs. Please try again.");
-    } finally {
-      setIsScrapingJobs(false);
-      setIsVerifyingJobs(false);
+      setLocationSuggestions(filteredCities);
+      setShowLocationSuggestions(filteredCities.length > 0);
+    } else {
+      setLocationSuggestions([]);
+      setShowLocationSuggestions(false);
     }
   };
+  
+  // Handle selecting a location suggestion
+  const handleSelectLocation = (location: string) => {
+    setSearchLocation(location);
+    setShowLocationSuggestions(false);
+  };
 
-  // Legacy function to scrape jobs (backup method)
+  // Handle toggling a job source
+  const handleToggleSource = (source: string) => {
+    if (source === "All") {
+      // If "All" is selected, clear other selections
+      setSelectedSources(["All"]);
+    } else {
+      // If "All" was previously selected, remove it
+      const newSources = selectedSources.filter(s => s !== "All");
+      
+      // Toggle the selected source
+      if (newSources.includes(source)) {
+        const updatedSources = newSources.filter(s => s !== source);
+        setSelectedSources(updatedSources.length === 0 ? ["All"] : updatedSources);
+      } else {
+        setSelectedSources([...newSources, source]);
+      }
+    }
+  };
+  
+  // Function to scrape jobs
   const handleScrapeJobs = async () => {
     if (!searchQuery.trim()) {
-      toast("Please enter a job title or keyword");
+      toast.error("Please enter a job title or keywords");
       return;
     }
 
     setIsScrapingJobs(true);
     
     try {
-      // Simulate API call to scrape jobs
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Determine which sources to scrape
+      const sourcesToScrape = selectedSources.includes("All") 
+        ? undefined // Scrape all sources
+        : selectedSources;
       
-      // Generate mock job results
-      const generateMockJobs = (): ScrapedJob[] => {
-        const companies = ['Google', 'Microsoft', 'Apple', 'Amazon', 'Meta', 'Netflix', 'Spotify', 'Airbnb', 'Uber', 'Twitter'];
-        const locations = ['San Francisco, CA', 'New York, NY', 'Seattle, WA', 'Austin, TX', 'Remote', 'Boston, MA', 'Chicago, IL'];
-        const sources = selectedSources.length > 0 ? selectedSources : ['LinkedIn', 'Indeed', 'Levels.fyi', 'Handshake', 'Company Website'];
-        
-        const titlePrefix = searchQuery.trim();
-        
-        // Generate requirements for jobs
-        const generateRequirements = () => {
-          const commonRequirements = [
-            "Bachelor's degree in Computer Science or related field",
-            "3+ years of experience with web development",
-            "Experience with modern JavaScript frameworks",
-            "Strong understanding of data structures and algorithms",
-            "Experience with cloud platforms (AWS, Azure, GCP)",
-            "Excellent communication and collaboration skills"
-          ];
-          
-          const shuffled = [...commonRequirements].sort(() => 0.5 - Math.random());
-          const count = Math.floor(Math.random() * 3) + 3; // 3-6 requirements
-          return shuffled.slice(0, count);
-        };
-        
-        // Real job portal URLs
-        const jobPortalUrls = [
-          'https://careers.google.com/jobs',
-          'https://www.microsoft.com/en-us/careers',
-          'https://www.apple.com/careers',
-          'https://www.amazon.jobs',
-          'https://careers.meta.com',
-          'https://jobs.netflix.com',
-          'https://www.uber.com/us/en/careers',
-          'https://careers.airbnb.com',
-          'https://careers.twitter.com',
-          'https://careers.linkedin.com'
-        ];
-        
-        // Generate job count based on maxResults setting
-        const jobCount = parseInt(maxResults);
-        
-        return Array(jobCount).fill(0).map((_, index) => {
-          const company = companies[Math.floor(Math.random() * companies.length)];
-          const location = searchLocation.trim() || locations[Math.floor(Math.random() * locations.length)];
-          const source = sources[Math.floor(Math.random() * sources.length)];
-          const daysAgo = Math.floor(Math.random() * 14) + 1;
-          
-          // Add match percentage
-          const matchPercentage = Math.floor(Math.random() * 31) + 70; // 70-100%
-          
-          // Use a real job portal URL
-          const portalUrl = jobPortalUrls[Math.floor(Math.random() * jobPortalUrls.length)];
-          const applyUrl = `${portalUrl}/${company.toLowerCase().replace(/\s/g, '-')}/${Math.random().toString(36).substring(7)}`;
-          
-          return {
-            id: `job-${index + 1}`,
-            title: `${titlePrefix} ${['Engineer', 'Developer', 'Specialist', 'Analyst', 'Manager'][Math.floor(Math.random() * 5)]}`,
-            company,
-            location,
-            url: `${portalUrl}/view/${company.toLowerCase().replace(/\s/g, '-')}/${index + 1}`,
-            source,
-            datePosted: `${daysAgo} days ago`,
-            description: "This is a sample job description that would contain details about the role, responsibilities, and requirements.",
-            applyUrl,
-            matchPercentage,
-            requirements: generateRequirements(),
-            verified: false
-          };
-        });
-      };
+      // Use the job scraper service
+      const jobs = await jobScraper.scrapeJobs(
+        searchQuery.trim(),
+        searchLocation.trim(),
+        sourcesToScrape
+      );
       
-      let mockJobs = generateMockJobs();
-      
-      // Filter by selected sources
-      mockJobs = selectedSources.length > 0 
-        ? mockJobs.filter(job => selectedSources.some(source => job.source.includes(source)))
-        : mockJobs;
-      
-      // Verify job URLs exist
-      const verifiedJobs = await verifyJobUrls(mockJobs);
-      
-      // Check if we already have jobs saved from previous searches
-      const savedJobsJson = localStorage.getItem('scrapedJobs');
-      let savedJobs: ScrapedJob[] = [];
-      
-      if (savedJobsJson) {
-        try {
-          savedJobs = JSON.parse(savedJobsJson);
-        } catch (error) {
-          console.error("Error parsing saved jobs:", error);
-        }
-      }
-      
-      // Combine new jobs with existing jobs, avoiding duplicates
-      const existingIds = new Set(savedJobs.map(job => job.id));
-      const uniqueVerifiedJobs = verifiedJobs.filter(job => !existingIds.has(job.id));
-      
-      const combinedJobs = [...savedJobs, ...uniqueVerifiedJobs];
-      
-      // Save to localStorage
-      localStorage.setItem('scrapedJobs', JSON.stringify(combinedJobs));
-      
-      onJobsScraped(verifiedJobs);
-      
-      if (verifiedJobs.length > 0) {
-        toast.success(`Found ${verifiedJobs.length} verified jobs matching your search`);
+      if (jobs.length > 0) {
+        onJobsScraped(jobs);
+        toast.success(`Found ${jobs.length} jobs matching your search`);
       } else {
-        toast("No valid jobs found matching your criteria. Try adjusting your search.");
+        toast.warning("No jobs found matching your criteria. Try adjusting your search.");
       }
     } catch (error) {
       console.error("Error scraping jobs:", error);
-      toast("Failed to scrape jobs. Please try again.");
+      toast.error("Failed to scrape jobs. Please try again.");
     } finally {
       setIsScrapingJobs(false);
-      setIsVerifyingJobs(false);
-    }
-  };
-
-  // Handle auto-apply for the best matching job
-  const handleAutoApply = async (job: ScrapedJob) => {
-    // Check if auto-apply is enabled and we have automation config
-    const automationConfigStr = localStorage.getItem('automationConfig');
-    
-    if (!automationConfigStr) {
-      toast("Auto-apply is enabled but no automation settings found", {
-        description: "Please configure your automation settings first",
-        duration: 5000
-      });
-      return;
-    }
-    
-    try {
-      const automationConfig = JSON.parse(automationConfigStr);
-      
-      // Show toast to indicate automation is starting
-      toast("Starting automatic application", {
-        description: `Applying to ${job.company} for ${job.title}`,
-        duration: 3000
-      });
-      
-      // Start the automation process
-      setTimeout(() => {
-        startAutomation(job.applyUrl, automationConfig);
-        
-        // Add job to applied jobs list
-        const appliedJobsStr = localStorage.getItem('appliedJobs');
-        let appliedJobs: string[] = [];
-        
-        if (appliedJobsStr) {
-          try {
-            appliedJobs = JSON.parse(appliedJobsStr);
-          } catch (error) {
-            console.error("Error parsing applied jobs:", error);
-          }
-        }
-        
-        if (!appliedJobs.includes(job.id)) {
-          appliedJobs.push(job.id);
-          localStorage.setItem('appliedJobs', JSON.stringify(appliedJobs));
-        }
-        
-        toast("Application automation started", {
-          description: "Browser extension will handle the rest of the process",
-          duration: 4000
-        });
-      }, 1500);
-    } catch (error) {
-      console.error("Error starting auto-apply:", error);
-      toast("Failed to start auto-apply", {
-        description: "Please try applying manually",
-        duration: 4000
-      });
     }
   };
 
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <label htmlFor="search-query" className="text-sm font-medium">
-          Job Title or Keywords
-        </label>
-        <Input
-          id="search-query"
-          placeholder="Software Engineer, Data Scientist, etc."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <label htmlFor="search-location" className="text-sm font-medium">
-          Location (Optional)
-        </label>
-        <Input
-          id="search-location"
-          placeholder="San Francisco, Remote, etc."
-          value={searchLocation}
-          onChange={(e) => setSearchLocation(e.target.value)}
-        />
-      </div>
+      <h3 className="text-lg font-medium">Find Jobs</h3>
       
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <label className="text-sm font-medium">
-            Maximum Results
+      <div className="space-y-3">
+        {/* Job Title/Keywords Input */}
+        <div>
+          <label htmlFor="jobTitle" className="block text-sm font-medium mb-1">
+            Job Title or Keywords
           </label>
-          <Select 
-            defaultValue={maxResults} 
-            onValueChange={setMaxResults}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="25" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="10">10 results</SelectItem>
-              <SelectItem value="25">25 results</SelectItem>
-              <SelectItem value="50">50 results</SelectItem>
-              <SelectItem value="100">100 results</SelectItem>
-            </SelectContent>
-          </Select>
+          <Input
+            id="jobTitle"
+            placeholder="Software Engineer, Data Scientist, etc."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full"
+          />
         </div>
         
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Search Mode</label>
-          <Select 
-            defaultValue={searchMode} 
-            onValueChange={(value) => setSearchMode(value as "basic" | "advanced")}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Advanced (Crawl4AI)" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="advanced">Advanced (Crawl4AI)</SelectItem>
-              <SelectItem value="basic">Basic (Legacy)</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      
-      <div className="space-y-2">
-        <div className="flex justify-between items-center">
-          <label className="text-sm font-medium">
-            Job Sources
+        {/* Location Input with Autocomplete */}
+        <div className="relative">
+          <label htmlFor="location" className="block text-sm font-medium mb-1">
+            Location (Optional)
           </label>
-          <label className="flex items-center space-x-2 text-sm">
-            <input
-              type="checkbox"
-              checked={enableAutoApply}
-              onChange={(e) => setEnableAutoApply(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300"
-            />
-            <span>Auto-apply to best match</span>
-          </label>
+          <Input
+            id="location"
+            placeholder="San Francisco, Remote, etc."
+            value={searchLocation}
+            onChange={(e) => handleLocationInput(e.target.value)}
+            onFocus={() => setShowLocationSuggestions(locationSuggestions.length > 0)}
+            onBlur={() => setTimeout(() => setShowLocationSuggestions(false), 200)}
+            className="w-full"
+          />
+          
+          {/* Location Suggestions Dropdown */}
+          {showLocationSuggestions && (
+            <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 max-h-60 overflow-auto">
+              {locationSuggestions.map((location, index) => (
+                <div
+                  key={index}
+                  className="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                  onClick={() => handleSelectLocation(location)}
+                >
+                  {location}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-        <div className="flex flex-wrap gap-2">
-          {SUPPORTED_JOB_SOURCES.map(source => (
-            <Badge
-              key={source.name}
-              variant={selectedSources.includes(source.name) ? "default" : "outline"}
-              className="cursor-pointer"
-              onClick={() => {
-                if (selectedSources.includes(source.name)) {
-                  setSelectedSources(selectedSources.filter(s => s !== source.name));
-                } else {
-                  setSelectedSources([...selectedSources, source.name]);
-                }
-              }}
-            >
-              {source.name}
-            </Badge>
-          ))}
-        </div>
-      </div>
-
-      {isVerifyingJobs && (
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span>Verifying job listings...</span>
-            <span>{verificationProgress}%</span>
+        
+        {/* Advanced Options Toggle */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
+          className="w-full"
+        >
+          {showAdvancedOptions ? "Hide" : "Show"} Advanced Options
+        </Button>
+        
+        {/* Advanced Options */}
+        {showAdvancedOptions && (
+          <div className="border rounded-md p-3 space-y-3">
+            <label className="block text-sm font-medium">Select Job Sources</label>
+            
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="source-all"
+                  checked={selectedSources.includes("All")}
+                  onCheckedChange={() => handleToggleSource("All")}
+                />
+                <label 
+                  htmlFor="source-all"
+                  className="text-sm font-medium cursor-pointer"
+                >
+                  All Sources
+                </label>
+              </div>
+              
+              <ScrollArea className="h-40 border rounded-md p-2">
+                <div className="space-y-2">
+                  {JOB_SOURCES.slice(0, 15).map((source) => (
+                    <div key={source.name} className="flex items-center space-x-2">
+                      <Checkbox 
+                        id={`source-${source.name}`}
+                        checked={selectedSources.includes(source.name)}
+                        onCheckedChange={() => handleToggleSource(source.name)}
+                        disabled={selectedSources.includes("All")}
+                      />
+                      <label 
+                        htmlFor={`source-${source.name}`}
+                        className="text-sm cursor-pointer truncate"
+                      >
+                        {source.name}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-            <div 
-              className="bg-blue-600 h-2.5 rounded-full" 
-              style={{ width: `${verificationProgress}%` }}
-            ></div>
-          </div>
-        </div>
-      )}
-      
-      <Button 
-        type="button" 
-        onClick={searchMode === "advanced" ? handleCrawl4AIScrape : handleScrapeJobs} 
-        disabled={isScrapingJobs || isVerifyingJobs || !searchQuery.trim()}
-        className="w-full"
-      >
-        {isScrapingJobs || isVerifyingJobs ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            {isScrapingJobs ? 'Searching for Jobs...' : 'Verifying Jobs...'}
-          </>
-        ) : (
-          <>
-            <Search className="mr-2 h-4 w-4" />
-            Find Jobs {searchMode === "advanced" ? "(Crawl4AI)" : ""}
-          </>
         )}
-      </Button>
-
-      <Alert className="bg-green-50 text-green-900 border border-green-200">
-        <Check className="h-4 w-4" />
-        <AlertDescription>
-          Only verified job listings with valid application links will be shown.
-          {searchMode === "advanced" && " Using enhanced Crawl4AI technology for better results."}
-          {enableAutoApply && " Auto-apply is enabled for the best matching job."}
+        
+        {/* Search Button */}
+        <Button 
+          className="w-full" 
+          onClick={handleScrapeJobs} 
+          disabled={isScrapingJobs}
+        >
+          {isScrapingJobs ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Searching...
+            </>
+          ) : (
+            <>
+              <Search className="mr-2 h-4 w-4" />
+              Find Jobs
+            </>
+          )}
+        </Button>
+      </div>
+      
+      <Alert variant="default" className="bg-blue-50 text-blue-800 border border-blue-200">
+        <AlertDescription className="text-sm">
+          Search across {JOB_SOURCES.length} top tech and finance companies to find your perfect role.
         </AlertDescription>
       </Alert>
     </div>

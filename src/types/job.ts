@@ -110,7 +110,6 @@ export interface SavedSearch {
 export interface JobFilters {
   search: string;
   location: string;
-  locationRadius?: number;
   jobType: string[];
   remote: boolean;
   experienceLevels: string[];
@@ -120,19 +119,18 @@ export interface JobFilters {
   companyTypes: string[];
   companySize: string[];
   benefits: string[];
-  datePosted?: string;
-  excludedSkills?: string[];
-  jobFunction?: string[];
-  workModel?: string[];
-  experienceYears?: [number, number];
-  sponsorH1b?: boolean;
-  categories?: string[];
-  companies?: string[];
-  excludeStaffingAgency?: boolean;
-  companyStage?: string[];
-  roleType?: string[];
-  title?: string[];
   sort?: 'relevance' | 'date-newest' | 'date-oldest' | 'salary-highest' | 'salary-lowest';
+}
+
+export interface JobCardProps {
+  job: Job;
+  view?: 'list' | 'grid' | 'detailed'; // Updated to include 'detailed' view
+  onClick?: () => void;
+  onSave?: () => void;
+  onApply?: () => void;
+  isSaved?: boolean;
+  isApplied?: boolean;
+  showMatchScore?: boolean;
 }
 
 export interface CoverLetterTemplate {

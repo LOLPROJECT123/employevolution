@@ -27,12 +27,12 @@ export interface ScrapedJob {
     score: number;
     total: number;
     found: number;
-    highPriority: {
+    highPriority?: {
       keywords: string[];
       found: number;
       total: number;
     };
-    lowPriority: {
+    lowPriority?: {
       keywords: string[];
       found: number;
       total: number;
@@ -50,6 +50,12 @@ export interface ScrapedJob {
   companyIndustry?: string;
   responsibilities?: string[];
   applicationStatus?: string;
+  matchCriteria?: {
+    skills?: boolean;
+    experience?: boolean;
+    education?: boolean;
+    location?: boolean;
+  };
 }
 
 export interface ResumeTemplate {
@@ -77,4 +83,15 @@ export interface TemplateSource {
   apiKey?: string;
   isActive: boolean;
   attribution: string;
+}
+
+export interface JobSourceMetadata {
+  name: string;
+  url: string;
+  type: string;
+  jobCount?: number;
+  logo?: string;
+  status?: 'active' | 'inactive' | 'error';
+  lastScraped?: string;
+  description?: string;
 }
