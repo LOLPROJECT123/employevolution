@@ -1,3 +1,4 @@
+
 import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
 import { BookmarkIcon, Building2, MapPin, Clock, CheckCircle, ArrowRight, Zap } from "lucide-react";
@@ -25,8 +26,7 @@ export function JobCard({
   onSave,
   variant = 'list'
 }: JobCardProps) {
-  // Safely format the postedAt field
-  const timeAgo = job.postedAt ? formatRelativeTime(job.postedAt) : 'Recently';
+  const timeAgo = formatRelativeTime(job.postedAt);
   
   const getMatchColor = (percentage?: number) => {
     if (!percentage) return "";

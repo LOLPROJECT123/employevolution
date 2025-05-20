@@ -15,7 +15,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { searchJobsWithCrawl4AI } from "@/utils/crawl4ai";
-import { startAutomation } from "@/utils/automationUtils";
 
 interface JobScraperProps {
   onJobsScraped: (jobs: ScrapedJob[]) => void;
@@ -30,7 +29,6 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
   const [verificationProgress, setVerificationProgress] = useState(0);
   const [maxResults, setMaxResults] = useState<string>("25");
   const [searchMode, setSearchMode] = useState<"basic" | "advanced">("advanced");
-  const [enableAutoApply, setEnableAutoApply] = useState(false);
 
   // Function to verify job URLs actually exist
   const verifyJobUrls = async (jobs: ScrapedJob[]): Promise<ScrapedJob[]> => {
@@ -123,7 +121,7 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
   // Function to scrape jobs using Crawl4AI
   const handleCrawl4AIScrape = async () => {
     if (!searchQuery.trim()) {
-      toast("Please enter a job title or keyword");
+      toast.error("Please enter a job title or keyword");
       return;
     }
 
@@ -168,11 +166,6 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
       }
       
       if (jobs.length > 0) {
-        // Check if auto-apply is enabled
-        if (enableAutoApply) {
-          handleAutoApply(jobs[0]);
-        }
-        
         // Combine new jobs with existing jobs, avoiding duplicates
         const existingIds = new Set(savedJobs.map(job => job.id));
         const uniqueNewJobs = jobs.filter(job => !existingIds.has(job.id));
@@ -183,14 +176,14 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
         
         // Update the jobs display
         onJobsScraped(jobs);
-        toast(`Found ${jobs.length} jobs matching your search`);
+        toast.success(`Found ${jobs.length} jobs matching your search`);
       } else {
-        toast("No valid jobs found matching your criteria. Try adjusting your search.");
+        toast.error("No valid jobs found matching your criteria. Try adjusting your search.");
       }
       
     } catch (error) {
       console.error("Error scraping jobs:", error);
-      toast("Failed to scrape jobs. Please try again.");
+      toast.error("Failed to scrape jobs. Please try again.");
     } finally {
       setIsScrapingJobs(false);
       setIsVerifyingJobs(false);
@@ -200,7 +193,7 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
   // Legacy function to scrape jobs (backup method)
   const handleScrapeJobs = async () => {
     if (!searchQuery.trim()) {
-      toast("Please enter a job title or keyword");
+      toast.error("Please enter a job title or keyword");
       return;
     }
 
@@ -317,71 +310,14 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
       if (verifiedJobs.length > 0) {
         toast.success(`Found ${verifiedJobs.length} verified jobs matching your search`);
       } else {
-        toast("No valid jobs found matching your criteria. Try adjusting your search.");
+        toast.error("No valid jobs found matching your criteria. Try adjusting your search.");
       }
     } catch (error) {
       console.error("Error scraping jobs:", error);
-      toast("Failed to scrape jobs. Please try again.");
+      toast.error("Failed to scrape jobs. Please try again.");
     } finally {
       setIsScrapingJobs(false);
       setIsVerifyingJobs(false);
-    }
-  };
-
-  // Handle auto-apply for the best matching job
-  const handleAutoApply = async (job: ScrapedJob) => {
-    // Check if auto-apply is enabled and we have automation config
-    const automationConfigStr = localStorage.getItem('automationConfig');
-    
-    if (!automationConfigStr) {
-      toast("Auto-apply is enabled but no automation settings found", {
-        description: "Please configure your automation settings first",
-        duration: 5000
-      });
-      return;
-    }
-    
-    try {
-      const automationConfig = JSON.parse(automationConfigStr);
-      
-      // Show toast to indicate automation is starting
-      toast("Starting automatic application", {
-        description: `Applying to ${job.company} for ${job.title}`,
-        duration: 3000
-      });
-      
-      // Start the automation process
-      setTimeout(() => {
-        startAutomation(job.applyUrl, automationConfig);
-        
-        // Add job to applied jobs list
-        const appliedJobsStr = localStorage.getItem('appliedJobs');
-        let appliedJobs: string[] = [];
-        
-        if (appliedJobsStr) {
-          try {
-            appliedJobs = JSON.parse(appliedJobsStr);
-          } catch (error) {
-            console.error("Error parsing applied jobs:", error);
-          }
-        }
-        
-        if (!appliedJobs.includes(job.id)) {
-          appliedJobs.push(job.id);
-          localStorage.setItem('appliedJobs', JSON.stringify(appliedJobs));
-        }
-        
-        toast("Application automation started", {
-          description: "Browser extension will handle the rest of the process",
-          duration: 4000
-        });
-      }, 1500);
-    } catch (error) {
-      console.error("Error starting auto-apply:", error);
-      toast("Failed to start auto-apply", {
-        description: "Please try applying manually",
-        duration: 4000
-      });
     }
   };
 
@@ -450,20 +386,9 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
       </div>
       
       <div className="space-y-2">
-        <div className="flex justify-between items-center">
-          <label className="text-sm font-medium">
-            Job Sources
-          </label>
-          <label className="flex items-center space-x-2 text-sm">
-            <input
-              type="checkbox"
-              checked={enableAutoApply}
-              onChange={(e) => setEnableAutoApply(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300"
-            />
-            <span>Auto-apply to best match</span>
-          </label>
-        </div>
+        <label className="text-sm font-medium">
+          Job Sources
+        </label>
         <div className="flex flex-wrap gap-2">
           {SUPPORTED_JOB_SOURCES.map(source => (
             <Badge
@@ -523,7 +448,6 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
         <AlertDescription>
           Only verified job listings with valid application links will be shown.
           {searchMode === "advanced" && " Using enhanced Crawl4AI technology for better results."}
-          {enableAutoApply && " Auto-apply is enabled for the best matching job."}
         </AlertDescription>
       </Alert>
     </div>
