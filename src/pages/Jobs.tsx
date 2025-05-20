@@ -215,21 +215,6 @@ const Jobs = () => {
             <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
               Find Your Next Opportunity
             </h1>
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                className="group flex items-center gap-2"
-                onClick={() => {
-                  // Check if running in Chrome extension context before accessing chrome API
-                  const chromeExtensionUrl = typeof chrome !== 'undefined' && chrome.runtime?.id 
-                    ? chrome.runtime.getURL("index.html") 
-                    : "https://chrome.google.com/webstore/detail/streamline-extension";
-                  window.open(chromeExtensionUrl, "_blank");
-                }}
-              >
-                <span>Chrome Extension</span>
-              </Button>
-            </div>
           </div>
           
           {/* Job Sources */}
