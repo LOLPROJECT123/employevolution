@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -337,9 +336,7 @@ export default function JobSourcesDisplay() {
       });
       
       // Ask if the user wants to scrape now
-      toast({
-        title: "Source added successfully",
-        description: "Would you like to scrape for jobs now?",
+      toast("Would you like to scrape for jobs now?", {
         action: {
           label: "Scrape Now",
           onClick: () => handleStartScraping()
