@@ -3,15 +3,81 @@
  * Job Application Automation Utilities
  */
 
-type AutomationConfig = {
+export type AutomationPlatform = 'handshake' | 'linkedin' | 'indeed' | 'glassdoor';
+
+export interface AutomationCredentials {
+  platform: AutomationPlatform;
+  email: string;
+  password: string;
+  enabled: boolean;
+}
+
+export interface AutomationProfile {
   name: string;
   email: string;
-  phone?: string;
-  resumeUrl?: string;
-  education?: any[];
-  experience?: any[];
-  skills?: string[];
-  coverLetterTemplate?: string;
+  phone: string;
+  location: string;
+  currentlyEmployed: boolean;
+  needVisa: boolean;
+  yearsOfCoding: number;
+  experience: string;
+  languagesKnown: string[];
+  codingLanguagesKnown: string[];
+  
+  // Extended profile fields
+  address?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  githubUrl?: string;
+  linkedinUrl?: string;
+  university?: string;
+  hasCriminalRecord?: boolean;
+  needsSponsorship?: boolean;
+  willingToRelocate?: boolean;
+  workAuthorized?: boolean;
+  isCitizen?: boolean;
+  educationLevel?: string;
+  salaryExpectation?: string;
+  gender?: 'Male' | 'Female' | 'Decline';
+  veteranStatus?: 'Yes' | 'No' | 'Decline';
+  disabilityStatus?: 'Yes' | 'No' | 'Decline';
+  canCommute?: boolean;
+  preferredShift?: 'Day shift' | 'Night shift' | 'Overnight shift';
+  availableForInterview?: string;
+}
+
+export interface IndeedSettings {
+  experienceYears?: {
+    java?: string;
+    aws?: string;
+    python?: string;
+    analysis?: string;
+    django?: string;
+    php?: string;
+    react?: string;
+    node?: string;
+    angular?: string;
+    javascript?: string;
+    orm?: string;
+    sdet?: string;
+    selenium?: string;
+    testautomation?: string;
+    webdev?: string;
+    programming?: string;
+    teaching?: string;
+    default?: string;
+  };
+  applicationSettings?: {
+    loadDelay?: number;
+    hasDBS?: boolean;
+    hasValidCertificate?: boolean;
+  };
+}
+
+export interface AutomationConfig {
+  credentials: AutomationCredentials;
+  profile: AutomationProfile;
   preferences?: {
     autoFillPersonal: boolean;
     autoFillEducation: boolean;
@@ -19,8 +85,19 @@ type AutomationConfig = {
     autoFillSkills: boolean;
     autoGenerateCoverLetter: boolean;
     applyWithoutConfirmation: boolean;
-  }
-};
+  };
+  platformSpecificSettings?: {
+    indeed?: IndeedSettings;
+  };
+  name?: string;
+  email?: string;
+  phone?: string;
+  resumeUrl?: string;
+  education?: any[];
+  experience?: any[];
+  skills?: string[];
+  coverLetterTemplate?: string;
+}
 
 /**
  * Start the automation process for a job application
@@ -99,4 +176,32 @@ export function checkExtensionInstalled(): Promise<boolean> {
     // Send a message to check if the extension is installed
     window.postMessage({ type: 'CHECK_EXTENSION_INSTALLED' }, '*');
   });
+}
+
+/**
+ * Generate a Handshake automation script
+ */
+export function getHandshakeAutomationScript(jobUrl: string, config: AutomationConfig): string {
+  return `// Handshake Automation Script for ${jobUrl}
+// Generated with Streamline Automation Tools
+
+console.log("Starting Handshake application automation for ${jobUrl}");
+console.log("Using configuration:", ${JSON.stringify(config, null, 2)});
+
+// This would be a full Python or JavaScript automation script in a real implementation
+`;
+}
+
+/**
+ * Generate an Indeed automation script
+ */
+export function getIndeedAutomationScript(jobUrl: string, config: AutomationConfig): string {
+  return `// Indeed Automation Script for ${jobUrl}
+// Generated with Streamline Automation Tools
+
+console.log("Starting Indeed application automation for ${jobUrl}");
+console.log("Using configuration:", ${JSON.stringify(config, null, 2)});
+
+// This would be a full Python or JavaScript automation script in a real implementation
+`;
 }

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -266,7 +265,6 @@ const Jobs = () => {
 
         if (bestMatch && bestMatch.applyUrl && bestMatch.matchPercentage && bestMatch.matchPercentage > 85) {
           toast({
-            title: "High match job found!",
             description: `${bestMatch.title} at ${bestMatch.company} is a ${bestMatch.matchPercentage}% match.`,
             action: {
               label: "Auto Apply",
