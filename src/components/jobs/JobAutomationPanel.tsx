@@ -232,17 +232,6 @@ const JobAutomationPanel = () => {
                 fileType="cover_letter"
               />
             </div>
-            
-            <div className="flex items-center justify-end py-2">
-              <Button 
-                type="button" 
-                variant="outline" 
-                className="text-sm"
-                onClick={handleNavigateToProfile}
-              >
-                Configure Profile Settings
-              </Button>
-            </div>
           </div>
           
           <Button 
