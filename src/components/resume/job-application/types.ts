@@ -13,8 +13,11 @@ export interface ScrapedJob {
   description: string;
   applyUrl: string;
   verified?: boolean;
+  salary?: string;
   matchPercentage?: number;
   matchKeywords?: string[];
+  requiredSkills?: string[];
+  matchedSkills?: string[];
   keywordMatch?: {
     score: number;
     total: number;
