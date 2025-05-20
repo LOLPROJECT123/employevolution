@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,17 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { useIsMobile } from '@/hooks/use-mobile';
 import { formatRelativeTime } from '@/utils/dateUtils';
 import { createJobScraper } from '@/utils/crawl4ai';
-import { ScrapedJob } from "@/components/resume/job-application/types";
-
-interface JobSource {
-  id: string;
-  name: string;
-  url: string;
-  isActive: boolean;
-  category?: string;
-  lastScraped?: string;
-  jobCount?: number;
-}
+import { ScrapedJob, JobSource } from "@/components/resume/job-application/types";
 
 interface JobSourcesDisplayProps {
   onJobsScraped?: (jobs: ScrapedJob[]) => void;
@@ -73,9 +62,9 @@ export default function JobSourcesDisplay({ onJobsScraped }: JobSourcesDisplayPr
     }
   }, []);
   
-  const handleSourceUpdate = (updatedSources: JobSource[]) => {
-    setJobSources(updatedSources);
-    localStorage.setItem('jobSources', JSON.stringify(updatedSources));
+  const handleSourceUpdate = (sources: JobSource[]) => {
+    setJobSources(sources);
+    localStorage.setItem('jobSources', JSON.stringify(sources));
   };
   
   const handleStartScraping = async () => {

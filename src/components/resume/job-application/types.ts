@@ -1,4 +1,3 @@
-
 export type JobApplicationTab = 'manual' | 'auto' | 'scraper' | 'linkedin';
 
 export interface ScrapedJob {
@@ -81,4 +80,14 @@ export interface JobCardProps {
 export interface LinkedInContactFinderProps {
   job?: any;
   university?: string;
+}
+
+export interface JobSource {
+  id: string;
+  name: string;
+  url: string;
+  isActive: boolean;
+  category?: string;
+  lastScraped?: string;
+  jobCount?: number;
 }
