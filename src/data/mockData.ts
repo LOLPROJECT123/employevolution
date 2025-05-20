@@ -12,8 +12,7 @@ export const mockScrapedJobs: ScrapedJob[] = [
     datePosted: "5 days ago",
     url: "https://careers.google.com/jobs/results/123456-senior-frontend-engineer/",
     applyUrl: "https://careers.google.com/jobs/results/123456-senior-frontend-engineer/apply/",
-    verified: true, // Changed from ISO string to boolean
-    logo: "https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40&q=80",
+    verified: true,
     salary: "$150,000 - $200,000",
     matchPercentage: 92,
     requiredSkills: ["React", "TypeScript", "JavaScript", "CSS", "HTML"],
@@ -30,8 +29,7 @@ export const mockScrapedJobs: ScrapedJob[] = [
     datePosted: "3 days ago",
     url: "https://www.metacareers.com/jobs/234567",
     applyUrl: "https://www.metacareers.com/jobs/234567/apply",
-    verified: true, // Changed from ISO string to boolean
-    logo: "https://images.unsplash.com/photo-1534972195531-d756b9bfa9f2?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40&q=80",
+    verified: true,
     salary: "$140,000 - $180,000",
     matchPercentage: 85,
     requiredSkills: ["React", "Python", "GraphQL", "MySQL", "Django"],
@@ -48,8 +46,7 @@ export const mockScrapedJobs: ScrapedJob[] = [
     datePosted: "1 week ago",
     url: "https://www.amazon.jobs/en/jobs/345678",
     applyUrl: "https://www.amazon.jobs/en/jobs/345678/apply",
-    verified: true, // Changed from ISO string to boolean
-    logo: "https://images.unsplash.com/photo-1523474253046-8cd2748b5fd2?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40&q=80",
+    verified: true,
     salary: "$130,000 - $170,000",
     matchPercentage: 78,
     requiredSkills: ["Java", "AWS", "Microservices", "DynamoDB", "Kubernetes"],
@@ -66,8 +63,7 @@ export const mockScrapedJobs: ScrapedJob[] = [
     datePosted: "2 days ago",
     url: "https://jobs.apple.com/en-us/details/456789",
     applyUrl: "https://jobs.apple.com/en-us/details/456789/apply",
-    verified: true, // Changed from ISO string to boolean
-    logo: "https://images.unsplash.com/photo-1611944212129-29977ae1398c?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40&q=80",
+    verified: true,
     salary: "$145,000 - $195,000",
     matchPercentage: 81,
     requiredSkills: ["Swift", "Kotlin", "Java", "GraphQL", "MongoDB"],
@@ -84,8 +80,7 @@ export const mockScrapedJobs: ScrapedJob[] = [
     datePosted: "4 days ago",
     url: "https://jobs.netflix.com/jobs/567890",
     applyUrl: "https://jobs.netflix.com/jobs/567890/apply",
-    verified: true, // Changed from ISO string to boolean
-    logo: "https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40&q=80",
+    verified: true,
     salary: "$135,000 - $175,000",
     matchPercentage: 89,
     requiredSkills: ["React", "JavaScript", "CSS", "HTML", "Redux"],
@@ -102,8 +97,7 @@ export const mockScrapedJobs: ScrapedJob[] = [
     datePosted: "1 week ago",
     url: "https://careers.microsoft.com/us/en/job/678901",
     applyUrl: "https://careers.microsoft.com/us/en/job/678901/apply",
-    verified: true, // Changed from ISO string to boolean
-    logo: "https://images.unsplash.com/photo-1611944212129-29977ae1398c?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40&q=80",
+    verified: true,
     salary: "$140,000 - $180,000",
     matchPercentage: 72,
     requiredSkills: ["Azure", "Docker", "Kubernetes", "CI/CD", "Terraform"],
@@ -120,8 +114,7 @@ export const mockScrapedJobs: ScrapedJob[] = [
     datePosted: "3 days ago",
     url: "https://www.linkedin.com/jobs/view/789012",
     applyUrl: "https://www.linkedin.com/jobs/view/789012/apply",
-    verified: true, // Changed from ISO string to boolean
-    logo: "https://images.unsplash.com/photo-1611944212129-29977ae1398c?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40&q=80",
+    verified: true,
     salary: "$120,000 - $150,000",
     matchPercentage: 65,
     requiredSkills: ["Figma", "Adobe XD", "UI Design", "UX Research", "Prototyping"],
@@ -138,8 +131,7 @@ export const mockScrapedJobs: ScrapedJob[] = [
     datePosted: "1 week ago",
     url: "https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite/job/890123",
     applyUrl: "https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite/job/890123/apply",
-    verified: true, // Changed from ISO string to boolean
-    logo: "https://images.unsplash.com/photo-1611944212129-29977ae1398c?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40&q=80",
+    verified: true,
     salary: "$150,000 - $190,000",
     matchPercentage: 73,
     requiredSkills: ["Python", "TensorFlow", "PyTorch", "SQL", "Statistics"],
@@ -156,8 +148,7 @@ export const mockScrapedJobs: ScrapedJob[] = [
     datePosted: "5 days ago",
     url: "https://www.indeed.com/viewjob?jk=901234",
     applyUrl: "https://www.indeed.com/viewjob?jk=901234&indeedApply=true",
-    verified: true, // Changed from ISO string to boolean
-    logo: "https://images.unsplash.com/photo-1611944212129-29977ae1398c?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40&q=80",
+    verified: true,
     salary: "$160,000 - $200,000",
     matchPercentage: 68,
     requiredSkills: ["Product Management", "Agile", "User Research", "Analytics", "Roadmapping"],
@@ -174,8 +165,7 @@ export const mockScrapedJobs: ScrapedJob[] = [
     datePosted: "2 weeks ago",
     url: "https://www.glassdoor.com/job-listing/1012345",
     applyUrl: "https://www.glassdoor.com/job-listing/1012345/apply",
-    verified: true, // Changed from ISO string to boolean
-    logo: "https://images.unsplash.com/photo-1611944212129-29977ae1398c?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40&q=80",
+    verified: true,
     salary: "$130,000 - $170,000",
     matchPercentage: 77,
     requiredSkills: ["AWS", "Azure", "GCP", "CloudFormation", "Infrastructure as Code"],
