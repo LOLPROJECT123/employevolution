@@ -18,6 +18,7 @@ import JobScraper from "@/components/resume/job-application/JobScraper";
 import JobAutomationPanel from "@/components/jobs/JobAutomationPanel";
 import { startAutomation } from "@/utils/automationUtils";
 import { isMobileApp } from "@/utils/mobileUtils";
+import { jobScraper } from "@/utils/jobScraperService";
 
 const generateSampleJobs = (count: number = 10): Job[] => {
   const now = new Date();
@@ -55,7 +56,7 @@ const generateSampleJobs = (count: number = 10): Job[] => {
 const jobsData: Job[] = generateSampleJobs(15);
 
 const Jobs = () => {
-  const [jobs, setJobs] = useState<Job[]>(jobsData);
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [filters, setFilters] = useState<JobFilters>({
@@ -83,6 +84,8 @@ const Jobs = () => {
   const [automationConfig, setAutomationConfig] = useState<any>(null);
   const [showAutomationPanel, setShowAutomationPanel] = useState<boolean>(false);
   const [isNativeMobileApp, setIsNativeMobileApp] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [totalJobCount, setTotalJobCount] = useState<number>(0);
 
   useEffect(() => {
     // Check if this is running in a native mobile app
@@ -114,6 +117,9 @@ const Jobs = () => {
         console.error("Error parsing automation config:", error);
       }
     }
+    
+    // Load initial jobs from the job scraper service
+    loadInitialJobs();
 
     // Setup message listener for Chrome extension communication
     const handleExtensionMessage = (event: MessageEvent) => {
@@ -137,6 +143,52 @@ const Jobs = () => {
       window.removeEventListener('message', handleExtensionMessage);
     };
   }, []);
+  
+  /**
+   * Load initial jobs from the job scraper service
+   */
+  const loadInitialJobs = async () => {
+    setIsLoading(true);
+    
+    try {
+      // Get all cached jobs from the scraper service
+      const allScrapedJobs = jobScraper.getAllJobs();
+      
+      if (allScrapedJobs.length === 0) {
+        // If no cached jobs, scrape a default set
+        await jobScraper.scrapeJobs("software engineer", "");
+        const freshJobs = jobScraper.getAllJobs();
+        setScrapedJobs(freshJobs);
+        processScrapedJobs(freshJobs);
+        setTotalJobCount(freshJobs.length);
+      } else {
+        // Use cached jobs
+        setScrapedJobs(allScrapedJobs);
+        processScrapedJobs(allScrapedJobs);
+        setTotalJobCount(allScrapedJobs.length);
+      }
+    } catch (error) {
+      console.error("Error loading initial jobs:", error);
+      toast.error("Failed to load job listings");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  /**
+   * Process scraped jobs into our Job type
+   */
+  const processScrapedJobs = (scrapedJobs: ScrapedJob[]) => {
+    const convertedJobs = scrapedJobs.map((scrapedJob): Job => 
+      jobScraper.convertScrapedJobToJob(scrapedJob)
+    );
+    
+    setJobs(convertedJobs);
+    
+    if (convertedJobs.length > 0) {
+      toast.success(`Found ${convertedJobs.length} jobs`);
+    }
+  };
 
   useEffect(() => {
     // Save jobs to localStorage when they change
@@ -167,7 +219,7 @@ const Jobs = () => {
     const jobId = job.id;
     if (savedJobIds.includes(jobId)) {
       setSavedJobIds(prev => prev.filter(id => id !== jobId));
-      toast.success("Job unsaved!");
+      toast.success("Job removed from saved listings!");
     } else {
       setSavedJobIds(prev => [...prev, jobId]);
       toast.success("Job saved!");
@@ -237,80 +289,105 @@ const Jobs = () => {
   
   const handleJobsScraped = (newScrapedJobs: ScrapedJob[]) => {
     setScrapedJobs(newScrapedJobs);
+    processScrapedJobs(newScrapedJobs);
+    setTotalJobCount(newScrapedJobs.length);
     
-    // Convert ScrapedJob objects to Job objects
-    if (newScrapedJobs.length > 0) {
-      const convertedJobs = newScrapedJobs.map((scrapedJob): Job => ({
-        id: scrapedJob.id,
-        title: scrapedJob.title,
-        company: scrapedJob.company,
-        location: scrapedJob.location,
-        description: scrapedJob.description,
-        postedAt: scrapedJob.datePosted,
-        applyUrl: scrapedJob.applyUrl,
-        salary: {
-          min: 0,
-          max: 0,
-          currency: 'USD',
-        },
-        type: 'full-time',
-        level: 'mid',
-        matchPercentage: scrapedJob.matchPercentage || Math.floor(Math.random() * 40) + 60,
-        requirements: scrapedJob.requirements || [],
-        skills: scrapedJob.matchKeywords || ['JavaScript', 'React', 'Node.js'],
-        workModel: 'hybrid'
-      }));
-      
-      setJobs(convertedJobs);
-      toast.success(`Found ${convertedJobs.length} jobs matching your criteria`);
-
-      // If automation is enabled, check for auto-apply opportunities
-      if (automationEnabled && automationConfig && automationConfig.autoApplyEnabled) {
-        // Find the best matching job
-        const bestMatch = convertedJobs.sort((a, b) => 
-          (b.matchPercentage || 0) - (a.matchPercentage || 0)
-        )[0];
-
-        if (bestMatch && bestMatch.applyUrl && bestMatch.matchPercentage && bestMatch.matchPercentage > 85) {
-          toast(`${bestMatch.title} at ${bestMatch.company} is a ${bestMatch.matchPercentage}% match.`, {
+    // If automation is enabled, check for auto-apply opportunities
+    if (automationEnabled && automationConfig && automationConfig.autoApplyEnabled) {
+      // Find the best matching jobs
+      const bestMatches = newScrapedJobs
+        .sort((a, b) => (b.matchPercentage || 0) - (a.matchPercentage || 0))
+        .slice(0, 3);
+        
+      for (const match of bestMatches) {
+        if (match && match.applyUrl && match.matchPercentage && match.matchPercentage > 85) {
+          toast(`${match.title} at ${match.company} is a ${match.matchPercentage}% match.`, {
             action: {
               label: "Auto Apply",
-              onClick: () => handleApplyJob(bestMatch)
+              onClick: () => {
+                const convertedJob = jobScraper.convertScrapedJobToJob(match);
+                handleApplyJob(convertedJob);
+              }
             },
             duration: 8000
           });
+          // Just show one for now
+          break;
         }
       }
     }
   };
   
-  // Handle URL validation and verification
-  const verifyJobUrl = async (job: Job) => {
-    if (!job.applyUrl) return;
-    
-    try {
-      const { checkJobUrlStatus } = await import('@/utils/jobUrlUtils');
-      const status = await checkJobUrlStatus(job.applyUrl);
-      
-      if (!status.valid) {
-        toast.warning("This job posting may no longer be available", {
-          description: "The company may have removed this job listing",
-          duration: 5000
-        });
-      }
-    } catch (error) {
-      console.error("Error verifying job URL:", error);
-    }
-  };
-
+  // Apply filters to jobs
   const filteredJobs = jobs.filter(job => {
-    if (filters.search && !job.title.toLowerCase().includes(filters.search.toLowerCase()) && !job.description.toLowerCase().includes(filters.search.toLowerCase())) {
-      return false;
+    // Search filter (title, company, description)
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      const matchesSearch = 
+        job.title.toLowerCase().includes(searchLower) || 
+        job.company.toLowerCase().includes(searchLower) ||
+        job.description.toLowerCase().includes(searchLower);
+      
+      if (!matchesSearch) return false;
     }
+    
+    // Location filter
     if (filters.location && !job.location.toLowerCase().includes(filters.location.toLowerCase())) {
       return false;
     }
+    
+    // Remote filter
+    if (filters.remote && !job.remote && job.workModel !== 'remote') {
+      return false;
+    }
+    
+    // Job type filter
+    if (filters.jobType && filters.jobType.length > 0 && !filters.jobType.includes(job.type)) {
+      return false;
+    }
+    
+    // Experience level filter
+    if (filters.experienceLevels && filters.experienceLevels.length > 0 && !filters.experienceLevels.includes(job.level)) {
+      return false;
+    }
+    
+    // Salary range filter
+    if (filters.salaryRange && (job.salary.min < filters.salaryRange[0] || job.salary.max > filters.salaryRange[1])) {
+      return false;
+    }
+    
+    // Company type filter
+    if (filters.companyTypes && filters.companyTypes.length > 0 && job.companyType && !filters.companyTypes.includes(job.companyType)) {
+      return false;
+    }
+    
     return true;
+  });
+  
+  // Sort filtered jobs based on sort preference
+  const sortedJobs = [...filteredJobs].sort((a, b) => {
+    if (!filters.sort || filters.sort === 'relevance') {
+      // Sort by match percentage (highest first) if available, otherwise keep original order
+      return (b.matchPercentage || 0) - (a.matchPercentage || 0);
+    }
+    
+    if (filters.sort === 'date-newest') {
+      return new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime();
+    }
+    
+    if (filters.sort === 'date-oldest') {
+      return new Date(a.postedAt).getTime() - new Date(b.postedAt).getTime();
+    }
+    
+    if (filters.sort === 'salary-highest') {
+      return b.salary.max - a.salary.max;
+    }
+    
+    if (filters.sort === 'salary-lowest') {
+      return a.salary.min - b.salary.min;
+    }
+    
+    return 0;
   });
   
   return (
@@ -359,39 +436,75 @@ const Jobs = () => {
 
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">
-                  {filteredJobs.length} Opportunities
+                  {isLoading ? "Loading jobs..." : `${sortedJobs.length} Opportunities`}
+                  <span className="text-sm text-gray-500 ml-2">from {totalJobCount} total jobs</span>
                 </h2>
                 {/* Only show swipe view button on mobile app */}
-                {filteredJobs.length > 3 && isNativeMobileApp && (
+                {sortedJobs.length > 3 && isNativeMobileApp && (
                   <Button variant="outline" onClick={handleShowSwipeInterface}>
                     Try Swipe View
                   </Button>
                 )}
               </div>
 
-              {showSwipeInterface && isNativeMobileApp ? (
+              {isLoading ? (
+                <div className="flex justify-center items-center h-64">
+                  <div className="animate-pulse space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="h-24 bg-gray-200 dark:bg-gray-700 rounded-lg w-full max-w-3xl" />
+                    ))}
+                  </div>
+                </div>
+              ) : showSwipeInterface && isNativeMobileApp ? (
                 <SwipeJobsInterface
-                  jobs={filteredJobs}
+                  jobs={sortedJobs}
                   onApply={handleApplyJob}
                   onSkip={handleSkipJob}
+                  onSave={(job) => handleSaveJob(job)}
+                  onClose={handleCloseSwipeInterface}
                 />
               ) : (
                 <div className="space-y-4">
-                  {filteredJobs.map(job => (
-                    <JobCard
-                      key={job.id}
-                      job={job}
-                      onClick={() => handleJobSelect(job)}
-                      isSaved={savedJobIds.includes(job.id)}
-                      onSave={() => handleSaveJob(job)}
-                      isApplied={appliedJobIds.includes(job.id)}
-                      onApply={() => handleApplyJob(job)}
-                    />
-                  ))}
+                  {sortedJobs.length > 0 ? (
+                    sortedJobs.map(job => (
+                      <JobCard
+                        key={job.id}
+                        job={job}
+                        onClick={() => handleJobSelect(job)}
+                        isSaved={savedJobIds.includes(job.id)}
+                        onSave={() => handleSaveJob(job)}
+                        isApplied={appliedJobIds.includes(job.id)}
+                        onApply={() => handleApplyJob(job)}
+                        showMatchScore={true}
+                      />
+                    ))
+                  ) : (
+                    <div className="text-center py-10">
+                      <p className="text-gray-500 dark:text-gray-400">No jobs found matching your criteria.</p>
+                      <p className="text-gray-500 dark:text-gray-400 mt-2">Try adjusting your filters or search for different keywords.</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           </div>
+          
+          {/* Job Detail View (as a modal for mobile, side panel for desktop) */}
+          {selectedJob && isDetailOpen && (
+            <div className={`fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center ${isMobile ? '' : 'p-6'}`}>
+              <div className={`bg-white rounded-lg shadow-xl overflow-hidden ${isMobile ? 'w-full h-full' : 'w-3/4 max-w-4xl max-h-[90vh]'}`} ref={detailViewRef}>
+                <JobDetailView
+                  job={selectedJob}
+                  onClose={handleCloseDetail}
+                  onSave={() => handleSaveJob(selectedJob)}
+                  onApply={() => handleApplyJob(selectedJob)}
+                  isSaved={savedJobIds.includes(selectedJob.id)}
+                  isApplied={appliedJobIds.includes(selectedJob.id)}
+                  isMobile={isMobile}
+                />
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </div>
