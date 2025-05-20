@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -106,76 +106,41 @@ const JobApplicationForm = ({ activeTab, onNavigateToProfile, onSuccess }: JobAp
 
   return (
     <form onSubmit={handleSubmit}>
-      {activeTab === "manual" && (
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="job-url" className="text-sm font-medium">
-              Job URL
-            </label>
-            <Input
-              id="job-url"
-              placeholder="https://www.example.com/job/12345"
-              value={jobUrl}
-              onChange={(e) => setJobUrl(e.target.value)}
-            />
-            <div className="flex items-center text-xs text-muted-foreground gap-1">
-              <Info className="h-3 w-3" />
-              <p>Paste the full URL of the job posting you want to apply to</p>
-            </div>
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <label htmlFor="job-url" className="text-sm font-medium">
+            Job URL
+          </label>
+          <Input
+            id="job-url"
+            placeholder="https://www.example.com/job/12345"
+            value={jobUrl}
+            onChange={(e) => setJobUrl(e.target.value)}
+          />
+          <div className="flex items-center text-xs text-muted-foreground gap-1">
+            <Info className="h-3 w-3" />
+            <p>Paste the full URL of the job posting you want to apply to</p>
           </div>
         </div>
-      )}
-
-      {activeTab === "auto" && (
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="auto-job-url" className="text-sm font-medium">
-              Job URL
-            </label>
-            <Input
-              id="auto-job-url"
-              placeholder="https://www.example.com/job/12345"
-              value={jobUrl}
-              onChange={(e) => setJobUrl(e.target.value)}
-            />
-          </div>
-          
-          <div className="flex items-center justify-center py-6 border-2 border-dashed rounded-lg">
-            <div className="text-center">
-              <p className="mb-4 text-muted-foreground">
-                Auto-fill uses your saved profile information to apply to jobs without manual entry
-              </p>
-              <Button 
-                variant="outline" 
-                type="button"
-                onClick={onNavigateToProfile}
-              >
-                Configure Auto-fill Settings
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      </div>
 
       <div className="mt-4">
-        {activeTab !== "scraper" && (
-          <Button 
-            type="submit" 
-            disabled={isSubmitting || isValidatingUrl} 
-            className="w-full"
-          >
-            {isSubmitting || isValidatingUrl ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {isValidatingUrl ? 'Checking Job Availability...' : 'Preparing Application...'}
-              </>
-            ) : (
-              <>
-                Apply to Job <ExternalLink className="ml-2 h-4 w-4" />
-              </>
-            )}
-          </Button>
-        )}
+        <Button 
+          type="submit" 
+          disabled={isSubmitting || isValidatingUrl} 
+          className="w-full"
+        >
+          {isSubmitting || isValidatingUrl ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {isValidatingUrl ? 'Checking Job Availability...' : 'Preparing Application...'}
+            </>
+          ) : (
+            <>
+              Apply to Job <ExternalLink className="ml-2 h-4 w-4" />
+            </>
+          )}
+        </Button>
       </div>
     </form>
   );
