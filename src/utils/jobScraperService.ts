@@ -126,24 +126,83 @@ export class JobScraperService {
   /**
    * Scrape jobs from a specific source
    */
-  private async scrapeSource(source: JobSource, query: string, location: string): Promise<ScrapedJob[]> {
+  async scrapeSource(source: JobSource, query: string = "", location: string = ""): Promise<ScrapedJob[]> {
     try {
       console.log(`Scraping ${source.name} (${source.url})`);
-      
+
       // In a real implementation, we would use different scraper strategies based on the source type
-      // For this demo, we'll generate mock data
+      // For this demo, we'll use a more intelligent approach to generate mock data
       
-      // Add a small delay to simulate real scraping time
-      await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 500));
+      // Determine how to approach different job board types
+      let jobCount = Math.floor(Math.random() * 8) + 5; // 5-12 jobs
+      let jobsData: ScrapedJob[] = [];
       
-      // Generate between 3-8 jobs per source
-      const jobCount = Math.floor(Math.random() * 6) + 3;
+      switch (source.type) {
+        case 'greenhouse':
+          // For Greenhouse job boards, add extra metadata
+          jobsData = this.scrapeGreenhouseSource(source, query, location, jobCount);
+          break;
+        
+        case 'lever':
+          // For Lever job boards, use their format
+          jobsData = this.scrapeLeverSource(source, query, location, jobCount);
+          break;
+        
+        case 'workday':
+          // For Workday instances
+          jobsData = this.scrapeWorkdaySource(source, query, location, jobCount);
+          break;
+          
+        default:
+          // For direct career pages
+          jobsData = Array.from({ length: jobCount }, (_, i) => this.createMockJob(source, query, location, i));
+      }
       
-      return Array.from({ length: jobCount }, (_, i) => this.createMockJob(source, query, location, i));
+      return jobsData;
     } catch (error) {
       console.error(`Error scraping ${source.name}:`, error);
       return [];
     }
+  }
+  
+  // Specialized scraper for Greenhouse job boards
+  private scrapeGreenhouseSource(source: JobSource, query: string, location: string, count: number): ScrapedJob[] {
+    // For Greenhouse, we typically would parse their HTML or use their API
+    // For this simulation, we'll adjust the job count based on the type
+    const greenhouseCount = count + 2; // They usually have more jobs listed
+    
+    return Array.from({ length: greenhouseCount }, (_, i) => {
+      const job = this.createMockJob(source, query, location, i);
+      // Greenhouse-specific properties
+      job.verified = true;
+      job.applyUrl = `${source.url}/jobs/${job.id}/apply`;
+      return job;
+    });
+  }
+  
+  // Specialized scraper for Lever job boards
+  private scrapeLeverSource(source: JobSource, query: string, location: string, count: number): ScrapedJob[] {
+    // Lever job boards have a specific format
+    return Array.from({ length: count }, (_, i) => {
+      const job = this.createMockJob(source, query, location, i);
+      // Lever-specific properties
+      job.applyUrl = `${source.url}/${job.id}`;
+      job.verified = true;
+      return job;
+    });
+  }
+  
+  // Specialized scraper for Workday instances
+  private scrapeWorkdaySource(source: JobSource, query: string, location: string, count: number): ScrapedJob[] {
+    // Workday has a different structure
+    const workdayCount = count - 1; // They often have fewer jobs publicly listed
+    
+    return Array.from({ length: workdayCount }, (_, i) => {
+      const job = this.createMockJob(source, query, location, i);
+      // Workday-specific properties
+      job.applyUrl = `${source.url.replace('/Search', '')}/job/${job.id}`;
+      return job;
+    });
   }
   
   /**

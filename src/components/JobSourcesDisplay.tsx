@@ -12,6 +12,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { formatRelativeTime } from '@/utils/dateUtils';
 import { searchJobsWithCrawl4AI } from "@/utils/crawl4ai";
 import { ScrapedJob } from "@/components/resume/job-application/types";
+import { jobScraper } from '@/utils/jobScraperService';
 
 interface JobSource {
   id: string;
@@ -308,9 +309,6 @@ export default function JobSourcesDisplay() {
       // Show loading state
       toast.loading(`Adding ${newSourceName} as a job source...`, { duration: 1500 });
       
-      // Simulate website validation
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
       // Create the new source
       const newSource: JobSource = {
         id: newId,
@@ -325,6 +323,12 @@ export default function JobSourcesDisplay() {
       setJobSources(updatedSources);
       localStorage.setItem('jobSources', JSON.stringify(updatedSources));
       
+      // Store the new source to be scraped immediately after adding
+      localStorage.setItem('pendingSourceToScrape', JSON.stringify({
+        name: newSourceName,
+        url: newSourceUrl
+      }));
+      
       // Reset form fields
       setNewSourceName('');
       setNewSourceUrl('');
@@ -332,17 +336,34 @@ export default function JobSourcesDisplay() {
       
       // Success notification
       toast.success(`${newSourceName} added as job source`, {
-        description: "Source has been added successfully and is ready for scraping"
+        description: "Source has been added successfully and is being scraped immediately"
       });
       
-      // Ask if the user wants to scrape now
-      toast("Would you like to scrape for jobs now?", {
-        action: {
-          label: "Scrape Now",
-          onClick: () => handleStartScraping()
-        },
-        duration: 5000
-      });
+      // Trigger scraping of the new source
+      try {
+        const jobs = await jobScraper.scrapeSource({
+          name: newSourceName,
+          url: newSourceUrl,
+          type: 'direct'
+        }, "", "");
+        
+        if (jobs.length > 0) {
+          setNewJobsFound(prev => prev + jobs.length);
+          setTotalJobsFound(prev => prev + jobs.length);
+          toast.success(`Found ${jobs.length} jobs at ${newSourceName}`);
+          
+          // Merge with existing jobs
+          const existingJobs = [...savedJobs];
+          const mergedJobs = mergeJobsWithoutDuplicates(existingJobs, jobs);
+          setSavedJobs(mergedJobs);
+          localStorage.setItem('scrapedJobs', JSON.stringify(mergedJobs));
+        } else {
+          toast.warning(`No jobs found at ${newSourceName}. The site may not be compatible with our scraper.`);
+        }
+      } catch (error) {
+        console.error(`Error scraping new source ${newSourceName}:`, error);
+        toast.error(`Failed to scrape jobs from ${newSourceName}`);
+      }
     } catch (error) {
       toast.error("Please enter a valid URL", {
         description: "The URL must include the protocol (http:// or https://)"

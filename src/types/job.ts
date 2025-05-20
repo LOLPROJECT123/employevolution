@@ -1,3 +1,4 @@
+
 export interface Job {
   id: string;
   title: string;
@@ -120,6 +121,9 @@ export interface JobFilters {
   companySize: string[];
   benefits: string[];
   sort?: 'relevance' | 'date-newest' | 'date-oldest' | 'salary-highest' | 'salary-lowest';
+  jobFunction?: string[];
+  companies?: string[];
+  title?: string;
 }
 
 export interface JobCardProps {

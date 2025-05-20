@@ -32,6 +32,52 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
   const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
   
+  useEffect(() => {
+    // Check if there's a pending source to scrape
+    const pendingSource = localStorage.getItem("pendingSourceToScrape");
+    if (pendingSource) {
+      try {
+        const sourceData = JSON.parse(pendingSource);
+        // Remove the pending source from local storage
+        localStorage.removeItem("pendingSourceToScrape");
+        // If the source has a URL, scrape it
+        if (sourceData.url && sourceData.name) {
+          scrapeSpecificSource(sourceData.name, sourceData.url);
+        }
+      } catch (error) {
+        console.error("Error parsing pending source:", error);
+      }
+    }
+  }, []);
+  
+  // Function to scrape a specific source
+  const scrapeSpecificSource = async (sourceName: string, sourceUrl: string) => {
+    setIsScrapingJobs(true);
+    
+    toast.loading(`Scraping jobs from ${sourceName}...`);
+    
+    try {
+      // Use the job scraper service to scrape this specific source
+      const jobs = await jobScraper.scrapeSource({
+        name: sourceName,
+        url: sourceUrl,
+        type: 'direct'
+      }, "", "");
+      
+      if (jobs.length > 0) {
+        onJobsScraped(jobs);
+        toast.success(`Found ${jobs.length} jobs at ${sourceName}`);
+      } else {
+        toast.warning(`No jobs found at ${sourceName}. The site may not be compatible with our scraper.`);
+      }
+    } catch (error) {
+      console.error(`Error scraping jobs from ${sourceName}:`, error);
+      toast.error(`Failed to scrape jobs from ${sourceName}`);
+    } finally {
+      setIsScrapingJobs(false);
+    }
+  };
+  
   // Function to handle location input
   const handleLocationInput = (input: string) => {
     setSearchLocation(input);
