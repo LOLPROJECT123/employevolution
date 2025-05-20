@@ -2,9 +2,8 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Loader2, ExternalLink, Info, FileText } from "lucide-react";
+import { Loader2, ExternalLink, Info } from "lucide-react";
 import { validateUrl, extractJobId } from "./utils";
 
 interface JobApplicationFormProps {
@@ -15,27 +14,8 @@ interface JobApplicationFormProps {
 
 const JobApplicationForm = ({ activeTab, onNavigateToProfile, onSuccess }: JobApplicationFormProps) => {
   const [jobUrl, setJobUrl] = useState("");
-  const [resumeText, setResumeText] = useState("");
-  const [coverLetterText, setCoverLetterText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isValidatingUrl, setIsValidatingUrl] = useState(false);
-
-  // Load saved data from localStorage
-  useEffect(() => {
-    try {
-      const savedResume = localStorage.getItem('userResume');
-      if (savedResume) {
-        setResumeText(savedResume);
-      }
-      
-      const savedCoverLetter = localStorage.getItem('userCoverLetter');
-      if (savedCoverLetter) {
-        setCoverLetterText(savedCoverLetter);
-      }
-    } catch (error) {
-      console.error("Error loading saved resume:", error);
-    }
-  }, []);
 
   // Function to check if a URL is still valid
   const checkUrlValidity = async (url: string): Promise<boolean> => {
@@ -72,11 +52,6 @@ const JobApplicationForm = ({ activeTab, onNavigateToProfile, onSuccess }: JobAp
       return;
     }
     
-    if (activeTab === "manual" && !resumeText.trim()) {
-      toast.error("Please enter your resume text");
-      return;
-    }
-    
     // Validate and potentially fix the URL
     const validatedUrl = validateUrl(jobUrl);
     if (!validatedUrl) {
@@ -96,15 +71,6 @@ const JobApplicationForm = ({ activeTab, onNavigateToProfile, onSuccess }: JobAp
       if (!isUrlValid) {
         setIsSubmitting(false);
         return;
-      }
-      
-      // Save the resume to localStorage for future use
-      if (resumeText.trim()) {
-        localStorage.setItem('userResume', resumeText);
-      }
-      
-      if (coverLetterText.trim()) {
-        localStorage.setItem('userCoverLetter', coverLetterText);
       }
       
       // Save the active tab preference
@@ -156,32 +122,6 @@ const JobApplicationForm = ({ activeTab, onNavigateToProfile, onSuccess }: JobAp
               <Info className="h-3 w-3" />
               <p>Paste the full URL of the job posting you want to apply to</p>
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="resume" className="text-sm font-medium">
-              Resume Text
-            </label>
-            <Textarea
-              id="resume"
-              placeholder="Paste your resume text here..."
-              rows={8}
-              value={resumeText}
-              onChange={(e) => setResumeText(e.target.value)}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <label htmlFor="cover-letter" className="text-sm font-medium">
-              Cover Letter (Optional)
-            </label>
-            <Textarea
-              id="cover-letter"
-              placeholder="Paste your cover letter here..."
-              rows={6}
-              value={coverLetterText}
-              onChange={(e) => setCoverLetterText(e.target.value)}
-            />
           </div>
         </div>
       )}
