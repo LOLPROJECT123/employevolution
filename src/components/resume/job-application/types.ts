@@ -1,5 +1,4 @@
 
-// Define available tabs for job application workflow
 export type JobApplicationTab = 'manual' | 'auto' | 'scraper';
 
 export interface ScrapedJob {
@@ -13,16 +12,8 @@ export interface ScrapedJob {
   description: string;
   applyUrl: string;
   verified?: boolean;
-  salary?: string;
-  salaryRange?: {
-    min: number;
-    max: number;
-    currency: string;
-  };
   matchPercentage?: number;
   matchKeywords?: string[];
-  requiredSkills?: string[];
-  matchedSkills?: string[];
   keywordMatch?: {
     score: number;
     total: number;
@@ -39,17 +30,6 @@ export interface ScrapedJob {
     };
   };
   requirements?: string[];
-  jobType?: string;
-  workModel?: 'onsite' | 'remote' | 'hybrid';
-  experienceLevel?: string;
-  education?: string[];
-  benefits?: string[];
-  applicationCount?: number;
-  companyLogo?: string;
-  companySize?: string;
-  companyIndustry?: string;
-  responsibilities?: string[];
-  applicationStatus?: string;
 }
 
 export interface ResumeTemplate {

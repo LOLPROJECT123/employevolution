@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardFooter, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,9 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogD
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { MessageSquarePlus, ThumbsUp, MessageCircle, Share2, PlusCircle, Filter, SortDesc, SortAsc, Link, Pencil, Trash2, X } from "lucide-react";
+import { MessageSquarePlus, ThumbsUp, MessageCircle, Send, PlusCircle, Filter, SortDesc, SortAsc } from "lucide-react";
 import { ResumePost, ResumeComment } from "@/types/resumePost";
-import { Alert } from "@/components/ui/alert";
 import {
   Select,
   SelectContent,
@@ -107,7 +107,6 @@ const ResumeForum = () => {
 
   const [selectedPost, setSelectedPost] = useState<ResumePost | null>(null);
   const [newComment, setNewComment] = useState("");
-  const [editingComment, setEditingComment] = useState<{id: string, content: string} | null>(null);
   const [newPost, setNewPost] = useState({
     title: "",
     content: "",
@@ -128,11 +127,6 @@ const ResumeForum = () => {
     company: null,
     role: null,
   });
-  const [linkCopiedAlert, setLinkCopiedAlert] = useState(false);
-
-  // Track liked posts and comments
-  const [likedPosts, setLikedPosts] = useState<{[key: string]: boolean}>({});
-  const [likedComments, setLikedComments] = useState<{[key: string]: boolean}>({});
 
   // Get unique companies and roles from posts
   const getFilterOptions = () => {
@@ -210,185 +204,47 @@ const ResumeForum = () => {
   const handleSubmitComment = () => {
     if (!selectedPost || !newComment.trim()) return;
 
-    if (editingComment) {
-      // Update existing comment
-      setPosts(prevPosts => 
-        prevPosts.map(post => {
-          if (post.id === selectedPost.id) {
-            return {
-              ...post,
-              comments: post.comments.map(comment => 
-                comment.id === editingComment.id
-                  ? { ...comment, content: newComment }
-                  : comment
-              )
-            };
-          }
-          return post;
-        })
-      );
+    const comment: ResumeComment = {
+      id: Date.now().toString(),
+      author: {
+        id: "current-user",
+        name: "Current User",
+        avatar: "/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png"
+      },
+      content: newComment,
+      upvotes: 0,
+      downvotes: 0,
+      createdAt: "Just now"
+    };
 
-      setEditingComment(null);
-      toast({
-        title: "Comment Updated",
-        description: "Your comment has been updated successfully."
-      });
-    } else {
-      // Add new comment
-      const comment: ResumeComment = {
-        id: Date.now().toString(),
-        author: {
-          id: "current-user",
-          name: "Current User",
-          avatar: "/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png"
-        },
-        content: newComment,
-        upvotes: 0,
-        downvotes: 0,
-        createdAt: "Just now",
-        isCurrentUser: true
-      };
+    const updatedPosts = posts.map(post => {
+      if (post.id === selectedPost.id) {
+        return {
+          ...post,
+          comments: [...post.comments, comment]
+        };
+      }
+      return post;
+    });
 
-      const updatedPosts = posts.map(post => {
-        if (post.id === selectedPost.id) {
-          return {
-            ...post,
-            comments: [...post.comments, comment]
-          };
-        }
-        return post;
-      });
-
-      setPosts(updatedPosts);
-      toast({
-        title: "Reply Posted",
-        description: "Your comment has been added to the discussion."
-      });
-    }
-
+    setPosts(updatedPosts);
     setNewComment("");
     setIsReplyDialogOpen(false);
-  };
-
-  const handleToggleLike = (postId: string) => {
-    setPosts(
-      posts.map(post => {
-        if (post.id === postId) {
-          // If already liked, unlike it (decrease upvotes)
-          if (likedPosts[postId]) {
-            return { ...post, upvotes: post.upvotes - 1 };
-          } 
-          // If not liked, like it (increase upvotes)
-          else {
-            return { ...post, upvotes: post.upvotes + 1 };
-          }
-        }
-        return post;
-      })
-    );
-    
-    // Toggle like status for this post
-    setLikedPosts(prev => ({
-      ...prev,
-      [postId]: !prev[postId]
-    }));
-  };
-
-  const handleToggleCommentLike = (postId: string, commentId: string) => {
-    const commentKey = `${postId}-${commentId}`;
-    const isLiked = likedComments[commentKey] || false;
-    
-    setPosts(prevPosts => 
-      prevPosts.map(post => {
-        if (post.id === postId) {
-          return {
-            ...post,
-            comments: post.comments.map(comment => {
-              if (comment.id === commentId) {
-                return {
-                  ...comment,
-                  upvotes: isLiked ? comment.upvotes - 1 : comment.upvotes + 1
-                };
-              }
-              return comment;
-            })
-          };
-        }
-        return post;
-      })
-    );
-    
-    // Toggle like status for this comment
-    setLikedComments(prev => ({
-      ...prev,
-      [commentKey]: !isLiked
-    }));
-
-    if (!isLiked) {
-      toast({
-        title: "Comment Liked",
-        description: "You liked this comment.",
-        duration: 3000 // 3 seconds
-      });
-    }
-  };
-
-  const handleEditComment = (postId: string, commentId: string) => {
-    const post = posts.find(p => p.id === postId);
-    const comment = post?.comments.find(c => c.id === commentId);
-    
-    if (comment) {
-      setSelectedPost(post);
-      setEditingComment({ id: commentId, content: comment.content });
-      setNewComment(comment.content);
-      setIsReplyDialogOpen(true);
-    }
-  };
-
-  const handleDeleteComment = (postId: string, commentId: string) => {
-    // Find the post and filter out the deleted comment
-    setPosts(prevPosts => 
-      prevPosts.map(post => {
-        if (post.id === postId) {
-          return {
-            ...post,
-            comments: post.comments.filter(comment => comment.id !== commentId)
-          };
-        }
-        return post;
-      })
-    );
-
     toast({
-      title: "Comment Deleted",
-      description: "Your comment has been removed from the discussion."
+      title: "Reply Posted",
+      description: "Your comment has been added to the discussion."
     });
   };
 
-  const handleSharePost = (post: ResumePost) => {
-    // Create a URL with post ID as parameter
-    const shareUrl = `${window.location.origin}/resume-tools?postId=${post.id}`;
-    
-    // Try to use the clipboard API
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(shareUrl)
-        .then(() => {
-          setLinkCopiedAlert(true);
-          setTimeout(() => setLinkCopiedAlert(false), 3000); // Hide after 3 seconds
-          
-          toast({
-            title: "Link Copied",
-            description: "Post link has been copied to clipboard."
-          });
-        })
-        .catch(() => {
-          // Fallback: show the link in an alert
-          prompt("Copy this link to share:", shareUrl);
-        });
-    } else {
-      // Fallback for browsers that don't support clipboard API
-      prompt("Copy this link to share:", shareUrl);
-    }
+  const handleUpvote = (postId: string) => {
+    setPosts(
+      posts.map(post => {
+        if (post.id === postId) {
+          return { ...post, upvotes: post.upvotes + 1 };
+        }
+        return post;
+      })
+    );
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -417,23 +273,6 @@ const ResumeForum = () => {
 
   return (
     <div className="space-y-6">
-      {/* Link Copied Alert */}
-      {linkCopiedAlert && (
-        <div className="fixed bottom-4 right-4 z-50">
-          <Alert className="bg-background border-border shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <h5 className="font-medium">Link Copied</h5>
-                <p className="text-sm text-muted-foreground">Post link has been copied to clipboard.</p>
-              </div>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setLinkCopiedAlert(false)}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </Alert>
-        </div>
-      )}
-
       <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
         <h2 className="text-2xl font-semibold">Resume Forum</h2>
         <div className="flex flex-wrap gap-2">
@@ -726,23 +565,20 @@ const ResumeForum = () => {
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className={`flex gap-1 ${likedPosts[post.id] ? "text-primary" : "text-muted-foreground"}`}
-                      onClick={() => handleToggleLike(post.id)}
+                      className="flex gap-1 text-muted-foreground"
+                      onClick={() => handleUpvote(post.id)}
                     >
-                      <ThumbsUp className={`h-4 w-4 ${likedPosts[post.id] ? "fill-primary" : ""}`} />
-                      <span>{post.upvotes}</span>
+                      <ThumbsUp className="h-4 w-4" />
+                      {post.upvotes}
                     </Button>
                     <Dialog open={selectedPost?.id === post.id && isReplyDialogOpen} onOpenChange={(open) => {
-                      if (!open) {
-                        setEditingComment(null);
-                      }
                       setIsReplyDialogOpen(open);
                       if (open) setSelectedPost(post);
                     }}>
                       <DialogTrigger asChild>
                         <Button variant="ghost" size="sm" className="flex gap-1 text-muted-foreground">
                           <MessageCircle className="h-4 w-4" />
-                          <span>{post.comments.length}</span>
+                          {post.comments.length}
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="sm:max-w-[600px]">
@@ -753,65 +589,32 @@ const ResumeForum = () => {
                           {post.comments.length === 0 ? (
                             <p className="text-muted-foreground text-center py-8">No replies yet. Be the first to respond!</p>
                           ) : (
-                            post.comments.map((comment) => {
-                              const commentKey = `${post.id}-${comment.id}`;
-                              const isLiked = likedComments[commentKey] || false;
-                              
-                              return (
-                                <div key={comment.id} className="mb-4 border-b pb-4 last:border-0">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center space-x-2">
-                                      <Avatar className="h-6 w-6">
-                                        {comment.author.avatar && <AvatarImage src={comment.author.avatar} />}
-                                        <AvatarFallback>{comment.author.name.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                      </Avatar>
-                                      <div>
-                                        <div className="text-sm font-medium">{comment.author.name}</div>
-                                        <div className="text-xs text-muted-foreground">{comment.createdAt}</div>
-                                      </div>
-                                    </div>
-                                    
-                                    {comment.isCurrentUser && (
-                                      <div className="flex items-center gap-1">
-                                        <Button 
-                                          variant="ghost" 
-                                          size="icon" 
-                                          className="h-6 w-6" 
-                                          onClick={() => handleEditComment(post.id, comment.id)}
-                                        >
-                                          <Pencil className="h-3 w-3" />
-                                        </Button>
-                                        <Button 
-                                          variant="ghost" 
-                                          size="icon" 
-                                          className="h-6 w-6 text-destructive hover:text-destructive" 
-                                          onClick={() => handleDeleteComment(post.id, comment.id)}
-                                        >
-                                          <Trash2 className="h-3 w-3" />
-                                        </Button>
-                                      </div>
-                                    )}
-                                  </div>
-                                  <p className="text-sm pl-8">{comment.content}</p>
-                                  <div className="flex gap-2 mt-2 pl-8">
-                                    <Button 
-                                      variant="ghost" 
-                                      size="sm" 
-                                      className={`h-6 px-2 text-xs flex items-center gap-1 ${isLiked ? "text-primary" : ""}`}
-                                      onClick={() => handleToggleCommentLike(post.id, comment.id)}
-                                    >
-                                      <ThumbsUp className={`h-3 w-3 ${isLiked ? "fill-primary" : ""}`} />
-                                      {comment.upvotes}
-                                    </Button>
+                            post.comments.map((comment) => (
+                              <div key={comment.id} className="mb-4 border-b pb-4 last:border-0">
+                                <div className="flex items-center space-x-2 mb-2">
+                                  <Avatar className="h-6 w-6">
+                                    {comment.author.avatar && <AvatarImage src={comment.author.avatar} />}
+                                    <AvatarFallback>{comment.author.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                  </Avatar>
+                                  <div>
+                                    <div className="text-sm font-medium">{comment.author.name}</div>
+                                    <div className="text-xs text-muted-foreground">{comment.createdAt}</div>
                                   </div>
                                 </div>
-                              );
-                            })
+                                <p className="text-sm pl-8">{comment.content}</p>
+                                <div className="flex gap-2 mt-2 pl-8">
+                                  <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
+                                    <ThumbsUp className="h-3 w-3 mr-1" />
+                                    {comment.upvotes}
+                                  </Button>
+                                </div>
+                              </div>
+                            ))
                           )}
                         </div>
                         <div className="flex items-center gap-2 mt-2">
                           <Textarea
-                            placeholder={editingComment ? "Edit your reply..." : "Write your reply..."}
+                            placeholder="Write your reply..."
                             value={newComment}
                             onChange={(e) => setNewComment(e.target.value)}
                             className="flex-1"
@@ -821,21 +624,12 @@ const ResumeForum = () => {
                             onClick={handleSubmitComment}
                             disabled={!newComment.trim()}
                           >
-                            <Share2 className="h-4 w-4" />
+                            <Send className="h-4 w-4" />
                           </Button>
                         </div>
                       </DialogContent>
                     </Dialog>
                   </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="text-muted-foreground"
-                    onClick={() => handleSharePost(post)}
-                  >
-                    <Link className="h-4 w-4 mr-1" />
-                    Share
-                  </Button>
                 </CardFooter>
               </Card>
             ))

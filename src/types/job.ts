@@ -1,3 +1,4 @@
+
 export interface Job {
   id: string;
   title: string;
@@ -59,22 +60,6 @@ export interface Job {
     status: 'scheduled' | 'completed' | 'cancelled';
     notes?: string;
   }>;
-  keywordMatch?: {
-    score: number;
-    found: number;
-    total: number;
-    highPriority?: {
-      keywords: string[];
-      found: number;
-      total: number;
-    };
-    lowPriority?: {
-      keywords: string[];
-      found: number;
-      total: number;
-    };
-  };
-  sortScore?: number;
 }
 
 export type JobStatus = 'applied' | 'interviewing' | 'offered' | 'rejected' | 'accepted';
@@ -132,7 +117,6 @@ export interface JobFilters {
   companyStage?: string[];
   roleType?: string[];
   title?: string[];
-  sort?: 'relevance' | 'date-newest' | 'date-oldest' | 'salary-highest' | 'salary-lowest';
 }
 
 export interface CoverLetterTemplate {

@@ -13,7 +13,7 @@ interface JobCardProps {
   onApply?: (job: Job) => void;
   onClick?: () => void;
   onSave?: () => void;
-  variant?: 'list' | 'grid' | 'detailed';
+  variant?: 'list' | 'grid';
 }
 
 export function JobCard({
@@ -26,8 +26,7 @@ export function JobCard({
   onSave,
   variant = 'list'
 }: JobCardProps) {
-  // Safely format the postedAt field
-  const timeAgo = job.postedAt ? formatRelativeTime(job.postedAt) : 'Recently';
+  const timeAgo = formatRelativeTime(job.postedAt);
   
   const getMatchColor = (percentage?: number) => {
     if (!percentage) return "";
@@ -156,96 +155,6 @@ export function JobCard({
     );
   }
   
-  if (variant === 'detailed') {
-    return (
-      <div
-        onClick={onClick}
-        className={`p-6 cursor-pointer transition-all relative border-b ${
-          isSelected ? 'bg-primary/5 dark:bg-primary/10' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
-        }`}
-      >
-        <div className="flex items-start gap-4">
-          <div className={`w-12 h-12 flex-shrink-0 rounded-lg flex items-center justify-center ${getCompanyColor()}`}>
-            {getCompanyInitial()}
-          </div>
-          
-          <div className="flex-1">
-            <div className="flex items-center justify-between">
-              <h3 className="font-medium text-lg">{job.title}</h3>
-              
-              {job.matchPercentage !== undefined && (
-                <Badge variant="outline" className={`px-2.5 py-0.5 ${getMatchBgColor(job.matchPercentage)} ${getMatchColor(job.matchPercentage)} flex items-center gap-1`}>
-                  {job.matchPercentage}% Match
-                </Badge>
-              )}
-            </div>
-            
-            <div className="flex flex-col mt-2">
-              <p className="text-base text-muted-foreground">{job.company}</p>
-              
-              <div className="flex flex-wrap gap-x-4 gap-y-2 mt-3">
-                <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-                  <MapPin className="w-4 h-4" /> {job.location}
-                </p>
-                
-                <p className="text-sm text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
-                  {formattedSalary}
-                </p>
-                
-                <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-                  <Clock className="w-4 h-4" /> {timeAgo}
-                </p>
-              </div>
-              
-              {job.skills && job.skills.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-4">
-                  {job.skills.slice(0, 5).map((skill, index) => (
-                    <Badge key={index} variant="secondary" className="font-normal">
-                      {skill}
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-        
-        <div className="flex items-center justify-between mt-4">
-          <Button
-            className={isApplied ? "text-green-600 border-green-200 bg-green-50 hover:bg-green-100" : "bg-blue-600 hover:bg-blue-700"}
-            onClick={(e) => {
-              e.stopPropagation();
-              onApply?.(job);
-            }}
-          >
-            {isApplied ? (
-              <>
-                <CheckCircle className="mr-1 h-4 w-4" /> Applied
-              </>
-            ) : (
-              <>
-                Apply Now <Zap className="ml-1 h-4 w-4" />
-              </>
-            )}
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="icon"
-            className={isSaved ? "text-primary" : ""}
-            onClick={(e) => {
-              e.stopPropagation();
-              onSave?.();
-            }}
-          >
-            <BookmarkIcon className={`h-5 w-5 ${isSaved ? "fill-current" : ""}`} />
-          </Button>
-        </div>
-      </div>
-    );
-  }
-  
-  // Default grid view
   return (
     <div
       onClick={onClick}

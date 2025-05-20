@@ -118,7 +118,7 @@ export const JobDetailView = ({
   return (
     <ScrollArea className="h-[calc(100vh-250px)]">
       <div className="p-6">
-        {job.matchPercentage !== undefined && (
+        {job.matchPercentage && (
           <div className={`p-4 rounded-lg ${getMatchBgColor(job.matchPercentage)} mb-4`}>
             <div className="flex items-center gap-2">
               <div className={`text-xl font-bold ${getMatchColor(job.matchPercentage)}`}>{job.matchPercentage}%</div>
@@ -223,7 +223,7 @@ export const JobDetailView = ({
           </div>
         )}
         
-        {job.matchPercentage !== undefined && (
+        {job.matchPercentage && (
           <div className="mt-8 border-t pt-6">
             <h2 className="text-xl font-semibold mb-3">Detailed Match Analysis</h2>
             <JobMatchDetails job={job} />

@@ -32,14 +32,14 @@ import { Switch } from "@/components/ui/switch";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Download, Settings } from "lucide-react";
+import { Download, SettingsIcon } from "lucide-react";
 import { 
   AutomationConfig, 
-  AutomationPlatform,
-  getAutomationConfig,
-  saveAutomationConfig,
-  getHandshakeAutomationScript,
-  getIndeedAutomationScript
+  AutomationCredentials, 
+  AutomationPlatform, 
+  AutomationProfile, 
+  getHandshakeAutomationScript, 
+  getIndeedAutomationScript 
 } from '@/utils/automationUtils';
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -121,12 +121,20 @@ type FormValues = z.infer<typeof formSchema>;
 
 // Function to load saved config from localStorage
 const loadSavedConfig = (): AutomationConfig | null => {
-  return getAutomationConfig();
+  const savedConfig = localStorage.getItem('automationConfig');
+  if (savedConfig) {
+    try {
+      return JSON.parse(savedConfig);
+    } catch (e) {
+      console.error('Failed to parse saved automation config:', e);
+    }
+  }
+  return null;
 };
 
 // Function to save config to localStorage
 const saveConfig = (config: AutomationConfig): void => {
-  saveAutomationConfig(config);
+  localStorage.setItem('automationConfig', JSON.stringify(config));
 };
 
 export default function AutomationSettings() {
@@ -139,54 +147,45 @@ export default function AutomationSettings() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: savedConfig ? {
-      platform: savedConfig.credentials?.platform || 'handshake',
-      email: savedConfig.credentials?.email || '',
-      password: savedConfig.credentials?.password || '',
-      enabled: savedConfig.credentials?.enabled || false,
-      name: savedConfig.profile?.name || savedConfig.name || '',
-      profileEmail: savedConfig.profile?.email || savedConfig.email || '',
-      phone: savedConfig.profile?.phone || savedConfig.phone || '',
-      location: savedConfig.profile?.location || '',
-      currentlyEmployed: savedConfig.profile?.currentlyEmployed || false,
-      needVisa: savedConfig.profile?.needVisa || false,
-      yearsOfCoding: savedConfig.profile?.yearsOfCoding || 0,
-      experience: savedConfig.profile?.experience || '',
-      languagesKnown: savedConfig.profile?.languagesKnown?.join(', ') || '',
-      codingLanguagesKnown: savedConfig.profile?.codingLanguagesKnown?.join(', ') || '',
+      platform: savedConfig.credentials.platform,
+      email: savedConfig.credentials.email,
+      password: savedConfig.credentials.password,
+      enabled: savedConfig.credentials.enabled,
+      name: savedConfig.profile.name,
+      profileEmail: savedConfig.profile.email,
+      phone: savedConfig.profile.phone,
+      location: savedConfig.profile.location,
+      currentlyEmployed: savedConfig.profile.currentlyEmployed,
+      needVisa: savedConfig.profile.needVisa,
+      yearsOfCoding: savedConfig.profile.yearsOfCoding,
+      experience: savedConfig.profile.experience,
+      languagesKnown: savedConfig.profile.languagesKnown.join(', '),
+      codingLanguagesKnown: savedConfig.profile.codingLanguagesKnown.join(', '),
       
       // Extended profile fields
-      address: savedConfig.profile?.address || '',
-      city: savedConfig.profile?.city || '',
-      state: savedConfig.profile?.state || '',
-      postalCode: savedConfig.profile?.postalCode || '',
-      githubUrl: savedConfig.profile?.githubUrl || '',
-      linkedinUrl: savedConfig.profile?.linkedinUrl || '',
-      university: savedConfig.profile?.university || '',
-      hasCriminalRecord: savedConfig.profile?.hasCriminalRecord || false,
-      needsSponsorship: savedConfig.profile?.needsSponsorship || false,
-      willingToRelocate: savedConfig.profile?.willingToRelocate || false,
-      workAuthorized: savedConfig.profile?.workAuthorized || false,
-      isCitizen: savedConfig.profile?.isCitizen || false,
-      educationLevel: savedConfig.profile?.educationLevel || '',
-      salaryExpectation: savedConfig.profile?.salaryExpectation || '',
-      gender: savedConfig.profile?.gender || 'Decline',
-      veteranStatus: savedConfig.profile?.veteranStatus || 'Decline',
-      disabilityStatus: savedConfig.profile?.disabilityStatus || 'Decline',
-      canCommute: savedConfig.profile?.canCommute || false,
-      preferredShift: savedConfig.profile?.preferredShift || 'Day shift',
-      availableForInterview: savedConfig.profile?.availableForInterview || '',
+      address: savedConfig.profile.address,
+      city: savedConfig.profile.city,
+      state: savedConfig.profile.state,
+      postalCode: savedConfig.profile.postalCode,
+      githubUrl: savedConfig.profile.githubUrl,
+      linkedinUrl: savedConfig.profile.linkedinUrl,
+      university: savedConfig.profile.university,
+      hasCriminalRecord: savedConfig.profile.hasCriminalRecord,
+      needsSponsorship: savedConfig.profile.needsSponsorship,
+      willingToRelocate: savedConfig.profile.willingToRelocate,
+      workAuthorized: savedConfig.profile.workAuthorized,
+      isCitizen: savedConfig.profile.isCitizen,
+      educationLevel: savedConfig.profile.educationLevel,
+      salaryExpectation: savedConfig.profile.salaryExpectation,
+      gender: savedConfig.profile.gender,
+      veteranStatus: savedConfig.profile.veteranStatus,
+      disabilityStatus: savedConfig.profile.disabilityStatus,
+      canCommute: savedConfig.profile.canCommute,
+      preferredShift: savedConfig.profile.preferredShift,
+      availableForInterview: savedConfig.profile.availableForInterview,
       
       // Indeed specific settings
-      indeed: savedConfig.platformSpecificSettings?.indeed || {
-        experienceYears: {
-          default: '0'
-        },
-        applicationSettings: {
-          loadDelay: 1.5,
-          hasDBS: false,
-          hasValidCertificate: false
-        }
-      }
+      indeed: savedConfig.platformSpecificSettings?.indeed,
     } : {
       platform: 'handshake' as AutomationPlatform,
       email: '',
@@ -262,10 +261,7 @@ export default function AutomationSettings() {
       },
       platformSpecificSettings: {
         indeed: values.indeed
-      },
-      name: values.name,
-      email: values.profileEmail,
-      phone: values.phone
+      }
     };
     
     // Save config
@@ -324,10 +320,7 @@ export default function AutomationSettings() {
       },
       platformSpecificSettings: {
         indeed: values.indeed
-      },
-      name: values.name,
-      email: values.profileEmail,
-      phone: values.phone
+      }
     };
     
     // Get script based on platform
@@ -365,7 +358,7 @@ export default function AutomationSettings() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2">
-          <Settings className="h-4 w-4" />
+          <SettingsIcon className="h-4 w-4" />
           <span>Application Automation</span>
         </Button>
       </DialogTrigger>
@@ -385,7 +378,6 @@ export default function AutomationSettings() {
                 <TabsTrigger value="general" className="flex-1">General</TabsTrigger>
                 <TabsTrigger value="indeed" className="flex-1">Indeed Settings</TabsTrigger>
               </TabsList>
-              
               <TabsContent value="general" className="pt-4">
                 <div className="space-y-6">
                   <div className="space-y-4">

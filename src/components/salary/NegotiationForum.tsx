@@ -7,11 +7,26 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ThumbsUp, MessageCircle, Link, Filter, PlusCircle, Pencil, Trash2, X } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { ForumPost, ForumComment } from "@/types/forumPost";
-import { Alert } from "@/components/ui/alert";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ThumbsUp, MessageCircle, Share2, Filter, PlusCircle } from "lucide-react";
+
+type ForumPost = {
+  id: string;
+  author: {
+    name: string;
+    avatar?: string;
+    initials: string;
+  };
+  title: string;
+  content: string;
+  tags: string[];
+  likes: number;
+  comments: number;
+  timestamp: string;
+  isAnonymous: boolean;
+  company?: string;
+  role?: string;
+  position?: string;
+};
 
 interface NegotiationForumProps {
   filters?: {
@@ -24,7 +39,6 @@ interface NegotiationForumProps {
 }
 
 const NegotiationForum = ({ filters }: NegotiationForumProps) => {
-  const { toast } = useToast();
   const [posts, setPosts] = useState<ForumPost[]>([
     {
       id: "1",
@@ -82,33 +96,12 @@ const NegotiationForum = ({ filters }: NegotiationForumProps) => {
   ]);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [commentDialogOpen, setCommentDialogOpen] = useState(false);
-  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
-  const [newComment, setNewComment] = useState("");
-  const [editingComment, setEditingComment] = useState<{id: string, text: string} | null>(null);
-  const [likedPosts, setLikedPosts] = useState<{[key: string]: boolean}>({});
-  const [likedComments, setLikedComments] = useState<{[key: string]: boolean}>({});
-  const [comments, setComments] = useState<{[key: string]: ForumComment[]}>({
-    "1": [
-      {id: "1-1", author: "TechManager", text: "Thank you for sharing! Could you elaborate on how you found comparable salary data?", timestamp: "1 day ago", isCurrentUser: false, likes: 5},
-      {id: "1-2", author: "SalaryExpert", text: "I used a similar approach and got a 15% increase. The key is having market data ready.", timestamp: "2 days ago", isCurrentUser: false, likes: 8}
-    ],
-    "2": [
-      {id: "2-1", author: "SeniorDev", text: "Always negotiate! The worst they can say is no. Be confident but respectful.", timestamp: "3 days ago", isCurrentUser: false, likes: 10},
-      {id: "2-2", author: "HiringManager", text: "I respect candidates who negotiate thoughtfully. Show you've done research.", timestamp: "4 days ago", isCurrentUser: false, likes: 6}
-    ],
-    "3": [
-      {id: "3-1", author: "RemoteWorker", text: "Did you ask for any additional stipend for home office setup?", timestamp: "5 days ago", isCurrentUser: false, likes: 3},
-      {id: "3-2", author: "WorkLifeBalance", text: "Remote work saved me 2 hours commuting daily. Worth every penny of the salary difference.", timestamp: "6 days ago", isCurrentUser: false, likes: 12}
-    ]
-  });
   const [newPost, setNewPost] = useState({
     title: "",
     content: "",
     tags: "",
     isAnonymous: false
   });
-  const [linkCopiedAlert, setLinkCopiedAlert] = useState(false);
 
   const handleSubmitPost = () => {
     const tagsArray = newPost.tags.split(',').map(tag => tag.trim()).filter(Boolean);
@@ -137,182 +130,6 @@ const NegotiationForum = ({ filters }: NegotiationForumProps) => {
       isAnonymous: false
     });
     setIsDialogOpen(false);
-  };
-
-  const handleToggleLike = (postId: string) => {
-    setPosts(
-      posts.map(post => {
-        if (post.id === postId) {
-          // If already liked, unlike it
-          if (likedPosts[postId]) {
-            return { ...post, likes: post.likes - 1 };
-          } 
-          // If not liked, like it
-          else {
-            return { ...post, likes: post.likes + 1 };
-          }
-        }
-        return post;
-      })
-    );
-    
-    // Toggle like status for this post
-    setLikedPosts(prev => ({
-      ...prev,
-      [postId]: !prev[postId]
-    }));
-  };
-
-  const handleToggleCommentLike = (postId: string, commentId: string) => {
-    const commentKey = `${postId}-${commentId}`;
-    const isLiked = likedComments[commentKey] || false;
-    
-    setComments(prev => {
-      const postComments = prev[postId] || [];
-      return {
-        ...prev,
-        [postId]: postComments.map(comment => {
-          if (comment.id === commentId) {
-            // Update likes count
-            const updatedLikes = (comment.likes || 0) + (isLiked ? -1 : 1);
-            return { ...comment, likes: updatedLikes };
-          }
-          return comment;
-        })
-      };
-    });
-    
-    // Toggle like status for this comment
-    setLikedComments(prev => ({
-      ...prev,
-      [commentKey]: !isLiked
-    }));
-
-    if (!isLiked) {
-      toast({
-        title: "Comment Liked",
-        description: "You liked this comment.",
-        duration: 3000 // 3 seconds
-      });
-    }
-  };
-
-  const handleSubmitComment = () => {
-    if (!selectedPostId || !newComment.trim()) return;
-
-    if (editingComment) {
-      // Update existing comment
-      setComments(prev => {
-        const postComments = prev[selectedPostId] || [];
-        return {
-          ...prev,
-          [selectedPostId]: postComments.map(comment => 
-            comment.id === editingComment.id 
-              ? {...comment, text: newComment} 
-              : comment
-          )
-        };
-      });
-
-      setEditingComment(null);
-      toast({
-        title: "Comment Updated",
-        description: "Your comment has been updated successfully."
-      });
-    } else {
-      // Add new comment
-      setComments(prev => {
-        const postComments = prev[selectedPostId] || [];
-        return {
-          ...prev,
-          [selectedPostId]: [
-            ...postComments,
-            {
-              id: `${selectedPostId}-${Date.now()}`,
-              author: "You",
-              text: newComment,
-              timestamp: "Just now",
-              isCurrentUser: true
-            }
-          ]
-        };
-      });
-
-      // Update comment count in the post
-      setPosts(
-        posts.map(post => {
-          if (post.id === selectedPostId) {
-            return { ...post, comments: post.comments + 1 };
-          }
-          return post;
-        })
-      );
-      
-      toast({
-        title: "Comment Posted",
-        description: "Your comment has been added to the discussion."
-      });
-    }
-
-    // Reset and close
-    setNewComment("");
-  };
-
-  const handleEditComment = (postId: string, commentId: string) => {
-    const comment = comments[postId]?.find(c => c.id === commentId);
-    if (comment) {
-      setSelectedPostId(postId);
-      setEditingComment({ id: commentId, text: comment.text });
-      setNewComment(comment.text);
-      setCommentDialogOpen(true);
-    }
-  };
-
-  const handleDeleteComment = (postId: string, commentId: string) => {
-    // Remove the comment
-    setComments(prev => {
-      const postComments = prev[postId] || [];
-      return {
-        ...prev,
-        [postId]: postComments.filter(comment => comment.id !== commentId)
-      };
-    });
-
-    // Update comment count in the post
-    setPosts(
-      posts.map(post => {
-        if (post.id === postId) {
-          return { ...post, comments: Math.max(0, post.comments - 1) };
-        }
-        return post;
-      })
-    );
-
-    toast({
-      title: "Comment Deleted",
-      description: "Your comment has been removed from the discussion."
-    });
-  };
-
-  const handleSharePost = (postId: string) => {
-    // Create a URL with post ID as parameter
-    const shareUrl = `${window.location.origin}/salary-negotiations?postId=${postId}`;
-    
-    // Try to use the clipboard API
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(shareUrl)
-        .then(() => {
-          setLinkCopiedAlert(true);
-          setTimeout(() => setLinkCopiedAlert(false), 3000); // Hide after 3 seconds
-        })
-        .catch(() => {
-          // Fallback: show the link in an alert
-          prompt("Copy this link to share:", shareUrl);
-        });
-    } else {
-      // Fallback for browsers that don't support clipboard API
-      prompt("Copy this link to share:", shareUrl);
-    }
   };
 
   const filteredPosts = React.useMemo(() => {
@@ -354,23 +171,6 @@ const NegotiationForum = ({ filters }: NegotiationForumProps) => {
 
   return (
     <div className="space-y-6">
-      {/* Link Copied Alert */}
-      {linkCopiedAlert && (
-        <div className="fixed bottom-4 right-4 z-50">
-          <Alert className="bg-background border-border shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <h5 className="font-medium">Link Copied</h5>
-                <p className="text-sm text-muted-foreground">Post link has been copied to clipboard.</p>
-              </div>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setLinkCopiedAlert(false)}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </Alert>
-        </div>
-      )}
-
       <div className="space-y-4">
         <h2 className="text-2xl font-semibold">Salary Negotiation Forum</h2>
         <div className="flex justify-end">
@@ -460,118 +260,17 @@ const NegotiationForum = ({ filters }: NegotiationForumProps) => {
               </CardContent>
               <CardFooter className="border-t pt-3 flex justify-between">
                 <div className="flex gap-3">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className={`flex gap-1 ${likedPosts[post.id] ? "text-primary" : "text-muted-foreground"}`}
-                    onClick={() => handleToggleLike(post.id)}
-                  >
-                    <ThumbsUp className={`h-4 w-4 ${likedPosts[post.id] ? "fill-primary" : ""}`} />
+                  <Button variant="ghost" size="sm" className="flex gap-1 text-muted-foreground">
+                    <ThumbsUp className="h-4 w-4" />
                     <span>{post.likes}</span>
                   </Button>
-                  <Dialog open={commentDialogOpen && selectedPostId === post.id} onOpenChange={(isOpen) => {
-                    if (!isOpen) {
-                      setEditingComment(null);
-                    }
-                    setCommentDialogOpen(isOpen);
-                    if (isOpen) {
-                      setSelectedPostId(post.id);
-                    }
-                  }}>
-                    <DialogTrigger asChild>
-                      <Button variant="ghost" size="sm" className="flex gap-1 text-muted-foreground">
-                        <MessageCircle className="h-4 w-4" />
-                        <span>{post.comments}</span>
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[600px]">
-                      <DialogHeader>
-                        <DialogTitle>Comments on: {post.title}</DialogTitle>
-                      </DialogHeader>
-                      <div className="max-h-[400px] overflow-y-auto py-4">
-                        {comments[post.id] && comments[post.id].length > 0 ? (
-                          comments[post.id].map((comment, index) => {
-                            const commentKey = `${post.id}-${comment.id}`;
-                            const isLiked = likedComments[commentKey] || false;
-                            
-                            return (
-                              <div key={index} className="mb-4 border-b pb-4 last:border-0">
-                                <div className="flex items-center justify-between mb-2">
-                                  <div className="flex items-center space-x-2">
-                                    <Avatar className="h-6 w-6">
-                                      <AvatarFallback>{comment.author.slice(0, 2).toUpperCase()}</AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                      <div className="text-sm font-medium">{comment.author}</div>
-                                      <div className="text-xs text-muted-foreground">{comment.timestamp}</div>
-                                    </div>
-                                  </div>
-                                  
-                                  {comment.isCurrentUser && (
-                                    <div className="flex items-center gap-1">
-                                      <Button 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        className="h-6 w-6" 
-                                        onClick={() => handleEditComment(post.id, comment.id)}
-                                      >
-                                        <Pencil className="h-3 w-3" />
-                                      </Button>
-                                      <Button 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        className="h-6 w-6 text-destructive hover:text-destructive" 
-                                        onClick={() => handleDeleteComment(post.id, comment.id)}
-                                      >
-                                        <Trash2 className="h-3 w-3" />
-                                      </Button>
-                                    </div>
-                                  )}
-                                </div>
-                                <p className="text-sm pl-8">{comment.text}</p>
-                                <div className="flex gap-2 mt-2 pl-8">
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm" 
-                                    className={`h-6 px-2 text-xs flex items-center gap-1 ${isLiked ? "text-primary" : ""}`}
-                                    onClick={() => handleToggleCommentLike(post.id, comment.id)}
-                                  >
-                                    <ThumbsUp className={`h-3 w-3 ${isLiked ? "fill-primary" : ""}`} />
-                                    {comment.likes || 0}
-                                  </Button>
-                                </div>
-                              </div>
-                            );
-                          })
-                        ) : (
-                          <p className="text-muted-foreground text-center py-8">No comments yet. Be the first to comment!</p>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 mt-2">
-                        <Textarea
-                          placeholder={editingComment ? "Edit your comment..." : "Write your comment..."}
-                          value={newComment}
-                          onChange={(e) => setNewComment(e.target.value)}
-                          className="flex-1"
-                        />
-                        <Button 
-                          size="icon" 
-                          onClick={handleSubmitComment}
-                          disabled={!newComment.trim()}
-                        >
-                          <MessageCircle className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                  <Button variant="ghost" size="sm" className="flex gap-1 text-muted-foreground">
+                    <MessageCircle className="h-4 w-4" />
+                    <span>{post.comments}</span>
+                  </Button>
                 </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="text-muted-foreground"
-                  onClick={() => handleSharePost(post.id)}
-                >
-                  <Link className="h-4 w-4 mr-1" />
+                <Button variant="ghost" size="sm" className="text-muted-foreground">
+                  <Share2 className="h-4 w-4 mr-1" />
                   Share
                 </Button>
               </CardFooter>

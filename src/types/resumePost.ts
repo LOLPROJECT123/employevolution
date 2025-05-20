@@ -12,8 +12,6 @@ export interface ResumeComment {
   upvotes: number;
   downvotes: number;
   createdAt: string;
-  isCurrentUser?: boolean;
-  isLiked?: boolean;
 }
 
 export interface ResumePost {
@@ -29,6 +27,5 @@ export interface ResumePost {
   tags: string[];
   company?: string;
   role?: string;
-  position?: string;
-  matchPercentage?: number;
+  position?: string; // Position field already properly added 
 }

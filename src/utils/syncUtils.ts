@@ -1,4 +1,3 @@
-
 /**
  * Utilities for synchronizing data between the extension and web app
  */
@@ -9,35 +8,29 @@ import { Job, JobApplicationStatus } from "@/types/job";
 interface ChromeRuntime {
   sendMessage: (
     message: any, 
-    callback?: (response: any) => void
+    responseCallback?: (response: any) => void
   ) => void;
   lastError?: {
     message: string;
   };
 }
 
-// Chrome interface definition that matches the existing global definition
 interface Chrome {
-  runtime?: {
-    sendMessage?: (
-      message: any,
-      callback?: (response: any) => void
-    ) => void;
-    lastError?: any;
-  };
+  runtime?: ChromeRuntime;
 }
 
 // Declare global window with chrome property
-// Use a merged interface approach to avoid conflicts
 declare global {
   interface Window {
     chrome?: {
       runtime?: {
         sendMessage?: (
           message: any,
-          callback?: (response: any) => void
+          responseCallback?: (response: any) => void
         ) => void;
-        lastError?: any;
+        lastError?: {
+          message: string;
+        };
       };
     };
   }
