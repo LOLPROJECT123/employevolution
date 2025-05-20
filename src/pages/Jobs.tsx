@@ -272,8 +272,7 @@ const Jobs = () => {
         )[0];
 
         if (bestMatch && bestMatch.applyUrl && bestMatch.matchPercentage && bestMatch.matchPercentage > 85) {
-          toast({
-            message: `${bestMatch.title} at ${bestMatch.company} is a ${bestMatch.matchPercentage}% match.`,
+          toast(`${bestMatch.title} at ${bestMatch.company} is a ${bestMatch.matchPercentage}% match.`, {
             action: {
               label: "Auto Apply",
               onClick: () => handleApplyJob(bestMatch)
