@@ -219,7 +219,13 @@ const Jobs = () => {
               <Button 
                 variant="outline" 
                 className="group flex items-center gap-2"
-                onClick={() => window.open(chrome.runtime?.id ? chrome.runtime.getURL("index.html") : "https://chrome.google.com/webstore/detail/streamline-extension", "_blank")}
+                onClick={() => {
+                  // Check if running in Chrome extension context before accessing chrome API
+                  const chromeExtensionUrl = typeof chrome !== 'undefined' && chrome.runtime?.id 
+                    ? chrome.runtime.getURL("index.html") 
+                    : "https://chrome.google.com/webstore/detail/streamline-extension";
+                  window.open(chromeExtensionUrl, "_blank");
+                }}
               >
                 <span>Chrome Extension</span>
               </Button>
