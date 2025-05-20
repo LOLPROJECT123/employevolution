@@ -5,7 +5,6 @@ import ATSOptimizer from "@/components/ATSOptimizer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AIResumeCreator from "@/components/resume/AIResumeCreator";
 import AICVCreator from "@/components/resume/AICVCreator";
-import JobApplicationAutomation from "@/components/resume/JobApplicationAutomation";
 import ResumeForum from "@/components/resume/ResumeForum";
 import ResumeTemplates from "@/components/resume/ResumeTemplates";
 import { useMobile } from "@/hooks/use-mobile";
@@ -31,12 +30,11 @@ const ResumeTools = () => {
           
           <Tabs defaultValue="ats-optimizer" className="space-y-8">
             {isMobile ? (
-              <div className="pb-16">  {/* Increased padding at bottom from 10 to 16 */}
+              <div className="pb-16">
                 <TabsList className="w-full mb-2 grid grid-cols-2 gap-x-2 gap-y-2">
                   <TabsTrigger value="ats-optimizer" className="p-2 text-sm whitespace-normal h-auto">ATS Optimizer</TabsTrigger>
                   <TabsTrigger value="ai-resume-creator" className="p-2 text-sm whitespace-normal h-auto">AI Resume Creator</TabsTrigger>
                   <TabsTrigger value="ai-cv-creator" className="p-2 text-sm whitespace-normal h-auto">AI CV Creator</TabsTrigger>
-                  <TabsTrigger value="job-automation" className="p-2 text-sm whitespace-normal h-auto">Job Automation</TabsTrigger>
                   <TabsTrigger value="forum" className="p-2 text-sm whitespace-normal h-auto">Resume Forum</TabsTrigger>
                   <TabsTrigger value="templates" className="p-2 text-sm whitespace-normal h-auto">Templates</TabsTrigger>
                 </TabsList>
@@ -46,7 +44,6 @@ const ResumeTools = () => {
                 <TabsTrigger value="ats-optimizer">ATS Optimizer</TabsTrigger>
                 <TabsTrigger value="ai-resume-creator">AI Resume Creator</TabsTrigger>
                 <TabsTrigger value="ai-cv-creator">AI CV Creator</TabsTrigger>
-                <TabsTrigger value="job-automation">Job Automation</TabsTrigger>
                 <TabsTrigger value="forum">Resume Forum</TabsTrigger>
                 <TabsTrigger value="templates">Templates</TabsTrigger>
               </TabsList>
@@ -62,10 +59,6 @@ const ResumeTools = () => {
             
             <TabsContent value="ai-cv-creator" className={isMobile ? "mt-4" : ""}>
               <AICVCreator />
-            </TabsContent>
-            
-            <TabsContent value="job-automation" className={isMobile ? "mt-4" : ""}>
-              <JobApplicationAutomation />
             </TabsContent>
             
             <TabsContent value="forum" className={isMobile ? "mt-4" : ""}>

@@ -1,28 +1,26 @@
 
-import { toast } from "sonner";
+/**
+ * Job Application Automation Utilities
+ */
 
 export type AutomationPlatform = 'handshake' | 'linkedin' | 'indeed' | 'glassdoor';
 
 export interface AutomationCredentials {
-  enabled: boolean;
-  username?: string;
-  password: string;
-  email: string;
   platform: AutomationPlatform;
+  email: string;
+  password: string;
+  enabled: boolean;
 }
 
 export interface AutomationProfile {
   name: string;
-  title?: string;
-  location: string;
-  skills?: string[];
-  experience: string;
-  education?: string[];
   email: string;
   phone: string;
+  location: string;
   currentlyEmployed: boolean;
   needVisa: boolean;
   yearsOfCoding: number;
+  experience: string;
   languagesKnown: string[];
   codingLanguagesKnown: string[];
   
@@ -50,245 +48,160 @@ export interface AutomationProfile {
 }
 
 export interface IndeedSettings {
-  autoApplyEasyApply: boolean;
-  skipAssessments: boolean;
-  autoUploadResume: boolean;
+  experienceYears?: {
+    java?: string;
+    aws?: string;
+    python?: string;
+    analysis?: string;
+    django?: string;
+    php?: string;
+    react?: string;
+    node?: string;
+    angular?: string;
+    javascript?: string;
+    orm?: string;
+    sdet?: string;
+    selenium?: string;
+    testautomation?: string;
+    webdev?: string;
+    programming?: string;
+    teaching?: string;
+    default?: string;
+  };
+  applicationSettings?: {
+    loadDelay?: number;
+    hasDBS?: boolean;
+    hasValidCertificate?: boolean;
+  };
 }
 
 export interface AutomationConfig {
   credentials: AutomationCredentials;
   profile: AutomationProfile;
-  indeed?: IndeedSettings;
-  linkedin?: {
-    autoApplyEasyApply: boolean;
-  };
-  handshake?: {
-    autoApply: boolean;
+  preferences?: {
+    autoFillPersonal: boolean;
+    autoFillEducation: boolean;
+    autoFillExperience: boolean;
+    autoFillSkills: boolean;
+    autoGenerateCoverLetter: boolean;
+    applyWithoutConfirmation: boolean;
   };
   platformSpecificSettings?: {
-    indeed?: {
-      experienceYears?: {
-        java?: string;
-        aws?: string;
-        python?: string;
-        analysis?: string;
-        django?: string;
-        php?: string;
-        react?: string;
-        node?: string;
-        angular?: string;
-        javascript?: string;
-        orm?: string;
-        sdet?: string;
-        selenium?: string;
-        testautomation?: string;
-        webdev?: string;
-        programming?: string;
-        teaching?: string;
-        default?: string;
-      };
-      applicationSettings?: {
-        loadDelay?: number;
-        hasDBS?: boolean;
-        hasValidCertificate?: boolean;
-      };
-    };
+    indeed?: IndeedSettings;
   };
+  name?: string;
+  email?: string;
+  phone?: string;
+  resumeUrl?: string;
+  education?: any[];
+  experience?: any[];
+  skills?: string[];
+  coverLetterTemplate?: string;
 }
 
 /**
- * Detect which platform a job URL belongs to
+ * Start the automation process for a job application
  */
-export const detectPlatform = (url: string): string | null => {
-  if (!url) return null;
-  
-  try {
-    const hostname = new URL(url).hostname;
-    
-    if (hostname.includes('indeed.com')) return 'Indeed';
-    if (hostname.includes('linkedin.com')) return 'LinkedIn';
-    if (hostname.includes('handshake.com') || hostname.includes('joinhandshake.com')) return 'Handshake';
-    if (hostname.includes('ziprecruiter.com')) return 'ZipRecruiter';
-    if (hostname.includes('monster.com')) return 'Monster';
-    if (hostname.includes('glassdoor.com')) return 'Glassdoor';
-    
-    return null;
-  } catch (error) {
-    console.error('Error parsing URL:', error);
-    return null;
-  }
-};
-
-/**
- * Start automation process for a specific job URL
- */
-export const startAutomation = (url: string, config: AutomationConfig) => {
-  const platform = detectPlatform(url);
-  
-  if (!platform) {
-    toast.error('Unsupported platform for automation');
+export function startAutomation(applyUrl: string, config: AutomationConfig): void {
+  if (!applyUrl) {
+    console.error("No apply URL provided");
     return;
   }
   
-  switch (platform) {
-    case 'Indeed':
-      console.log('Running Indeed automation script');
-      const indeedScript = getIndeedAutomationScript(url, config);
-      executeAutomationScript(indeedScript);
-      break;
-      
-    case 'LinkedIn':
-      console.log('Running LinkedIn automation script');
-      // LinkedIn automation logic would go here
-      break;
-      
-    case 'Handshake':
-      console.log('Running Handshake automation script');
-      const handshakeScript = getHandshakeAutomationScript(url, config);
-      executeAutomationScript(handshakeScript);
-      break;
-      
-    default:
-      toast.error(`Automation not yet supported for ${platform}`);
-      break;
+  if (!config) {
+    console.error("No automation configuration provided");
+    return;
   }
-};
-
-/**
- * Generate Indeed automation script
- */
-export const getIndeedAutomationScript = (url: string, config: AutomationConfig): string => {
-  const { credentials, profile, indeed } = config;
   
-  return `
-    // Indeed Automation Script
-    // URL: ${url}
-    // Config: ${JSON.stringify({ credentials, profile, indeed })}
-    
-    (async () => {
-      try {
-        console.log("Starting Indeed application automation");
-        
-        // Navigate to job page
-        window.location.href = "${url}";
-        
-        // Wait for page to load
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // Find and click apply button
-        const applyButton = document.querySelector('button[id*="apply"], a[id*="apply"]');
-        if (applyButton) {
-          applyButton.click();
-          console.log("Clicked apply button");
-        } else {
-          console.error("Could not find apply button");
-          return;
-        }
-        
-        // Wait for application form to load
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        
-        // Fill in basic information if needed
-        const nameInput = document.querySelector('input[id*="name"]');
-        if (nameInput && nameInput.value === "") {
-          nameInput.value = "${profile.name}";
-          nameInput.dispatchEvent(new Event('input', { bubbles: true }));
-          nameInput.dispatchEvent(new Event('change', { bubbles: true }));
-          console.log("Filled in name");
-        }
-        
-        const emailInput = document.querySelector('input[type="email"]');
-        if (emailInput && emailInput.value === "") {
-          emailInput.value = "${credentials.email}";
-          emailInput.dispatchEvent(new Event('input', { bubbles: true }));
-          emailInput.dispatchEvent(new Event('change', { bubbles: true }));
-          console.log("Filled in email");
-        }
-        
-        // Auto upload resume if enabled
-        if (${indeed?.autoUploadResume ?? false}) {
-          const resumeUpload = document.querySelector('input[type="file"][accept*=".pdf"]');
-          if (resumeUpload) {
-            console.log("Found resume upload but need manual intervention");
-            // Cannot programmatically set file input due to security restrictions
-          }
-        }
-        
-        // Skip assessments if enabled
-        if (${indeed?.skipAssessments ?? false}) {
-          const skipButtons = document.querySelectorAll('button:contains("Skip")');
-          skipButtons.forEach(button => button.click());
-          console.log("Attempted to skip assessments");
-        }
-        
-        console.log("Indeed automation completed");
-      } catch (error) {
-        console.error("Error during Indeed automation:", error);
-      }
-    })();
-  `;
-};
-
-/**
- * Generate Handshake automation script
- */
-export const getHandshakeAutomationScript = (url: string, config: AutomationConfig): string => {
-  const { credentials, profile } = config;
+  // In production, this would communicate with a browser extension
+  // For now, we'll just post a message that the extension can listen for
+  window.postMessage({
+    type: 'START_AUTOMATION',
+    payload: {
+      url: applyUrl,
+      config
+    }
+  }, '*');
   
-  return `
-    // Handshake Automation Script
-    // URL: ${url}
-    // Config: ${JSON.stringify({ credentials, profile })}
-    
-    (async () => {
-      try {
-        console.log("Starting Handshake application automation");
-        
-        // Navigate to job page
-        window.location.href = "${url}";
-        
-        // Wait for page to load
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // Find and click apply button
-        const applyButton = document.querySelector('a[data-test="job-detail-apply"]');
-        if (applyButton) {
-          applyButton.click();
-          console.log("Clicked apply button");
-        } else {
-          console.error("Could not find apply button");
-          return;
-        }
-        
-        // Wait for application form to load
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        
-        console.log("Handshake automation completed");
-      } catch (error) {
-        console.error("Error during Handshake automation:", error);
-      }
-    })();
-  `;
-};
+  // Log the automation start
+  console.log(`Automation started for URL: ${applyUrl}`);
+  console.log("Using config:", config);
+  
+  // Open the URL in a new tab (the extension would handle the automation)
+  window.open(applyUrl, '_blank');
+}
 
 /**
- * Execute automation script
+ * Save automation configuration to local storage
  */
-const executeAutomationScript = (script: string) => {
+export function saveAutomationConfig(config: AutomationConfig): void {
+  localStorage.setItem('automationConfig', JSON.stringify(config));
+  console.log("Automation configuration saved");
+}
+
+/**
+ * Get saved automation configuration
+ */
+export function getAutomationConfig(): AutomationConfig | null {
+  const configStr = localStorage.getItem('automationConfig');
+  if (!configStr) return null;
+  
   try {
-    // In a real implementation, this would communicate with a browser extension
-    // For demo purposes, we'll just log the script
-    console.log("Automation script to execute:", script);
-    
-    // Simulate sending to extension
-    window.postMessage({
-      type: 'EXECUTE_AUTOMATION',
-      script
-    }, '*');
-    
-    toast.success("Automation script sent to extension");
+    return JSON.parse(configStr);
   } catch (error) {
-    console.error("Error executing automation script:", error);
-    toast.error("Failed to execute automation script");
+    console.error("Error parsing automation config:", error);
+    return null;
   }
-};
+}
+
+/**
+ * Check if the Streamline extension is installed
+ */
+export function checkExtensionInstalled(): Promise<boolean> {
+  return new Promise((resolve) => {
+    // Set a timeout in case we don't get a response
+    const timeout = setTimeout(() => resolve(false), 500);
+    
+    // Add an event listener for the response
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'EXTENSION_INSTALLED') {
+        clearTimeout(timeout);
+        window.removeEventListener('message', handleMessage);
+        resolve(true);
+      }
+    };
+    
+    window.addEventListener('message', handleMessage);
+    
+    // Send a message to check if the extension is installed
+    window.postMessage({ type: 'CHECK_EXTENSION_INSTALLED' }, '*');
+  });
+}
+
+/**
+ * Generate a Handshake automation script
+ */
+export function getHandshakeAutomationScript(jobUrl: string, config: AutomationConfig): string {
+  return `// Handshake Automation Script for ${jobUrl}
+// Generated with Streamline Automation Tools
+
+console.log("Starting Handshake application automation for ${jobUrl}");
+console.log("Using configuration:", ${JSON.stringify(config, null, 2)});
+
+// This would be a full Python or JavaScript automation script in a real implementation
+`;
+}
+
+/**
+ * Generate an Indeed automation script
+ */
+export function getIndeedAutomationScript(jobUrl: string, config: AutomationConfig): string {
+  return `// Indeed Automation Script for ${jobUrl}
+// Generated with Streamline Automation Tools
+
+console.log("Starting Indeed application automation for ${jobUrl}");
+console.log("Using configuration:", ${JSON.stringify(config, null, 2)});
+
+// This would be a full Python or JavaScript automation script in a real implementation
+`;
+}

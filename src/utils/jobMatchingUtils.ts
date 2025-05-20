@@ -100,6 +100,73 @@ export const getMatchLabel = (percentage?: number) => {
  * The overallScore is now exactly the percentage of job-required skills matched by userSkills.
  */
 export const getDetailedMatch = (job: Job, userSkills: string[] = []): ComprehensiveMatch => {
+  // If the job already has a match percentage, use that instead of recalculating
+  if (job.matchPercentage !== undefined) {
+    // Normalize skills for case-insensitive comparison
+    const normalizedUserSkills = userSkills.map(skill => skill.toLowerCase());
+    const normalizedJobSkills = job.skills?.map(skill => skill.toLowerCase()) || [];
+    
+    // Skills calculation
+    const skillMatches: SkillMatch[] = [];
+    const missingSkills: string[] = [];
+
+    if (job.skills) {
+      for (let i = 0; i < job.skills.length; i++) {
+        const skill = job.skills[i];
+        const normalizedSkill = skill.toLowerCase();
+        const isMatched = normalizedUserSkills.includes(normalizedSkill);
+        
+        // We consider all skills equally important for basic matching
+        const isHighPriority = false;
+        
+        if (isMatched) {
+          skillMatches.push({ skill, matched: true, isHighPriority });
+        } else {
+          missingSkills.push(skill);
+        }
+      }
+    }
+
+    // Use the job's match percentage
+    const overallScore = job.matchPercentage;
+    
+    // Create a match object based on the job's match percentage
+    return {
+      overallScore,
+      matchLevel: getMatchLevel(overallScore),
+      skills: {
+        matched: skillMatches,
+        missing: missingSkills,
+        extras: normalizedUserSkills.filter(skill => 
+          !normalizedJobSkills.includes(skill)
+        ).map(skill => {
+          // Find the original case from user's skills
+          const originalCaseIndex = userSkills.findIndex(
+            s => s.toLowerCase() === skill
+          );
+          return originalCaseIndex >= 0 ? userSkills[originalCaseIndex] : skill;
+        }),
+        score: overallScore
+      },
+      experience: {
+        matched: true,
+        matchPercentage: overallScore, // Use the same score for consistency
+        details: "Experience match is based on your skills match."
+      },
+      education: {
+        matched: true,
+        details: "Education match is based on your skills match."
+      },
+      location: {
+        matched: true,
+        distance: 0,
+        details: "Location is not considered in this match calculation."
+      },
+      salaryMatch: true
+    };
+  }
+  
+  // Original calculation if no match percentage is provided
   // Normalize skills for case-insensitive comparison
   const normalizedUserSkills = userSkills.map(skill => skill.toLowerCase());
   const normalizedJobSkills = job.skills?.map(skill => skill.toLowerCase()) || [];
