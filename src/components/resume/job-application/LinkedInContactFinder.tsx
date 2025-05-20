@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -103,7 +102,7 @@ const LinkedInContactFinder = ({
     }
     
     if (body.includes("[relevant skill/experience]")) {
-      body = body.replace(/\[relevant skill/experience\]/g, "machine learning and full-stack development");
+      body = body.replace(/\[relevant skill\/experience\]/g, "machine learning and full-stack development");
     }
     
     setMessageSubject(subject);
