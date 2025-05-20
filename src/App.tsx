@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -21,6 +20,7 @@ import LeetcodePatterns from "./pages/LeetcodePatterns";
 import SalaryNegotiations from "./pages/SalaryNegotiations";
 import Profile from "./pages/Profile";
 import NetworkingTools from "./pages/NetworkingTools"; // New import
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -75,6 +75,7 @@ const App = () => {
                 <Route path="/salary-negotiations" element={<SalaryNegotiations />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/networking" element={<NetworkingTools />} />
+                <Route path="/settings" element={<Settings />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
