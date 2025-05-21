@@ -38,29 +38,6 @@ export const parseResume = async (file: File, showToast: boolean = false): Promi
     const skills = parseSkills(text);
     const languages = parseLanguages(text);
     const socialLinks = extractSocialLinks(text);
-    
-    // Extract potential work authorization from text
-    let workAuthorization = "";
-    const workAuthRegex = /(work authorization|work permit|visa status|employment eligibility):?\s*(.*?)(?:\.|$)/i;
-    const workAuthMatch = text.match(workAuthRegex);
-    if (workAuthMatch && workAuthMatch[2]) {
-      workAuthorization = workAuthMatch[2].trim();
-      personalInfo.workAuthorization = workAuthorization;
-    }
-    
-    // Try to extract Gmail specifically
-    const gmailRegex = /([a-zA-Z0-9._%+-]+@gmail\.com)/i;
-    const gmailMatch = text.match(gmailRegex);
-    if (gmailMatch && gmailMatch[1]) {
-      personalInfo.email = gmailMatch[1]; // Prioritize Gmail if found
-    }
-
-    // Enhanced phone extraction with focus on standard formats
-    const enhancedPhoneRegex = /(?:\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/;
-    const phoneMatch = text.match(enhancedPhoneRegex);
-    if (phoneMatch) {
-      personalInfo.phone = phoneMatch[0];
-    }
 
     if (showToast) toast.success("Resume parsed successfully!");
 
@@ -71,15 +48,7 @@ export const parseResume = async (file: File, showToast: boolean = false): Promi
       projects,
       skills,
       languages,
-      socialLinks,
-      preferences: {
-        desiredRoles: [],
-        preferredLocations: [],
-        preferredIndustries: [],
-        preferredCompanySize: "",
-        desiredBenefits: [],
-        remotePreference: 'remote'
-      }
+      socialLinks
     };
   } catch (error) {
     if (showToast) {
@@ -103,13 +72,6 @@ export const parseResume = async (file: File, showToast: boolean = false): Promi
         github: "",
         portfolio: "",
         other: ""
-      },
-      preferences: {
-        desiredRoles: [],
-        preferredLocations: [],
-        preferredIndustries: [],
-        preferredCompanySize: "",
-        desiredBenefits: [],
       }
     };
   }
