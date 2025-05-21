@@ -46,13 +46,12 @@ const ResumeTools = () => {
           </div>
           
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-            <TabsList className="grid grid-cols-2 md:grid-cols-6 mb-6 w-full">
-              <TabsTrigger value="ats-optimizer" className="text-xs md:text-sm px-2 py-1.5">ATS Optimizer</TabsTrigger>
-              <TabsTrigger value="ai-creator" className="text-xs md:text-sm px-2 py-1.5">AI Resume</TabsTrigger>
-              <TabsTrigger value="ai-cv" className="text-xs md:text-sm px-2 py-1.5">AI CV</TabsTrigger>
-              <TabsTrigger value="job-automation" className="text-xs md:text-sm px-2 py-1.5">Job Automation</TabsTrigger>
-              <TabsTrigger value="forum" className="text-xs md:text-sm px-2 py-1.5">Resume Forum</TabsTrigger>
-              <TabsTrigger value="templates" className="text-xs md:text-sm px-2 py-1.5">Templates</TabsTrigger>
+            <TabsList className="grid grid-cols-5 mb-6 w-full">
+              <TabsTrigger value="ats-optimizer" className="text-xs md:text-sm px-2 py-1">ATS Optimizer</TabsTrigger>
+              <TabsTrigger value="ai-creator" className="text-xs md:text-sm px-2 py-1">AI Resume</TabsTrigger>
+              <TabsTrigger value="ai-cv" className="text-xs md:text-sm px-2 py-1">AI CV</TabsTrigger>
+              <TabsTrigger value="forum" className="text-xs md:text-sm px-2 py-1">Resume Forum</TabsTrigger>
+              <TabsTrigger value="templates" className="text-xs md:text-sm px-2 py-1">Templates</TabsTrigger>
             </TabsList>
             
             <TabsContent value="ats-optimizer" className="mt-0">
@@ -65,15 +64,6 @@ const ResumeTools = () => {
             
             <TabsContent value="ai-cv" className="mt-0">
               <AICVCreator />
-            </TabsContent>
-            
-            <TabsContent value="job-automation" className="mt-0">
-              <div className="flex flex-col gap-4">
-                <p>Use our job automation tools to streamline your job application process.</p>
-                <a href="/job-automation" className="text-primary hover:underline">
-                  Go to Job Application Automation
-                </a>
-              </div>
             </TabsContent>
             
             <TabsContent value="templates" className="mt-0">
