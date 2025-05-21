@@ -8,7 +8,6 @@ import ResumeTemplates from "@/components/resume/ResumeTemplates";
 import AIResumeCreator from "@/components/resume/AIResumeCreator";
 import AICVCreator from "@/components/resume/AICVCreator";
 import ResumeForum from "@/components/resume/ResumeForum";
-import JobApplicationAutomation from "@/components/resume/JobApplicationAutomation";
 import { useParams, useNavigate } from "react-router-dom";
 
 const ResumeTools = () => {
@@ -46,12 +45,11 @@ const ResumeTools = () => {
           </div>
           
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-            <TabsList className="grid grid-cols-2 md:grid-cols-5 mb-6">
+            <TabsList className="grid grid-cols-2 md:grid-cols-4 mb-6">
               <TabsTrigger value="templates">Templates</TabsTrigger>
               <TabsTrigger value="ai-creator">AI Resume</TabsTrigger>
               <TabsTrigger value="ai-cv">AI CV</TabsTrigger>
               <TabsTrigger value="forum">Forum</TabsTrigger>
-              <TabsTrigger value="automation">Automation</TabsTrigger>
             </TabsList>
             
             <TabsContent value="templates" className="mt-0">
@@ -68,10 +66,6 @@ const ResumeTools = () => {
             
             <TabsContent value="forum" className="mt-0">
               <ResumeForum />
-            </TabsContent>
-            
-            <TabsContent value="automation" className="mt-0">
-              <JobApplicationAutomation />
             </TabsContent>
           </Tabs>
         </div>
