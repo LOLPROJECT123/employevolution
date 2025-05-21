@@ -5,6 +5,7 @@ import MobileHeader from "@/components/MobileHeader";
 import { useMobile } from "@/hooks/use-mobile";
 import { useNavigate } from 'react-router-dom';
 import { useJobApplications } from '@/contexts/JobApplicationContext';
+import { JobStatus } from '@/types/job';
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -24,6 +25,7 @@ import { Progress } from "@/components/ui/progress";
 import {
   BriefcaseIcon,
   FileTextIcon,
+  MessageSquareIcon,
   CheckCircleIcon,
   XCircleIcon,
   HourglassIcon,
@@ -245,7 +247,7 @@ const Dashboard = () => {
                 <Button 
                   variant="secondary" 
                   className="w-full justify-start text-left button-hover"
-                  onClick={() => navigate('/resume-tools/ai-creator')}
+                  onClick={() => console.log("Generate resume")}
                 >
                   <FileTextIcon className="w-4 h-4 mr-2" />
                   <div className="flex flex-col items-start">
@@ -256,12 +258,23 @@ const Dashboard = () => {
                 <Button 
                   variant="secondary" 
                   className="w-full justify-start text-left button-hover"
-                  onClick={() => navigate('/resume-tools/ai-cv')}
+                  onClick={() => console.log("Generate cover letter")}
                 >
                   <FileTextIcon className="w-4 h-4 mr-2" />
                   <div className="flex flex-col items-start">
                     <span>Cover Letter</span>
                     <span className="text-xs text-muted-foreground">Craft a personalized letter</span>
+                  </div>
+                </Button>
+                <Button 
+                  variant="secondary" 
+                  className="w-full justify-start text-left button-hover"
+                  onClick={() => console.log("Ask AI assistant")}
+                >
+                  <MessageSquareIcon className="w-4 h-4 mr-2" />
+                  <div className="flex flex-col items-start">
+                    <span>AI Assistant</span>
+                    <span className="text-xs text-muted-foreground">Get career advice</span>
                   </div>
                 </Button>
                 <Button 
