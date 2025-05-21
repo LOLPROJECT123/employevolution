@@ -57,8 +57,6 @@ import EditSocialLinks from "@/components/profile/EditSocialLinks";
 import EditJobPreferences from "@/components/profile/EditJobPreferences";
 import EditEqualEmployment from "@/components/profile/EditEqualEmployment";
 
-import EnhancedProfileDetails from "@/components/profile/EnhancedProfileDetails";
-
 const ProfilePage = () => {
   const isMobile = useMobile();
   const [activeTab, setActiveTab] = useState('contact');
@@ -723,7 +721,7 @@ const ProfilePage = () => {
   );
 
   return (
-    <div>
+    <>
       {!isMobile && <Navbar />}
       {isMobile && <MobileHeader showLogo={true} />}
       
@@ -1425,8 +1423,6 @@ const ProfilePage = () => {
         </Tabs>
       </div>
 
-      <EnhancedProfileDetails />
-      
       <EditProfileHeader
         open={profileHeaderModalOpen}
         onClose={() => setProfileHeaderModalOpen(false)}
@@ -1534,7 +1530,7 @@ const ProfilePage = () => {
         initialData={equalEmploymentData}
         onSave={handleUpdateEqualEmployment}
       />
-    </div>
+    </>
   );
 };
 

@@ -1,79 +1,77 @@
 
-import { useState } from 'react';
-import Navbar from "@/components/Navbar";
-import ATSOptimizer from "@/components/ATSOptimizer";
+import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Navbar from "@/components/Navbar";
+import MobileHeader from "@/components/MobileHeader";
+import { useMobile } from "@/hooks/use-mobile";
+import ResumeTemplates from "@/components/resume/ResumeTemplates";
 import AIResumeCreator from "@/components/resume/AIResumeCreator";
 import AICVCreator from "@/components/resume/AICVCreator";
-import JobApplicationAutomation from "@/components/resume/JobApplicationAutomation";
 import ResumeForum from "@/components/resume/ResumeForum";
-import ResumeTemplates from "@/components/resume/ResumeTemplates";
-import { useMobile } from "@/hooks/use-mobile";
-import MobileHeader from "@/components/MobileHeader";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import JobApplicationAutomation from "@/components/resume/JobApplicationAutomation";
+import { useParams, useNavigate } from "react-router-dom";
 
 const ResumeTools = () => {
   const isMobile = useMobile();
+  const { tab } = useParams();
+  const navigate = useNavigate();
+  
+  // Default to 'templates' tab unless specified otherwise
+  const [activeTab, setActiveTab] = useState(tab || 'templates');
+
+  useEffect(() => {
+    // Update active tab when the tab parameter changes
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, [tab]);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    navigate(`/resume-tools/${value}`, { replace: true });
+  };
 
   return (
-    <div className="min-h-screen flex flex-col bg-secondary/30">
+    <div className="min-h-screen bg-background">
       {!isMobile && <Navbar />}
       {isMobile && <MobileHeader title="Resume Tools" />}
       
-      <main className={`flex-1 ${isMobile ? 'pt-16' : 'pt-20'}`}>
-        <div className="container px-4 py-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold">Resume & CV Tools</h1>
-            <p className="text-muted-foreground mt-1 mb-6">
-              Create, optimize, and get feedback on your professional documents to increase your chances of landing interviews
+      <main className="container px-4 py-8 pt-20">
+        <div className="flex flex-col gap-8">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Resume Tools</h1>
+            <p className="text-muted-foreground">
+              Create, optimize, and manage your resume to stand out to employers.
             </p>
           </div>
           
-          <Tabs defaultValue="ats-optimizer" className="space-y-8">
-            {isMobile ? (
-              <div className="pb-16">  {/* Increased padding at bottom from 10 to 16 */}
-                <TabsList className="w-full mb-2 grid grid-cols-2 gap-x-2 gap-y-2">
-                  <TabsTrigger value="ats-optimizer" className="p-2 text-sm whitespace-normal h-auto">ATS Optimizer</TabsTrigger>
-                  <TabsTrigger value="ai-resume-creator" className="p-2 text-sm whitespace-normal h-auto">AI Resume Creator</TabsTrigger>
-                  <TabsTrigger value="ai-cv-creator" className="p-2 text-sm whitespace-normal h-auto">AI CV Creator</TabsTrigger>
-                  <TabsTrigger value="job-automation" className="p-2 text-sm whitespace-normal h-auto">Job Automation</TabsTrigger>
-                  <TabsTrigger value="forum" className="p-2 text-sm whitespace-normal h-auto">Resume Forum</TabsTrigger>
-                  <TabsTrigger value="templates" className="p-2 text-sm whitespace-normal h-auto">Templates</TabsTrigger>
-                </TabsList>
-              </div>
-            ) : (
-              <TabsList className="flex flex-wrap">
-                <TabsTrigger value="ats-optimizer">ATS Optimizer</TabsTrigger>
-                <TabsTrigger value="ai-resume-creator">AI Resume Creator</TabsTrigger>
-                <TabsTrigger value="ai-cv-creator">AI CV Creator</TabsTrigger>
-                <TabsTrigger value="job-automation">Job Automation</TabsTrigger>
-                <TabsTrigger value="forum">Resume Forum</TabsTrigger>
-                <TabsTrigger value="templates">Templates</TabsTrigger>
-              </TabsList>
-            )}
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+            <TabsList className="grid grid-cols-2 md:grid-cols-5 mb-6">
+              <TabsTrigger value="templates">Templates</TabsTrigger>
+              <TabsTrigger value="ai-creator">AI Resume</TabsTrigger>
+              <TabsTrigger value="ai-cv">AI CV</TabsTrigger>
+              <TabsTrigger value="forum">Forum</TabsTrigger>
+              <TabsTrigger value="automation">Automation</TabsTrigger>
+            </TabsList>
             
-            <TabsContent value="ats-optimizer" className={isMobile ? "mt-4" : ""}>
-              <ATSOptimizer />
+            <TabsContent value="templates" className="mt-0">
+              <ResumeTemplates />
             </TabsContent>
             
-            <TabsContent value="ai-resume-creator" className={isMobile ? "mt-4" : ""}>
+            <TabsContent value="ai-creator" className="mt-0">
               <AIResumeCreator />
             </TabsContent>
             
-            <TabsContent value="ai-cv-creator" className={isMobile ? "mt-4" : ""}>
+            <TabsContent value="ai-cv" className="mt-0">
               <AICVCreator />
             </TabsContent>
             
-            <TabsContent value="job-automation" className={isMobile ? "mt-4" : ""}>
-              <JobApplicationAutomation />
-            </TabsContent>
-            
-            <TabsContent value="forum" className={isMobile ? "mt-4" : ""}>
+            <TabsContent value="forum" className="mt-0">
               <ResumeForum />
             </TabsContent>
             
-            <TabsContent value="templates" className={isMobile ? "mt-4" : ""}>
-              <ResumeTemplates />
+            <TabsContent value="automation" className="mt-0">
+              <JobApplicationAutomation />
             </TabsContent>
           </Tabs>
         </div>
