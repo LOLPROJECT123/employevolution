@@ -5,6 +5,7 @@ export interface ParsedResume {
     email: string;
     phone: string;
     location: string;
+    workAuthorization?: string;
   };
   workExperiences: Array<{
     role: string;
@@ -13,18 +14,25 @@ export interface ParsedResume {
     startDate: string;
     endDate: string;
     description: string[];
+    industry?: string;
+    companySize?: string;
   }>;
   education: Array<{
     school: string;
     degree: string;
     startDate: string;
     endDate: string;
+    gpa?: string;
+    fieldOfStudy?: string;
+    description?: string[];
   }>;
   projects: Array<{
     name: string;
     startDate: string;
     endDate: string;
     description: string[];
+    technologies?: string[];
+    url?: string;
   }>;
   skills: string[];
   languages: string[];
@@ -33,5 +41,14 @@ export interface ParsedResume {
     github: string;
     portfolio: string;
     other: string;
+  };
+  preferences?: {
+    desiredRoles?: string[];
+    preferredLocations?: string[];
+    preferredIndustries?: string[];
+    preferredCompanySize?: string;
+    desiredBenefits?: string[];
+    salaryExpectation?: string;
+    remotePreference?: 'remote' | 'hybrid' | 'onsite';
   };
 }

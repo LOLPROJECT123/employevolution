@@ -20,7 +20,7 @@ import ResumeTools from "./pages/ResumeTools";
 import LeetcodePatterns from "./pages/LeetcodePatterns";
 import SalaryNegotiations from "./pages/SalaryNegotiations";
 import Profile from "./pages/Profile";
-import NetworkingTools from "./pages/NetworkingTools";
+import NetworkingTools from "./pages/NetworkingTools"; // New import
 
 const queryClient = new QueryClient();
 
@@ -71,7 +71,6 @@ const App = () => {
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/resume-tools" element={<ResumeTools />} />
-                <Route path="/resume-tools/:tab" element={<ResumeTools />} />
                 <Route path="/leetcode-patterns" element={<LeetcodePatterns />} />
                 <Route path="/salary-negotiations" element={<SalaryNegotiations />} />
                 <Route path="/profile" element={<Profile />} />
