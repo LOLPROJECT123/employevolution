@@ -35,7 +35,7 @@ export async function validateJobUrl(url: string): Promise<boolean> {
 }
 
 /**
- * Detects which job platform a URL belongs to
+ * Detects which job platform or ATS a URL belongs to
  */
 export function detectPlatform(url: string | undefined): string | null {
   if (!url) return null;
@@ -48,6 +48,8 @@ export function detectPlatform(url: string | undefined): string | null {
   if (lowerUrl.includes('glassdoor.com')) return 'Glassdoor';
   if (lowerUrl.includes('monster.com')) return 'Monster';
   if (lowerUrl.includes('ziprecruiter.com')) return 'ZipRecruiter';
+  
+  // Common ATS platforms
   if (lowerUrl.includes('greenhouse.io')) return 'Greenhouse';
   if (lowerUrl.includes('lever.co')) return 'Lever';
   if (lowerUrl.includes('workday')) return 'Workday';
@@ -56,11 +58,21 @@ export function detectPlatform(url: string | undefined): string | null {
   if (lowerUrl.includes('taleo.net')) return 'Taleo';
   if (lowerUrl.includes('brassring.com')) return 'BrassRing';
   if (lowerUrl.includes('smartrecruiters.com')) return 'SmartRecruiters';
+  if (lowerUrl.includes('bamboohr.com')) return 'BambooHR';
+  if (lowerUrl.includes('recruitee.com')) return 'Recruitee';
+  if (lowerUrl.includes('jazzhr.com')) return 'JazzHR';
+  if (lowerUrl.includes('zoho.com/recruit')) return 'Zoho Recruit';
+  if (lowerUrl.includes('avature.net')) return 'Avature';
+  if (lowerUrl.includes('ashbyhq.com')) return 'Ashby';
+  if (lowerUrl.includes('myworkdayjobs.com')) return 'Workday';
+  if (lowerUrl.includes('breezy.hr')) return 'Breezy HR';
+  if (lowerUrl.includes('freshteam.com')) return 'Freshteam';
+  if (lowerUrl.includes('successfactors.')) return 'SAP SuccessFactors';
+  
+  // Tech job boards
   if (lowerUrl.includes('wellfound.com')) return 'Wellfound';
   if (lowerUrl.includes('dice.com')) return 'Dice';
   if (lowerUrl.includes('careerbuilder.com')) return 'CareerBuilder';
-  
-  // Tech specific job boards
   if (lowerUrl.includes('stackoverflow.com/jobs')) return 'Stack Overflow';
   if (lowerUrl.includes('github.com/jobs')) return 'GitHub Jobs';
   if (lowerUrl.includes('ycombinator.com/jobs')) return 'Y Combinator';
@@ -128,6 +140,17 @@ export function extractJobIdFromUrl(url: string): string | null {
       const matches = lastPart.match(/.*_(\w+)$/);
       return matches && matches[1] ? matches[1] : lastPart;
     }
+    else if (platform === 'iCims') {
+      // iCIMS URLs: careers-company.icims.com/jobs/JOBID/job
+      const pathParts = urlObj.pathname.split('/');
+      if (pathParts.includes('jobs') && pathParts.length > pathParts.indexOf('jobs') + 1) {
+        return pathParts[pathParts.indexOf('jobs') + 1];
+      }
+    }
+    else if (platform === 'Taleo') {
+      // Taleo URLs: company.taleo.net/careersection/2/jobdetail.ftl?job=JOBID
+      return urlObj.searchParams.get('job') || null;
+    }
     else if (platform === 'Google Careers') {
       // Google careers: careers.google.com/jobs/results/JOBID
       const pathParts = urlObj.pathname.split('/');
@@ -137,6 +160,15 @@ export function extractJobIdFromUrl(url: string): string | null {
           return pathParts[resultIndex + 1];
         }
       }
+    }
+    else if (platform === 'SmartRecruiters') {
+      // SmartRecruiters URLs: jobs.smartrecruiters.com/Company/JOBID
+      const pathParts = urlObj.pathname.split('/');
+      return pathParts[pathParts.length - 1] || null;
+    }
+    else if (platform === 'BrassRing') {
+      // BrassRing URLs: company.brassring.com/TGnewUI/Search/home/HomeWithPreLoad?JobID=JOBID
+      return urlObj.searchParams.get('JobID') || null;
     }
     
     // Generic extraction approach
@@ -232,9 +264,13 @@ export function extractCompanyFromUrl(url: string): string | null {
       }
     }
     else if (platform === 'Greenhouse') {
-      // Greenhouse URLs: greenhouse.io/companyname/job/position
+      // Greenhouse URLs: greenhouse.io/companyname/job/position or job-boards.greenhouse.io/companyname
       const pathParts = urlObj.pathname.split('/');
       if (pathParts.length > 1) {
+        return pathParts[1].replace(/-/g, ' ');
+      }
+      // Handle job-boards.greenhouse.io domain
+      if (hostname.includes('job-boards.greenhouse.io')) {
         return pathParts[1].replace(/-/g, ' ');
       }
     }
@@ -243,6 +279,34 @@ export function extractCompanyFromUrl(url: string): string | null {
       const pathParts = urlObj.pathname.split('/');
       if (pathParts.length > 1) {
         return pathParts[1].replace(/-/g, ' ');
+      }
+    }
+    else if (platform === 'Workday') {
+      // Workday URLs: companyname.wd5.myworkdayjobs.com
+      const matches = hostname.match(/^([^\.]+)\.wd\d+\.myworkdayjobs/);
+      if (matches && matches[1]) {
+        return matches[1].replace(/-/g, ' ');
+      }
+    }
+    else if (platform === 'iCims') {
+      // iCIMS URLs: careers-companyname.icims.com
+      const matches = hostname.match(/^careers-([^\.]+)\.icims\.com/);
+      if (matches && matches[1]) {
+        return matches[1].replace(/-/g, ' ');
+      }
+    }
+    else if (platform === 'Taleo') {
+      // Taleo URLs: companyname.taleo.net
+      const matches = hostname.match(/^([^\.]+)\.taleo\.net/);
+      if (matches && matches[1]) {
+        return matches[1].replace(/-/g, ' ');
+      }
+    }
+    else if (platform === 'SmartRecruiters') {
+      // SmartRecruiters URLs: jobs.smartrecruiters.com/CompanyName
+      const pathParts = urlObj.pathname.split('/');
+      if (pathParts.length > 1) {
+        return pathParts[1].replace(/([A-Z])/g, ' $1').trim();
       }
     }
     
@@ -285,13 +349,48 @@ export function estimateApplicationTime(url: string): number {
   if (platform === 'Taleo') return 30;
   if (platform === 'iCims') return 20;
   if (platform === 'BrassRing') return 22;
+  if (platform === 'SuccessFactors') return 28;
   
   // Medium complexity
   if (platform === 'Greenhouse') return 15;
   if (platform === 'Lever') return 12;
+  if (platform === 'SmartRecruiters') return 18;
+  if (platform === 'Jobvite') return 17;
+  
+  // Simpler application systems
+  if (platform === 'BambooHR') return 10;
+  if (platform === 'JazzHR') return 12;
+  if (platform === 'Recruitee') return 8;
+  if (platform === 'Breezy HR') return 8;
+  if (platform === 'Freshteam') return 9;
   
   // Default case - average time
   return 15;
+}
+
+/**
+ * Generates a generic ATS URL template for a company name
+ */
+export function generateAtsUrlTemplate(company: string, atsType: string): string {
+  // Normalize company name for URL usage
+  const normalizedCompany = company.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  
+  switch (atsType.toLowerCase()) {
+    case 'greenhouse':
+      return `https://boards.greenhouse.io/${normalizedCompany}`;
+    case 'lever':
+      return `https://jobs.lever.co/${normalizedCompany}`;
+    case 'workday':
+      return `https://${normalizedCompany}.wd5.myworkdayjobs.com/en-US/External`;
+    case 'icims':
+      return `https://careers-${normalizedCompany}.icims.com/jobs/search`;
+    case 'taleo':
+      return `https://${normalizedCompany}.taleo.net/careersection/2/jobsearch.ftl`;
+    case 'smartrecruiters':
+      return `https://jobs.smartrecruiters.com/${company.replace(/\s+/g, '')}`;
+    default:
+      return '';
+  }
 }
 
 /**
@@ -325,4 +424,48 @@ export async function batchValidateUrls(urls: string[]): Promise<Record<string, 
   }
   
   return results;
+}
+
+/**
+ * Detects if a URL is for an ATS system and returns its type
+ */
+export function detectAtsSystem(url: string): string | null {
+  const platform = detectPlatform(url);
+  
+  // If it's one of our recognized ATS platforms, return it
+  if (['Greenhouse', 'Lever', 'Workday', 'iCims', 'Taleo', 'SmartRecruiters', 
+       'BrassRing', 'BambooHR', 'JazzHR', 'Recruitee', 'Breezy HR', 'Freshteam',
+       'Jobvite', 'SAP SuccessFactors', 'Ashby', 'Avature', 'Zoho Recruit'].includes(platform || '')) {
+    return platform;
+  }
+  
+  return null;
+}
+
+/**
+ * Generate the company name variation for ATS URL templates
+ */
+export function generateCompanyNameVariations(companyName: string): string[] {
+  const variations: string[] = [];
+  
+  // Original name
+  variations.push(companyName);
+  
+  // Lowercase with dashes
+  variations.push(companyName.toLowerCase().replace(/\s+/g, '-'));
+  
+  // Lowercase with no spaces
+  variations.push(companyName.toLowerCase().replace(/\s+/g, ''));
+  
+  // Remove non-alphanumeric characters
+  const alphanumeric = companyName.replace(/[^a-zA-Z0-9\s]/g, '');
+  variations.push(alphanumeric.toLowerCase().replace(/\s+/g, '-'));
+  
+  // Acronym (using first letter of each word)
+  const acronym = companyName.split(/\s+/).map(word => word[0]).join('').toLowerCase();
+  if (acronym.length > 1) {
+    variations.push(acronym);
+  }
+  
+  return [...new Set(variations)]; // Remove duplicates
 }

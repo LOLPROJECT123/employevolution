@@ -1,17 +1,21 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { RefreshCwIcon, PlusIcon } from "lucide-react";
+import { RefreshCwIcon, PlusIcon, BriefcaseIcon } from "lucide-react";
 import { toast } from "sonner";
 import { JobScraperConfig } from "@/components/JobScraperConfig";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { useIsMobile } from '@/hooks/use-mobile';
 import { formatRelativeTime } from '@/utils/dateUtils';
 import { createJobScraper } from '@/utils/crawl4ai';
 import { ScrapedJob, JobSource } from "@/components/resume/job-application/types";
+import CommonATSSystems from '@/components/CommonATSSystems';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { generateAtsUrlTemplate } from '@/utils/jobValidationUtils';
 
 interface JobSourcesDisplayProps {
   onJobsScraped?: (jobs: ScrapedJob[]) => void;
@@ -26,7 +30,10 @@ export default function JobSourcesDisplay({ onJobsScraped }: JobSourcesDisplayPr
   const [newJobsFound, setNewJobsFound] = useState(0);
   const [newSourceUrl, setNewSourceUrl] = useState('');
   const [newSourceName, setNewSourceName] = useState('');
+  const [newSourceCompany, setNewSourceCompany] = useState('');
+  const [newSourceAtsType, setNewSourceAtsType] = useState('');
   const [openAddDialog, setOpenAddDialog] = useState(false);
+  const [addDialogTab, setAddDialogTab] = useState<string>('custom');
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -44,6 +51,10 @@ export default function JobSourcesDisplay({ onJobsScraped }: JobSourcesDisplayPr
           { id: 'voleon', name: 'Voleon Group', url: 'https://jobs.lever.co/voleon', isActive: true, category: 'finance', lastScraped: new Date().toISOString(), jobCount: 12 },
           { id: 'google', name: 'Google', url: 'https://www.google.com/about/careers/applications/jobs/results', isActive: true, category: 'tech', lastScraped: new Date().toISOString(), jobCount: 23 },
           { id: 'microsoft', name: 'Microsoft', url: 'https://jobs.careers.microsoft.com/global/en/search', isActive: true, category: 'tech', lastScraped: new Date().toISOString(), jobCount: 31 },
+          // ATS Generic Platform Sources
+          { id: 'greenhouse-generic', name: 'Greenhouse ATS', url: 'https://boards.greenhouse.io/{company}', isActive: true, category: 'ats', lastScraped: new Date().toISOString(), jobCount: 0, isGeneric: true },
+          { id: 'lever-generic', name: 'Lever ATS', url: 'https://jobs.lever.co/{company}', isActive: true, category: 'ats', lastScraped: new Date().toISOString(), jobCount: 0, isGeneric: true },
+          { id: 'workday-generic', name: 'Workday ATS', url: 'https://{company}.wd5.myworkdayjobs.com/en-US/External', isActive: true, category: 'ats', lastScraped: new Date().toISOString(), jobCount: 0, isGeneric: true },
         ];
         setJobSources(defaultSources);
         localStorage.setItem('jobSources', JSON.stringify(defaultSources));
@@ -294,8 +305,104 @@ export default function JobSourcesDisplay({ onJobsScraped }: JobSourcesDisplayPr
       toast.error("Please enter a valid URL");
     }
   };
+  
+  const handleAddAtsSource = () => {
+    if (!newSourceCompany.trim() || !newSourceAtsType.trim()) {
+      toast.error("Please enter both a company name and select an ATS type");
+      return;
+    }
+    
+    try {
+      // Generate ATS URL based on company name and ATS type
+      const url = generateAtsUrlTemplate(newSourceCompany, newSourceAtsType);
+      
+      if (!url) {
+        toast.error("Could not generate URL for this ATS type");
+        return;
+      }
+      
+      const atsTypeName = {
+        'greenhouse': 'Greenhouse',
+        'lever': 'Lever',
+        'workday': 'Workday',
+        'icims': 'iCIMS',
+        'taleo': 'Taleo',
+        'smartrecruiters': 'SmartRecruiters'
+      }[newSourceAtsType] || newSourceAtsType;
+      
+      const newId = `ats-${newSourceCompany.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${newSourceAtsType}`;
+      
+      if (jobSources.some(source => source.id === newId)) {
+        toast.error("This company ATS source already exists");
+        return;
+      }
+      
+      const newSource: JobSource = {
+        id: newId,
+        name: `${newSourceCompany} (${atsTypeName})`,
+        url: url,
+        isActive: true,
+        category: 'ats',
+        lastScraped: new Date().toISOString(),
+        jobCount: 0,
+        atsType: newSourceAtsType
+      };
+      
+      const updatedSources = [...jobSources, newSource];
+      setJobSources(updatedSources);
+      localStorage.setItem('jobSources', JSON.stringify(updatedSources));
+      
+      setNewSourceCompany('');
+      setNewSourceAtsType('');
+      setOpenAddDialog(false);
+      
+      toast.success("ATS source added", {
+        description: `${newSourceCompany} ${atsTypeName} has been added to your search sources`
+      });
+    } catch (e) {
+      toast.error("Error adding ATS source");
+      console.error(e);
+    }
+  };
 
   const activeSourcesCount = jobSources.filter(source => source.isActive).length;
+  
+  const handleAddAtsFromComponent = (company: string, url: string, type: string) => {
+    const atsTypeName = {
+      'greenhouse': 'Greenhouse',
+      'lever': 'Lever',
+      'workday': 'Workday',
+      'icims': 'iCIMS',
+      'taleo': 'Taleo',
+      'smartrecruiters': 'SmartRecruiters'
+    }[type] || type;
+    
+    const newId = `ats-${company.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${type}`;
+    
+    if (jobSources.some(source => source.id === newId)) {
+      toast.error("This company ATS source already exists");
+      return;
+    }
+    
+    const newSource: JobSource = {
+      id: newId,
+      name: `${company} (${atsTypeName})`,
+      url: url,
+      isActive: true,
+      category: 'ats',
+      lastScraped: new Date().toISOString(),
+      jobCount: 0,
+      atsType: type
+    };
+    
+    const updatedSources = [...jobSources, newSource];
+    setJobSources(updatedSources);
+    localStorage.setItem('jobSources', JSON.stringify(updatedSources));
+    
+    toast.success("ATS source added", {
+      description: `${company} ${atsTypeName} has been added to your search sources`
+    });
+  };
 
   const AddSourceButton = () => (
     <Dialog open={openAddDialog} onOpenChange={setOpenAddDialog}>
@@ -307,45 +414,111 @@ export default function JobSourcesDisplay({ onJobsScraped }: JobSourcesDisplayPr
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add Custom Job Source</DialogTitle>
+          <DialogTitle>Add Job Source</DialogTitle>
           <DialogDescription>
             Add a company careers page or job board to search for opportunities
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <label htmlFor="sourceName" className="text-sm font-medium">
-              Company/Source Name
-            </label>
-            <Input
-              id="sourceName"
-              value={newSourceName}
-              onChange={(e) => setNewSourceName(e.target.value)}
-              placeholder="e.g., Citadel, Jane Street, Two Sigma"
-            />
+        
+        <Tabs value={addDialogTab} onValueChange={setAddDialogTab} className="w-full">
+          <TabsList className="grid grid-cols-2 mb-4">
+            <TabsTrigger value="custom">Custom URL</TabsTrigger>
+            <TabsTrigger value="ats">ATS Platform</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="custom" className="space-y-4 py-2">
+            <div className="space-y-2">
+              <label htmlFor="sourceName" className="text-sm font-medium">
+                Company/Source Name
+              </label>
+              <Input
+                id="sourceName"
+                value={newSourceName}
+                onChange={(e) => setNewSourceName(e.target.value)}
+                placeholder="e.g., Citadel, Jane Street, Two Sigma"
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="sourceUrl" className="text-sm font-medium">
+                Careers Page URL
+              </label>
+              <Input
+                id="sourceUrl"
+                value={newSourceUrl}
+                onChange={(e) => setNewSourceUrl(e.target.value)}
+                placeholder="https://company.com/careers"
+              />
+              <p className="text-xs text-muted-foreground">
+                Supported formats: Company career pages, Greenhouse.io, Lever.co, and other ATS job boards
+              </p>
+            </div>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button variant="outline">
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button onClick={handleAddCustomSource}>
+                Add & Scrape Now
+              </Button>
+            </DialogFooter>
+          </TabsContent>
+          
+          <TabsContent value="ats" className="space-y-4 py-2">
+            <div className="space-y-2">
+              <label htmlFor="companyName" className="text-sm font-medium">
+                Company Name
+              </label>
+              <Input
+                id="companyName"
+                value={newSourceCompany}
+                onChange={(e) => setNewSourceCompany(e.target.value)}
+                placeholder="e.g., Acme Corporation"
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="atsType" className="text-sm font-medium">
+                ATS Platform
+              </label>
+              <select
+                id="atsType"
+                value={newSourceAtsType}
+                onChange={(e) => setNewSourceAtsType(e.target.value)}
+                className="w-full p-2 border border-input bg-background rounded-md"
+              >
+                <option value="">Select ATS platform</option>
+                <option value="greenhouse">Greenhouse</option>
+                <option value="lever">Lever</option>
+                <option value="workday">Workday</option>
+                <option value="icims">iCIMS</option>
+                <option value="taleo">Taleo</option>
+                <option value="smartrecruiters">SmartRecruiters</option>
+              </select>
+              <p className="text-xs text-muted-foreground mt-1">
+                This will generate a URL template specific to this ATS platform
+              </p>
+            </div>
+            
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button variant="outline">
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button onClick={handleAddAtsSource}>
+                Add ATS Source
+              </Button>
+            </DialogFooter>
+          </TabsContent>
+        </Tabs>
+        
+        <div className="mt-6 border-t pt-4">
+          <p className="text-sm text-center text-muted-foreground mb-4">
+            Browse common ATS platforms below:
+          </p>
+          <div className="max-h-64 overflow-y-auto">
+            <CommonATSSystems onAddToJobSources={handleAddAtsFromComponent} />
           </div>
-          <div className="space-y-2">
-            <label htmlFor="sourceUrl" className="text-sm font-medium">
-              Careers Page URL
-            </label>
-            <Input
-              id="sourceUrl"
-              value={newSourceUrl}
-              onChange={(e) => setNewSourceUrl(e.target.value)}
-              placeholder="https://company.com/careers"
-            />
-            <p className="text-xs text-muted-foreground">
-              Supported formats: Company career pages, Greenhouse.io, Lever.co, and other ATS job boards
-            </p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenAddDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleAddCustomSource}>
-              Add & Scrape Now
-            </Button>
-          </DialogFooter>
         </div>
       </DialogContent>
     </Dialog>
@@ -438,6 +611,31 @@ export default function JobSourcesDisplay({ onJobsScraped }: JobSourcesDisplayPr
                   </Button>
                 </div>
               )}
+            </div>
+          )}
+          
+          {/* Show ATS source preview */}
+          {jobSources.filter(source => source.category === 'ats').length > 0 && (
+            <div className="mt-4 border-t border-blue-100 dark:border-blue-900/50 pt-3">
+              <div className="flex items-center gap-2 mb-2">
+                <BriefcaseIcon className="h-4 w-4 text-blue-600/70" />
+                <h4 className="text-sm font-medium text-blue-600/90 dark:text-blue-400/90">ATS Platforms</h4>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {jobSources
+                  .filter(source => source.category === 'ats' && !source.isGeneric)
+                  .slice(0, 6) // Limit to avoid cluttering
+                  .map(source => (
+                    <Badge key={source.id} variant="outline" className="bg-blue-50/50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+                      {source.name}
+                    </Badge>
+                  ))}
+                {jobSources.filter(source => source.category === 'ats' && !source.isGeneric).length > 6 && (
+                  <Badge variant="outline" className="bg-blue-50/50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+                    +{jobSources.filter(source => source.category === 'ats' && !source.isGeneric).length - 6} more
+                  </Badge>
+                )}
+              </div>
             </div>
           )}
         </div>

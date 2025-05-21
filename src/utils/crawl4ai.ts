@@ -1,359 +1,315 @@
 
-/**
- * Implementation of Crawl4AI for job scraping
- * Based on: https://github.com/unclecode/crawl4ai
- */
-
 import { ScrapedJob } from "@/components/resume/job-application/types";
-import { toast } from "sonner";
+import { detectPlatform, extractCompanyFromUrl } from "./jobValidationUtils";
 
-// Crawl4AI configuration types
-export interface Crawl4AIOptions {
+// Interface for the scraper options
+interface ScrapeOptions {
+  maxResults: number;
   maxPages?: number;
-  maxResults?: number;
-  timeout?: number;
-  waitFor?: number;
-  proxy?: string;
-  userAgent?: string;
-  headers?: Record<string, string>;
+  keywords?: string[];
+  location?: string;
 }
 
-export interface JobSiteConfig {
-  siteName: string;
-  baseUrl: string;
-  searchUrlTemplate: string;
-  selectors: {
-    jobList: string;
-    jobItem: string;
-    title: string;
-    company: string;
-    location: string;
-    description?: string;
-    applyUrl?: string;
-    date?: string;
-    salary?: string;
-  };
-  pagination?: {
-    nextButton?: string;
-    pageParam?: string;
-    maxPages?: number;
-  };
-  transform?: {
-    title?: (text: string) => string;
-    company?: (text: string) => string;
-    location?: (text: string) => string;
-    description?: (text: string) => string;
-    date?: (text: string) => string;
-  };
-}
-
-// Predefined job site configurations
-export const JOB_SITE_CONFIGS: Record<string, JobSiteConfig> = {
-  'linkedin': {
-    siteName: 'LinkedIn',
-    baseUrl: 'https://www.linkedin.com',
-    searchUrlTemplate: 'https://www.linkedin.com/jobs/search/?keywords={query}&location={location}&start={offset}',
-    selectors: {
-      jobList: '.jobs-search__results-list',
-      jobItem: '.job-search-card',
-      title: '.base-search-card__title',
-      company: '.base-search-card__subtitle',
-      location: '.job-search-card__location',
-      applyUrl: 'a.base-card__full-link',
-      date: '.job-search-card__listdate'
+// Mock implementation of the Crawl4AI API for job searching
+export function createJobScraper() {
+  return {
+    // Main method for searching jobs
+    async searchJobs(query: string, location: string = '', platforms: string[] = []): Promise<ScrapedJob[]> {
+      console.log(`Searching for jobs with query: "${query}" in location: "${location}"`);
+      console.log('Using platforms:', platforms);
+      
+      // This would be a real API call in production
+      // For now, we'll generate mock results
+      return generateMockJobListings(query, location, platforms);
     },
-    pagination: {
-      pageParam: 'start',
-      maxPages: 5
-    }
-  },
-  'indeed': {
-    siteName: 'Indeed',
-    baseUrl: 'https://www.indeed.com',
-    searchUrlTemplate: 'https://www.indeed.com/jobs?q={query}&l={location}&start={offset}',
-    selectors: {
-      jobList: '.jobsearch-ResultsList',
-      jobItem: '.job_seen_beacon',
-      title: '.jcs-JobTitle',
-      company: '.companyName',
-      location: '.companyLocation',
-      description: '.job-snippet',
-      applyUrl: '.jcs-JobTitle',
-      date: '.date'
-    },
-    pagination: {
-      pageParam: 'start',
-      maxPages: 5
-    }
-  },
-  'glassdoor': {
-    siteName: 'Glassdoor',
-    baseUrl: 'https://www.glassdoor.com',
-    searchUrlTemplate: 'https://www.glassdoor.com/Job/jobs.htm?sc.keyword={query}&locT=C&locId={locationId}',
-    selectors: {
-      jobList: '.job-search-results',
-      jobItem: '.react-job-listing',
-      title: '.job-title',
-      company: '.employer-name',
-      location: '.location',
-      description: '.job-description',
-      applyUrl: '.job-link'
-    },
-    pagination: {
-      nextButton: '.next',
-      maxPages: 3
-    }
-  }
-};
-
-/**
- * Main class for Crawl4AI job scraping
- */
-export class Crawl4AI {
-  private options: Crawl4AIOptions;
-  
-  constructor(options?: Crawl4AIOptions) {
-    this.options = {
-      maxPages: 3,
-      maxResults: 50,
-      timeout: 30000,
-      waitFor: 2000,
-      ...options
-    };
-  }
-  
-  /**
-   * Search for jobs across multiple sites
-   */
-  async searchJobs(query: string, location: string = '', sitesToSearch: string[] = ['linkedin', 'indeed']): Promise<ScrapedJob[]> {
-    const allJobs: ScrapedJob[] = [];
     
-    for (const site of sitesToSearch) {
-      if (JOB_SITE_CONFIGS[site]) {
+    // Verify job URLs are valid
+    async verifyJobs(jobs: ScrapedJob[]): Promise<ScrapedJob[]> {
+      console.log(`Verifying ${jobs.length} job listings`);
+      
+      // Add small delay to simulate verification process
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // In a real implementation, we would check if each URL is still valid
+      // For this mock, we'll assume 85% of jobs are valid
+      return jobs.filter(() => Math.random() > 0.15)
+        .map(job => ({
+          ...job,
+          verified: true
+        }));
+    },
+    
+    // Get details for a specific job
+    async getJobDetails(jobId: string, url: string): Promise<ScrapedJob | null> {
+      console.log(`Getting details for job ID: ${jobId} from URL: ${url}`);
+      
+      // Add small delay to simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // In a real implementation, this would scrape the job page
+      // For now, we'll return a detailed mock job
+      const mockJobs = generateMockJobListings('', '', []);
+      const job = mockJobs.find(j => j.id === jobId) || mockJobs[0];
+      
+      if (!job) return null;
+      
+      return {
+        ...job,
+        description: `This is a detailed job description for ${job.title} at ${job.company}. The ideal candidate will have experience with web development technologies like React, Node.js, and TypeScript. You'll be working on cutting-edge projects in a fast-paced environment.`,
+      };
+    }
+  };
+}
+
+// Helper function to generate mock job listings
+function generateMockJobListings(query: string, location: string, platforms: string[]): ScrapedJob[] {
+  const jobs: ScrapedJob[] = [];
+  
+  // Number of jobs to generate
+  const jobCount = Math.floor(Math.random() * 20) + 5; // 5-25 jobs
+  
+  // Job titles to use based on query
+  let jobTitles = [
+    'Software Engineer', 
+    'Senior Developer', 
+    'Full Stack Engineer',
+    'Frontend Developer',
+    'Backend Engineer',
+    'Data Scientist',
+    'Machine Learning Engineer',
+    'DevOps Engineer',
+    'QA Engineer',
+    'Product Manager'
+  ];
+  
+  if (query.toLowerCase().includes('quant')) {
+    jobTitles = [
+      'Quantitative Developer',
+      'Quant Researcher',
+      'Quantitative Analyst',
+      'Quantitative Strategist',
+      'Algorithmic Trader',
+      'Quant Software Engineer',
+      'Systematic Trader',
+      'Research Scientist',
+      'Quantitative Portfolio Manager',
+      'Machine Learning Quant'
+    ];
+  }
+  
+  // Companies to use based on platforms
+  let companies = [
+    'TechCorp', 
+    'Innovate Inc', 
+    'ByteWorks',
+    'DataSys',
+    'FutureTech',
+    'CloudNine',
+    'CoreLogic',
+    'Quantum Solutions',
+    'PrimeSoft',
+    'Nexus Technologies'
+  ];
+  
+  // If we're targeting finance platforms
+  if (platforms.some(p => 
+    p.includes('citadel') || 
+    p.includes('jane') || 
+    p.includes('two-sigma') || 
+    p.includes('optiver') || 
+    p.includes('hrt') || 
+    p.includes('jump')
+  )) {
+    companies = [
+      'Citadel Securities',
+      'Jane Street',
+      'Two Sigma',
+      'Optiver',
+      'Hudson River Trading',
+      'Jump Trading',
+      'IMC Trading',
+      'DRW',
+      'Virtu Financial',
+      'Tower Research'
+    ];
+  }
+  
+  // If we're targeting specific domains
+  if (platforms.length > 0) {
+    // Replace companies with extracted names from URLs if possible
+    companies = platforms.map(platform => {
+      if (platform.includes('.')) {
+        // If platform is a URL
         try {
-          const jobs = await this.scrapeJobSite(site, query, location);
-          allJobs.push(...jobs);
-          
-          // Break if we've reached the maximum number of results
-          if (allJobs.length >= (this.options.maxResults || 50)) {
-            break;
-          }
-        } catch (error) {
-          console.error(`Error scraping ${site}:`, error);
+          const extractedCompany = extractCompanyFromUrl(`https://${platform}`);
+          return extractedCompany || platform;
+        } catch {
+          return platform;
         }
       }
+      return platform;
+    });
+  }
+  
+  // Detect if we're scraping ATS platforms
+  const isAts = platforms.some(p => 
+    p.includes('greenhouse.io') || 
+    p.includes('lever.co') || 
+    p.includes('workday') || 
+    p.includes('icims.com')
+  );
+  
+  // Generate the jobs
+  for (let i = 0; i < jobCount; i++) {
+    const jobTitleIndex = Math.floor(Math.random() * jobTitles.length);
+    const companyIndex = Math.floor(Math.random() * companies.length);
+    
+    const jobTitle = jobTitles[jobTitleIndex];
+    const companyName = companies[Math.min(companyIndex, companies.length - 1)];
+    
+    // Determine platform for this job
+    let platform = '';
+    
+    if (isAts) {
+      // Use the ATS platform
+      if (platforms.find(p => p.includes('greenhouse.io'))) platform = 'Greenhouse';
+      else if (platforms.find(p => p.includes('lever.co'))) platform = 'Lever';
+      else if (platforms.find(p => p.includes('workday'))) platform = 'Workday';
+      else if (platforms.find(p => p.includes('icims.com'))) platform = 'iCims';
+      else platform = 'LinkedIn'; // Default
+    } else {
+      // Use a random platform
+      const platformOptions = ['LinkedIn', 'Indeed', 'Glassdoor', 'ZipRecruiter'];
+      platform = platformOptions[Math.floor(Math.random() * platformOptions.length)];
     }
     
-    return allJobs.slice(0, this.options.maxResults || 50);
-  }
-  
-  /**
-   * Scrape jobs from a specific site
-   */
-  private async scrapeJobSite(siteKey: string, query: string, location: string): Promise<ScrapedJob[]> {
-    const config = JOB_SITE_CONFIGS[siteKey];
+    // Generate a random ID
+    const id = `job-${Date.now()}-${i}-${Math.floor(Math.random() * 10000)}`;
     
-    if (!config) {
-      throw new Error(`Unknown site: ${siteKey}`);
+    // Generate a URL based on platform
+    let applyUrl = '';
+    let atsSystem = null;
+    
+    if (platform === 'Greenhouse') {
+      applyUrl = `https://boards.greenhouse.io/${companyName.toLowerCase().replace(/\s+/g, '')}/jobs/123456`;
+      atsSystem = 'Greenhouse';
+    } else if (platform === 'Lever') {
+      applyUrl = `https://jobs.lever.co/${companyName.toLowerCase().replace(/\s+/g, '')}/abcdef-123456`;
+      atsSystem = 'Lever';
+    } else if (platform === 'Workday') {
+      applyUrl = `https://${companyName.toLowerCase().replace(/\s+/g, '')}.wd5.myworkdayjobs.com/en-US/External/job/Location/${jobTitle.replace(/\s+/g, '-')}_JR-12345`;
+      atsSystem = 'Workday';
+    } else if (platform === 'iCims') {
+      applyUrl = `https://careers-${companyName.toLowerCase().replace(/\s+/g, '')}.icims.com/jobs/12345/job`;
+      atsSystem = 'iCims';
+    } else if (platform === 'LinkedIn') {
+      applyUrl = `https://www.linkedin.com/jobs/view/123456789`;
+    } else if (platform === 'Indeed') {
+      applyUrl = `https://www.indeed.com/viewjob?jk=abcdef123456`;
+    } else {
+      applyUrl = `https://example.com/jobs/${id}`;
     }
     
-    // For demo purposes, we'll simulate the scraping
-    // In a real implementation, this would use a headless browser or API
-    console.log(`Scraping ${config.siteName} for "${query}" in "${location || 'any location'}"`);
+    // Generate random salary
+    const baseMin = 90000;
+    const baseMax = 150000;
+    const salaryMin = baseMin + (Math.floor(Math.random() * 30000));
+    const salaryMax = salaryMin + (Math.floor(Math.random() * 50000));
     
-    // Simulate a delay for the scraping process
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Generate posted date (random within last 30 days)
+    const daysAgo = Math.floor(Math.random() * 30);
+    const postedAt = new Date();
+    postedAt.setDate(postedAt.getDate() - daysAgo);
     
-    // Generate mock results
-    const results = this.generateMockResults(config, query, location, 10);
+    // Generate random locations
+    const locations = [
+      'San Francisco, CA',
+      'New York, NY',
+      'Seattle, WA',
+      'Austin, TX',
+      'Boston, MA',
+      'Chicago, IL',
+      'Remote'
+    ];
+    const randomLocation = location || locations[Math.floor(Math.random() * locations.length)];
     
-    return results;
-  }
-  
-  /**
-   * Generate mock job results for demonstration
-   */
-  private generateMockResults(config: JobSiteConfig, query: string, location: string, count: number): ScrapedJob[] {
-    const results: ScrapedJob[] = [];
-    const companies = ['Google', 'Microsoft', 'Apple', 'Amazon', 'Meta', 'Netflix', 'Spotify', 'Airbnb', 'Uber', 'Twitter'];
-    const locations = location ? [location] : ['San Francisco, CA', 'New York, NY', 'Seattle, WA', 'Austin, TX', 'Remote', 'Boston, MA'];
-    const titlePrefix = query || 'Software Engineer';
+    // Generate keyword match data
+    const keywordData = generateKeywordMatchData();
     
-    for (let i = 0; i < count; i++) {
-      const company = companies[Math.floor(Math.random() * companies.length)];
-      const jobLocation = locations[Math.floor(Math.random() * locations.length)];
-      const daysAgo = Math.floor(Math.random() * 14) + 1;
-      const id = `${config.siteName.toLowerCase()}-${Date.now()}-${i}`;
-      
-      // Create a more realistic job URL
-      const jobUrlPath = `${titlePrefix.toLowerCase().replace(/\s+/g, '-')}-at-${company.toLowerCase().replace(/\s+/g, '-')}-${id}`;
-      const jobUrl = `${config.baseUrl}/jobs/${jobUrlPath}`;
-      const applyUrl = `${config.baseUrl}/jobs/apply/${jobUrlPath}`;
-      const isRemote = Math.random() > 0.5;
-      
-      results.push({
-        id,
-        title: `${titlePrefix} ${['Senior', 'Lead', 'Principal', 'Junior', ''][Math.floor(Math.random() * 5)]}`.trim(),
-        company,
-        location: jobLocation,
-        url: jobUrl,
-        source: config.siteName,
-        datePosted: `${daysAgo} days ago`,
-        description: `This is a ${titlePrefix} position at ${company}. Join our team to work on exciting projects using modern technologies.`,
-        applyUrl,
-        verified: Math.random() > 0.1, // 90% chance of being verified
-        matchPercentage: Math.floor(Math.random() * 31) + 70, // 70-100%
-        remote: isRemote,
-        requirements: [
-          'Bachelor\'s degree in Computer Science or related field',
-          `3+ years of experience with ${query}`,
-          'Strong problem-solving skills'
-        ]
-      });
-    }
-    
-    return results;
-  }
-  
-  /**
-   * Verify that job listings and apply URLs are valid
-   */
-  async verifyJobs(jobs: ScrapedJob[]): Promise<ScrapedJob[]> {
-    console.log(`Verifying ${jobs.length} job listings`);
-    
-    // In a real implementation, this would check if the URLs are valid
-    // For this demo, we'll simulate verification with a delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    return jobs.map(job => ({
-      ...job,
-      verified: Math.random() > 0.15 // 85% chance of successful verification
-    })).filter(job => job.verified);
-  }
-  
-  /**
-   * Extract details from a job listing page
-   */
-  async extractJobDetails(job: ScrapedJob): Promise<ScrapedJob> {
-    console.log(`Extracting details for job: ${job.title} at ${job.company}`);
-    
-    // Simulate a delay for extracting details
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // In a real implementation, this would visit the job page and extract more details
-    // For this demo, we'll just add some additional information
-    const enhancedJob: ScrapedJob = {
-      ...job,
-      description: job.description + `\n\nWe are looking for a ${job.title} to join our team at ${job.company}. You will be responsible for designing, developing, and maintaining our software systems. The ideal candidate has strong technical skills and works well in a team environment.`,
-      requirements: [
-        'Bachelor\'s degree in Computer Science or related field',
-        '3+ years of experience in software development',
-        'Proficiency in JavaScript and TypeScript',
-        'Experience with React and modern frontend frameworks',
-        'Knowledge of cloud services (AWS, Azure, or GCP)'
-      ],
-      keywordMatch: {
-        score: Math.floor(Math.random() * 31) + 70,
-        total: 12,
-        found: 9,
-        highPriority: {
-          keywords: ['JavaScript', 'React', 'TypeScript', 'Node.js', 'AWS'],
-          found: 4,
-          total: 5
-        },
-        lowPriority: {
-          keywords: ['Git', 'Agile', 'REST API', 'Docker', 'CI/CD', 'Testing', 'MongoDB'],
-          found: 5,
-          total: 7
-        }
-      }
+    // Create the job object
+    const job: ScrapedJob = {
+      id,
+      title: jobTitle,
+      company: companyName,
+      location: randomLocation,
+      description: `${companyName} is seeking a talented ${jobTitle} to join our team. This position requires experience with [requirements].`,
+      salary: {
+        min: salaryMin,
+        max: salaryMax,
+        currency: '$'
+      },
+      applyUrl,
+      postedAt: postedAt.toISOString(),
+      keywordMatch: keywordData,
+      source: platform,
+      verified: false,
+      remote: randomLocation.toLowerCase().includes('remote'),
+      atsSystem: atsSystem
     };
     
-    return enhancedJob;
+    jobs.push(job);
   }
   
-  /**
-   * Helper function to get a random work model that's type-safe
-   */
-  private getRandomWorkModel(): "remote" | "hybrid" | "onsite" {
-    const models: ["remote", "hybrid", "onsite"] = ["remote", "hybrid", "onsite"];
-    return models[Math.floor(Math.random() * models.length)];
-  }
+  return jobs;
 }
 
-/**
- * Create an instance of the Crawl4AI scraper with default options
- */
-export const createJobScraper = (options?: Crawl4AIOptions) => {
-  return new Crawl4AI(options);
-};
+// Generate mock keyword match data for a job
+function generateKeywordMatchData() {
+  // Create mock high priority keywords
+  const highPriorityKeywords = ["Python", "JavaScript", "React", "AWS", "Docker", "Node.js", "TypeScript", "MongoDB", "Git", "CI/CD", "Kubernetes"];
+  const highPriorityCount = Math.floor(Math.random() * 5) + 6; // 6-11 keywords
+  const highPrioritySelected = highPriorityKeywords.slice(0, highPriorityCount);
+  const highPriorityFound = Math.floor(Math.random() * highPriorityCount);
+  
+  // Create mock low priority keywords
+  const lowPriorityKeywords = ["Agile", "Scrum", "REST API", "GraphQL", "Testing", "DevOps", "Linux", "SQL", "NoSQL"];
+  const lowPriorityCount = Math.floor(Math.random() * 5) + 4; // 4-9 keywords
+  const lowPrioritySelected = lowPriorityKeywords.slice(0, lowPriorityCount);
+  const lowPriorityFound = Math.floor(Math.random() * lowPriorityCount);
+  
+  const totalKeywords = highPriorityCount + lowPriorityCount;
+  const foundKeywords = highPriorityFound + lowPriorityFound;
+  
+  // Weight high priority keywords more than low priority
+  const score = Math.round(
+    ((highPriorityFound * 1.5) + (lowPriorityFound * 0.5)) / 
+    ((highPriorityCount * 1.5) + (lowPriorityCount * 0.5)) * 100
+  );
+  
+  return {
+    score,
+    total: totalKeywords,
+    found: foundKeywords,
+    highPriority: {
+      keywords: highPrioritySelected,
+      found: highPriorityFound,
+      total: highPriorityCount
+    },
+    lowPriority: {
+      keywords: lowPrioritySelected,
+      found: lowPriorityFound,
+      total: lowPriorityCount
+    }
+  };
+}
 
-/**
- * Run a job search using Crawl4AI
- */
+// Export the main function for using Crawl4AI for job searches
 export async function searchJobsWithCrawl4AI(
-  query: string, 
-  location: string = '', 
-  platforms: string[] = ['linkedin', 'indeed'],
-  options?: Crawl4AIOptions
+  query: string,
+  location: string = '',
+  platforms: string[] = [],
+  options: Partial<ScrapeOptions> = {}
 ): Promise<ScrapedJob[]> {
-  try {
-    const scraper = createJobScraper(options);
-    
-    // Show search starting toast
-    toast.loading("Searching for jobs...", {
-      description: `Looking for "${query}" jobs across multiple platforms`,
-      duration: 2000
-    });
-    
-    // Search for jobs
-    const jobs = await scraper.searchJobs(query, location, platforms);
-    
-    if (jobs.length === 0) {
-      toast.error("No jobs found", {
-        description: "Try different search terms or locations"
-      });
-      return [];
-    }
-    
-    // Show verification starting toast
-    toast.loading("Verifying job listings...", {
-      description: "Making sure job listings are still active",
-      duration: 1500
-    });
-    
-    // Verify jobs
-    const verifiedJobs = await scraper.verifyJobs(jobs);
-    
-    if (verifiedJobs.length === 0) {
-      toast.warning("No valid job listings found", {
-        description: "All jobs failed verification. Try a different search."
-      });
-      return [];
-    }
-    
-    // Process and enhance job listings
-    const enhancedJobs: ScrapedJob[] = [];
-    
-    for (const job of verifiedJobs.slice(0, 10)) { // Limit to 10 jobs for details extraction
-      const enhancedJob = await scraper.extractJobDetails(job);
-      enhancedJobs.push(enhancedJob);
-    }
-    
-    // Add remaining jobs without detailed extraction
-    enhancedJobs.push(...verifiedJobs.slice(10));
-    
-    toast.success(`Found ${enhancedJobs.length} job opportunities`, {
-      description: `${Math.min(10, enhancedJobs.length)} with enhanced details`
-    });
-    
-    return enhancedJobs;
-    
-  } catch (error) {
-    console.error("Error searching for jobs:", error);
-    toast.error("Failed to search for jobs", {
-      description: "There was an error during the job search process."
-    });
-    return [];
-  }
+  const scraper = createJobScraper();
+  return scraper.searchJobs(query, location, platforms);
 }
