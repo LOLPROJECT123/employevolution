@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,7 +43,8 @@ const templateSources: TemplateSource[] = [
     isPremium: false,
     isOfficial: true,
     isActive: true,
-    attribution: "Templates provided by ResumeGenius under fair use for demonstration"
+    attribution: "Templates provided by ResumeGenius under fair use for demonstration",
+    templates: [] // Added empty templates array to satisfy the type requirement
   },
   {
     id: "2",
@@ -54,7 +54,8 @@ const templateSources: TemplateSource[] = [
     isPremium: false,
     isOfficial: true,
     isActive: true,
-    attribution: "Templates courtesy of Zety - Professional Resume Builder"
+    attribution: "Templates courtesy of Zety - Professional Resume Builder",
+    templates: [] // Added empty templates array to satisfy the type requirement
   },
   {
     id: "3",
@@ -64,7 +65,8 @@ const templateSources: TemplateSource[] = [
     isPremium: false,
     isOfficial: true,
     isActive: true,
-    attribution: "Resume templates by Resume.io - used for demonstration purposes"
+    attribution: "Resume templates by Resume.io - used for demonstration purposes",
+    templates: [] // Added empty templates array to satisfy the type requirement
   }
 ];
 
@@ -413,7 +415,7 @@ const ResumeTemplates = () => {
                   className="w-full text-xs h-8"
                   onClick={clearAllFilters}
                 >
-                  <X className="h-4 w-4 mr-2" /> Clear All Filters
+                  <X className="h-3 w-3 cursor-pointer" /> Clear All Filters
                 </Button>
               </div>
             </DropdownMenuContent>
