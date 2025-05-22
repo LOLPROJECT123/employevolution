@@ -25,7 +25,12 @@ export interface ScrapedJob {
     currency?: string;
   };
   applyUrl?: string;
-  postedAt?: string;
+  // Add missing properties
+  url?: string;
+  datePosted?: string;
+  postedAt?: string; // Some components use postedAt and others use datePosted
+  matchPercentage?: number;
+  requirements?: string[];
   keywordMatch?: {
     score: number;
     total: number;
@@ -53,4 +58,27 @@ export interface ScrapedJob {
       matched: boolean;
     }>;
   };
+}
+
+// Add the missing types needed by ResumeTemplates.tsx
+export interface ResumeTemplate {
+  id: string;
+  name: string;
+  thumbnail: string;
+  description: string;
+  category: string;
+  popularity: 'high' | 'medium' | 'low';
+  atsScore: number;
+  premium: boolean;
+  customizable: boolean;
+  source: string;
+}
+
+export interface TemplateSource {
+  id: string;
+  name: string;
+  url: string;
+  templateCount: number;
+  isPremium: boolean;
+  isOfficial: boolean;
 }

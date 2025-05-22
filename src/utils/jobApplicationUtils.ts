@@ -1,3 +1,4 @@
+
 /**
  * Utility functions for job application scraping and auto-filling
  */
@@ -101,7 +102,7 @@ export function convertScrapedJobToJob(scrapedJob: ScrapedJob): Job {
     location: scrapedJob.location,
     description: scrapedJob.description,
     skills: extractSkillsFromDescription(scrapedJob.description),
-    postedAt: scrapedJob.datePosted,
+    postedAt: scrapedJob.postedAt || scrapedJob.datePosted,
     applyUrl: scrapedJob.applyUrl,
     source: scrapedJob.source,
     requirements: scrapedJob.requirements || [],
