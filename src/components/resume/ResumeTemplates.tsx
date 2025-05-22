@@ -40,6 +40,9 @@ const templateSources: TemplateSource[] = [
     id: "1",
     name: "ResumeGenius",
     url: "https://resumegenius.com",
+    templateCount: 25,
+    isPremium: false,
+    isOfficial: true,
     isActive: true,
     attribution: "Templates provided by ResumeGenius under fair use for demonstration"
   },
@@ -47,6 +50,9 @@ const templateSources: TemplateSource[] = [
     id: "2",
     name: "Zety",
     url: "https://zety.com",
+    templateCount: 18,
+    isPremium: false,
+    isOfficial: true,
     isActive: true,
     attribution: "Templates courtesy of Zety - Professional Resume Builder"
   },
@@ -54,6 +60,9 @@ const templateSources: TemplateSource[] = [
     id: "3",
     name: "Resume.io",
     url: "https://resume.io",
+    templateCount: 22,
+    isPremium: false,
+    isOfficial: true,
     isActive: true,
     attribution: "Resume templates by Resume.io - used for demonstration purposes"
   }
@@ -96,6 +105,7 @@ const ResumeTemplates = () => {
       const mockTemplates: ResumeTemplate[] = [
         {
           id: "1",
+          name: "Google SWE Template",
           title: "Google SWE Template",
           description: "Clean, ATS-optimized template used by a successful Google software engineer. Focuses on technical projects and quantifiable achievements.",
           imageUrl: "/placeholder.svg",
@@ -113,6 +123,7 @@ const ResumeTemplates = () => {
         },
         {
           id: "2",
+          name: "Amazon PM Resume",
           title: "Amazon PM Resume",
           description: "Template used by a Senior Product Manager at Amazon. Highlights leadership, product metrics and business impact.",
           imageUrl: "/placeholder.svg",
@@ -130,6 +141,7 @@ const ResumeTemplates = () => {
         },
         {
           id: "3",
+          name: "Meta UI/UX Designer",
           title: "Meta UI/UX Designer",
           description: "Visually appealing template for design roles that helped land a position at Meta. Includes portfolio links and project showcases.",
           imageUrl: "/placeholder.svg",
@@ -147,6 +159,7 @@ const ResumeTemplates = () => {
         },
         {
           id: "5",
+          name: "Apple iOS Developer",
           title: "Apple iOS Developer",
           description: "iOS developer template with a focus on App Store launches and technical achievements. ATS-friendly format that helped land a role at Apple.",
           imageUrl: "/placeholder.svg",

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -43,7 +42,7 @@ export default function JobSourcesDisplay({ onJobsScraped }: JobSourcesDisplayPr
         setJobSources(JSON.parse(savedSources));
       } else {
         // Default sources now include our finance/tech job boards
-        const defaultSources = [
+        const defaultSources: JobSource[] = [
           { id: 'linkedin', name: 'LinkedIn', url: 'https://www.linkedin.com/jobs', isActive: true, category: 'general', lastScraped: new Date().toISOString(), jobCount: 42 },
           { id: 'indeed', name: 'Indeed', url: 'https://www.indeed.com/jobs', isActive: true, category: 'general', lastScraped: new Date().toISOString(), jobCount: 37 },
           { id: 'worldquant', name: 'WorldQuant', url: 'https://www.worldquant.com/career-listing/', isActive: true, category: 'finance', lastScraped: new Date().toISOString(), jobCount: 15 },
@@ -214,7 +213,7 @@ export default function JobSourcesDisplay({ onJobsScraped }: JobSourcesDisplayPr
       }
       
       // Determine category based on URL or name
-      let category = 'custom';
+      let category: 'general' | 'tech' | 'finance' | 'custom' | 'ats' | 'corporate' = 'custom';
       if (newSourceUrl.includes('greenhouse.io') || newSourceUrl.includes('lever.co')) {
         category = 'ats';
       } else if (newSourceName.toLowerCase().includes('capital') || 

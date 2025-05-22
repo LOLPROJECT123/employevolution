@@ -64,14 +64,26 @@ export interface ScrapedJob {
 export interface ResumeTemplate {
   id: string;
   name: string;
-  thumbnail: string;
+  title: string;
   description: string;
-  category: string;
-  popularity: 'high' | 'medium' | 'low';
-  atsScore: number;
-  premium: boolean;
-  customizable: boolean;
+  imageUrl: string;
+  previewUrl: string;
+  downloadUrl: string;
+  company: string;
+  role: string;
+  roleType: string;
+  rating: number;
+  downloads: number;
+  tags: string[];
   source: string;
+  attribution: string;
+  licenseType: 'free' | 'premium' | 'attribution-required';
+  thumbnail?: string;
+  category?: string;
+  popularity?: 'high' | 'medium' | 'low';
+  atsScore?: number;
+  premium?: boolean;
+  customizable?: boolean;
 }
 
 export interface TemplateSource {
@@ -81,4 +93,6 @@ export interface TemplateSource {
   templateCount: number;
   isPremium: boolean;
   isOfficial: boolean;
+  isActive?: boolean;
+  attribution?: string;
 }
