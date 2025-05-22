@@ -1,3 +1,6 @@
+
+import { JobSource, JobApplicationTab } from "./types";
+
 export const JOB_TABS = [
   {
     value: 'manual',
@@ -22,31 +25,36 @@ export const SUPPORTED_JOB_SOURCES: JobSource[] = [
     id: "linkedin",
     name: "LinkedIn",
     url: "https://www.linkedin.com/jobs",
-    isActive: true
+    isActive: true,
+    category: "general"
   },
   {
     id: "indeed",
     name: "Indeed",
     url: "https://www.indeed.com",
-    isActive: true
+    isActive: true,
+    category: "general"
   },
   {
     id: "glassdoor",
     name: "Glassdoor",
     url: "https://www.glassdoor.com",
-    isActive: true
+    isActive: true,
+    category: "general"
   },
   {
     id: "monster",
     name: "Monster",
     url: "https://www.monster.com",
-    isActive: true
+    isActive: true,
+    category: "general"
   },
   {
     id: "ziprecruiter",
     name: "ZipRecruiter",
     url: "https://www.ziprecruiter.com",
-    isActive: true
+    isActive: true,
+    category: "general"
   }
 ];
 

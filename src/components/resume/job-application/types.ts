@@ -1,3 +1,4 @@
+
 import React from "react";
 
 export interface ScrapedJob {
@@ -6,17 +7,19 @@ export interface ScrapedJob {
   company: string;
   location: string;
   description: string;
-  salary: {
+  salary?: {
     min: number;
     max: number;
     currency: string;
   };
   applyUrl: string;
-  postedAt: string;
-  keywordMatch: KeywordMatchData;
+  postedAt?: string;
+  datePosted?: string;  // Added for backward compatibility
+  keywordMatch?: KeywordMatchData;
+  matchPercentage?: number; // Added for match percentage display
   source: string;
   verified: boolean;
-  remote: boolean;
+  remote?: boolean;
   atsSystem?: string | null;
   url?: string;
   detailsFetched?: boolean;
@@ -50,4 +53,33 @@ export interface JobSource {
   url: string;
   icon?: React.ReactNode;
   isActive?: boolean;
+  category?: 'general' | 'tech' | 'finance' | 'custom' | 'ats' | 'corporate';
+  lastScraped?: string;
+  jobCount?: number;
+  isGeneric?: boolean;
+  atsType?: string;
+}
+
+// Add ResumeTemplate and TemplateSource types needed for ResumeTemplates.tsx
+export interface ResumeTemplate {
+  id: string;
+  name: string;
+  description: string;
+  thumbnail: string;
+  isPremium: boolean;
+  isPopular?: boolean;
+  category: string;
+  tags: string[];
+}
+
+export interface TemplateSource {
+  id: string;
+  name: string;
+  url: string;
+  templateCount: number;
+  isPremium: boolean;
+  isOfficial: boolean;
+  isActive: boolean;
+  attribution: string;
+  templates: ResumeTemplate[];
 }
