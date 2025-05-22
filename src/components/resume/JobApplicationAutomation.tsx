@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -13,12 +12,13 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Check, Linkedin, UserRound } from "lucide-react";
+import { AlertTriangle, Check, Linkedin, UserRound, Link } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Import components
 import JobApplicationForm from "./job-application/JobApplicationForm";
 import JobScraper from "./job-application/JobScraper";
+import JobSourceScraper from "./job-application/JobSourceScraper";
 import JobList from "./job-application/JobList";
 import ConfirmationModal from "./job-application/ConfirmationModal";
 import LinkedInContactFinder from "./job-application/LinkedInContactFinder";
@@ -315,6 +315,9 @@ const JobApplicationAutomation = () => {
             <TabsTrigger value="linkedin" className="flex-1">
               <Linkedin className="h-4 w-4 mr-1" /> LinkedIn
             </TabsTrigger>
+            <TabsTrigger value="custom-urls" className="flex-1">
+              <Link className="h-4 w-4 mr-1" /> Custom URLs
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="scraper" className="space-y-4 pt-4">
@@ -398,6 +401,11 @@ const JobApplicationAutomation = () => {
                 toast.success("New template created successfully");
               }}
             />
+          </TabsContent>
+          
+          <TabsContent value="custom-urls" className="space-y-4 pt-4">
+            <JobSourceScraper onJobsScraped={setScrapedJobs} />
+            {scrapedJobs.length > 0 && <JobList jobs={scrapedJobs} onSelectJob={handleSelectJob} />}
           </TabsContent>
         </Tabs>
         
