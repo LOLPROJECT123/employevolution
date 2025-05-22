@@ -70,6 +70,18 @@ export interface ResumeTemplate {
   isPopular?: boolean;
   category: string;
   tags: string[];
+  // Additional properties used in the component
+  company?: string;
+  role?: string;
+  roleType?: string;
+  rating?: number;
+  downloads?: number;
+  source?: string;
+  attribution?: string;
+  licenseType?: string;
+  imageUrl?: string;
+  previewUrl?: string;
+  downloadUrl?: string;
 }
 
 export interface TemplateSource {

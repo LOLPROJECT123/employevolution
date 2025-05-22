@@ -1,4 +1,36 @@
-import React from "react";
+
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Download, Search, Filter, Star, Eye, ThumbsUp, FileText, X, RefreshCcw } from "lucide-react";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from "@/components/ui/use-toast";
 import { ResumeTemplate, TemplateSource } from "./job-application/types";
 
 // Template sources (simulating API services)
@@ -76,74 +108,82 @@ const ResumeTemplates = () => {
         {
           id: "1",
           name: "Google SWE Template",
-          title: "Google SWE Template",
           description: "Clean, ATS-optimized template used by a successful Google software engineer. Focuses on technical projects and quantifiable achievements.",
-          imageUrl: "/placeholder.svg",
-          previewUrl: "/placeholder.svg",
-          downloadUrl: "/placeholder.svg",
+          thumbnail: "/placeholder.svg",
+          isPremium: false,
+          category: "Technical",
+          tags: ["Technical", "Software Engineering", "ATS-Optimized"],
           company: "Google",
           role: "Software Engineer",
           roleType: "Full-time",
           rating: 4.9,
           downloads: 12483,
-          tags: ["Technical", "Software Engineering", "ATS-Optimized"],
           source: "ResumeGenius",
           attribution: "Template provided by ResumeGenius",
-          licenseType: "free" // Changed from attribution-required to free
+          licenseType: "free", // Changed from attribution-required to free
+          imageUrl: "/placeholder.svg",
+          previewUrl: "/placeholder.svg",
+          downloadUrl: "/placeholder.svg",
         },
         {
           id: "2",
           name: "Amazon PM Resume",
-          title: "Amazon PM Resume",
           description: "Template used by a Senior Product Manager at Amazon. Highlights leadership, product metrics and business impact.",
-          imageUrl: "/placeholder.svg",
-          previewUrl: "/placeholder.svg",
-          downloadUrl: "/placeholder.svg",
+          thumbnail: "/placeholder.svg",
+          isPremium: false,
+          category: "Product",
+          tags: ["Product", "Leadership", "Business-Impact"],
           company: "Amazon",
           role: "Product Manager",
           roleType: "Full-time",
           rating: 4.7,
           downloads: 8976,
-          tags: ["Product", "Leadership", "Business-Impact"],
           source: "Zety",
           attribution: "Template courtesy of Zety",
-          licenseType: "free"
+          licenseType: "free",
+          imageUrl: "/placeholder.svg",
+          previewUrl: "/placeholder.svg",
+          downloadUrl: "/placeholder.svg",
         },
         {
           id: "3",
           name: "Meta UI/UX Designer",
-          title: "Meta UI/UX Designer",
           description: "Visually appealing template for design roles that helped land a position at Meta. Includes portfolio links and project showcases.",
-          imageUrl: "/placeholder.svg",
-          previewUrl: "/placeholder.svg",
-          downloadUrl: "/placeholder.svg",
+          thumbnail: "/placeholder.svg",
+          isPremium: false,
+          category: "Design",
+          tags: ["Design", "Portfolio", "Creative"],
           company: "Meta",
           role: "UI/UX Designer",
           roleType: "Full-time",
           rating: 4.8,
           downloads: 9254,
-          tags: ["Design", "Portfolio", "Creative"],
           source: "Zety",
           attribution: "Template courtesy of Zety",
-          licenseType: "free"
+          licenseType: "free",
+          imageUrl: "/placeholder.svg",
+          previewUrl: "/placeholder.svg",
+          downloadUrl: "/placeholder.svg",
         },
         {
           id: "5",
           name: "Apple iOS Developer",
-          title: "Apple iOS Developer",
           description: "iOS developer template with a focus on App Store launches and technical achievements. ATS-friendly format that helped land a role at Apple.",
-          imageUrl: "/placeholder.svg",
-          previewUrl: "/placeholder.svg",
-          downloadUrl: "/placeholder.svg",
+          thumbnail: "/placeholder.svg",
+          isPremium: false,
+          category: "Mobile",
+          tags: ["Mobile", "iOS", "Developer"],
           company: "Apple",
           role: "iOS Developer",
           roleType: "Contract",
           rating: 4.8,
           downloads: 10245,
-          tags: ["Mobile", "iOS", "Developer"],
           source: "ResumeGenius",
           attribution: "Template provided by ResumeGenius",
-          licenseType: "free" // Changed from attribution-required to free
+          licenseType: "free", // Changed from attribution-required to free
+          imageUrl: "/placeholder.svg",
+          previewUrl: "/placeholder.svg",
+          downloadUrl: "/placeholder.svg",
         }
       ];
       
@@ -168,10 +208,10 @@ const ResumeTemplates = () => {
   // Extract unique filter options
   const getFilterOptions = (): FilterOptions => {
     return {
-      companies: [...new Set(templates.map(t => t.company))],
-      roleTypes: [...new Set(templates.map(t => t.roleType || ""))].filter(Boolean),
-      positions: [...new Set(templates.map(t => t.role))],
-      sources: [...new Set(templates.map(t => t.source || ""))].filter(Boolean),
+      companies: [...new Set(templates.map(t => t.company || ""))].filter(Boolean) as string[],
+      roleTypes: [...new Set(templates.map(t => t.roleType || ""))].filter(Boolean) as string[],
+      positions: [...new Set(templates.map(t => t.role || ""))].filter(Boolean) as string[],
+      sources: [...new Set(templates.map(t => t.source || ""))].filter(Boolean) as string[],
     };
   };
   
@@ -185,10 +225,10 @@ const ResumeTemplates = () => {
       
       // Search filter
       const matchesSearch = !searchTerm || 
-        template.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         template.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        template.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        template.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (template.company && template.company.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (template.role && template.role.toLowerCase().includes(searchTerm.toLowerCase())) ||
         template.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
       
       // Dropdown filters
@@ -229,19 +269,19 @@ const ResumeTemplates = () => {
 
   const handleDownload = (template: ResumeTemplate) => {
     // In a real app, this would handle the actual download
-    console.log(`Downloading template: ${template.title}`);
+    console.log(`Downloading template: ${template.name}`);
     
     toast({
       title: "Resume Template Downloaded",
-      description: `${template.title} has been downloaded successfully. ${template.attribution}`,
+      description: `${template.name} has been downloaded successfully. ${template.attribution}`,
     });
   };
   
   const handleUseTemplate = (template: ResumeTemplate) => {
-    console.log(`Using template: ${template.title}`);
+    console.log(`Using template: ${template.name}`);
     toast({
       title: "Template Selected",
-      description: `You are now using the ${template.title} template.`,
+      description: `You are now using the ${template.name} template.`,
     });
   };
 
@@ -469,7 +509,7 @@ const ResumeTemplates = () => {
                 <Card key={template.id} className="overflow-hidden flex flex-col">
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-start">
-                      <CardTitle className="text-lg">{template.title}</CardTitle>
+                      <CardTitle className="text-lg">{template.name}</CardTitle>
                       <Badge variant="secondary" className="ml-2">
                         {template.company}
                       </Badge>
@@ -486,7 +526,7 @@ const ResumeTemplates = () => {
                       <AspectRatio ratio={3/4} className="bg-muted overflow-hidden rounded-md border">
                         <img 
                           src={template.imageUrl} 
-                          alt={template.title}
+                          alt={template.name}
                           className="w-full h-full object-cover"
                         />
                         <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black/50 rounded-md">
@@ -503,7 +543,7 @@ const ResumeTemplates = () => {
                             </DialogTrigger>
                             <DialogContent className="max-w-2xl">
                               <DialogHeader>
-                                <DialogTitle>{template.title}</DialogTitle>
+                                <DialogTitle>{template.name}</DialogTitle>
                                 <DialogDescription>
                                   {template.description}
                                 </DialogDescription>
@@ -512,7 +552,7 @@ const ResumeTemplates = () => {
                                 <AspectRatio ratio={3/4} className="overflow-hidden rounded-md border">
                                   <img 
                                     src={template.previewUrl} 
-                                    alt={template.title}
+                                    alt={template.name}
                                     className="w-full h-full object-contain bg-white"
                                   />
                                 </AspectRatio>
