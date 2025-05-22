@@ -1,4 +1,3 @@
-
 /**
  * Utility functions for job application scraping and auto-filling
  */

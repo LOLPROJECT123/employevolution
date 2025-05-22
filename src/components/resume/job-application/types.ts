@@ -1,3 +1,4 @@
+
 // Define ScrapedJob type
 export interface ScrapedJob {
   id: string;
@@ -59,6 +60,7 @@ export interface ResumeTemplate {
   licenseType?: string;
   attribution?: string;
   imageUrl?: string;
+  source?: string;
 }
 
 // Define TemplateSource interface
@@ -67,5 +69,22 @@ export interface TemplateSource {
   name: string;
   url: string;
   isActive?: boolean;
+  templateCount?: number;
+  isPremium?: boolean;
+  isOfficial?: boolean;
+  attribution?: string;
   templates: ResumeTemplate[];
+}
+
+// Define JobSource interface
+export interface JobSource {
+  id: string;
+  name: string;
+  url: string;
+  isActive?: boolean;
+  category: 'general' | 'tech' | 'finance' | 'custom' | 'ats' | 'corporate';
+  lastScraped?: string;
+  jobCount?: number;
+  isGeneric?: boolean;
+  atsType?: string;
 }
