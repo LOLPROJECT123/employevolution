@@ -1,12 +1,11 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ScrapedJob } from "./types";
-import { Loader2, ExternalLink, AlertTriangle, Check } from "lucide-react";
+import { Loader2, ExternalLink, Check } from "lucide-react";
 import { toast } from "sonner";
 import { createJobScraper } from "@/utils/crawl4ai";
 
@@ -44,7 +43,7 @@ const JobSourceScraper = ({ onJobsScraped }: JobSourceScraperProps) => {
         duration: 1500
       });
       
-      // Initialize the job scraper
+      // Initialize the enhanced job scraper
       const jobScraper = createJobScraper();
       const scrapedJobs: ScrapedJob[] = [];
       
@@ -63,7 +62,17 @@ const JobSourceScraper = ({ onJobsScraped }: JobSourceScraperProps) => {
         
         try {
           // Extract domain for the search (simulate targeted scraping)
-          const domain = new URL(url).hostname;
+          let domain;
+          try {
+            domain = new URL(url).hostname;
+          } catch (e) {
+            // If URL parsing fails, try adding https:// prefix
+            try {
+              domain = new URL(`https://${url}`).hostname;
+            } catch (e2) {
+              throw new Error("Invalid URL format");
+            }
+          }
           
           // Search for jobs from this domain
           const jobs = await jobScraper.searchJobs("", "", [domain]);
@@ -118,7 +127,7 @@ const JobSourceScraper = ({ onJobsScraped }: JobSourceScraperProps) => {
       </CardHeader>
       <CardContent className="space-y-4">
         <Textarea
-          placeholder="https://job-boards.greenhouse.io/example\nhttps://careers.example.com/jobs\nhttps://jobs.lever.co/example"
+          placeholder="https://job-boards.greenhouse.io/example&#10;https://careers.example.com/jobs&#10;https://jobs.lever.co/example"
           value={jobUrls}
           onChange={(e) => setJobUrls(e.target.value)}
           className="h-40"

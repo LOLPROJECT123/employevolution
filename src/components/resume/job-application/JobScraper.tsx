@@ -36,7 +36,7 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
         duration: 1500
       });
       
-      // Initialize the job scraper
+      // Initialize the enhanced job scraper
       const jobScraper = createJobScraper();
       
       // Get the selected job sources
@@ -56,7 +56,10 @@ const JobScraper = ({ onJobsScraped }: JobScraperProps) => {
         duration: 2000
       });
       
-      // Search for jobs
+      // Show initial progress
+      setScrapingProgress(10);
+      
+      // Search for jobs with the enhanced scraper
       const jobs = await jobScraper.searchJobs(
         searchQuery,
         location,
