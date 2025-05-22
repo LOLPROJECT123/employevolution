@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -25,8 +26,7 @@ import { JOB_TABS } from "./job-application/constants";
 import { ScrapedJob, JobApplicationTab } from "./job-application/types";
 import { LinkedInContact, OutreachTemplate } from "@/types/resumePost";
 
-// Define the JobApplicationTab type
-type JobApplicationTab = 'manual' | 'auto' | 'scraper' | 'linkedin';
+// Remove the duplicate type definition that was here
 
 const JobApplicationAutomation = () => {
   const [activeTab, setActiveTab] = useState<JobApplicationTab>("manual");
