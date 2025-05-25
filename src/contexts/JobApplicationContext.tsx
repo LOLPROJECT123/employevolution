@@ -1,158 +1,119 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Job, JobStatus, JobApplication } from '@/types/job';
-import { toast } from 'sonner';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+
+export interface JobApplication {
+  id: string;
+  jobId: string;
+  status: 'applied' | 'interviewing' | 'offered' | 'rejected' | 'accepted';
+  appliedAt: string;
+  notes?: string;
+  followUpDate?: string;
+}
+
+export interface AppliedJob {
+  id: string;
+  title: string;
+  company: string;
+  location: string;
+  salary?: {
+    min: number;
+    max: number;
+    currency: string;
+  };
+  type: 'full-time' | 'part-time' | 'contract' | 'internship';
+  level: 'entry' | 'mid' | 'senior' | 'lead' | 'executive';
+  description: string;
+  requirements: string[];
+  postedAt: string;
+  skills: string[];
+}
 
 interface JobApplicationContextType {
-  savedJobs: Job[];
-  appliedJobs: Job[];
   applications: JobApplication[];
-  saveJob: (job: Job) => void;
-  unsaveJob: (jobId: string) => void;
-  applyToJob: (job: Job) => void;
-  updateApplicationStatus: (applicationId: string, status: JobStatus) => void;
-  getApplicationByJobId: (jobId: string) => JobApplication | undefined;
+  appliedJobs: AppliedJob[];
+  addApplication: (application: Omit<JobApplication, 'id'>) => void;
+  updateApplicationStatus: (id: string, status: JobApplication['status']) => void;
+  addAppliedJob: (job: AppliedJob) => void;
 }
 
 const JobApplicationContext = createContext<JobApplicationContextType | undefined>(undefined);
 
-export function JobApplicationProvider({ children }: { children: ReactNode }) {
-  const [savedJobs, setSavedJobs] = useState<Job[]>([]);
-  const [appliedJobs, setAppliedJobs] = useState<Job[]>([]);
+export const JobApplicationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [applications, setApplications] = useState<JobApplication[]>([]);
+  const [appliedJobs, setAppliedJobs] = useState<AppliedJob[]>([]);
 
-  // Load saved state from localStorage on mount
+  // Load data from localStorage on mount
   useEffect(() => {
-    try {
-      const savedJobsData = localStorage.getItem('savedJobs');
-      const appliedJobsData = localStorage.getItem('appliedJobs');
-      const applicationsData = localStorage.getItem('applications');
-
-      if (savedJobsData) setSavedJobs(JSON.parse(savedJobsData));
-      if (appliedJobsData) setAppliedJobs(JSON.parse(appliedJobsData));
-      if (applicationsData) setApplications(JSON.parse(applicationsData));
-    } catch (error) {
-      console.error('Error loading job data from localStorage:', error);
+    const savedApplications = localStorage.getItem('jobApplications');
+    const savedJobs = localStorage.getItem('appliedJobs');
+    
+    if (savedApplications) {
+      try {
+        setApplications(JSON.parse(savedApplications));
+      } catch (error) {
+        console.error('Error loading applications:', error);
+      }
+    }
+    
+    if (savedJobs) {
+      try {
+        setAppliedJobs(JSON.parse(savedJobs));
+      } catch (error) {
+        console.error('Error loading applied jobs:', error);
+      }
     }
   }, []);
 
-  // Save to localStorage when state changes
+  // Save to localStorage whenever data changes
   useEffect(() => {
-    localStorage.setItem('savedJobs', JSON.stringify(savedJobs));
-  }, [savedJobs]);
+    localStorage.setItem('jobApplications', JSON.stringify(applications));
+  }, [applications]);
 
   useEffect(() => {
     localStorage.setItem('appliedJobs', JSON.stringify(appliedJobs));
   }, [appliedJobs]);
 
-  useEffect(() => {
-    localStorage.setItem('applications', JSON.stringify(applications));
-  }, [applications]);
-
-  const saveJob = (job: Job) => {
-    if (!savedJobs.some(j => j.id === job.id)) {
-      setSavedJobs([...savedJobs, job]);
-      toast.success("Job saved to your profile");
-    } else {
-      unsaveJob(job.id);
-    }
-  };
-
-  const unsaveJob = (jobId: string) => {
-    setSavedJobs(savedJobs.filter(job => job.id !== jobId));
-    toast.success("Job removed from saved jobs");
-  };
-
-  const applyToJob = (job: Job) => {
-    // Check if already applied
-    if (applications.some(app => app.jobId === job.id)) {
-      toast.info("You've already applied to this job");
-      return;
-    }
-
-    // Create a new application
+  const addApplication = (application: Omit<JobApplication, 'id'>) => {
     const newApplication: JobApplication = {
-      id: `app-${Date.now()}`,
-      jobId: job.id,
-      userId: 'current-user', // In a real app, this would be the actual user ID
-      status: 'applied',
-      appliedAt: new Date().toISOString(),
-      notes: ''
+      ...application,
+      id: `app-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
     };
-
-    // Update applications list
-    setApplications([...applications, newApplication]);
-    
-    // Update applied jobs list if not already there
-    if (!appliedJobs.some(j => j.id === job.id)) {
-      setAppliedJobs([...appliedJobs, job]);
-    }
-
-    toast.success("Application submitted successfully");
+    setApplications(prev => [...prev, newApplication]);
   };
 
-  const updateApplicationStatus = (applicationId: string, status: JobStatus) => {
-    const updatedApplications = applications.map(app => 
-      app.id === applicationId ? { ...app, status } : app
+  const updateApplicationStatus = (id: string, status: JobApplication['status']) => {
+    setApplications(prev => 
+      prev.map(app => 
+        app.id === id ? { ...app, status } : app
+      )
     );
-    
-    setApplications(updatedApplications);
-    
-    // Get the application and corresponding job for the toast message
-    const updatedApp = updatedApplications.find(app => app.id === applicationId);
-    if (updatedApp) {
-      const job = appliedJobs.find(job => job.id === updatedApp.jobId);
-      
-      if (job) {
-        let statusMessage = "";
-        switch (status) {
-          case 'interviewing':
-            statusMessage = "Interview scheduled";
-            break;
-          case 'offered':
-            statusMessage = "Received job offer";
-            break;
-          case 'rejected':
-            statusMessage = "Application status updated to rejected";
-            break;
-          case 'accepted':
-            statusMessage = "Offer accepted! Congratulations!";
-            break;
-          default:
-            statusMessage = "Application status updated";
-        }
-        
-        toast.success(statusMessage, {
-          description: `${job.title} at ${job.company}`
-        });
-      }
-    }
   };
 
-  const getApplicationByJobId = (jobId: string) => {
-    return applications.find(app => app.jobId === jobId);
+  const addAppliedJob = (job: AppliedJob) => {
+    setAppliedJobs(prev => {
+      const exists = prev.find(j => j.id === job.id);
+      if (exists) return prev;
+      return [...prev, job];
+    });
   };
 
   return (
     <JobApplicationContext.Provider value={{
-      savedJobs,
-      appliedJobs,
       applications,
-      saveJob,
-      unsaveJob,
-      applyToJob,
+      appliedJobs,
+      addApplication,
       updateApplicationStatus,
-      getApplicationByJobId
+      addAppliedJob
     }}>
       {children}
     </JobApplicationContext.Provider>
   );
-}
+};
 
-export function useJobApplications() {
+export const useJobApplications = () => {
   const context = useContext(JobApplicationContext);
   if (context === undefined) {
     throw new Error('useJobApplications must be used within a JobApplicationProvider');
   }
   return context;
-}
+};
