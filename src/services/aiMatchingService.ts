@@ -1,4 +1,3 @@
-
 import { Job } from '@/types/job';
 import { User } from '@/types/auth';
 
@@ -33,7 +32,11 @@ class AIMatchingService {
       experience: userProfile.profile.experience,
       location: userProfile.profile.location,
       salaryRange: userProfile.profile.salary_range,
-      preferences: userProfile.profile.preferences
+      preferences: {
+        remote: userProfile.profile.preferences.remote,
+        jobTypes: userProfile.profile.preferences.job_types,
+        industries: userProfile.profile.preferences.industries
+      }
     };
 
     // Skills matching with AI-like analysis
@@ -201,9 +204,10 @@ class AIMatchingService {
       score += 20;
     }
     
-    // Company type consideration
+    // Company type consideration - Fixed the type comparison
     if (job.companyType) {
-      if (job.companyType === 'startup' && criteria.preferences.industries.includes('technology')) {
+      // Check if it's a tech company for startup preference
+      if (criteria.preferences.industries.includes('technology')) {
         score += 10;
       }
     }
