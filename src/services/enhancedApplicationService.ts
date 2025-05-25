@@ -9,7 +9,7 @@ interface ApplicationNote {
   type: 'general' | 'interview' | 'follow_up' | 'rejection';
 }
 
-interface EnhancedJobApplication extends JobApplication {
+interface EnhancedJobApplication extends Omit<JobApplication, 'notes'> {
   notes: ApplicationNote[];
   interview_date?: string;
   salary_offered?: number;
