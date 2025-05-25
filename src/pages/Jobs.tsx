@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -14,7 +13,10 @@ import AutomationSettings from "@/components/AutomationSettings";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { useAuth } from "@/hooks/useAuth";
 import { jobApi, JobSearchParams } from "@/services/jobApi";
-import { applicationService } from "@/services/applicationService";
+import { enhancedApplicationService } from "@/services/enhancedApplicationService";
+import { savedSearchService } from "@/services/savedSearchService";
+import { resumeService } from "@/services/resumeService";
+import { jobAlertService } from "@/services/jobAlertService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -24,7 +26,8 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { Loader2, User, LogOut } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, User, LogOut, Bell, Save, TrendingUp } from "lucide-react";
 
 type SortOption = 'relevance' | 'date-newest' | 'date-oldest' | 'salary-highest' | 'salary-lowest';
 
@@ -38,6 +41,8 @@ const Jobs = () => {
   const [sortOption, setSortOption] = useState<SortOption>('relevance');
   const [loading, setLoading] = useState(true);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [applicationMetrics, setApplicationMetrics] = useState<any>(null);
+  const [activeAlerts, setActiveAlerts] = useState(0);
   const [searchParams, setSearchParams] = useState<JobSearchParams>({
     query: '',
     location: '',
@@ -62,10 +67,13 @@ const Jobs = () => {
     benefits: []
   });
 
-  // Load initial jobs
+  // Load initial jobs and user data
   useEffect(() => {
     loadJobs();
-  }, []);
+    if (user) {
+      loadUserData();
+    }
+  }, [user]);
 
   // Update view mode based on screen size
   useEffect(() => {
@@ -75,7 +83,7 @@ const Jobs = () => {
   // Load user's saved and applied jobs
   useEffect(() => {
     if (user) {
-      const applications = applicationService.getUserApplications(user.id);
+      const applications = enhancedApplicationService.getUserApplications(user.id);
       setAppliedJobIds(applications.map(app => app.job_id));
       
       // Load saved jobs from localStorage
@@ -83,6 +91,18 @@ const Jobs = () => {
       setSavedJobIds(savedJobs);
     }
   }, [user]);
+
+  const loadUserData = async () => {
+    if (!user) return;
+    
+    // Load application metrics
+    const metrics = enhancedApplicationService.getApplicationMetrics(user.id);
+    setApplicationMetrics(metrics);
+    
+    // Load active alerts count
+    const alerts = jobAlertService.getAlerts(user.id);
+    setActiveAlerts(alerts.filter(alert => alert.is_active).length);
+  };
 
   const loadJobs = async (params: Partial<JobSearchParams> = {}) => {
     setLoading(true);
@@ -94,6 +114,14 @@ const Jobs = () => {
       
       if (response.jobs.length > 0 && !selectedJob) {
         setSelectedJob(response.jobs[0]);
+      }
+
+      // Check for job alerts if user is logged in
+      if (user) {
+        const alertMatches = await jobAlertService.checkAlertsForNewJobs(user.id, response.jobs);
+        alertMatches.forEach(({ alert, matchingJobs }) => {
+          jobAlertService.triggerNotification(user.id, alert, matchingJobs);
+        });
       }
     } catch (error) {
       toast({
@@ -159,9 +187,28 @@ const Jobs = () => {
         return;
       }
 
-      // Submit application
-      await applicationService.submitApplication(job, user.id);
+      // Get user's default resume and cover letter
+      const defaultResume = resumeService.getDefaultResume(user.id);
+      const defaultCoverLetter = resumeService.getDefaultCoverLetter(user.id);
+
+      // Submit application with enhanced tracking
+      await enhancedApplicationService.submitApplication(
+        job, 
+        user.id,
+        defaultResume?.name,
+        defaultCoverLetter?.name,
+        `Applied via job search platform to ${job.company}`
+      );
+
+      // Update usage counts
+      if (defaultResume) {
+        await resumeService.updateResumeUsage(user.id, defaultResume.id);
+      }
+
       setAppliedJobIds([...appliedJobIds, job.id]);
+      
+      // Refresh metrics
+      loadUserData();
       
       toast({
         title: "Application submitted",
@@ -175,6 +222,29 @@ const Jobs = () => {
     } catch (error) {
       toast({
         title: "Application failed",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSaveSearch = async () => {
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
+
+    const searchName = `Search: ${activeFilters.search || 'All jobs'} in ${activeFilters.location || 'All locations'}`;
+    
+    try {
+      await savedSearchService.saveSearch(searchName, activeFilters, user.id);
+      toast({
+        title: "Search saved",
+        description: "You can access this search from your saved searches.",
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to save search",
         description: "Please try again later.",
         variant: "destructive",
       });
@@ -270,7 +340,15 @@ const Jobs = () => {
             <div className="flex items-center space-x-4">
               {user ? (
                 <div className="flex items-center space-x-4">
-                  <span className="text-sm text-gray-600">Welcome, {user.name}</span>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-gray-600">Welcome, {user.name}</span>
+                    {activeAlerts > 0 && (
+                      <Badge variant="outline" className="bg-blue-50 text-blue-600">
+                        <Bell className="w-3 h-3 mr-1" />
+                        {activeAlerts} alerts
+                      </Badge>
+                    )}
+                  </div>
                   <Button variant="outline" size="sm" onClick={logout}>
                     <LogOut className="w-4 h-4 mr-2" />
                     Logout
@@ -288,12 +366,63 @@ const Jobs = () => {
               </div>
             </div>
           </div>
+
+          {/* Application Metrics Dashboard */}
+          {user && applicationMetrics && (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-2">
+                    <TrendingUp className="h-4 w-4 text-blue-600" />
+                    <div>
+                      <p className="text-sm text-gray-600">Total Applied</p>
+                      <p className="text-2xl font-bold">{applicationMetrics.totalApplications}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Response Rate</p>
+                    <p className="text-2xl font-bold text-green-600">{applicationMetrics.responseRate.toFixed(1)}%</p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Interview Rate</p>
+                    <p className="text-2xl font-bold text-purple-600">{applicationMetrics.interviewRate.toFixed(1)}%</p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Offer Rate</p>
+                    <p className="text-2xl font-bold text-orange-600">{applicationMetrics.offerRate.toFixed(1)}%</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
           
           {/* Enhanced Job Filtering */}
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
             <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="font-semibold text-lg">Filter Jobs</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Find jobs that match your preferences</p>
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="font-semibold text-lg">Filter Jobs</h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Find jobs that match your preferences</p>
+                </div>
+                {user && (
+                  <Button variant="outline" size="sm" onClick={handleSaveSearch}>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Search
+                  </Button>
+                )}
+              </div>
             </div>
             <div className="p-4">
               <JobFiltersSection onApplyFilters={applyFilters} />
