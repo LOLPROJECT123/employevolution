@@ -9,10 +9,9 @@ import { JobApplicationProvider } from "@/contexts/JobApplicationContext";
 import Index from "./pages/Index";
 import Jobs from "./pages/Jobs";
 import JobAutomation from "./pages/JobAutomation";
-import ResumePost from "./pages/ResumePost";
+import ResumeTools from "./pages/ResumeTools";
 import Networking from "./pages/Networking";
 import Dashboard from "./pages/Dashboard";
-import ResumeTools from "./pages/ResumeTools";
 import InterviewPractice from "./pages/InterviewPractice";
 import Referrals from "./pages/Referrals";
 import SalaryNegotiations from "./pages/SalaryNegotiations";
@@ -34,11 +33,10 @@ function App() {
                 <Route path="/" element={<Index />} />
                 <Route path="/jobs" element={<Jobs />} />
                 <Route path="/job-automation" element={<JobAutomation />} />
-                <Route path="/resume-post" element={<ResumePost />} />
-                <Route path="/networking" element={<Networking />} />
-                <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/resume-tools" element={<ResumeTools />} />
                 <Route path="/resume-tools/:tab" element={<ResumeTools />} />
+                <Route path="/networking" element={<Networking />} />
+                <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/interview-practice" element={<InterviewPractice />} />
                 <Route path="/referrals" element={<Referrals />} />
                 <Route path="/salary-negotiations" element={<SalaryNegotiations />} />

@@ -28,12 +28,35 @@ export interface AppliedJob {
   skills: string[];
 }
 
+export interface SavedJob {
+  id: string;
+  title: string;
+  company: string;
+  location: string;
+  salary?: {
+    min: number;
+    max: number;
+    currency: string;
+  };
+  type: 'full-time' | 'part-time' | 'contract' | 'internship';
+  level: 'entry' | 'mid' | 'senior' | 'lead' | 'executive';
+  description: string;
+  requirements: string[];
+  postedAt: string;
+  skills: string[];
+  savedAt: string;
+}
+
 interface JobApplicationContextType {
   applications: JobApplication[];
   appliedJobs: AppliedJob[];
+  savedJobs: SavedJob[];
   addApplication: (application: Omit<JobApplication, 'id'>) => void;
   updateApplicationStatus: (id: string, status: JobApplication['status']) => void;
   addAppliedJob: (job: AppliedJob) => void;
+  applyToJob: (job: AppliedJob) => void;
+  saveJob: (job: SavedJob) => void;
+  getApplicationByJobId: (jobId: string) => JobApplication | undefined;
 }
 
 const JobApplicationContext = createContext<JobApplicationContextType | undefined>(undefined);
@@ -41,11 +64,13 @@ const JobApplicationContext = createContext<JobApplicationContextType | undefine
 export const JobApplicationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [appliedJobs, setAppliedJobs] = useState<AppliedJob[]>([]);
+  const [savedJobs, setSavedJobs] = useState<SavedJob[]>([]);
 
   // Load data from localStorage on mount
   useEffect(() => {
     const savedApplications = localStorage.getItem('jobApplications');
-    const savedJobs = localStorage.getItem('appliedJobs');
+    const savedAppliedJobs = localStorage.getItem('appliedJobs');
+    const savedJobsList = localStorage.getItem('savedJobs');
     
     if (savedApplications) {
       try {
@@ -55,11 +80,19 @@ export const JobApplicationProvider: React.FC<{ children: React.ReactNode }> = (
       }
     }
     
-    if (savedJobs) {
+    if (savedAppliedJobs) {
       try {
-        setAppliedJobs(JSON.parse(savedJobs));
+        setAppliedJobs(JSON.parse(savedAppliedJobs));
       } catch (error) {
         console.error('Error loading applied jobs:', error);
+      }
+    }
+
+    if (savedJobsList) {
+      try {
+        setSavedJobs(JSON.parse(savedJobsList));
+      } catch (error) {
+        console.error('Error loading saved jobs:', error);
       }
     }
   }, []);
@@ -72,6 +105,10 @@ export const JobApplicationProvider: React.FC<{ children: React.ReactNode }> = (
   useEffect(() => {
     localStorage.setItem('appliedJobs', JSON.stringify(appliedJobs));
   }, [appliedJobs]);
+
+  useEffect(() => {
+    localStorage.setItem('savedJobs', JSON.stringify(savedJobs));
+  }, [savedJobs]);
 
   const addApplication = (application: Omit<JobApplication, 'id'>) => {
     const newApplication: JobApplication = {
@@ -97,13 +134,38 @@ export const JobApplicationProvider: React.FC<{ children: React.ReactNode }> = (
     });
   };
 
+  const applyToJob = (job: AppliedJob) => {
+    addAppliedJob(job);
+    addApplication({
+      jobId: job.id,
+      status: 'applied',
+      appliedAt: new Date().toISOString()
+    });
+  };
+
+  const saveJob = (job: SavedJob) => {
+    setSavedJobs(prev => {
+      const exists = prev.find(j => j.id === job.id);
+      if (exists) return prev;
+      return [...prev, job];
+    });
+  };
+
+  const getApplicationByJobId = (jobId: string) => {
+    return applications.find(app => app.jobId === jobId);
+  };
+
   return (
     <JobApplicationContext.Provider value={{
       applications,
       appliedJobs,
+      savedJobs,
       addApplication,
       updateApplicationStatus,
-      addAppliedJob
+      addAppliedJob,
+      applyToJob,
+      saveJob,
+      getApplicationByJobId
     }}>
       {children}
     </JobApplicationContext.Provider>
