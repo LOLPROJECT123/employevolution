@@ -1,3 +1,4 @@
+
 import { enhancedApplicationService } from './enhancedApplicationService';
 import { Job } from '@/types/job';
 import { ApplicationStatus } from '@/types/auth';
@@ -72,32 +73,6 @@ class AnalyticsService {
       offerRate: basicMetrics.offerRate,
       avgResponseTime: basicMetrics.avgResponseTime,
       activeApplications
-    };
-  }
-
-  private generateBenchmarks(metrics: any) {
-    // Industry benchmark data (these would be real industry averages in production)
-    const industryBenchmarks = {
-      responseRate: 25,
-      interviewRate: 15,
-      offerRate: 8
-    };
-
-    const compareToIndustry = (userRate: number, industryRate: number): 'above' | 'below' | 'average' => {
-      if (userRate > industryRate * 1.1) return 'above';
-      if (userRate < industryRate * 0.9) return 'below';
-      return 'average';
-    };
-
-    return {
-      industryAvgResponseRate: industryBenchmarks.responseRate,
-      industryAvgInterviewRate: industryBenchmarks.interviewRate,
-      industryAvgOfferRate: industryBenchmarks.offerRate,
-      yourPerformanceVsIndustry: {
-        responseRate: compareToIndustry(metrics.responseRate, industryBenchmarks.responseRate),
-        interviewRate: compareToIndustry(metrics.interviewRate, industryBenchmarks.interviewRate),
-        offerRate: compareToIndustry(metrics.offerRate, industryBenchmarks.offerRate)
-      }
     };
   }
 
@@ -339,6 +314,32 @@ class AnalyticsService {
     }
 
     return recommendations;
+  }
+
+  private generateBenchmarks(metrics: any) {
+    // Industry benchmark data (these would be real industry averages in production)
+    const industryBenchmarks = {
+      responseRate: 25,
+      interviewRate: 15,
+      offerRate: 8
+    };
+
+    const compareToIndustry = (userRate: number, industryRate: number) => {
+      if (userRate > industryRate * 1.1) return 'above';
+      if (userRate < industryRate * 0.9) return 'below';
+      return 'average';
+    };
+
+    return {
+      industryAvgResponseRate: industryBenchmarks.responseRate,
+      industryAvgInterviewRate: industryBenchmarks.interviewRate,
+      industryAvgOfferRate: industryBenchmarks.offerRate,
+      yourPerformanceVsIndustry: {
+        responseRate: compareToIndustry(metrics.responseRate, industryBenchmarks.responseRate),
+        interviewRate: compareToIndustry(metrics.interviewRate, industryBenchmarks.interviewRate),
+        offerRate: compareToIndustry(metrics.offerRate, industryBenchmarks.offerRate)
+      }
+    };
   }
 
   // Generate weekly/monthly reports
