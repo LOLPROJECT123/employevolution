@@ -42,6 +42,141 @@ export type Database = {
         }
         Relationships: []
       }
+      communications: {
+        Row: {
+          application_id: string | null
+          communication_type: string
+          contact_id: string | null
+          content: string | null
+          created_at: string | null
+          direction: string
+          follow_up_date: string | null
+          follow_up_required: boolean | null
+          id: string
+          response_received: boolean | null
+          scheduled_for: string | null
+          sent_at: string | null
+          status: string | null
+          subject: string | null
+          template_used: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          application_id?: string | null
+          communication_type: string
+          contact_id?: string | null
+          content?: string | null
+          created_at?: string | null
+          direction: string
+          follow_up_date?: string | null
+          follow_up_required?: boolean | null
+          id?: string
+          response_received?: boolean | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string | null
+          subject?: string | null
+          template_used?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          application_id?: string | null
+          communication_type?: string
+          contact_id?: string | null
+          content?: string | null
+          created_at?: string | null
+          direction?: string
+          follow_up_date?: string | null
+          follow_up_required?: boolean | null
+          id?: string
+          response_received?: boolean | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string | null
+          subject?: string | null
+          template_used?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communications_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communications_template_used_fkey"
+            columns: ["template_used"]
+            isOneToOne: false
+            referencedRelation: "email_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contacts: {
+        Row: {
+          company_name: string
+          contact_type: string
+          created_at: string | null
+          email: string
+          first_name: string
+          id: string
+          job_title: string | null
+          last_contacted: string | null
+          last_name: string
+          linkedin_url: string | null
+          notes: string | null
+          phone: string | null
+          relationship_strength: string | null
+          source: string | null
+          tags: string[] | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          company_name: string
+          contact_type: string
+          created_at?: string | null
+          email: string
+          first_name: string
+          id?: string
+          job_title?: string | null
+          last_contacted?: string | null
+          last_name: string
+          linkedin_url?: string | null
+          notes?: string | null
+          phone?: string | null
+          relationship_strength?: string | null
+          source?: string | null
+          tags?: string[] | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          company_name?: string
+          contact_type?: string
+          created_at?: string | null
+          email?: string
+          first_name?: string
+          id?: string
+          job_title?: string | null
+          last_contacted?: string | null
+          last_name?: string
+          linkedin_url?: string | null
+          notes?: string | null
+          phone?: string | null
+          relationship_strength?: string | null
+          source?: string | null
+          tags?: string[] | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       cover_letters: {
         Row: {
           content: string
@@ -120,6 +255,123 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      email_templates: {
+        Row: {
+          body: string
+          category: string
+          created_at: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          subject: string
+          updated_at: string | null
+          usage_count: number | null
+          user_id: string
+          variables: Json | null
+        }
+        Insert: {
+          body: string
+          category: string
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          subject: string
+          updated_at?: string | null
+          usage_count?: number | null
+          user_id: string
+          variables?: Json | null
+        }
+        Update: {
+          body?: string
+          category?: string
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          subject?: string
+          updated_at?: string | null
+          usage_count?: number | null
+          user_id?: string
+          variables?: Json | null
+        }
+        Relationships: []
+      }
+      follow_up_sequence_steps: {
+        Row: {
+          created_at: string | null
+          delay_days: number
+          id: string
+          is_active: boolean | null
+          sequence_id: string | null
+          step_number: number
+          template_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          delay_days: number
+          id?: string
+          is_active?: boolean | null
+          sequence_id?: string | null
+          step_number: number
+          template_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          delay_days?: number
+          id?: string
+          is_active?: boolean | null
+          sequence_id?: string | null
+          step_number?: number
+          template_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follow_up_sequence_steps_sequence_id_fkey"
+            columns: ["sequence_id"]
+            isOneToOne: false
+            referencedRelation: "follow_up_sequences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follow_up_sequence_steps_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "email_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      follow_up_sequences: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          trigger_event: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          trigger_event: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          trigger_event?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       interviews: {
         Row: {
