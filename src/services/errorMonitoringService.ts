@@ -1,10 +1,15 @@
 interface ErrorContext {
-  userId?: string;
   route?: string;
-  userAgent?: string;
   timestamp?: string;
+  jobId?: string;
+  query?: string;
+  searchParams?: string;
+  userId?: string;
   sessionId?: string;
-  buildVersion?: string;
+  userAgent?: string;
+  component?: string;
+  action?: string;
+  metadata?: Record<string, any>;
 }
 
 interface ErrorReport {
@@ -12,7 +17,10 @@ interface ErrorReport {
   stack?: string;
   context: ErrorContext;
   severity: 'low' | 'medium' | 'high' | 'critical';
-  category: 'auth' | 'api' | 'ui' | 'performance' | 'security' | 'other';
+  category: 'ui' | 'api' | 'auth' | 'data' | 'network' | 'performance';
+  timestamp?: string;
+  userId?: string;
+  sessionId?: string;
 }
 
 class ErrorMonitoringService {

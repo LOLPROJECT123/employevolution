@@ -6,19 +6,36 @@ export interface Job {
   location: string;
   description: string;
   requirements?: string[];
+  responsibilities?: string[];
   salary?: {
     min: number;
     max: number;
     currency: string;
   };
-  type: 'full-time' | 'part-time' | 'contract' | 'internship';
-  level: 'entry' | 'mid' | 'senior' | 'executive';
+  type: 'full-time' | 'part-time' | 'contract' | 'internship' | 'temporary';
+  level: 'entry' | 'mid' | 'senior' | 'executive' | 'intern' | 'lead';
   postedAt: string;
   skills?: string[];
   remote?: boolean;
   applyUrl: string;
   source: string;
   matchPercentage?: number;
+  workModel?: 'onsite' | 'remote' | 'hybrid';
+  companySize?: string;
+  companyType?: string;
+  category?: string;
+  jobFunction?: string;
+  applicationDetails?: {
+    isAvailable: boolean;
+    applicantCount?: number;
+    easyApply?: boolean;
+  };
+  matchCriteria?: {
+    skillsMatch: number;
+    experienceMatch: number;
+    locationMatch: number;
+    salaryMatch: number;
+  };
   aiMatchData?: {
     overall: number;
     skillsMatch: number;
@@ -42,6 +59,23 @@ export interface JobSearchFilters {
   skills?: string[];
 }
 
+export interface JobFilters {
+  search: string;
+  location: string;
+  jobType: string[];
+  remote: boolean;
+  experienceLevels: string[];
+  education: string[];
+  salaryRange: [number, number];
+  skills: string[];
+  companyTypes: string[];
+  companySize: string[];
+  benefits: string[];
+  jobFunction?: string[];
+  companies?: string[];
+  title?: string[];
+}
+
 export interface JobAlert {
   id: string;
   name: string;
@@ -51,3 +85,13 @@ export interface JobAlert {
   createdAt: string;
   lastTriggered?: string;
 }
+
+export interface SavedSearch {
+  id: string;
+  name: string;
+  filters: JobFilters;
+  createdAt: string;
+  lastUsed?: string;
+}
+
+export type JobStatus = 'applied' | 'interview' | 'offer' | 'rejected' | 'saved';

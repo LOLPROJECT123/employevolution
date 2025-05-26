@@ -1,4 +1,3 @@
-
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import Navbar from "@/components/Navbar";
@@ -97,6 +96,72 @@ const features = [
     icon: BriefcaseIcon,
     delay: "600",
     path: "/jobs"
+  }
+];
+
+const mockJobs: Job[] = [
+  {
+    id: '1',
+    title: 'Senior Software Engineer',
+    company: 'TechCorp',
+    location: 'San Francisco, CA',
+    description: 'We are looking for a senior software engineer to join our team...',
+    requirements: ['5+ years experience', 'React', 'TypeScript'],
+    salary: {
+      min: 120000,
+      max: 180000,
+      currency: 'USD'
+    },
+    type: 'full-time',
+    level: 'senior',
+    postedAt: '2024-01-15T10:00:00Z',
+    skills: ['React', 'TypeScript', 'Node.js'],
+    remote: true,
+    applyUrl: 'https://techcorp.com/careers/senior-engineer',
+    source: 'company_website',
+    matchPercentage: 95
+  },
+  {
+    id: '2',
+    title: 'Product Manager',
+    company: 'StartupXYZ',
+    location: 'Remote',
+    description: 'Join our product team to drive innovation...',
+    requirements: ['3+ years PM experience', 'Agile/Scrum'],
+    salary: {
+      min: 100000,
+      max: 140000,
+      currency: 'USD'
+    },
+    type: 'full-time',
+    level: 'mid',
+    postedAt: '2024-01-14T14:30:00Z',
+    skills: ['Product Management', 'Agile', 'Analytics'],
+    remote: true,
+    applyUrl: 'https://startupxyz.com/jobs/product-manager',
+    source: 'job_board',
+    matchPercentage: 87
+  },
+  {
+    id: '3',
+    title: 'Frontend Developer',
+    company: 'DesignHub',
+    location: 'New York, NY',
+    description: 'Create beautiful user interfaces with modern technologies...',
+    requirements: ['2+ years React experience', 'CSS/SCSS'],
+    salary: {
+      min: 80000,
+      max: 120000,
+      currency: 'USD'
+    },
+    type: 'full-time',
+    level: 'mid',
+    postedAt: '2024-01-13T09:15:00Z',
+    skills: ['React', 'CSS', 'JavaScript'],
+    remote: false,
+    applyUrl: 'https://designhub.com/careers/frontend-dev',
+    source: 'company_website',
+    matchPercentage: 78
   }
 ];
 
@@ -213,7 +278,7 @@ const Index = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-            {sampleJobs.map((job) => (
+            {mockJobs.map((job) => (
               <JobCard key={job.id} job={job} onApply={handleApply} />
             ))}
           </div>
