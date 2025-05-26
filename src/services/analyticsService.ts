@@ -1,3 +1,4 @@
+
 interface JobApplicationMetrics {
   totalApplications: number;
   responseRate: number;
@@ -105,169 +106,6 @@ class AnalyticsService {
       { jobTitle: 'Product Manager', avgSalary: 155000, growth: 8.7 },
       { jobTitle: 'DevOps Engineer', avgSalary: 140000, growth: 18.5 },
       { jobTitle: 'UI/UX Designer', avgSalary: 125000, growth: 12.3 }
-    ];
-  }
-
-  generateApplicationAnalytics(userId: string) {
-    console.log(`Generating analytics for user: ${userId}`);
-    
-    return {
-      overview: {
-        totalApplications: this.applicationData.length,
-        responseRate: this.calculateResponseRate(),
-        interviewRate: this.calculateInterviewRate(),
-        offerRate: this.calculateOfferRate(),
-        avgResponseTime: this.calculateAverageResponseTime(),
-        activeApplications: this.getActiveApplications()
-      },
-      trends: {
-        applicationsOverTime: this.getApplicationTrends(),
-        responseRateOverTime: this.getResponseRateTrends(),
-        statusDistribution: this.getStatusDistribution()
-      },
-      insights: {
-        topPerformingSkills: this.getTopPerformingSkills(),
-        bestCompanyTypes: this.getBestCompanyTypes(),
-        optimalApplicationTiming: this.getOptimalTiming(),
-        salaryAnalysis: {
-          avgOfferedSalary: this.getAverageSalary(),
-          salaryRangeDistribution: this.getSalaryDistribution()
-        }
-      },
-      recommendations: this.generateRecommendations(),
-      benchmarks: {
-        industryAvgResponseRate: 25,
-        industryAvgInterviewRate: 15,
-        industryAvgOfferRate: 8,
-        yourPerformanceVsIndustry: {
-          responseRate: this.calculateResponseRate() > 25 ? 'above' : 'below',
-          interviewRate: this.calculateInterviewRate() > 15 ? 'above' : 'below',
-          offerRate: this.calculateOfferRate() > 8 ? 'above' : 'below'
-        }
-      }
-    };
-  }
-
-  private calculateResponseRate(): number {
-    const responsesReceived = this.applicationData.filter(app => app.responseDate).length;
-    return this.applicationData.length > 0 ? (responsesReceived / this.applicationData.length) * 100 : 0;
-  }
-
-  private calculateInterviewRate(): number {
-    const interviews = this.applicationData.filter(app => app.status === 'interview' || app.status === 'offer').length;
-    return this.applicationData.length > 0 ? (interviews / this.applicationData.length) * 100 : 0;
-  }
-
-  private calculateOfferRate(): number {
-    const offers = this.applicationData.filter(app => app.status === 'offer').length;
-    return this.applicationData.length > 0 ? (offers / this.applicationData.length) * 100 : 0;
-  }
-
-  private calculateAverageResponseTime(): number {
-    const responseTimes = this.applicationData
-      .filter(app => app.responseDate)
-      .map(app => app.responseDate.getTime() - app.appliedDate.getTime());
-    return responseTimes.length > 0 
-      ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length / (24 * 60 * 60 * 1000)
-      : 0;
-  }
-
-  private getActiveApplications(): number {
-    return this.applicationData.filter(app => 
-      app.status !== 'rejected' && app.status !== 'offer'
-    ).length;
-  }
-
-  private getApplicationTrends() {
-    const trends = this.applicationData.reduce((acc, app) => {
-      const date = app.appliedDate.toISOString().slice(0, 10);
-      acc[date] = (acc[date] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    return Object.entries(trends)
-      .map(([date, count]) => ({ date, count: count as number }))
-      .sort((a, b) => a.date.localeCompare(b.date))
-      .slice(-30);
-  }
-
-  private getResponseRateTrends() {
-    // Generate mock response rate trends
-    return Array.from({ length: 30 }, (_, i) => ({
-      date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-      rate: Math.random() * 30 + 10
-    }));
-  }
-
-  private getStatusDistribution() {
-    const distribution = this.applicationData.reduce((acc, app) => {
-      acc[app.status] = (acc[app.status] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    const total = this.applicationData.length;
-    return Object.entries(distribution).map(([status, count]) => ({
-      status,
-      count: count as number,
-      percentage: total > 0 ? (count as number / total) * 100 : 0
-    }));
-  }
-
-  private getTopPerformingSkills() {
-    return [
-      { skill: 'React', responseRate: 45, applications: 25 },
-      { skill: 'TypeScript', responseRate: 42, applications: 18 },
-      { skill: 'Python', responseRate: 38, applications: 22 },
-      { skill: 'AWS', responseRate: 35, applications: 15 },
-      { skill: 'Node.js', responseRate: 33, applications: 20 }
-    ];
-  }
-
-  private getBestCompanyTypes() {
-    return [
-      { type: 'Startup', successRate: 35, applications: 30 },
-      { type: 'Big Tech', successRate: 25, applications: 40 },
-      { type: 'Mid-size', successRate: 40, applications: 25 },
-      { type: 'Enterprise', successRate: 20, applications: 35 }
-    ];
-  }
-
-  private getOptimalTiming() {
-    return [
-      { dayOfWeek: 'Tuesday', successRate: 35 },
-      { dayOfWeek: 'Wednesday', successRate: 32 },
-      { dayOfWeek: 'Thursday', successRate: 30 },
-      { dayOfWeek: 'Monday', successRate: 25 },
-      { dayOfWeek: 'Friday', successRate: 20 }
-    ];
-  }
-
-  private getAverageSalary(): number {
-    const salaries = this.applicationData
-      .filter(app => app.salary)
-      .map(app => app.salary);
-    return salaries.length > 0 
-      ? salaries.reduce((sum, salary) => sum + salary, 0) / salaries.length
-      : 0;
-  }
-
-  private getSalaryDistribution() {
-    return [
-      { range: 'Under $80k', count: 15 },
-      { range: '$80k - $120k', count: 35 },
-      { range: '$120k - $160k', count: 28 },
-      { range: '$160k - $200k', count: 15 },
-      { range: 'Over $200k', count: 7 }
-    ];
-  }
-
-  private generateRecommendations(): string[] {
-    return [
-      'Consider applying to more mid-size companies for better response rates',
-      'Add TypeScript to your skill set to improve match rates',
-      'Tuesday and Wednesday show the highest success rates for applications',
-      'Follow up on applications after 1 week if no response received',
-      'Tailor your resume keywords to match job descriptions more closely'
     ];
   }
 
@@ -382,7 +220,7 @@ class AnalyticsService {
     }, {} as Record<string, number>);
 
     return Object.entries(grouped)
-      .map(([month, count]) => ({ month, count: count as number }))
+      .map(([month, count]) => ({ month, count }))
       .sort((a, b) => a.month.localeCompare(b.month))
       .slice(-12); // Last 12 months
   }
@@ -483,6 +321,7 @@ class AnalyticsService {
       }
       acc[search.location].searches++;
       
+      // Get salary data from applications in this location
       const applicationsInLocation = this.applicationData.filter(app => app.location === search.location);
       applicationsInLocation.forEach(app => {
         acc[search.location].totalSalary += app.salary;
@@ -503,7 +342,7 @@ class AnalyticsService {
 
   private getSearchTrends(): Array<{ date: string; searches: number; applications: number }> {
     const trends = this.searchData.reduce((acc, search) => {
-      const date = search.searchDate.toISOString().slice(0, 10);
+      const date = search.searchDate.toISOString().slice(0, 10); // YYYY-MM-DD format
       if (!acc[date]) {
         acc[date] = { searches: 0, applications: 0 };
       }
@@ -513,9 +352,9 @@ class AnalyticsService {
     }, {} as Record<string, { searches: number; applications: number }>);
 
     return Object.entries(trends)
-      .map(([date, stats]) => ({ date, searches: stats.searches, applications: stats.applications }))
+      .map(([date, stats]) => ({ date, ...stats }))
       .sort((a, b) => a.date.localeCompare(b.date))
-      .slice(-30);
+      .slice(-30); // Last 30 days
   }
 
   private getDemandBySkill(): Array<{ skill: string; jobCount: number; growth: number }> {

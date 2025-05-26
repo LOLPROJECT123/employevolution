@@ -273,21 +273,14 @@ class PushNotificationService {
           icon: payload.icon,
           badge: payload.badge,
           data: payload.data,
-          requireInteraction: payload.requireInteraction
-          // Note: vibrate is not part of standard NotificationOptions
+          requireInteraction: payload.requireInteraction,
+          vibrate: payload.vibrate
         });
       }
 
       // For scheduled notifications or when the app is in background, use service worker
       const registration = await navigator.serviceWorker.ready;
-      await registration.showNotification(payload.title, {
-        body: payload.body,
-        icon: payload.icon,
-        badge: payload.badge,
-        data: payload.data,
-        actions: payload.actions,
-        requireInteraction: payload.requireInteraction
-      });
+      await registration.showNotification(payload.title, payload);
       
       console.log('Notification sent:', payload);
     } catch (error) {

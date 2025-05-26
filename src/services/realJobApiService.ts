@@ -113,6 +113,3 @@ class RealJobApiService {
 }
 
 export const realJobApiService = new RealJobApiService();
-
-// Also export the browser service for Jobs page
-export { realBrowserService } from './realBrowserService';
