@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { analyticsService } from "@/services/analyticsService";
+import { analyticsService, AnalyticsData } from "@/services/analyticsService";
 import {
   AreaChart,
   Area,
@@ -16,43 +16,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
-interface AnalyticsData {
-  overview: {
-    totalApplications: number;
-    responseRate: number;
-    interviewRate: number;
-    offerRate: number;
-    avgResponseTime: number;
-    activeApplications: number;
-  };
-  trends: {
-    applicationsOverTime: Array<{ month: string; count: number }>;
-    responseRateOverTime: Array<{ month: string; count: number }>;
-    statusDistribution: Array<{ status: string; count: number }>;
-  };
-  insights: {
-    topPerformingSkills: string[];
-    industryComparison: {
-      responseRate: 'above' | 'below' | 'average';
-      timeToInterview: 'faster' | 'slower' | 'average';
-    };
-    recommendations: string[];
-  };
-  benchmarks: {
-    industryAverages: {
-      responseRate: number;
-      interviewRate: number;
-      offerRate: number;
-    };
-    yourPerformanceVsIndustry: {
-      responseRate: 'above' | 'below' | 'average';
-      interviewRate: 'above' | 'below' | 'average';
-      offerRate: 'above' | 'below' | 'average';
-    };
-  };
-  recommendations: string[];
-}
 
 export const AnalyticsDashboard = () => {
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);

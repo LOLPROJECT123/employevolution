@@ -1,5 +1,6 @@
+
 import { useState } from 'react';
-import { Job, JobStatus } from "@/types/job";
+import { Job } from "@/types/job";
 import { 
   Tabs, 
   TabsContent, 
@@ -25,6 +26,8 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { useJobApplications } from "@/contexts/JobApplicationContext";
+
+type ApplicationStatus = "applied" | "interviewing" | "offered" | "rejected" | "accepted";
 
 interface SavedAndAppliedJobsProps {
   onSelect: (job: Job) => void;
@@ -64,7 +67,7 @@ export function SavedAndAppliedJobs({
   const applyToJob = propOnApply || contextApplyToJob;
   const saveJob = propOnSave || contextSaveJob;
   
-  const handleStatusChange = (jobId: string, status: JobStatus) => {
+  const handleStatusChange = (jobId: string, status: ApplicationStatus) => {
     const application = getApplicationByJobId(jobId);
     if (application) {
       updateApplicationStatus(application.id, status);
@@ -153,7 +156,7 @@ export function SavedAndAppliedJobs({
                           </span>
                           <Select
                             value={application?.status || "applied"}
-                            onValueChange={(value) => handleStatusChange(job.id, value as JobStatus)}
+                            onValueChange={(value) => handleStatusChange(job.id, value as ApplicationStatus)}
                           >
                             <SelectTrigger className="w-[160px] h-8">
                               <SelectValue placeholder="Update status" />

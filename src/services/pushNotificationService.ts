@@ -1,4 +1,3 @@
-
 interface PushSubscription {
   endpoint: string;
   keys: {
@@ -12,373 +11,192 @@ interface NotificationPayload {
   body: string;
   icon?: string;
   badge?: string;
+  tag?: string;
   data?: any;
-  actions?: Array<{
-    action: string;
-    title: string;
-    icon?: string;
-  }>;
-  requireInteraction?: boolean;
-  vibrate?: number[];
+}
+
+interface NotificationPermissionStatus {
+  granted: boolean;
+  denied: boolean;
+  prompt: boolean;
 }
 
 class PushNotificationService {
+  private registration: ServiceWorkerRegistration | null = null;
   private subscription: PushSubscription | null = null;
-  private isSupported = false;
-  private isPermissionGranted = false;
+  private isSupported: boolean = false;
 
   constructor() {
-    this.checkSupport();
-    this.checkPermission();
+    this.isSupported = this.checkSupport();
+    this.init();
   }
 
-  private checkSupport(): void {
-    this.isSupported = 'serviceWorker' in navigator && 'PushManager' in window;
-    console.log('Push notifications supported:', this.isSupported);
+  private checkSupport(): boolean {
+    return (
+      'serviceWorker' in navigator &&
+      'PushManager' in window &&
+      'Notification' in window
+    );
   }
 
-  private checkPermission(): void {
-    if (!this.isSupported) return;
-    
-    this.isPermissionGranted = Notification.permission === 'granted';
-    console.log('Push notification permission:', Notification.permission);
-  }
-
-  async requestPermission(): Promise<boolean> {
+  private async init(): Promise<void> {
     if (!this.isSupported) {
-      console.log('Push notifications not supported');
-      return false;
-    }
-
-    try {
-      const permission = await Notification.requestPermission();
-      this.isPermissionGranted = permission === 'granted';
-      
-      if (this.isPermissionGranted) {
-        console.log('Push notification permission granted');
-        await this.subscribeToPush();
-      } else {
-        console.log('Push notification permission denied');
-      }
-
-      return this.isPermissionGranted;
-    } catch (error) {
-      console.error('Error requesting notification permission:', error);
-      return false;
-    }
-  }
-
-  private async subscribeToPush(): Promise<void> {
-    try {
-      const registration = await navigator.serviceWorker.ready;
-      
-      // VAPID public key (in a real app, this would be from your server)
-      const vapidPublicKey = 'BMqSvZs...'; // This would be your actual VAPID public key
-      
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: this.urlBase64ToUint8Array(vapidPublicKey)
-      });
-
-      this.subscription = {
-        endpoint: subscription.endpoint,
-        keys: {
-          p256dh: this.arrayBufferToBase64(subscription.getKey('p256dh')!),
-          auth: this.arrayBufferToBase64(subscription.getKey('auth')!)
-        }
-      };
-
-      // Send subscription to server
-      await this.sendSubscriptionToServer(this.subscription);
-      
-      console.log('Push subscription successful:', this.subscription);
-    } catch (error) {
-      console.error('Failed to subscribe to push notifications:', error);
-    }
-  }
-
-  private async sendSubscriptionToServer(subscription: PushSubscription): Promise<void> {
-    try {
-      // In a real implementation, this would send to your backend
-      console.log('Sending subscription to server:', subscription);
-      
-      // Store locally for now
-      localStorage.setItem('pushSubscription', JSON.stringify(subscription));
-    } catch (error) {
-      console.error('Failed to send subscription to server:', error);
-    }
-  }
-
-  async scheduleJobAlert(alertData: {
-    jobTitle: string;
-    company: string;
-    location: string;
-    salary?: string;
-    matchPercentage?: number;
-  }): Promise<void> {
-    if (!this.isPermissionGranted) {
-      console.log('Push notifications not permitted');
+      console.warn('Push notifications are not supported in this browser');
       return;
     }
 
-    const payload: NotificationPayload = {
-      title: '🎯 New Job Match!',
-      body: `${alertData.jobTitle} at ${alertData.company} - ${alertData.location}`,
-      icon: '/favicon.ico',
-      badge: '/favicon.ico',
-      data: {
-        type: 'job-alert',
-        jobData: alertData,
-        url: '/jobs'
-      },
-      actions: [
-        {
-          action: 'view',
-          title: 'View Job',
-          icon: '/icons/view.png'
-        },
-        {
-          action: 'save',
-          title: 'Save for Later',
-          icon: '/icons/save.png'
-        }
-      ],
-      requireInteraction: true,
-      vibrate: [200, 100, 200]
-    };
-
-    await this.sendNotification(payload);
-  }
-
-  async scheduleInterviewReminder(reminderData: {
-    jobTitle: string;
-    company: string;
-    interviewTime: Date;
-    location: string;
-  }): Promise<void> {
-    if (!this.isPermissionGranted) return;
-
-    const timeUntil = reminderData.interviewTime.getTime() - Date.now();
-    const hoursUntil = Math.round(timeUntil / (1000 * 60 * 60));
-
-    const payload: NotificationPayload = {
-      title: '📅 Interview Reminder',
-      body: `${reminderData.jobTitle} interview at ${reminderData.company} in ${hoursUntil} hours`,
-      icon: '/favicon.ico',
-      data: {
-        type: 'interview-reminder',
-        interviewData: reminderData,
-        url: '/interviews'
-      },
-      actions: [
-        {
-          action: 'prepare',
-          title: 'Review Prep',
-          icon: '/icons/prepare.png'
-        },
-        {
-          action: 'directions',
-          title: 'Get Directions',
-          icon: '/icons/directions.png'
-        }
-      ],
-      requireInteraction: true,
-      vibrate: [100, 50, 100, 50, 100]
-    };
-
-    await this.sendNotification(payload);
-  }
-
-  async scheduleFollowUpReminder(followUpData: {
-    jobTitle: string;
-    company: string;
-    applicationDate: Date;
-    followUpType: 'email' | 'linkedin' | 'phone';
-  }): Promise<void> {
-    if (!this.isPermissionGranted) return;
-
-    const payload: NotificationPayload = {
-      title: '📮 Follow-up Reminder',
-      body: `Time to follow up on your ${followUpData.jobTitle} application at ${followUpData.company}`,
-      icon: '/favicon.ico',
-      data: {
-        type: 'follow-up-reminder',
-        followUpData,
-        url: '/applications'
-      },
-      actions: [
-        {
-          action: 'compose',
-          title: 'Send Follow-up',
-          icon: '/icons/email.png'
-        },
-        {
-          action: 'snooze',
-          title: 'Remind Later',
-          icon: '/icons/snooze.png'
-        }
-      ],
-      vibrate: [150, 75, 150]
-    };
-
-    await this.sendNotification(payload);
-  }
-
-  async scheduleApplicationDeadline(deadlineData: {
-    jobTitle: string;
-    company: string;
-    deadline: Date;
-    hoursLeft: number;
-  }): Promise<void> {
-    if (!this.isPermissionGranted) return;
-
-    const urgencyLevel = deadlineData.hoursLeft <= 24 ? 'urgent' : 'normal';
-    const emoji = urgencyLevel === 'urgent' ? '🚨' : '⏰';
-
-    const payload: NotificationPayload = {
-      title: `${emoji} Application Deadline`,
-      body: `${deadlineData.jobTitle} at ${deadlineData.company} - ${deadlineData.hoursLeft} hours left!`,
-      icon: '/favicon.ico',
-      data: {
-        type: 'application-deadline',
-        deadlineData,
-        urgency: urgencyLevel,
-        url: '/applications'
-      },
-      actions: [
-        {
-          action: 'apply',
-          title: 'Apply Now',
-          icon: '/icons/apply.png'
-        },
-        {
-          action: 'remind',
-          title: 'Remind in 1hr',
-          icon: '/icons/remind.png'
-        }
-      ],
-      requireInteraction: urgencyLevel === 'urgent',
-      vibrate: urgencyLevel === 'urgent' ? [200, 100, 200, 100, 200] : [150, 100, 150]
-    };
-
-    await this.sendNotification(payload);
-  }
-
-  private async sendNotification(payload: NotificationPayload): Promise<void> {
     try {
-      // For immediate notifications, use the Notification API
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification(payload.title, {
-          body: payload.body,
-          icon: payload.icon,
-          badge: payload.badge,
-          data: payload.data,
-          requireInteraction: payload.requireInteraction
-          // Note: vibrate is not part of standard NotificationOptions
-        });
-      }
-
-      // For scheduled notifications or when the app is in background, use service worker
-      const registration = await navigator.serviceWorker.ready;
-      await registration.showNotification(payload.title, {
-        body: payload.body,
-        icon: payload.icon,
-        badge: payload.badge,
-        data: payload.data,
-        actions: payload.actions,
-        requireInteraction: payload.requireInteraction
-      });
-      
-      console.log('Notification sent:', payload);
+      this.registration = await navigator.serviceWorker.register('/sw.js');
+      console.log('Service worker registered:', this.registration);
     } catch (error) {
-      console.error('Failed to send notification:', error);
+      console.error('Service worker registration failed:', error);
     }
   }
 
-  async scheduleBulkNotifications(notifications: Array<{
-    type: 'job-alert' | 'interview-reminder' | 'follow-up' | 'deadline';
-    data: any;
-    scheduleFor: Date;
-  }>): Promise<void> {
-    for (const notification of notifications) {
-      const delay = notification.scheduleFor.getTime() - Date.now();
-      
-      if (delay > 0) {
-        setTimeout(async () => {
-          switch (notification.type) {
-            case 'job-alert':
-              await this.scheduleJobAlert(notification.data);
-              break;
-            case 'interview-reminder':
-              await this.scheduleInterviewReminder(notification.data);
-              break;
-            case 'follow-up':
-              await this.scheduleFollowUpReminder(notification.data);
-              break;
-            case 'deadline':
-              await this.scheduleApplicationDeadline(notification.data);
-              break;
-          }
-        }, delay);
-      }
+  async requestPermission(): Promise<NotificationPermission> {
+    if (!this.isSupported) {
+      throw new Error('Push notifications are not supported');
+    }
+
+    const permission = await Notification.requestPermission();
+    console.log('Notification permission:', permission);
+    return permission;
+  }
+
+  getPermissionStatus(): NotificationPermissionStatus {
+    const permission = Notification.permission;
+    return {
+      granted: permission === 'granted',
+      denied: permission === 'denied',
+      prompt: permission === 'default'
+    };
+  }
+
+  async subscribe(): Promise<PushSubscription | null> {
+    if (!this.registration) {
+      throw new Error('Service worker not registered');
+    }
+
+    if (Notification.permission !== 'granted') {
+      throw new Error('Notification permission not granted');
+    }
+
+    try {
+      const subscription = await this.registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: this.urlBase64ToUint8Array(
+          'YOUR_VAPID_PUBLIC_KEY' // Replace with your actual VAPID public key
+        )
+      });
+
+      this.subscription = subscription as any;
+      console.log('Push subscription:', this.subscription);
+      return this.subscription;
+    } catch (error) {
+      console.error('Failed to subscribe to push notifications:', error);
+      return null;
     }
   }
 
   async unsubscribe(): Promise<boolean> {
+    if (!this.subscription) {
+      return true;
+    }
+
     try {
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.getSubscription();
-      
-      if (subscription) {
-        await subscription.unsubscribe();
-        this.subscription = null;
-        localStorage.removeItem('pushSubscription');
-        console.log('Push subscription removed');
-        return true;
-      }
-      
-      return false;
+      const result = await (this.subscription as any).unsubscribe();
+      this.subscription = null;
+      return result;
     } catch (error) {
       console.error('Failed to unsubscribe from push notifications:', error);
       return false;
     }
   }
 
-  getSubscriptionStatus(): {
-    isSupported: boolean;
-    isPermissionGranted: boolean;
-    isSubscribed: boolean;
-  } {
-    return {
-      isSupported: this.isSupported,
-      isPermissionGranted: this.isPermissionGranted,
-      isSubscribed: this.subscription !== null
+  showLocalNotification(payload: NotificationPayload): void {
+    if (!this.isSupported || Notification.permission !== 'granted') {
+      console.warn('Cannot show notification: not supported or permission not granted');
+      return;
+    }
+
+    const options: NotificationOptions = {
+      body: payload.body,
+      icon: payload.icon || '/favicon.ico',
+      badge: payload.badge,
+      tag: payload.tag,
+      data: payload.data,
+      requireInteraction: true,
+      timestamp: Date.now()
     };
+
+    new Notification(payload.title, options);
   }
 
-  // Utility functions
+  // Helper method to convert VAPID key
   private urlBase64ToUint8Array(base64String: string): Uint8Array {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding)
+      .replace(/-/g, '+')
+      .replace(/_/g, '/');
+
     const rawData = window.atob(base64);
     const outputArray = new Uint8Array(rawData.length);
-    
+
     for (let i = 0; i < rawData.length; ++i) {
       outputArray[i] = rawData.charCodeAt(i);
     }
-    
     return outputArray;
   }
 
-  private arrayBufferToBase64(buffer: ArrayBuffer): string {
-    const bytes = new Uint8Array(buffer);
-    let binary = '';
-    
-    for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    
-    return window.btoa(binary);
+  // Job-specific notification methods
+  notifyNewJobMatch(job: any): void {
+    this.showLocalNotification({
+      title: 'New Job Match Found!',
+      body: `${job.title} at ${job.company} matches your preferences`,
+      icon: '/favicon.ico',
+      tag: 'job-match',
+      data: { jobId: job.id, type: 'job-match' }
+    });
+  }
+
+  notifyApplicationStatusChange(jobTitle: string, company: string, status: string): void {
+    this.showLocalNotification({
+      title: 'Application Status Update',
+      body: `Your application for ${jobTitle} at ${company} is now ${status}`,
+      icon: '/favicon.ico',
+      tag: 'status-update',
+      data: { type: 'status-update', status }
+    });
+  }
+
+  notifyInterviewReminder(jobTitle: string, company: string, timeUntil: string): void {
+    this.showLocalNotification({
+      title: 'Interview Reminder',
+      body: `Interview for ${jobTitle} at ${company} in ${timeUntil}`,
+      icon: '/favicon.ico',
+      tag: 'interview-reminder',
+      data: { type: 'interview-reminder' }
+    });
+  }
+
+  notifyFollowUpReminder(jobTitle: string, company: string): void {
+    this.showLocalNotification({
+      title: 'Follow-up Reminder',
+      body: `Time to follow up on your application for ${jobTitle} at ${company}`,
+      icon: '/favicon.ico',
+      tag: 'follow-up',
+      data: { type: 'follow-up' }
+    });
+  }
+
+  // Get current subscription
+  getCurrentSubscription(): PushSubscription | null {
+    return this.subscription;
+  }
+
+  // Check if notifications are enabled
+  isEnabled(): boolean {
+    return this.isSupported && Notification.permission === 'granted';
   }
 }
 

@@ -1,4 +1,5 @@
-import { supabase } from '@/lib/supabase';
+
+import { supabase } from '@/integrations/supabase/client';
 
 interface AnalyticsEvent {
   user_id: string;
@@ -47,7 +48,7 @@ interface AnalyticsInsights {
   topPerformingSkills: string[];
   industryComparison: {
     responseRate: 'above' | 'below' | 'average';
-    timeToInterview: 'above' | 'below' | 'average';
+    timeToInterview: 'faster' | 'slower' | 'average';
   };
   recommendations: string[];
 }
@@ -101,7 +102,7 @@ class AnalyticsService {
     this.events = [];
 
     try {
-      // Store events in application_events table instead of user_events
+      // Store events in application_events table
       const { error } = await supabase
         .from('application_events')
         .insert(

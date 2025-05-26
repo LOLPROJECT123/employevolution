@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Job } from '@/types/job';
 import { MobileJobCard } from '@/components/MobileJobCard';

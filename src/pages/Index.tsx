@@ -1,337 +1,290 @@
 
-import { useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { Job } from '@/types/job';
-import Navbar from "@/components/Navbar";
-import MobileHeader from "@/components/MobileHeader";
-import { useMobile } from "@/hooks/use-mobile";
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { JobCard } from "@/components/JobCard";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { 
-  BriefcaseIcon, 
-  FileTextIcon, 
-  SearchIcon, 
-  BarChartIcon, 
-  RocketIcon,
-  CheckCircleIcon,
-  TrendingUpIcon,
-  MessageCircleIcon,
-  BookIcon
+  MapPin, 
+  DollarSign, 
+  Clock, 
+  TrendingUp, 
+  Users, 
+  Star,
+  CheckCircle,
+  Calendar,
+  Briefcase
 } from 'lucide-react';
-
-const sampleJobs = [
-  {
-    id: '1',
-    title: 'Senior Software Engineer',
-    company: 'TechCorp',
-    location: 'San Francisco, CA',
-    salary: {
-      min: 150000,
-      max: 220000,
-      currency: '$'
-    },
-    type: 'full-time' as const,
-    level: 'senior' as const,
-    description: 'We are looking for a Senior Software Engineer...',
-    requirements: ['5+ years experience', 'React', 'Node.js'],
-    postedAt: new Date().toISOString(),
-    skills: ['React', 'TypeScript', 'Node.js', 'AWS', 'Docker']
-  },
-  {
-    id: '2',
-    title: 'Product Manager',
-    company: 'InnovateCo',
-    location: 'New York, NY',
-    salary: {
-      min: 130000,
-      max: 180000,
-      currency: '$'
-    },
-    type: 'full-time' as const,
-    level: 'mid' as const,
-    description: 'Seeking an experienced Product Manager...',
-    requirements: ['3+ years experience', 'Agile', 'Technical background'],
-    postedAt: new Date(Date.now() - 86400000).toISOString(),
-    skills: ['Product Strategy', 'Agile', 'User Research', 'Data Analysis']
-  }
-];
-
-const features = [
-  {
-    title: "Find Relevant Jobs",
-    description: "Discover job opportunities tailored to your skills and preferences.",
-    icon: SearchIcon,
-    delay: "100",
-    path: "/jobs"
-  },
-  {
-    title: "Track Applications",
-    description: "Keep track of your job applications and never miss a follow-up.",
-    icon: CheckCircleIcon,
-    delay: "200",
-    path: "/dashboard"
-  },
-  {
-    title: "Resume Forum",
-    description: "Get feedback on your resume from the community and industry professionals.",
-    icon: MessageCircleIcon,
-    delay: "300",
-    path: "/resume-forum"
-  },
-  {
-    title: "LeetCode Patterns",
-    description: "Learn common patterns for solving technical interview problems effectively.",
-    icon: BookIcon,
-    delay: "400",
-    path: "/leetcode-patterns"
-  },
-  {
-    title: "Application Insights",
-    description: "Gain valuable insights on your job search progress and performance.",
-    icon: BarChartIcon,
-    delay: "500",
-    path: "/dashboard"
-  },
-  {
-    title: "Career Opportunities",
-    description: "Explore global opportunities beyond your local area.",
-    icon: BriefcaseIcon,
-    delay: "600",
-    path: "/jobs"
-  }
-];
-
-const mockJobs: Job[] = [
-  {
-    id: '1',
-    title: 'Senior Software Engineer',
-    company: 'TechCorp',
-    location: 'San Francisco, CA',
-    description: 'We are looking for a senior software engineer to join our team...',
-    requirements: ['5+ years experience', 'React', 'TypeScript'],
-    salary: {
-      min: 120000,
-      max: 180000,
-      currency: 'USD'
-    },
-    type: 'full-time',
-    level: 'senior',
-    postedAt: '2024-01-15T10:00:00Z',
-    skills: ['React', 'TypeScript', 'Node.js'],
-    remote: true,
-    applyUrl: 'https://techcorp.com/careers/senior-engineer',
-    source: 'company_website',
-    matchPercentage: 95
-  },
-  {
-    id: '2',
-    title: 'Product Manager',
-    company: 'StartupXYZ',
-    location: 'Remote',
-    description: 'Join our product team to drive innovation...',
-    requirements: ['3+ years PM experience', 'Agile/Scrum'],
-    salary: {
-      min: 100000,
-      max: 140000,
-      currency: 'USD'
-    },
-    type: 'full-time',
-    level: 'mid',
-    postedAt: '2024-01-14T14:30:00Z',
-    skills: ['Product Management', 'Agile', 'Analytics'],
-    remote: true,
-    applyUrl: 'https://startupxyz.com/jobs/product-manager',
-    source: 'job_board',
-    matchPercentage: 87
-  },
-  {
-    id: '3',
-    title: 'Frontend Developer',
-    company: 'DesignHub',
-    location: 'New York, NY',
-    description: 'Create beautiful user interfaces with modern technologies...',
-    requirements: ['2+ years React experience', 'CSS/SCSS'],
-    salary: {
-      min: 80000,
-      max: 120000,
-      currency: 'USD'
-    },
-    type: 'full-time',
-    level: 'mid',
-    postedAt: '2024-01-13T09:15:00Z',
-    skills: ['React', 'CSS', 'JavaScript'],
-    remote: false,
-    applyUrl: 'https://designhub.com/careers/frontend-dev',
-    source: 'company_website',
-    matchPercentage: 78
-  }
-];
+import { useNavigate } from 'react-router-dom';
+import { Job } from '@/types/job';
 
 const Index = () => {
   const navigate = useNavigate();
-  const [animationReady, setAnimationReady] = useState(false);
-  const isMobile = useMobile();
+  const [stats, setStats] = useState({
+    totalApplications: 24,
+    responseRate: 18,
+    interviewsScheduled: 3,
+    savedJobs: 12
+  });
+
+  const [recentJobs, setRecentJobs] = useState<Job[]>([]);
 
   useEffect(() => {
-    const timer = setTimeout(() => setAnimationReady(true), 100);
-    return () => clearTimeout(timer);
+    // Mock recent jobs data
+    const mockJobs: Job[] = [
+      {
+        id: '1',
+        title: 'Senior Frontend Developer',
+        company: 'TechCorp',
+        location: 'San Francisco, CA',
+        salary: { min: 120000, max: 160000, currency: 'USD' },
+        type: 'full-time',
+        level: 'senior',
+        description: 'Looking for an experienced frontend developer...',
+        requirements: ['React', 'TypeScript', 'GraphQL'],
+        postedAt: '2024-01-15T10:00:00Z',
+        skills: ['React', 'TypeScript', 'GraphQL'],
+        applyUrl: 'https://example.com/apply',
+        source: 'company'
+      },
+      {
+        id: '2',
+        title: 'Product Manager',
+        company: 'StartupXYZ',
+        location: 'Remote',
+        salary: { min: 100000, max: 140000, currency: 'USD' },
+        type: 'full-time',
+        level: 'mid',
+        description: 'Join our growing product team...',
+        requirements: ['Product Strategy', 'Analytics', 'Leadership'],
+        postedAt: '2024-01-14T14:00:00Z',
+        skills: ['Product Strategy', 'Analytics', 'Leadership'],
+        applyUrl: 'https://example.com/apply',
+        source: 'job_board'
+      },
+      {
+        id: '3',
+        title: 'UX Designer',
+        company: 'DesignStudio',
+        location: 'New York, NY',
+        salary: { min: 80000, max: 120000, currency: 'USD' },
+        type: 'full-time',
+        level: 'mid',
+        description: 'Create amazing user experiences...',
+        requirements: ['Figma', 'User Research', 'Prototyping'],
+        postedAt: '2024-01-13T09:00:00Z',
+        skills: ['Figma', 'User Research', 'Prototyping'],
+        applyUrl: 'https://example.com/apply',
+        source: 'company'
+      }
+    ];
+
+    setRecentJobs(mockJobs);
   }, []);
 
-  // Now accepting a Job object instead of a string
-  const handleApply = (job: any) => {
-    navigate(`/auth?mode=signup&redirect=/jobs/${job.id}`);
+  const formatSalary = (job: Job) => {
+    if (job.salary) {
+      return `$${(job.salary.min / 1000).toFixed(0)}k - $${(job.salary.max / 1000).toFixed(0)}k`;
+    }
+    return 'Salary not specified';
+  };
+
+  const getTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffInDays === 0) return 'Today';
+    if (diffInDays === 1) return 'Yesterday';
+    return `${diffInDays} days ago`;
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {isMobile ? (
-        <MobileHeader title="Streamline" />
-      ) : (
-        <Navbar />
-      )}
-      
-      {/* Hero Section */}
-      <section className={`${isMobile ? 'pt-20' : 'pt-32'} pb-20 px-4 relative overflow-hidden`}>
-        <div className="absolute inset-0 bg-gradient-to-br from-accent/80 to-transparent z-0"></div>
-        <div className="container relative z-10">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className={`${animationReady ? 'slide-up' : 'opacity-0'} text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 transition-all duration-700`}>
-              Land Your Dream Tech Job With <span className="text-primary">Streamline</span>
-            </h1>
-            
-            <p className={`${animationReady ? 'slide-up' : 'opacity-0'} text-xl text-muted-foreground mb-8 transition-all duration-700 delay-100`}>
-              Get personalized job recommendations, resume feedback, and interview preparation with our comprehensive platform.
-            </p>
-            
-            <div className={`${animationReady ? 'slide-up' : 'opacity-0'} flex flex-col sm:flex-row justify-center gap-4 mb-12 transition-all duration-700 delay-200`}>
-              <Button 
-                size="lg"
-                onClick={() => navigate('/auth?mode=signup')}
-                className="bg-primary hover:bg-primary/90"
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="container mx-auto px-4 py-8">
+        {/* Hero Section */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            Welcome to Your Job Search Dashboard
+          </h1>
+          <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
+            Track your applications, discover new opportunities, and land your dream job with our comprehensive job search platform.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button 
+              size="lg" 
+              onClick={() => navigate('/jobs')}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3"
+            >
+              <Briefcase className="mr-2 h-5 w-5" />
+              Find Jobs
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline"
+              onClick={() => navigate('/dashboard')}
+              className="px-8 py-3"
+            >
+              <TrendingUp className="mr-2 h-5 w-5" />
+              View Analytics
+            </Button>
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          <Card className="bg-white dark:bg-gray-800 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Applications</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.totalApplications}</p>
+                </div>
+                <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-full">
+                  <Briefcase className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white dark:bg-gray-800 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Response Rate</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.responseRate}%</p>
+                </div>
+                <div className="p-3 bg-green-100 dark:bg-green-900 rounded-full">
+                  <TrendingUp className="h-6 w-6 text-green-600 dark:text-green-400" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white dark:bg-gray-800 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Interviews</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.interviewsScheduled}</p>
+                </div>
+                <div className="p-3 bg-purple-100 dark:bg-purple-900 rounded-full">
+                  <Calendar className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white dark:bg-gray-800 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Saved Jobs</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.savedJobs}</p>
+                </div>
+                <div className="p-3 bg-yellow-100 dark:bg-yellow-900 rounded-full">
+                  <Star className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Recent Jobs Section */}
+        <Card className="bg-white dark:bg-gray-800 shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
+              Recent Job Opportunities
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {recentJobs.map((job) => (
+              <div 
+                key={job.id} 
+                className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => navigate('/jobs')}
               >
-                Get Started
-              </Button>
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                        {job.title}
+                      </h3>
+                      <Badge variant="secondary" className="ml-2">
+                        {job.type}
+                      </Badge>
+                    </div>
+                    
+                    <p className="text-lg font-medium text-blue-600 dark:text-blue-400 mb-2">
+                      {job.company}
+                    </p>
+                    
+                    <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400 mb-3">
+                      <div className="flex items-center">
+                        <MapPin className="h-4 w-4 mr-1" />
+                        {job.location}
+                      </div>
+                      <div className="flex items-center">
+                        <DollarSign className="h-4 w-4 mr-1" />
+                        {formatSalary(job)}
+                      </div>
+                      <div className="flex items-center">
+                        <Clock className="h-4 w-4 mr-1" />
+                        {getTimeAgo(job.postedAt)}
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-2">
+                      {job.skills?.slice(0, 3).map((skill) => (
+                        <Badge key={skill} variant="outline" className="text-xs">
+                          {skill}
+                        </Badge>
+                      ))}
+                      {job.skills && job.skills.length > 3 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{job.skills.length - 3} more
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col gap-2 lg:ml-6">
+                    <Button 
+                      className="w-full lg:w-auto"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate('/jobs');
+                      }}
+                    >
+                      View Details
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="w-full lg:w-auto"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Handle save job action
+                      }}
+                    >
+                      <Star className="h-4 w-4 mr-2" />
+                      Save
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+            
+            <div className="text-center pt-6">
               <Button 
                 variant="outline" 
                 size="lg"
                 onClick={() => navigate('/jobs')}
               >
-                Browse Jobs
+                View All Jobs
               </Button>
             </div>
-
-            <div className={`${animationReady ? 'slide-up' : 'opacity-0'} grid grid-cols-3 gap-6 max-w-3xl mx-auto mb-12 transition-all duration-700 delay-300`}>
-              <div className="text-center">
-                <div className="font-bold text-3xl text-primary mb-2">500K+</div>
-                <div className="text-muted-foreground">Active Jobs</div>
-              </div>
-              <div className="text-center">
-                <div className="font-bold text-3xl text-primary mb-2">50K+</div>
-                <div className="text-muted-foreground">Companies</div>
-              </div>
-              <div className="text-center">
-                <div className="font-bold text-3xl text-primary mb-2">1M+</div>
-                <div className="text-muted-foreground">Job Seekers</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="py-20">
-        <div className="container px-4">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className={`${animationReady ? 'slide-up' : 'opacity-0'} font-bold transition-all duration-700`}>
-              Everything You Need for Your Job Search
-            </h2>
-            <p className={`${animationReady ? 'slide-up' : 'opacity-0'} text-muted-foreground mt-4 transition-all duration-700 delay-100`}>
-              Our platform provides comprehensive tools to help you find and secure your dream job.
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <div 
-                key={index}
-                className={`${animationReady ? 'slide-up' : 'opacity-0'} glass-card rounded-xl p-6 transition-all duration-700 cursor-pointer hover:shadow-md`}
-                style={{ transitionDelay: `${parseInt(feature.delay)}ms` }}
-                onClick={() => navigate(feature.path)}
-              >
-                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                  <feature.icon className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="text-xl font-medium mb-2">{feature.title}</h3>
-                <p className="text-muted-foreground">{feature.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Jobs Section */}
-      <section className="py-20 bg-secondary/50">
-        <div className="container px-4">
-          <div className="text-center max-w-3xl mx-auto mb-12">
-            <h2 className="text-3xl font-bold mb-4">Featured Jobs</h2>
-            <p className="text-muted-foreground">
-              Discover opportunities at top tech companies
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-            {mockJobs.map((job) => (
-              <JobCard key={job.id} job={job} onApply={handleApply} />
-            ))}
-          </div>
-
-          <div className="text-center mt-12">
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={() => navigate('/jobs')}
-            >
-              View All Jobs
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Call to Action */}
-      <section className="py-20 bg-gradient-to-br from-accent to-background">
-        <div className="container px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className={`${animationReady ? 'slide-up' : 'opacity-0'} font-bold mb-6 transition-all duration-700`}>
-              Ready to Accelerate Your Career?
-            </h2>
-            <p className={`${animationReady ? 'slide-up' : 'opacity-0'} text-xl text-muted-foreground mb-10 transition-all duration-700 delay-100`}>
-              Join thousands of professionals who are already using Streamline to find their dream jobs.
-            </p>
-            <Button 
-              size="lg" 
-              className={`${animationReady ? 'slide-up' : 'opacity-0'} bg-primary hover:bg-primary/90 button-hover transition-all duration-700 delay-200`}
-              onClick={() => navigate('/auth?mode=signup')}
-            >
-              Get Started Today
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="py-8 border-t">
-        <div className="container px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center space-x-2 mb-4 md:mb-0 cursor-pointer" onClick={() => navigate('/')}>
-              <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline Logo" className="w-6 h-6" />
-              <span className="font-medium">Streamline</span>
-            </div>
-            <div className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} Streamline. All rights reserved.
-            </div>
-          </div>
-        </div>
-      </footer>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 export interface Job {
   id: string;
   title: string;
@@ -24,6 +25,7 @@ export interface Job {
   companyType?: string;
   category?: string;
   jobFunction?: string;
+  benefits?: string[];
   applicationDetails?: {
     isAvailable: boolean;
     applicantCount?: number;
@@ -94,3 +96,4 @@ export interface SavedSearch {
 }
 
 export type JobStatus = 'applied' | 'interviewing' | 'offered' | 'rejected' | 'saved' | 'accepted';
+export type JobApplicationStatus = 'applied' | 'interviewing' | 'offered' | 'rejected' | 'accepted';

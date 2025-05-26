@@ -1,4 +1,3 @@
-
 interface ErrorContext {
   route?: string;
   timestamp?: string;
@@ -47,7 +46,7 @@ class ErrorMonitoringService {
           timestamp: new Date().toISOString()
         },
         severity: 'high',
-        category: 'other'
+        category: 'ui'
       });
     };
 
@@ -62,7 +61,7 @@ class ErrorMonitoringService {
           timestamp: new Date().toISOString()
         },
         severity: 'high',
-        category: 'other'
+        category: 'api'
       });
     };
   }
