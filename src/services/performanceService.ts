@@ -31,7 +31,12 @@ class PerformanceService {
 
   // Performance monitoring - now delegated to monitoringService
   startTimer(operation: string): () => number {
-    return monitoringService.startTimer(operation);
+    const startTime = performance.now();
+    return () => {
+      const duration = performance.now() - startTime;
+      this.recordMetric(operation, duration);
+      return duration;
+    };
   }
 
   recordMetric(operation: string, duration: number): void {

@@ -71,7 +71,7 @@ class GDPRService {
         .eq('user_id', user.user.id);
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as UserConsent[];
     } catch (error) {
       console.error('Failed to fetch user consents:', error);
       return [];
@@ -159,7 +159,7 @@ class GDPRService {
       if (!user.user) throw new Error('User not authenticated');
 
       // Delete user data from all tables (in reverse dependency order)
-      const tables = [
+      const tableNames = [
         'document_usage',
         'follow_up_sequence_steps',
         'follow_up_sequences',
@@ -181,14 +181,14 @@ class GDPRService {
         'profiles'
       ];
 
-      for (const table of tables) {
+      for (const tableName of tableNames) {
         const { error } = await supabase
-          .from(table)
+          .from(tableName as any)
           .delete()
           .eq('user_id', user.user.id);
 
         if (error && error.code !== 'PGRST116') {
-          console.error(`Failed to delete data from ${table}:`, error);
+          console.error(`Failed to delete data from ${tableName}:`, error);
         }
       }
 

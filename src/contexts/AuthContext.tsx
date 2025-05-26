@@ -13,6 +13,10 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ user: User | null; error: any }>;
   signUp: (email: string, password: string, userData?: any) => Promise<{ user: User | null; error: any }>;
   signOut: () => Promise<void>;
+  // Add aliases for backward compatibility
+  login: (email: string, password: string) => Promise<{ user: User | null; error: any }>;
+  register: (email: string, password: string, userData?: any) => Promise<{ user: User | null; error: any }>;
+  logout: () => Promise<void>;
   updateProfile: (updates: any) => Promise<void>;
   checkEmailExists: (email: string) => Promise<boolean>;
 }
@@ -211,6 +215,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signIn,
     signUp,
     signOut,
+    // Aliases for backward compatibility
+    login: signIn,
+    register: signUp,
+    logout: signOut,
     updateProfile,
     checkEmailExists,
   };
