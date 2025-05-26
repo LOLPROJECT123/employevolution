@@ -30,7 +30,7 @@ class SupabaseSavedJobsService {
 
     return {
       ...data,
-      job_data: data.job_data as Job // Type assertion when retrieving
+      job_data: data.job_data as unknown as Job // Safe type conversion
     } as SavedJob;
   }
 
@@ -59,7 +59,7 @@ class SupabaseSavedJobsService {
 
     return (data || []).map(item => ({
       ...item,
-      job_data: item.job_data as Job // Type assertion for each item
+      job_data: item.job_data as unknown as Job // Safe type conversion
     })) as SavedJob[];
   }
 
