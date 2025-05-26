@@ -1,4 +1,3 @@
-
 export interface Job {
   id: string;
   title: string;
@@ -26,6 +25,7 @@ export interface Job {
   category?: string;
   jobFunction?: string;
   benefits?: string[];
+  sponsorH1b?: boolean;
   applicationDetails?: {
     isAvailable: boolean;
     applicantCount?: number;
