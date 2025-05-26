@@ -18,7 +18,7 @@ class SupabaseSavedJobsService {
       .insert({
         user_id: userId,
         job_id: job.id,
-        job_data: job,
+        job_data: job as any, // Type assertion for JSONB storage
         notes: notes
       })
       .select()
@@ -28,7 +28,10 @@ class SupabaseSavedJobsService {
       throw new Error(`Failed to save job: ${error.message}`);
     }
 
-    return data;
+    return {
+      ...data,
+      job_data: data.job_data as Job // Type assertion when retrieving
+    } as SavedJob;
   }
 
   async unsaveJob(userId: string, jobId: string): Promise<void> {
@@ -54,7 +57,10 @@ class SupabaseSavedJobsService {
       throw new Error(`Failed to fetch saved jobs: ${error.message}`);
     }
 
-    return data || [];
+    return (data || []).map(item => ({
+      ...item,
+      job_data: item.job_data as Job // Type assertion for each item
+    })) as SavedJob[];
   }
 
   async getSavedJobIds(userId: string): Promise<string[]> {

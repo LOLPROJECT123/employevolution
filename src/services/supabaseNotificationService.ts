@@ -36,7 +36,7 @@ class SupabaseNotificationService {
       throw new Error(`Failed to create notification: ${error.message}`);
     }
 
-    return data;
+    return data as Notification;
   }
 
   async getUserNotifications(userId: string, limit = 50): Promise<Notification[]> {
@@ -51,7 +51,7 @@ class SupabaseNotificationService {
       throw new Error(`Failed to fetch notifications: ${error.message}`);
     }
 
-    return data || [];
+    return (data || []) as Notification[];
   }
 
   async getUnreadCount(userId: string): Promise<number> {
