@@ -1,3 +1,4 @@
+
 interface PushSubscription {
   endpoint: string;
   keys: {
@@ -125,8 +126,7 @@ class PushNotificationService {
       badge: payload.badge,
       tag: payload.tag,
       data: payload.data,
-      requireInteraction: true,
-      timestamp: Date.now()
+      requireInteraction: true
     };
 
     new Notification(payload.title, options);

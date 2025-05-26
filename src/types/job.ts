@@ -30,6 +30,7 @@ export interface Job {
     isAvailable: boolean;
     applicantCount?: number;
     easyApply?: boolean;
+    platform?: string;
   };
   matchCriteria?: {
     degree: boolean;
