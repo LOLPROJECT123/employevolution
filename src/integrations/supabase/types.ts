@@ -50,6 +50,44 @@ export type Database = {
           },
         ]
       }
+      document_usage: {
+        Row: {
+          application_id: string | null
+          company_name: string
+          document_id: string | null
+          id: string
+          notes: string | null
+          position_title: string
+          used_at: string | null
+        }
+        Insert: {
+          application_id?: string | null
+          company_name: string
+          document_id?: string | null
+          id?: string
+          notes?: string | null
+          position_title: string
+          used_at?: string | null
+        }
+        Update: {
+          application_id?: string | null
+          company_name?: string
+          document_id?: string | null
+          id?: string
+          notes?: string | null
+          position_title?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_usage_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "user_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_alerts: {
         Row: {
           created_at: string
@@ -328,6 +366,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_documents: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          file_path: string
+          file_size: number | null
+          file_type: string
+          id: string
+          is_default: boolean | null
+          name: string
+          tags: string[] | null
+          type: string
+          updated_at: string | null
+          user_id: string
+          version: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          file_path: string
+          file_size?: number | null
+          file_type: string
+          id?: string
+          is_default?: boolean | null
+          name: string
+          tags?: string[] | null
+          type: string
+          updated_at?: string | null
+          user_id: string
+          version?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          file_path?: string
+          file_size?: number | null
+          file_type?: string
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          tags?: string[] | null
+          type?: string
+          updated_at?: string | null
+          user_id?: string
+          version?: number | null
+        }
+        Relationships: []
       }
     }
     Views: {

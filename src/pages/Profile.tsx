@@ -24,7 +24,8 @@ import {
   Download,
   Plus,
   Settings as SettingsIcon,
-  X
+  X,
+  FileText
 } from "lucide-react";
 import EditProfileHeader from "@/components/profile/EditProfileHeader";
 import EditContactInfo from "@/components/profile/EditContactInfo";
@@ -33,6 +34,7 @@ import EditEducation from "@/components/profile/EditEducation";
 import EditSocialLinks from "@/components/profile/EditSocialLinks";
 import EditJobPreferences from "@/components/profile/EditJobPreferences";
 import EditEqualEmployment from "@/components/profile/EditEqualEmployment";
+import DocumentManager from "@/components/documents/DocumentManager";
 
 const Profile = () => {
   const isMobile = useMobile();
@@ -209,9 +211,10 @@ const Profile = () => {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid grid-cols-5 w-full">
+          <TabsList className="grid grid-cols-6 w-full">
             <TabsTrigger value="contact">Contact</TabsTrigger>
             <TabsTrigger value="resume">Resume</TabsTrigger>
+            <TabsTrigger value="documents">Documents</TabsTrigger>
             <TabsTrigger value="preferences">Job Preferences</TabsTrigger>
             <TabsTrigger value="equal">Equal Employment</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
@@ -407,6 +410,11 @@ const Profile = () => {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Documents Tab */}
+          <TabsContent value="documents" className="space-y-6">
+            <DocumentManager />
           </TabsContent>
 
           {/* Job Preferences Tab */}
