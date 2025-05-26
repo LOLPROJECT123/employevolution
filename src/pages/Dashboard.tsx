@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -34,8 +33,20 @@ import {
   PlusIcon,
   Mail,
   BarChart3,
+  Users,
+  History,
+  Zap,
 } from 'lucide-react';
 import AnalyticsDashboard from '@/components/analytics/AnalyticsDashboard';
+import CalendarView from '@/components/calendar/CalendarView';
+import InterviewScheduler from '@/components/calendar/InterviewScheduler';
+import ReminderManager from '@/components/calendar/ReminderManager';
+import ApplicationTimeline from '@/components/calendar/ApplicationTimeline';
+import EmailTemplates from '@/components/communications/EmailTemplates';
+import ContactManager from '@/components/communications/ContactManager';
+import CommunicationHistory from '@/components/communications/CommunicationHistory';
+import FollowUpSequences from '@/components/communications/FollowUpSequences';
+import { Interview, Reminder } from '@/services/calendarService';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -43,6 +54,8 @@ const Dashboard = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(true); // Mock authentication
   const [animationReady, setAnimationReady] = useState(false);
   const { applications, appliedJobs } = useJobApplications();
+  const [showInterviewScheduler, setShowInterviewScheduler] = useState(false);
+  const [showReminderManager, setShowReminderManager] = useState(false);
 
   useEffect(() => {
     // In a real app, check if user is authenticated
@@ -55,6 +68,16 @@ const Dashboard = () => {
     const timer = setTimeout(() => setAnimationReady(true), 100);
     return () => clearTimeout(timer);
   }, [navigate]);
+
+  const handleInterviewCreated = (interview: Interview) => {
+    // Refresh calendar view
+    window.location.reload();
+  };
+
+  const handleReminderCreated = (reminder: Reminder) => {
+    // Refresh calendar view
+    window.location.reload();
+  };
 
   // Get application stats from our applications data
   const stats = {
@@ -152,11 +175,23 @@ const Dashboard = () => {
           </div>
 
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList>
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="analytics">
                 <BarChart3 className="w-4 h-4 mr-2" />
                 Analytics
+              </TabsTrigger>
+              <TabsTrigger value="calendar">
+                <CalendarIcon className="w-4 h-4 mr-2" />
+                Calendar
+              </TabsTrigger>
+              <TabsTrigger value="communications">
+                <Mail className="w-4 h-4 mr-2" />
+                Communications
+              </TabsTrigger>
+              <TabsTrigger value="timeline">
+                <History className="w-4 h-4 mr-2" />
+                Timeline
               </TabsTrigger>
             </TabsList>
 
@@ -429,7 +464,75 @@ const Dashboard = () => {
             <TabsContent value="analytics">
               <AnalyticsDashboard />
             </TabsContent>
+
+            <TabsContent value="calendar">
+              <div className="space-y-6">
+                <CalendarView
+                  onCreateInterview={() => setShowInterviewScheduler(true)}
+                  onCreateReminder={() => setShowReminderManager(true)}
+                />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="communications">
+              <div className="space-y-6">
+                <Tabs defaultValue="templates" className="w-full">
+                  <TabsList className="grid w-full grid-cols-4">
+                    <TabsTrigger value="templates" className="flex items-center gap-2">
+                      <Mail className="h-4 w-4" />
+                      Templates
+                    </TabsTrigger>
+                    <TabsTrigger value="contacts" className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      Contacts
+                    </TabsTrigger>
+                    <TabsTrigger value="history" className="flex items-center gap-2">
+                      <History className="h-4 w-4" />
+                      History
+                    </TabsTrigger>
+                    <TabsTrigger value="sequences" className="flex items-center gap-2">
+                      <Zap className="h-4 w-4" />
+                      Sequences
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="templates" className="space-y-6">
+                    <EmailTemplates />
+                  </TabsContent>
+
+                  <TabsContent value="contacts" className="space-y-6">
+                    <ContactManager />
+                  </TabsContent>
+
+                  <TabsContent value="history" className="space-y-6">
+                    <CommunicationHistory />
+                  </TabsContent>
+
+                  <TabsContent value="sequences" className="space-y-6">
+                    <FollowUpSequences />
+                  </TabsContent>
+                </Tabs>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="timeline">
+              <div className="space-y-6">
+                <ApplicationTimeline showAll />
+              </div>
+            </TabsContent>
           </Tabs>
+
+          <InterviewScheduler
+            open={showInterviewScheduler}
+            onClose={() => setShowInterviewScheduler(false)}
+            onInterviewCreated={handleInterviewCreated}
+          />
+
+          <ReminderManager
+            open={showReminderManager}
+            onClose={() => setShowReminderManager(false)}
+            onReminderCreated={handleReminderCreated}
+          />
         </div>
       </main>
     </div>
