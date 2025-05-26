@@ -191,19 +191,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const checkEmailExists = async (email: string): Promise<boolean> => {
     try {
-      // This is a simplified check - in production you'd want a more secure method
-      const { data, error } = await supabase.auth.signInWithPassword({
+      // Try to sign in with a dummy password to check if email exists
+      // This is a simple approach - in production you might want a dedicated endpoint
+      const { error } = await supabase.auth.signInWithPassword({
         email,
-        password: 'dummy-password-check'
+        password: 'dummy-password-that-will-fail'
       });
 
-      // If we get a specific error about invalid credentials, the email exists
-      if (error?.message === 'Invalid login credentials') {
+      // If we get an "Invalid login credentials" error, it means the email exists
+      // If we get "User not found" or similar, the email doesn't exist
+      if (error?.message?.includes('Invalid login credentials')) {
         return true;
       }
-
+      
+      // For any other error or no error, assume email doesn't exist
+      // This ensures new users can always sign up
       return false;
     } catch (error) {
+      console.error('Error checking email existence:', error);
+      // If there's an error, default to allowing signup
       return false;
     }
   };

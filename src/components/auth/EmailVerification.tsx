@@ -28,28 +28,45 @@ export const EmailVerification = ({ onEmailVerified }: EmailVerificationProps) =
       return;
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast({
+        title: "Invalid email",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
+      // For new users, we'll default to allowing signup
+      // The checkEmailExists function might not work reliably in all cases
       const emailExists = await checkEmailExists(email);
+      
+      console.log('Email check result:', { email, emailExists });
+      
       onEmailVerified(email, emailExists);
       
       if (emailExists) {
         toast({
-          title: "Email found",
+          title: "Welcome back!",
           description: "Please sign in with your password",
         });
       } else {
         toast({
-          title: "New user",
+          title: "Let's get you started",
           description: "Please create your account",
         });
       }
     } catch (error) {
+      console.error('Email verification error:', error);
+      // If email check fails, default to signup flow
+      onEmailVerified(email, false);
       toast({
-        title: "Error",
-        description: "Failed to verify email. Please try again.",
-        variant: "destructive",
+        title: "Let's get you started",
+        description: "Please create your account",
       });
     } finally {
       setLoading(false);
@@ -68,6 +85,7 @@ export const EmailVerification = ({ onEmailVerified }: EmailVerificationProps) =
           placeholder="Enter your email"
           required
           disabled={loading}
+          autoFocus
         />
       </div>
       
@@ -75,6 +93,10 @@ export const EmailVerification = ({ onEmailVerified }: EmailVerificationProps) =
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         Continue
       </Button>
+
+      <div className="text-xs text-muted-foreground text-center">
+        We'll check if you have an account and guide you to sign in or sign up
+      </div>
     </form>
   );
 };

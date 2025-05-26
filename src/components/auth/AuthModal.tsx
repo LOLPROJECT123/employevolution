@@ -40,20 +40,28 @@ export const AuthModal = ({ isOpen, onClose, defaultMode = 'email-check' }: Auth
 
     try {
       if (mode === 'login') {
-        await login(email, password);
+        const result = await login(email, password);
+        if (result.error) {
+          throw new Error(result.error.message);
+        }
         toast({
           title: "Welcome back!",
           description: "You've successfully logged in.",
         });
+        onClose();
       } else if (mode === 'signup') {
-        await register(email, password, name);
+        const result = await register(email, password, { full_name: name });
+        if (result.error) {
+          throw new Error(result.error.message);
+        }
         toast({
           title: "Account created!",
-          description: "Welcome to Streamline. Please check your email to verify your account.",
+          description: "Welcome to Streamline. Your account has been created successfully.",
         });
+        onClose();
       }
-      onClose();
     } catch (error: any) {
+      console.error('Authentication error:', error);
       toast({
         title: "Authentication failed",
         description: error.message || "Please check your credentials and try again.",
@@ -67,6 +75,18 @@ export const AuthModal = ({ isOpen, onClose, defaultMode = 'email-check' }: Auth
   const resetToEmailCheck = () => {
     setMode('email-check');
     setEmail('');
+    setPassword('');
+    setName('');
+  };
+
+  const switchToSignup = () => {
+    setMode('signup');
+    setPassword('');
+    setName('');
+  };
+
+  const switchToLogin = () => {
+    setMode('login');
     setPassword('');
     setName('');
   };
@@ -122,52 +142,77 @@ export const AuthModal = ({ isOpen, onClose, defaultMode = 'email-check' }: Auth
         {mode === 'email-check' ? (
           <EmailVerification onEmailVerified={handleEmailVerified} />
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                readOnly
-                className="bg-gray-50"
-              />
-            </div>
-
-            {mode === 'signup' && (
+          <div className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  id="email"
+                  type="email"
+                  value={email}
+                  readOnly
+                  className="bg-gray-50"
+                />
+              </div>
+
+              {mode === 'signup' && (
+                <div>
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    placeholder="Enter your full name"
+                    disabled={loading}
+                  />
+                </div>
+              )}
+              
+              <div>
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
-                  placeholder="Enter your full name"
+                  placeholder="Enter your password"
+                  minLength={6}
                   disabled={loading}
                 />
               </div>
-            )}
-            
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="Enter your password"
-                minLength={6}
-                disabled={loading}
-              />
+              
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {mode === 'login' ? 'Sign In' : 'Create Account'}
+              </Button>
+            </form>
+
+            <div className="text-center space-y-2">
+              <div className="text-sm text-muted-foreground">or</div>
+              {mode === 'login' ? (
+                <Button 
+                  variant="outline" 
+                  onClick={switchToSignup}
+                  className="w-full"
+                  disabled={loading}
+                >
+                  Create a new account
+                </Button>
+              ) : (
+                <Button 
+                  variant="outline" 
+                  onClick={switchToLogin}
+                  className="w-full"
+                  disabled={loading}
+                >
+                  Already have an account? Sign in
+                </Button>
+              )}
             </div>
-            
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {mode === 'login' ? 'Sign In' : 'Create Account'}
-            </Button>
-          </form>
+          </div>
         )}
       </DialogContent>
     </Dialog>
