@@ -1,4 +1,3 @@
-
 import { Link, useLocation } from "react-router-dom";
 import { useMobile } from "@/hooks/use-mobile";
 import { ModeToggle } from "@/components/ModeToggle";
@@ -38,8 +37,6 @@ import {
   Home,
   Briefcase,
   FileText as FileTextIcon,
-  Calendar,
-  MessageSquare as MessageSquareIcon,
   Users as UsersIcon,
   Play,
   UserPlus,
@@ -50,8 +47,6 @@ const navigationItems = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Jobs', href: '/jobs', icon: Briefcase },
   { name: 'Resume Tools', href: '/resume-tools', icon: FileTextIcon },
-  { name: 'Calendar', href: '/calendar', icon: Calendar },
-  { name: 'Communications', href: '/communications', icon: MessageSquareIcon },
   { name: 'Networking', href: '/networking', icon: UsersIcon },
   { name: 'Interview Practice', href: '/interview-practice', icon: Play },
   { name: 'Referrals', href: '/referrals', icon: UserPlus },
