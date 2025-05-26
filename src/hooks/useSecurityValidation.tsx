@@ -10,18 +10,20 @@ interface ValidationResult {
   sanitizedData?: any;
 }
 
+interface ValidationOptions {
+  sanitize?: boolean;
+  checkRateLimit?: boolean;
+  endpoint?: string;
+  identifier?: string;
+}
+
 export const useSecurityValidation = () => {
   const [isValidating, setIsValidating] = useState(false);
 
   const validateForm = useCallback(async <T>(
     data: any,
     schema: z.ZodSchema<T>,
-    options: {
-      sanitize?: boolean;
-      checkRateLimit?: boolean;
-      endpoint?: string;
-      identifier?: string;
-    } = {}
+    options: ValidationOptions = {}
   ): Promise<ValidationResult> => {
     setIsValidating(true);
     
