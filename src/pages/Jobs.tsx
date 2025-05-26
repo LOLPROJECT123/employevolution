@@ -1,548 +1,608 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, MapPin, Building, DollarSign, Clock, Star, ExternalLink, Zap, TrendingUp } from "lucide-react";
-import { toast } from "sonner";
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import Navbar from "@/components/Navbar";
+import MobileHeader from "@/components/MobileHeader";
+import { Job, JobFilters } from "@/types/job";
+import { JobDetailView } from "@/components/JobDetailView";
+import { JobFiltersSection } from "@/components/JobFilters";
+import { EnhancedJobCard } from "@/components/jobs/EnhancedJobCard";
+import { useIsMobile } from "@/hooks/use-mobile";
+import SwipeJobsInterface from "@/components/SwipeJobsInterface";
+import { SavedAndAppliedJobs } from "@/components/SavedAndAppliedJobs";
+import { toast } from "@/hooks/use-toast";
+import AutomationSettings from "@/components/AutomationSettings";
+import { AuthModal } from "@/components/auth/AuthModal";
+import { SessionTimeoutWarning } from "@/components/auth/SessionTimeoutWarning";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { useSessionTimeout } from "@/hooks/useSessionTimeout";
 import { jobApi, JobSearchParams } from "@/services/jobApi";
+import { supabaseApplicationService } from "@/services/supabaseApplicationService";
+import { supabaseSavedJobsService } from "@/services/supabaseSavedJobsService";
+import { savedSearchService } from "@/services/savedSearchService";
+import { resumeService } from "@/services/resumeService";
+import { jobAlertService } from "@/services/jobAlertService";
+import { supabaseNotificationService } from "@/services/supabaseNotificationService";
 import { jobDeduplicationService } from "@/services/jobDeduplicationService";
 import { errorMonitoringService } from "@/services/errorMonitoringService";
-import { realBrowserService } from "@/services/realJobApiService";
-import { aiMatchingService } from "@/services/aiMatchingService";
-import { Job } from "@/types/job";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2, LogOut, Bell, Save, TrendingUp } from "lucide-react";
+import JobApplicationAutomation from "@/components/resume/JobApplicationAutomation";
+
+type SortOption = 'relevance' | 'date-newest' | 'date-oldest' | 'salary-highest' | 'salary-lowest';
 
 const Jobs = () => {
+  const { user, userProfile, logout, saveJob, unsaveJob, applyToJob } = useSupabaseAuth();
+  
+  // Session timeout hook
+  const { showWarning, timeLeft, extendSession, formatTimeLeft } = useSessionTimeout({
+    timeoutMinutes: 30,
+    warningMinutes: 5
+  });
+
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
+  const [savedJobIds, setSavedJobIds] = useState<string[]>([]);
+  const [appliedJobIds, setAppliedJobIds] = useState<string[]>([]);
+  const [sortOption, setSortOption] = useState<SortOption>('relevance');
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [applicationMetrics, setApplicationMetrics] = useState<any>(null);
+  const [activeAlerts, setActiveAlerts] = useState(0);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  
+  // Stable search parameters with proper memoization
   const [searchParams, setSearchParams] = useState<JobSearchParams>({
-    query: "",
-    location: "",
+    query: '',
+    location: '',
     page: 1,
     limit: 20
   });
-  const [savedJobs, setSavedJobs] = useState<string[]>([]);
-  const [realTimeScrapingEnabled, setRealTimeScrapingEnabled] = useState(false);
-  const [aiMatchingEnabled, setAiMatchingEnabled] = useState(true);
+  
+  const isMobile = useIsMobile();
+  const [viewMode, setViewMode] = useState<'list' | 'swipe'>(isMobile ? 'swipe' : 'list');
+  const [showMyJobs, setShowMyJobs] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<JobFilters>({
+    search: "",
+    location: "",
+    jobType: [],
+    remote: false,
+    experienceLevels: [],
+    education: [],
+    salaryRange: [0, 300000],
+    skills: [],
+    companyTypes: [],
+    companySize: [],
+    benefits: []
+  });
 
-  // Mock user profile for AI matching
-  const userProfile = {
-    skills: ['JavaScript', 'React', 'Node.js', 'Python', 'AWS'],
-    experience: 5,
-    education: ['Computer Science'],
-    preferences: {
-      salaryRange: { min: 120000, max: 180000 },
-      locations: ['San Francisco', 'New York', 'Remote'],
-      remotePreference: 'hybrid' as const,
-      jobTypes: ['full-time'],
-      industries: ['technology']
-    },
-    workHistory: [
-      {
-        title: 'Software Engineer',
-        company: 'Tech Corp',
-        duration: 3,
-        skills: ['JavaScript', 'React', 'Node.js']
-      }
-    ]
-  };
+  // Prevent multiple simultaneous API calls
+  const loadingRef = useRef(false);
 
-  const searchJobs = async () => {
-    if (!searchParams.query.trim()) {
-      toast.error("Please enter a job title or keywords");
+  // Memoized search parameters to prevent unnecessary re-renders
+  const stableSearchParams = useMemo(() => searchParams, [
+    searchParams.query,
+    searchParams.location,
+    searchParams.page,
+    searchParams.limit,
+    searchParams.remote
+  ]);
+
+  // Load jobs with caching and prevent duplicate calls
+  const loadJobs = useCallback(async (params: Partial<JobSearchParams> = {}) => {
+    if (loadingRef.current) {
+      console.log('Skipping duplicate job load request');
       return;
     }
 
+    loadingRef.current = true;
     setLoading(true);
     
     try {
-      let jobResults: Job[] = [];
-
-      if (realTimeScrapingEnabled) {
-        // Use real browser scraping
-        toast.loading("Using advanced job scraping...", { duration: 2000 });
-        
-        const scrapingResult = await realBrowserService.searchJobs({
-          query: searchParams.query,
-          location: searchParams.location,
-          page: searchParams.page,
-          limit: searchParams.limit,
-          remote: searchParams.remote,
-          salary_min: searchParams.salary_min,
-          salary_max: searchParams.salary_max,
-          job_type: searchParams.job_type,
-          experience_level: searchParams.experience_level
-        });
-
-        if (scrapingResult && scrapingResult.length > 0) {
-          jobResults = scrapingResult.flatMap(result => result.jobs).map(job => ({
-            ...job,
-            source: 'Real-time Scraping'
-          }));
-          
-          toast.success(`Scraped ${jobResults.length} jobs`);
-        } else {
-          toast.error("Real-time scraping failed, falling back to API");
-          const response = await jobApi.searchJobs(searchParams);
-          jobResults = response.jobs;
-        }
-      } else {
-        // Use regular API
-        const response = await jobApi.searchJobs(searchParams);
-        jobResults = response.jobs;
+      const searchQuery = { ...stableSearchParams, ...params };
+      console.log('Loading jobs with params:', searchQuery);
+      
+      const response = await jobApi.searchJobs(searchQuery);
+      
+      // Apply deduplication to the jobs
+      const deduplicatedJobs = jobDeduplicationService.deduplicateJobs(response.jobs);
+      
+      setJobs(deduplicatedJobs);
+      setFilteredJobs(deduplicatedJobs);
+      
+      if (deduplicatedJobs.length > 0 && !selectedJob) {
+        setSelectedJob(deduplicatedJobs[0]);
       }
-      
-      // Apply deduplication
-      const uniqueJobs = jobDeduplicationService.deduplicateJobs(jobResults);
-      
-      // Apply AI matching if enabled
-      if (aiMatchingEnabled) {
-        const jobsWithMatching = uniqueJobs.map(job => {
-          const matchScore = aiMatchingService.calculateJobMatch(job, userProfile);
-          return {
-            ...job,
-            matchPercentage: matchScore.overall,
-            aiMatchData: matchScore
-          };
-        }).sort((a, b) => (b.matchPercentage || 0) - (a.matchPercentage || 0));
-        
-        setJobs(jobsWithMatching);
-        toast.success(`Found ${jobsWithMatching.length} unique jobs with AI matching`);
-      } else {
-        setJobs(uniqueJobs);
-        toast.success(`Found ${uniqueJobs.length} unique jobs`);
+
+      if (user) {
+        try {
+          const alertMatches = await jobAlertService.checkAlertsForNewJobs(user.id, deduplicatedJobs);
+          alertMatches.forEach(({ alert, matchingJobs }) => {
+            jobAlertService.triggerNotification(user.id, alert, matchingJobs);
+          });
+        } catch (error) {
+          errorMonitoringService.captureAPIError(error, 'job-alerts', { userId: user.id });
+          console.error('Error checking job alerts:', error);
+        }
       }
     } catch (error) {
-      console.error("Job search failed:", error);
-      errorMonitoringService.captureAPIError(error, 'job-search', {
-        searchParams: JSON.stringify(searchParams)
+      console.error('Error loading jobs:', error);
+      errorMonitoringService.captureAPIError(error, 'job-search');
+      toast({
+        title: "Failed to load jobs",
+        description: "Please try again later.",
+        variant: "destructive",
       });
-      toast.error("Failed to search jobs. Please try again.");
     } finally {
       setLoading(false);
+      setInitialLoading(false);
+      loadingRef.current = false;
+    }
+  }, [stableSearchParams, selectedJob, user]);
+
+  // Load user data
+  const loadUserData = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      const metrics = await supabaseApplicationService.getApplicationMetrics(user.id);
+      setApplicationMetrics(metrics);
+      
+      const alerts = jobAlertService.getAlerts(user.id);
+      setActiveAlerts(alerts.filter(alert => alert.is_active).length);
+    } catch (error) {
+      console.error('Error loading user data:', error);
+      errorMonitoringService.captureAPIError(error, 'user-data', { userId: user.id });
+    }
+  }, [user]);
+
+  // Load saved and applied jobs
+  const loadSavedAndAppliedJobs = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      const savedIds = await supabaseSavedJobsService.getSavedJobIds(user.id);
+      setSavedJobIds(savedIds);
+      
+      const applications = await supabaseApplicationService.getUserApplications(user.id);
+      setAppliedJobIds(applications.map(app => app.job_id));
+    } catch (error) {
+      console.error('Error loading saved and applied jobs:', error);
+      errorMonitoringService.captureAPIError(error, 'saved-applied-jobs', { userId: user.id });
+    }
+  }, [user]);
+
+  // Load notification count
+  const loadNotificationCount = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      const count = await supabaseNotificationService.getUnreadCount(user.id);
+      setUnreadNotifications(count);
+    } catch (error) {
+      console.error('Error loading notification count:', error);
+      errorMonitoringService.captureAPIError(error, 'notifications', { userId: user.id });
+    }
+  }, [user]);
+
+  // Initial load jobs
+  useEffect(() => {
+    loadJobs();
+  }, []); // Only run once on mount
+
+  // Load user data when user changes
+  useEffect(() => {
+    if (user) {
+      loadUserData();
+      loadSavedAndAppliedJobs();
+      loadNotificationCount();
+    }
+  }, [user, loadUserData, loadSavedAndAppliedJobs, loadNotificationCount]);
+
+  // Update view mode based on screen size
+  useEffect(() => {
+    setViewMode(isMobile ? 'swipe' : 'list');
+  }, [isMobile]);
+
+  // ... keep existing code (all handler functions remain the same)
+
+  const handleJobSelect = (job: Job) => {
+    setSelectedJob(job);
+  };
+
+  const handleSaveJob = async (job: Job) => {
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
+
+    const isCurrentlySaved = savedJobIds.includes(job.id);
+    
+    if (isCurrentlySaved) {
+      const success = await unsaveJob(job.id);
+      if (success) {
+        setSavedJobIds(prev => prev.filter(id => id !== job.id));
+      }
+    } else {
+      const success = await saveJob(job);
+      if (success) {
+        setSavedJobIds(prev => [...prev, job.id]);
+      }
     }
   };
 
-  const getSalaryPrediction = (job: Job) => {
-    if (!aiMatchingEnabled) return null;
-    
-    return aiMatchingService.predictSalary(
-      job.title,
-      job.location,
-      job.skills || [],
-      5 // Default experience
-    );
-  };
+  const handleApplyJob = async (job: Job) => {
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
 
-  const saveJob = (jobId: string) => {
-    setSavedJobs(prev => [...prev, jobId]);
-    toast.success("Job saved successfully!");
-  };
+    if (appliedJobIds.includes(job.id)) {
+      toast({
+        title: "Already applied",
+        description: "You have already applied to this job.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-  const unsaveJob = (jobId: string) => {
-    setSavedJobs(prev => prev.filter(id => id !== jobId));
-    toast.success("Job removed from saved list");
-  };
-
-  const applyToJob = async (job: Job) => {
     try {
-      let isAvailable = true;
-      
-      // Use real URL verification if available
-      if (realTimeScrapingEnabled) {
-        isAvailable = await realBrowserService.verifyJobAvailability(job.applyUrl);
-      } else {
-        isAvailable = await jobApi.checkJobAvailability(job.applyUrl);
-      }
+      const isAvailable = await jobApi.checkJobAvailability(job.applyUrl || '');
       
       if (!isAvailable) {
-        toast.error("This job is no longer available");
+        toast({
+          title: "Job no longer available",
+          description: "This position has been filled or removed.",
+          variant: "destructive",
+        });
         return;
       }
 
-      // Open job application URL
-      window.open(job.applyUrl, '_blank');
-      toast.success("Opening job application page...");
+      const defaultResume = resumeService.getDefaultResume(user.id);
+      const defaultCoverLetter = resumeService.getDefaultCoverLetter(user.id);
+
+      const success = await applyToJob(
+        job,
+        defaultResume?.name,
+        defaultCoverLetter?.name,
+        `Applied via job search platform to ${job.company}`
+      );
+
+      if (success) {
+        setAppliedJobIds(prev => [...prev, job.id]);
+        loadUserData();
+        loadNotificationCount();
+        
+        if (job.applyUrl) {
+          window.open(job.applyUrl, '_blank');
+        }
+      }
     } catch (error) {
-      console.error("Error applying to job:", error);
-      errorMonitoringService.captureError({
-        message: `Failed to apply to job: ${error.message}`,
-        stack: error.stack,
-        context: {
-          route: window.location.pathname,
-          timestamp: new Date().toISOString()
-        },
-        severity: 'medium',
-        category: 'ui'
-      });
-      toast.error("Failed to open job application. Please try again.");
+      console.error('Error applying to job:', error);
+      errorMonitoringService.captureAPIError(error, 'job-application', { userId: user.id, jobId: job.id });
     }
   };
 
-  useEffect(() => {
-    searchJobs();
-  }, []);
+  const handleSaveSearch = async () => {
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchParams(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-      page: 1 // Reset page on new search
-    }));
+    const searchName = `Search: ${activeFilters.search || 'All jobs'} in ${activeFilters.location || 'All locations'}`;
+    
+    try {
+      await savedSearchService.saveSearch(searchName, activeFilters, user.id);
+      toast({
+        title: "Search saved",
+        description: "You can access this search from your saved searches.",
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to save search",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    }
   };
 
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Enhanced Job Search</h1>
-        <p className="text-muted-foreground">
-          Advanced job search with AI matching, real-time scraping, and salary predictions
-        </p>
+  const handleSearch = useCallback((query: string) => {
+    const newParams = { ...searchParams, query, page: 1 };
+    setSearchParams(newParams);
+    loadJobs(newParams);
+  }, [searchParams, loadJobs]);
+
+  const applyFilters = useCallback((filters: JobFilters) => {
+    setActiveFilters(filters);
+    
+    const searchQuery: JobSearchParams = {
+      query: filters.search,
+      location: filters.location,
+      remote: filters.remote,
+      salary_min: filters.salaryRange[0] > 0 ? filters.salaryRange[0] : undefined,
+      salary_max: filters.salaryRange[1] < 300000 ? filters.salaryRange[1] : undefined,
+      job_type: filters.jobType.length > 0 ? filters.jobType[0] : undefined,
+      experience_level: filters.experienceLevels.length > 0 ? filters.experienceLevels[0] : undefined,
+      page: 1
+    };
+    
+    setSearchParams(searchQuery);
+    loadJobs(searchQuery);
+  }, [loadJobs]);
+
+  const sortJobs = useCallback((option: SortOption) => {
+    let sortedJobs = [...filteredJobs];
+    
+    switch (option) {
+      case 'relevance':
+        sortedJobs.sort((a, b) => (b.matchPercentage || 0) - (a.matchPercentage || 0));
+        break;
+      case 'date-newest':
+        sortedJobs.sort((a, b) => new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime());
+        break;
+      case 'date-oldest':
+        sortedJobs.sort((a, b) => new Date(a.postedAt).getTime() - new Date(b.postedAt).getTime());
+        break;
+      case 'salary-highest':
+        sortedJobs.sort((a, b) => b.salary.max - a.salary.max);
+        break;
+      case 'salary-lowest':
+        sortedJobs.sort((a, b) => a.salary.min - b.salary.min);
+        break;
+    }
+    
+    setFilteredJobs(sortedJobs);
+    if (sortedJobs.length > 0) {
+      setSelectedJob(sortedJobs[0]);
+    }
+  }, [filteredJobs]);
+
+  const handleSortChange = useCallback((value: string) => {
+    setSortOption(value as SortOption);
+    sortJobs(value as SortOption);
+  }, [sortJobs]);
+
+  // Memoized computed values
+  const savedJobs = useMemo(() => 
+    jobs.filter(job => savedJobIds.includes(job.id)), 
+    [jobs, savedJobIds]
+  );
+  
+  const appliedJobs = useMemo(() => 
+    jobs.filter(job => appliedJobIds.includes(job.id)), 
+    [jobs, appliedJobIds]
+  );
+
+  const handleSessionLogout = useCallback(async () => {
+    await logout();
+  }, [logout]);
+
+  if (initialLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900/30">
+        {!isMobile && <Navbar />}
+        {isMobile && <MobileHeader />}
+        <main className={`flex-1 ${isMobile ? 'pt-16' : 'pt-20'} flex items-center justify-center`}>
+          <div className="text-center">
+            <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4" />
+            <p className="text-gray-600">Loading jobs...</p>
+          </div>
+        </main>
       </div>
+    );
+  }
 
-      {/* Advanced Settings */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Search Settings</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-4 flex-wrap">
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="realTimeScrapingEnabled"
-                checked={realTimeScrapingEnabled}
-                onChange={(e) => setRealTimeScrapingEnabled(e.target.checked)}
-                className="rounded border-gray-300"
-              />
-              <label htmlFor="realTimeScrapingEnabled" className="text-sm">
-                Real-time scraping (slower but more comprehensive)
-              </label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="aiMatchingEnabled"
-                checked={aiMatchingEnabled}
-                onChange={(e) => setAiMatchingEnabled(e.target.checked)}
-                className="rounded border-gray-300"
-              />
-              <label htmlFor="aiMatchingEnabled" className="text-sm">
-                AI job matching and salary predictions
-              </label>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Search Form */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Search className="h-5 w-5" />
-            Search Jobs
-          </CardTitle>
-          <CardDescription>
-            Search across multiple job boards with AI-powered matching and deduplication
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Job title, keywords, or company"
-                  name="query"
-                  value={searchParams.query}
-                  onChange={handleInputChange}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <div className="flex-1">
-              <div className="relative">
-                <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Location"
-                  name="location"
-                  value={searchParams.location}
-                  onChange={handleInputChange}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <Button onClick={searchJobs} disabled={loading} className="min-w-[120px]">
-              {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Searching...
-                </>
-              ) : (
-                <>
-                  {realTimeScrapingEnabled ? <Zap className="h-4 w-4 mr-2" /> : <Search className="h-4 w-4 mr-2" />}
-                  Search
-                </>
-              )}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Results */}
-      <Tabs defaultValue="all" className="w-full">
-        <TabsList>
-          <TabsTrigger value="all">All Jobs ({jobs.length})</TabsTrigger>
-          <TabsTrigger value="saved">Saved Jobs ({savedJobs.length})</TabsTrigger>
-          {aiMatchingEnabled && (
-            <TabsTrigger value="top-matches">
-              <Star className="h-4 w-4 mr-1" />
-              Top Matches
-            </TabsTrigger>
-          )}
-        </TabsList>
-        
-        <TabsContent value="all" className="space-y-4">
-          {jobs.map((job) => {
-            const salaryPrediction = getSalaryPrediction(job);
+  return (
+    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900/30">
+      {!isMobile && <Navbar />}
+      {isMobile && <MobileHeader />}
+      
+      <main className={`flex-1 ${isMobile ? 'pt-16' : 'pt-20'}`}>
+        <div className="container px-4 py-8 mx-auto max-w-7xl">
+          {/* ... keep existing code (header section) */}
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
+              Find Your Next Opportunity
+            </h1>
             
-            return (
-              <Card key={job.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="text-xl font-semibold">{job.title}</h3>
-                        {aiMatchingEnabled && job.matchPercentage && (
-                          <Badge variant={job.matchPercentage >= 80 ? "default" : job.matchPercentage >= 60 ? "secondary" : "outline"}>
-                            <Star className="h-3 w-3 mr-1" />
-                            {job.matchPercentage}% match
-                          </Badge>
-                        )}
-                      </div>
-                      
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
-                        <div className="flex items-center gap-1">
-                          <Building className="h-4 w-4" />
-                          {job.company}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <MapPin className="h-4 w-4" />
-                          {job.location}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
-                          {new Date(job.postedAt).toLocaleDateString()}
-                        </div>
-                      </div>
-                      
-                      {job.salary && (
-                        <div className="flex items-center gap-1 text-sm font-medium text-green-600 mb-2">
-                          <DollarSign className="h-4 w-4" />
-                          {job.salary.currency}{job.salary.min.toLocaleString()} - {job.salary.currency}{job.salary.max.toLocaleString()}
-                          {salaryPrediction && (
-                            <span className="text-xs text-muted-foreground ml-2">
-                              (Predicted: ${salaryPrediction.predictedSalary.median.toLocaleString()})
-                            </span>
-                          )}
-                        </div>
-                      )}
-                      
-                      {realTimeScrapingEnabled && job.source === 'Real-time Scraping' && (
-                        <Badge variant="outline" className="mb-2">
-                          <TrendingUp className="h-3 w-3 mr-1" />
-                          Live Data
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <Button
-                        variant={savedJobs.includes(job.id) ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => savedJobs.includes(job.id) ? unsaveJob(job.id) : saveJob(job.id)}
-                      >
-                        {savedJobs.includes(job.id) ? "Saved" : "Save"}
-                      </Button>
-                      <Button size="sm" onClick={() => applyToJob(job)}>
-                        <ExternalLink className="h-4 w-4 mr-1" />
-                        Apply
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                    {job.description}
-                  </p>
-                  
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {job.skills?.slice(0, 5).map((skill) => (
-                      <Badge key={skill} variant="secondary" className="text-xs">
-                        {skill}
+            <div className="flex items-center space-x-4">
+              {user && (
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-gray-600">Welcome, {userProfile?.full_name || user.email}</span>
+                    {activeAlerts > 0 && (
+                      <Badge variant="outline" className="bg-blue-50 text-blue-600">
+                        <Bell className="w-3 h-3 mr-1" />
+                        {activeAlerts} alerts
                       </Badge>
-                    ))}
-                    {job.skills && job.skills.length > 5 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{job.skills.length - 5} more
+                    )}
+                    {unreadNotifications > 0 && (
+                      <Badge variant="outline" className="bg-red-50 text-red-600">
+                        {unreadNotifications} new
                       </Badge>
                     )}
                   </div>
-                  
-                  {aiMatchingEnabled && job.aiMatchData && (
-                    <div className="bg-blue-50 p-3 rounded-lg mb-3">
-                      <div className="text-xs text-blue-800 font-medium mb-1">AI Match Analysis:</div>
-                      <div className="text-xs text-blue-700">
-                        {job.aiMatchData.reasons.slice(0, 2).join(', ')}
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div className="flex justify-between items-center text-xs text-muted-foreground">
-                    <span>Source: {job.source}</span>
-                    <div className="flex gap-2">
-                      {job.remote && <Badge variant="outline">Remote</Badge>}
-                      <Badge variant="outline">{job.type}</Badge>
-                      <Badge variant="outline">{job.level}</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-          
-          {jobs.length === 0 && !loading && (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <p className="text-muted-foreground">No jobs found. Try adjusting your search criteria.</p>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="saved" className="space-y-4">
-          {jobs.filter(job => savedJobs.includes(job.id)).map((job) => (
-            <Card key={job.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                {/* Same job card content as above but with Remove button */}
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex-1">
-                    <h3 className="text-xl font-semibold mb-2">{job.title}</h3>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
-                      <div className="flex items-center gap-1">
-                        <Building className="h-4 w-4" />
-                        {job.company}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <MapPin className="h-4 w-4" />
-                        {job.location}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => unsaveJob(job.id)}
-                    >
-                      Remove
-                    </Button>
-                    <Button size="sm" onClick={() => applyToJob(job)}>
-                      <ExternalLink className="h-4 w-4 mr-1" />
-                      Apply
-                    </Button>
-                  </div>
+                  <Button variant="outline" size="sm" onClick={logout}>
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Logout
+                  </Button>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-          
-          {savedJobs.length === 0 && (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <p className="text-muted-foreground">No saved jobs yet. Save jobs from the search results to see them here.</p>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
+              )}
+              
+              <div className="hidden md:block">
+                <AutomationSettings />
+              </div>
+            </div>
+          </div>
 
-        {aiMatchingEnabled && (
-          <TabsContent value="top-matches" className="space-y-4">
-            {jobs.filter(job => (job.matchPercentage || 0) >= 70).map((job) => (
-              <Card key={job.id} className="hover:shadow-md transition-shadow border-green-200">
-                <CardContent className="p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="text-xl font-semibold">{job.title}</h3>
-                        <Badge variant="default" className="bg-green-600">
-                          <Star className="h-3 w-3 mr-1" />
-                          {job.matchPercentage}% match
-                        </Badge>
-                      </div>
-                      
-                      {job.aiMatchData && (
-                        <div className="bg-green-50 p-3 rounded-lg mb-3">
-                          <div className="text-sm font-medium text-green-800 mb-2">Why this is a great match:</div>
-                          <ul className="text-sm text-green-700 space-y-1">
-                            {job.aiMatchData.reasons.map((reason, index) => (
-                              <li key={index}>• {reason}</li>
-                            ))}
-                          </ul>
-                          {job.aiMatchData.suggestions.length > 0 && (
-                            <div className="mt-2">
-                              <div className="text-sm font-medium text-blue-800 mb-1">To improve your match:</div>
-                              <ul className="text-sm text-blue-700 space-y-1">
-                                {job.aiMatchData.suggestions.map((suggestion, index) => (
-                                  <li key={index}>• {suggestion}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      
-                      {/* Rest of job details */}
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
-                        <div className="flex items-center gap-1">
-                          <Building className="h-4 w-4" />
-                          {job.company}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <MapPin className="h-4 w-4" />
-                          {job.location}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <Button
-                        variant={savedJobs.includes(job.id) ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => savedJobs.includes(job.id) ? unsaveJob(job.id) : saveJob(job.id)}
-                      >
-                        {savedJobs.includes(job.id) ? "Saved" : "Save"}
-                      </Button>
-                      <Button size="sm" onClick={() => applyToJob(job)} className="bg-green-600 hover:bg-green-700">
-                        <ExternalLink className="h-4 w-4 mr-1" />
-                        Apply Now
-                      </Button>
+          {/* ... keep existing code (metrics dashboard, content sections) */}
+          {user && applicationMetrics && (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-2">
+                    <TrendingUp className="h-4 w-4 text-blue-600" />
+                    <div>
+                      <p className="text-sm text-gray-600">Total Applied</p>
+                      <p className="text-2xl font-bold">{applicationMetrics.totalApplications}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            ))}
-            
-            {jobs.filter(job => (job.matchPercentage || 0) >= 70).length === 0 && (
               <Card>
-                <CardContent className="p-8 text-center">
-                  <p className="text-muted-foreground">No high-match jobs found. Try broadening your search criteria or updating your profile.</p>
+                <CardContent className="p-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Response Rate</p>
+                    <p className="text-2xl font-bold text-green-600">{applicationMetrics.responseRate.toFixed(1)}%</p>
+                  </div>
                 </CardContent>
               </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Interview Rate</p>
+                    <p className="text-2xl font-bold text-purple-600">{applicationMetrics.interviewRate.toFixed(1)}%</p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Offer Rate</p>
+                    <p className="text-2xl font-bold text-orange-600">{applicationMetrics.offerRate.toFixed(1)}%</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          <div className="space-y-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="font-semibold text-lg">Filter Jobs</h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Find jobs that match your preferences</p>
+                  </div>
+                  {user && (
+                    <Button variant="outline" size="sm" onClick={handleSaveSearch}>
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Search
+                    </Button>
+                  )}
+                </div>
+              </div>
+              <div className="p-4">
+                <JobFiltersSection onApplyFilters={applyFilters} />
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <JobApplicationAutomation />
+            </div>
+
+            {user && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                  <h2 className="font-semibold text-lg">My Jobs</h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Saved and Applied Positions</p>
+                </div>
+                <div className="p-4">
+                  <SavedAndAppliedJobs
+                    savedJobs={savedJobs}
+                    appliedJobs={appliedJobs}
+                    onApply={handleApplyJob}
+                    onSave={handleSaveJob}
+                    onSelect={handleJobSelect}
+                    selectedJobId={selectedJob?.id || null}
+                  />
+                </div>
+              </div>
             )}
-          </TabsContent>
-        )}
-      </Tabs>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div>
+                <Card className="overflow-hidden h-full max-h-[calc(100vh-250px)]">
+                  <CardHeader className="py-3 px-4 border-b flex flex-row justify-between items-center">
+                    <div>
+                      <CardTitle className="text-base font-medium">Browse Jobs</CardTitle>
+                      <p className="text-xs text-muted-foreground">
+                        Showing {filteredJobs.length} jobs
+                        {loading && <span className="ml-2 text-blue-600">• Loading...</span>}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Select defaultValue={sortOption} onValueChange={handleSortChange}>
+                        <SelectTrigger className="w-[180px] bg-white dark:bg-gray-800 h-8 text-sm">
+                          <SelectValue placeholder="Sort By: Relevance" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="relevance">Sort By: Relevance</SelectItem>
+                          <SelectItem value="date-newest">Date: Newest First</SelectItem>
+                          <SelectItem value="date-oldest">Date: Oldest First</SelectItem>
+                          <SelectItem value="salary-highest">Salary: Highest First</SelectItem>
+                          <SelectItem value="salary-lowest">Salary: Lowest First</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </CardHeader>
+                  
+                  <CardContent className="p-0 divide-y overflow-y-auto max-h-[calc(100vh-300px)]">
+                    {filteredJobs.map(job => (
+                      <div key={job.id} className="p-4">
+                        <EnhancedJobCard 
+                          job={job}
+                          onApply={handleApplyJob}
+                          onSave={handleSaveJob}
+                          onSelect={handleJobSelect}
+                          isSelected={selectedJob?.id === job.id}
+                          isSaved={savedJobIds.includes(job.id)}
+                          isApplied={appliedJobIds.includes(job.id)}
+                          variant="list"
+                        />
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              </div>
+              
+              <div>
+                <Card className="h-full max-h-[calc(100vh-250px)] overflow-hidden">
+                  <CardContent className="p-0">
+                    <JobDetailView 
+                      job={selectedJob} 
+                      onApply={handleApplyJob}
+                      onSave={handleSaveJob}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+      
+      <AuthModal 
+        isOpen={authModalOpen} 
+        onClose={() => setAuthModalOpen(false)} 
+      />
+
+      <SessionTimeoutWarning
+        isOpen={showWarning}
+        timeLeft={formatTimeLeft()}
+        onExtend={extendSession}
+        onLogout={handleSessionLogout}
+      />
     </div>
   );
 };
