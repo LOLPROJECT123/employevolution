@@ -1,4 +1,3 @@
-
 import { Link, useLocation } from "react-router-dom";
 import { useMobile } from "@/hooks/use-mobile";
 import { ModeToggle } from "@/components/ModeToggle";
@@ -66,12 +65,15 @@ const Navbar = () => {
     return location.pathname === path;
   };
 
-  const handleSignOut = () => {
-    logout();
+  const handleSignOut = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   const handleSignIn = () => {
-    // Navigate to auth page or trigger sign in
     window.location.href = '/auth';
   };
 
