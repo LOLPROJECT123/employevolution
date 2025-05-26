@@ -20,7 +20,7 @@ interface ValidationOptions {
 export const useSecurityValidation = () => {
   const [isValidating, setIsValidating] = useState(false);
 
-  const validateForm = useCallback(async <T>(
+  const validateForm = useCallback(async <T extends any>(
     data: any,
     schema: z.ZodSchema<T>,
     options: ValidationOptions = {}
