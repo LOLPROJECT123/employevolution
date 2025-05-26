@@ -33,13 +33,14 @@ import {
   Menu,
   MessageSquare,
   HelpCircle,
-  LogOut
+  LogOut,
+  LogIn
 } from "lucide-react";
 
 const Navbar = () => {
   const isMobile = useMobile();
   const location = useLocation();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
 
   // Handle scroll effect for navbar
@@ -67,6 +68,11 @@ const Navbar = () => {
 
   const handleSignOut = () => {
     logout();
+  };
+
+  const handleSignIn = () => {
+    // Navigate to auth page or trigger sign in
+    window.location.href = '/auth';
   };
 
   return (
@@ -183,12 +189,14 @@ const Navbar = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 bg-background">
-              <DropdownMenuItem asChild>
-                <Link to="/profile" className="flex items-center">
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
-                </Link>
-              </DropdownMenuItem>
+              {user && (
+                <DropdownMenuItem asChild>
+                  <Link to="/profile" className="flex items-center">
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </Link>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem>
                 <MessageSquare className="mr-2 h-4 w-4" />
                 <span>Report Issues</span>
@@ -198,10 +206,17 @@ const Navbar = () => {
                 <span>Support</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleSignOut}>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Sign out</span>
-              </DropdownMenuItem>
+              {user ? (
+                <DropdownMenuItem onClick={handleSignOut}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Sign out</span>
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem onClick={handleSignIn}>
+                  <LogIn className="mr-2 h-4 w-4" />
+                  <span>Sign in</span>
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
