@@ -28,15 +28,15 @@ const DocumentList: React.FC<DocumentListProps> = ({
   onSetDefault,
   onPreview
 }) => {
-  const handleDownload = async (document: UserDocument) => {
+  const handleDownload = async (doc: UserDocument) => {
     try {
-      const url = await documentService.getDocumentUrl(document.file_path);
-      const link = document.createElement('a');
+      const url = await documentService.getDocumentUrl(doc.file_path);
+      const link = window.document.createElement('a');
       link.href = url;
-      link.download = document.name;
-      document.body.appendChild(link);
+      link.download = doc.name;
+      window.document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
+      window.document.body.removeChild(link);
     } catch (error) {
       toast({
         title: "Download failed",
