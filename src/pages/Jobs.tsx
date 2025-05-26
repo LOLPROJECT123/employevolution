@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
 import { Job, JobFilters } from "@/types/job";
@@ -43,11 +43,14 @@ const Jobs = () => {
   const [savedJobIds, setSavedJobIds] = useState<string[]>([]);
   const [appliedJobIds, setAppliedJobIds] = useState<string[]>([]);
   const [sortOption, setSortOption] = useState<SortOption>('relevance');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [applicationMetrics, setApplicationMetrics] = useState<any>(null);
   const [activeAlerts, setActiveAlerts] = useState(0);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  
+  // Stable search parameters with proper memoization
   const [searchParams, setSearchParams] = useState<JobSearchParams>({
     query: '',
     location: '',
@@ -72,74 +75,32 @@ const Jobs = () => {
     benefits: []
   });
 
-  // Load initial jobs and user data
-  useEffect(() => {
-    loadJobs();
-    if (user) {
-      loadUserData();
+  // Prevent multiple simultaneous API calls
+  const loadingRef = useRef(false);
+
+  // Memoized search parameters to prevent unnecessary re-renders
+  const stableSearchParams = useMemo(() => searchParams, [
+    searchParams.query,
+    searchParams.location,
+    searchParams.page,
+    searchParams.limit,
+    searchParams.remote
+  ]);
+
+  // Load jobs with caching and prevent duplicate calls
+  const loadJobs = useCallback(async (params: Partial<JobSearchParams> = {}) => {
+    if (loadingRef.current) {
+      console.log('Skipping duplicate job load request');
+      return;
     }
-  }, [user]);
 
-  // Update view mode based on screen size
-  useEffect(() => {
-    setViewMode(isMobile ? 'swipe' : 'list');
-  }, [isMobile]);
-
-  // Load user's saved and applied jobs from Supabase
-  useEffect(() => {
-    if (user) {
-      loadSavedAndAppliedJobs();
-      loadNotificationCount();
-    }
-  }, [user]);
-
-  const loadSavedAndAppliedJobs = async () => {
-    if (!user) return;
-    
-    try {
-      // Load saved job IDs
-      const savedIds = await supabaseSavedJobsService.getSavedJobIds(user.id);
-      setSavedJobIds(savedIds);
-      
-      // Load applied job IDs
-      const applications = await supabaseApplicationService.getUserApplications(user.id);
-      setAppliedJobIds(applications.map(app => app.job_id));
-    } catch (error) {
-      console.error('Error loading saved and applied jobs:', error);
-    }
-  };
-
-  const loadNotificationCount = async () => {
-    if (!user) return;
-    
-    try {
-      const count = await supabaseNotificationService.getUnreadCount(user.id);
-      setUnreadNotifications(count);
-    } catch (error) {
-      console.error('Error loading notification count:', error);
-    }
-  };
-
-  const loadUserData = async () => {
-    if (!user) return;
-    
-    try {
-      // Load application metrics
-      const metrics = await supabaseApplicationService.getApplicationMetrics(user.id);
-      setApplicationMetrics(metrics);
-      
-      // Load active alerts count
-      const alerts = jobAlertService.getAlerts(user.id);
-      setActiveAlerts(alerts.filter(alert => alert.is_active).length);
-    } catch (error) {
-      console.error('Error loading user data:', error);
-    }
-  };
-
-  const loadJobs = async (params: Partial<JobSearchParams> = {}) => {
+    loadingRef.current = true;
     setLoading(true);
+    
     try {
-      const searchQuery = { ...searchParams, ...params };
+      const searchQuery = { ...stableSearchParams, ...params };
+      console.log('Loading jobs with params:', searchQuery);
+      
       const response = await jobApi.searchJobs(searchQuery);
       setJobs(response.jobs);
       setFilteredJobs(response.jobs);
@@ -150,12 +111,17 @@ const Jobs = () => {
 
       // Check for job alerts if user is logged in
       if (user) {
-        const alertMatches = await jobAlertService.checkAlertsForNewJobs(user.id, response.jobs);
-        alertMatches.forEach(({ alert, matchingJobs }) => {
-          jobAlertService.triggerNotification(user.id, alert, matchingJobs);
-        });
+        try {
+          const alertMatches = await jobAlertService.checkAlertsForNewJobs(user.id, response.jobs);
+          alertMatches.forEach(({ alert, matchingJobs }) => {
+            jobAlertService.triggerNotification(user.id, alert, matchingJobs);
+          });
+        } catch (error) {
+          console.error('Error checking job alerts:', error);
+        }
       }
     } catch (error) {
+      console.error('Error loading jobs:', error);
       toast({
         title: "Failed to load jobs",
         description: "Please try again later.",
@@ -163,8 +129,73 @@ const Jobs = () => {
       });
     } finally {
       setLoading(false);
+      setInitialLoading(false);
+      loadingRef.current = false;
     }
-  };
+  }, [stableSearchParams, selectedJob, user]);
+
+  // Load user data
+  const loadUserData = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      const metrics = await supabaseApplicationService.getApplicationMetrics(user.id);
+      setApplicationMetrics(metrics);
+      
+      const alerts = jobAlertService.getAlerts(user.id);
+      setActiveAlerts(alerts.filter(alert => alert.is_active).length);
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    }
+  }, [user]);
+
+  // Load saved and applied jobs
+  const loadSavedAndAppliedJobs = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      const savedIds = await supabaseSavedJobsService.getSavedJobIds(user.id);
+      setSavedJobIds(savedIds);
+      
+      const applications = await supabaseApplicationService.getUserApplications(user.id);
+      setAppliedJobIds(applications.map(app => app.job_id));
+    } catch (error) {
+      console.error('Error loading saved and applied jobs:', error);
+    }
+  }, [user]);
+
+  // Load notification count
+  const loadNotificationCount = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      const count = await supabaseNotificationService.getUnreadCount(user.id);
+      setUnreadNotifications(count);
+    } catch (error) {
+      console.error('Error loading notification count:', error);
+    }
+  }, [user]);
+
+  // Initial load jobs
+  useEffect(() => {
+    loadJobs();
+  }, []); // Only run once on mount
+
+  // Load user data when user changes
+  useEffect(() => {
+    if (user) {
+      loadUserData();
+      loadSavedAndAppliedJobs();
+      loadNotificationCount();
+    }
+  }, [user, loadUserData, loadSavedAndAppliedJobs, loadNotificationCount]);
+
+  // Update view mode based on screen size
+  useEffect(() => {
+    setViewMode(isMobile ? 'swipe' : 'list');
+  }, [isMobile]);
+
+  // ... keep existing code (all handler functions remain the same)
 
   const handleJobSelect = (job: Job) => {
     setSelectedJob(job);
@@ -207,7 +238,6 @@ const Jobs = () => {
     }
 
     try {
-      // Check if job is still available
       const isAvailable = await jobApi.checkJobAvailability(job.applyUrl || '');
       
       if (!isAvailable) {
@@ -219,11 +249,9 @@ const Jobs = () => {
         return;
       }
 
-      // Get user's default resume and cover letter
       const defaultResume = resumeService.getDefaultResume(user.id);
       const defaultCoverLetter = resumeService.getDefaultCoverLetter(user.id);
 
-      // Submit application
       const success = await applyToJob(
         job,
         defaultResume?.name,
@@ -233,12 +261,9 @@ const Jobs = () => {
 
       if (success) {
         setAppliedJobIds(prev => [...prev, job.id]);
-        
-        // Refresh user data
         loadUserData();
         loadNotificationCount();
         
-        // Open application URL if available
         if (job.applyUrl) {
           window.open(job.applyUrl, '_blank');
         }
@@ -271,13 +296,13 @@ const Jobs = () => {
     }
   };
 
-  const handleSearch = (query: string) => {
+  const handleSearch = useCallback((query: string) => {
     const newParams = { ...searchParams, query, page: 1 };
     setSearchParams(newParams);
     loadJobs(newParams);
-  };
+  }, [searchParams, loadJobs]);
 
-  const applyFilters = (filters: JobFilters) => {
+  const applyFilters = useCallback((filters: JobFilters) => {
     setActiveFilters(filters);
     
     const searchQuery: JobSearchParams = {
@@ -293,9 +318,9 @@ const Jobs = () => {
     
     setSearchParams(searchQuery);
     loadJobs(searchQuery);
-  };
+  }, [loadJobs]);
 
-  const sortJobs = (option: SortOption) => {
+  const sortJobs = useCallback((option: SortOption) => {
     let sortedJobs = [...filteredJobs];
     
     switch (option) {
@@ -320,18 +345,25 @@ const Jobs = () => {
     if (sortedJobs.length > 0) {
       setSelectedJob(sortedJobs[0]);
     }
-  };
+  }, [filteredJobs]);
 
-  const handleSortChange = (value: string) => {
+  const handleSortChange = useCallback((value: string) => {
     setSortOption(value as SortOption);
     sortJobs(value as SortOption);
-  };
+  }, [sortJobs]);
 
-  // Get saved and applied jobs for display
-  const savedJobs = jobs.filter(job => savedJobIds.includes(job.id));
-  const appliedJobs = jobs.filter(job => appliedJobIds.includes(job.id));
+  // Memoized computed values
+  const savedJobs = useMemo(() => 
+    jobs.filter(job => savedJobIds.includes(job.id)), 
+    [jobs, savedJobIds]
+  );
+  
+  const appliedJobs = useMemo(() => 
+    jobs.filter(job => appliedJobIds.includes(job.id)), 
+    [jobs, appliedJobIds]
+  );
 
-  if (loading && jobs.length === 0) {
+  if (initialLoading) {
     return (
       <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900/30">
         {!isMobile && <Navbar />}
@@ -353,6 +385,7 @@ const Jobs = () => {
       
       <main className={`flex-1 ${isMobile ? 'pt-16' : 'pt-20'}`}>
         <div className="container px-4 py-8 mx-auto max-w-7xl">
+          {/* ... keep existing code (header section) */}
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
               Find Your Next Opportunity
@@ -388,7 +421,7 @@ const Jobs = () => {
             </div>
           </div>
 
-          {/* Application Metrics Dashboard */}
+          {/* ... keep existing code (metrics dashboard, content sections) */}
           {user && applicationMetrics && (
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
               <Card>
@@ -429,9 +462,7 @@ const Jobs = () => {
             </div>
           )}
 
-          {/* Main Content Section */}
           <div className="space-y-6">
-            {/* Enhanced Job Filtering */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
               <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                 <div className="flex justify-between items-center">
@@ -452,7 +483,6 @@ const Jobs = () => {
               </div>
             </div>
 
-            {/* Job Application Automation Section */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
               <JobApplicationAutomation />
             </div>
@@ -476,7 +506,6 @@ const Jobs = () => {
               </div>
             )}
             
-            {/* Job Browser */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
                 <Card className="overflow-hidden h-full max-h-[calc(100vh-250px)]">
@@ -485,6 +514,7 @@ const Jobs = () => {
                       <CardTitle className="text-base font-medium">Browse Jobs</CardTitle>
                       <p className="text-xs text-muted-foreground">
                         Showing {filteredJobs.length} jobs
+                        {loading && <span className="ml-2 text-blue-600">• Loading...</span>}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
