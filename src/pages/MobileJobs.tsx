@@ -178,9 +178,13 @@ const MobileJobs = () => {
           {selectedJob ? (
             <MobileJobDetail
               job={selectedJob}
-              onClose={handleCloseJobDetail}
+              onBack={handleCloseJobDetail}
               isSaved={savedJobs.includes(selectedJob.id)}
               onSave={() => handleSaveJob(selectedJob.id)}
+              onApply={(job) => {
+                console.log('Applying to job:', job);
+                // Add apply logic here
+              }}
             />
           ) : isFilterOpen ? (
             <div className="p-4">

@@ -1,8 +1,10 @@
+
 interface ErrorContext {
   route?: string;
   timestamp?: string;
   jobId?: string;
   query?: string;
+  location?: string;
   searchParams?: string;
   userId?: string;
   sessionId?: string;

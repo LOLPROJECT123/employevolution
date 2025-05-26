@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Job, JobStatus } from "@/types/job";
 import { 

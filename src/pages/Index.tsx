@@ -1,5 +1,7 @@
+
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { Job } from '@/types/job';
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
 import { useMobile } from "@/hooks/use-mobile";

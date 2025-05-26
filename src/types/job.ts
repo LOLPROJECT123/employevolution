@@ -1,4 +1,3 @@
-
 export interface Job {
   id: string;
   title: string;
@@ -31,10 +30,10 @@ export interface Job {
     easyApply?: boolean;
   };
   matchCriteria?: {
-    skillsMatch: number;
-    experienceMatch: number;
-    locationMatch: number;
-    salaryMatch: number;
+    degree: boolean;
+    experience: boolean;
+    skills: boolean;
+    location: boolean;
   };
   aiMatchData?: {
     overall: number;
@@ -94,4 +93,4 @@ export interface SavedSearch {
   lastUsed?: string;
 }
 
-export type JobStatus = 'applied' | 'interview' | 'offer' | 'rejected' | 'saved';
+export type JobStatus = 'applied' | 'interviewing' | 'offered' | 'rejected' | 'saved' | 'accepted';
