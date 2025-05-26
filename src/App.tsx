@@ -19,6 +19,8 @@ import Auth from "./pages/Auth";
 import Calendar from "./pages/Calendar";
 import Communications from "./pages/Communications";
 import Analytics from "./pages/Analytics";
+import SecurityMiddleware from "@/components/security/SecurityMiddleware";
+import Security from "./pages/Security";
 
 const queryClient = new QueryClient();
 
@@ -28,27 +30,30 @@ function App() {
       <TooltipProvider>
         <AuthProvider>
           <JobApplicationProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/jobs" element={<Jobs />} />
-                <Route path="/job-automation" element={<JobAutomation />} />
-                <Route path="/resume-tools" element={<ResumeTools />} />
-                <Route path="/resume-tools/:tab" element={<ResumeTools />} />
-                <Route path="/networking" element={<Networking />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/calendar" element={<Calendar />} />
-                <Route path="/communications" element={<Communications />} />
-                <Route path="/analytics" element={<Analytics />} />
-                <Route path="/interview-practice" element={<InterviewPractice />} />
-                <Route path="/referrals" element={<Referrals />} />
-                <Route path="/salary-negotiations" element={<SalaryNegotiations />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/auth" element={<Auth />} />
-              </Routes>
-            </BrowserRouter>
+            <SecurityMiddleware>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/jobs" element={<Jobs />} />
+                  <Route path="/job-automation" element={<JobAutomation />} />
+                  <Route path="/resume-tools" element={<ResumeTools />} />
+                  <Route path="/resume-tools/:tab" element={<ResumeTools />} />
+                  <Route path="/networking" element={<Networking />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/calendar" element={<Calendar />} />
+                  <Route path="/communications" element={<Communications />} />
+                  <Route path="/analytics" element={<Analytics />} />
+                  <Route path="/security" element={<Security />} />
+                  <Route path="/interview-practice" element={<InterviewPractice />} />
+                  <Route path="/referrals" element={<Referrals />} />
+                  <Route path="/salary-negotiations" element={<SalaryNegotiations />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/auth" element={<Auth />} />
+                </Routes>
+              </BrowserRouter>
+            </SecurityMiddleware>
           </JobApplicationProvider>
         </AuthProvider>
       </TooltipProvider>

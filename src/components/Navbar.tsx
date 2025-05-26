@@ -33,8 +33,37 @@ import {
   MessageSquare,
   HelpCircle,
   LogOut,
-  LogIn
+  LogIn,
+  Home,
+  Briefcase,
+  FileText as FileTextIcon,
+  Send,
+  Calendar,
+  MessageSquare as MessageSquareIcon,
+  BarChart3,
+  Shield,
+  Zap,
+  Users as UsersIcon,
+  Play,
+  UserPlus,
+  DollarSign as DollarSignIcon
 } from "lucide-react";
+
+const navigationItems = [
+  { name: 'Dashboard', href: '/dashboard', icon: Home },
+  { name: 'Jobs', href: '/jobs', icon: Briefcase },
+  { name: 'Resume Tools', href: '/resume-tools', icon: FileTextIcon },
+  { name: 'Applications', href: '/dashboard', icon: Send },
+  { name: 'Calendar', href: '/calendar', icon: Calendar },
+  { name: 'Communications', href: '/communications', icon: MessageSquareIcon },
+  { name: 'Analytics', href: '/analytics', icon: BarChart3 },
+  { name: 'Security', href: '/security', icon: Shield },
+  { name: 'Job Automation', href: '/job-automation', icon: Zap },
+  { name: 'Networking', href: '/networking', icon: UsersIcon },
+  { name: 'Interview Practice', href: '/interview-practice', icon: Play },
+  { name: 'Referrals', href: '/referrals', icon: UserPlus },
+  { name: 'Salary Negotiations', href: '/salary-negotiations', icon: DollarSignIcon },
+];
 
 const Navbar = () => {
   const isMobile = useMobile();
@@ -93,89 +122,19 @@ const Navbar = () => {
           
           <NavigationMenu>
             <NavigationMenuList className="flex space-x-1">
-              <NavigationMenuItem>
-                <Link to="/dashboard">
-                  <div className={cn(
-                    "flex items-center px-3 py-2 text-sm font-medium transition-colors",
-                    isActive("/dashboard") ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                  )}>
-                    <BriefcaseIcon className="mr-2 h-4 w-4" />
-                    Dashboard
-                  </div>
-                </Link>
-              </NavigationMenuItem>
-              
-              <NavigationMenuItem>
-                <Link to="/jobs">
-                  <div className={cn(
-                    "flex items-center px-3 py-2 text-sm font-medium transition-colors",
-                    isActive("/jobs") ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                  )}>
-                    <BriefcaseIcon className="mr-2 h-4 w-4" />
-                    Jobs
-                  </div>
-                </Link>
-              </NavigationMenuItem>
-              
-              <NavigationMenuItem>
-                <Link to="/resume-tools">
-                  <div className={cn(
-                    "flex items-center px-3 py-2 text-sm font-medium transition-colors",
-                    isActive("/resume-tools") ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                  )}>
-                    <FileText className="mr-2 h-4 w-4" />
-                    Resume
-                  </div>
-                </Link>
-              </NavigationMenuItem>
-              
-              <NavigationMenuItem>
-                <Link to="/interview-practice">
-                  <div className={cn(
-                    "flex items-center px-3 py-2 text-sm font-medium transition-colors",
-                    isActive("/interview-practice") ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                  )}>
-                    <BookOpen className="mr-2 h-4 w-4" />
-                    Interview Prep
-                  </div>
-                </Link>
-              </NavigationMenuItem>
-              
-              <NavigationMenuItem>
-                <Link to="/referrals">
-                  <div className={cn(
-                    "flex items-center px-3 py-2 text-sm font-medium transition-colors",
-                    isActive("/referrals") ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                  )}>
-                    <Users className="mr-2 h-4 w-4" />
-                    Referrals
-                  </div>
-                </Link>
-              </NavigationMenuItem>
-              
-              <NavigationMenuItem>
-                <Link to="/salary-negotiations">
-                  <div className={cn(
-                    "flex items-center px-3 py-2 text-sm font-medium transition-colors",
-                    isActive("/salary-negotiations") ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                  )}>
-                    <DollarSign className="mr-2 h-4 w-4" />
-                    Salary
-                  </div>
-                </Link>
-              </NavigationMenuItem>
-              
-              <NavigationMenuItem>
-                <Link to="/networking">
-                  <div className={cn(
-                    "flex items-center px-3 py-2 text-sm font-medium transition-colors",
-                    isActive("/networking") ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                  )}>
-                    <Users className="mr-2 h-4 w-4" />
-                    Networking
-                  </div>
-                </Link>
-              </NavigationMenuItem>
+              {navigationItems.map((item) => (
+                <NavigationMenuItem key={item.name}>
+                  <Link to={item.href}>
+                    <div className={cn(
+                      "flex items-center px-3 py-2 text-sm font-medium transition-colors",
+                      isActive(item.href) ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                    )}>
+                      <item.icon className="mr-2 h-4 w-4" />
+                      {item.name}
+                    </div>
+                  </Link>
+                </NavigationMenuItem>
+              ))}
             </NavigationMenuList>
           </NavigationMenu>
         </div>

@@ -42,6 +42,45 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          id: string
+          ip_address: unknown | null
+          new_values: Json | null
+          old_values: Json | null
+          record_id: string | null
+          table_name: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string | null
+          table_name?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string | null
+          table_name?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       communications: {
         Row: {
           application_id: string | null
@@ -295,6 +334,30 @@ export type Database = {
           usage_count?: number | null
           user_id?: string
           variables?: Json | null
+        }
+        Relationships: []
+      }
+      encryption_keys: {
+        Row: {
+          created_at: string | null
+          encrypted_key: string
+          id: string
+          is_active: boolean | null
+          key_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          encrypted_key: string
+          id?: string
+          is_active?: boolean | null
+          key_name: string
+        }
+        Update: {
+          created_at?: string | null
+          encrypted_key?: string
+          id?: string
+          is_active?: boolean | null
+          key_name?: string
         }
         Relationships: []
       }
@@ -610,6 +673,33 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          created_at: string | null
+          endpoint: string
+          id: string
+          identifier: string
+          requests_count: number | null
+          window_start: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          endpoint: string
+          id?: string
+          identifier: string
+          requests_count?: number | null
+          window_start?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          endpoint?: string
+          id?: string
+          identifier?: string
+          requests_count?: number | null
+          window_start?: string | null
+        }
+        Relationships: []
+      }
       reminders: {
         Row: {
           created_at: string | null
@@ -772,6 +862,72 @@ export type Database = {
           },
         ]
       }
+      security_events: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          event_type: string
+          id: string
+          ip_address: unknown | null
+          metadata: Json | null
+          severity: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          event_type: string
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          severity?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          event_type?: string
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          severity?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_consents: {
+        Row: {
+          consent_date: string | null
+          consent_type: string
+          consented: boolean
+          id: string
+          ip_address: unknown | null
+          user_id: string
+          withdrawn_date: string | null
+        }
+        Insert: {
+          consent_date?: string | null
+          consent_type: string
+          consented?: boolean
+          id?: string
+          ip_address?: unknown | null
+          user_id: string
+          withdrawn_date?: string | null
+        }
+        Update: {
+          consent_date?: string | null
+          consent_type?: string
+          consented?: boolean
+          id?: string
+          ip_address?: unknown | null
+          user_id?: string
+          withdrawn_date?: string | null
+        }
+        Relationships: []
+      }
       user_documents: {
         Row: {
           created_at: string | null
@@ -825,7 +981,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cleanup_rate_limits: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
