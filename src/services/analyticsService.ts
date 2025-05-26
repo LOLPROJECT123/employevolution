@@ -1,440 +1,592 @@
-import { enhancedApplicationService } from './enhancedApplicationService';
-import { Job } from '@/types/job';
-import { ApplicationStatus } from '@/types/auth';
-
-interface ApplicationAnalytics {
-  overview: {
-    totalApplications: number;
-    responseRate: number;
-    interviewRate: number;
-    offerRate: number;
-    avgResponseTime: number;
-    activeApplications: number;
-  };
-  trends: {
-    applicationsOverTime: { date: string; count: number }[];
-    responseRateOverTime: { date: string; rate: number }[];
-    statusDistribution: { status: ApplicationStatus; count: number; percentage: number }[];
-  };
-  insights: {
-    topPerformingSkills: { skill: string; responseRate: number; applications: number }[];
-    bestCompanyTypes: { type: string; successRate: number; applications: number }[];
-    optimalApplicationTiming: { dayOfWeek: string; successRate: number }[];
-    salaryAnalysis: {
-      avgOfferedSalary: number;
-      salaryRangeDistribution: { range: string; count: number }[];
-    };
-  };
-  recommendations: string[];
-  benchmarks: {
-    industryAvgResponseRate: number;
-    industryAvgInterviewRate: number;
-    industryAvgOfferRate: number;
-    yourPerformanceVsIndustry: {
-      responseRate: 'above' | 'below' | 'average';
-      interviewRate: 'above' | 'below' | 'average';
-      offerRate: 'above' | 'below' | 'average';
-    };
-  };
+interface JobApplicationMetrics {
+  totalApplications: number;
+  responseRate: number;
+  interviewRate: number;
+  offerRate: number;
+  averageResponseTime: number;
+  applicationsByStatus: Record<string, number>;
+  applicationsByMonth: Array<{ month: string; count: number }>;
+  topCompanies: Array<{ company: string; applications: number; responseRate: number }>;
+  topJobTitles: Array<{ title: string; applications: number; successRate: number }>;
+  salaryRanges: Array<{ range: string; count: number; averageOffer: number }>;
 }
 
-interface TimeSeriesData {
-  date: string;
-  applications: number;
-  responses: number;
-  interviews: number;
-  offers: number;
+interface JobSearchMetrics {
+  totalSearches: number;
+  averageSearchResults: number;
+  clickThroughRate: number;
+  saveRate: number;
+  popularKeywords: Array<{ keyword: string; searches: number; successRate: number }>;
+  popularLocations: Array<{ location: string; searches: number; avgSalary: number }>;
+  searchTrends: Array<{ date: string; searches: number; applications: number }>;
+}
+
+interface MarketInsights {
+  salaryTrends: Array<{ jobTitle: string; avgSalary: number; growth: number }>;
+  demandBySkill: Array<{ skill: string; jobCount: number; growth: number }>;
+  industryGrowth: Array<{ industry: string; jobCount: number; growth: number }>;
+  competitiveAnalysis: Array<{ company: string; openPositions: number; avgSalary: number }>;
+  locationTrends: Array<{ location: string; jobCount: number; avgSalary: number; costOfLiving: number }>;
+}
+
+interface UserPerformanceMetrics {
+  profileCompleteness: number;
+  resumeViews: number;
+  profileViews: number;
+  networkConnections: number;
+  skillsMatchRate: number;
+  marketValue: number;
+  recommendations: string[];
 }
 
 class AnalyticsService {
-  // Generate comprehensive analytics for a user
-  generateApplicationAnalytics(userId: string): ApplicationAnalytics {
-    const applications = enhancedApplicationService.getUserApplications(userId);
-    const basicMetrics = enhancedApplicationService.getApplicationMetrics(userId);
-    
-    return {
-      overview: this.generateOverviewMetrics(applications, basicMetrics),
-      trends: this.generateTrendAnalysis(applications),
-      insights: this.generateInsights(applications),
-      recommendations: this.generateRecommendations(applications, basicMetrics),
-      benchmarks: this.generateBenchmarks(basicMetrics)
-    };
+  private applicationData: any[] = [];
+  private searchData: any[] = [];
+  private marketData: any[] = [];
+
+  constructor() {
+    this.loadMockData();
   }
 
-  private generateOverviewMetrics(applications: any[], basicMetrics: any) {
-    const activeStatuses = ['applied', 'phone_screen', 'interview_scheduled', 'interview_completed', 'offer_received'];
-    const activeApplications = applications.filter(app => activeStatuses.includes(app.status)).length;
-
-    return {
-      totalApplications: basicMetrics.totalApplications,
-      responseRate: basicMetrics.responseRate,
-      interviewRate: basicMetrics.interviewRate,
-      offerRate: basicMetrics.offerRate,
-      avgResponseTime: basicMetrics.avgResponseTime,
-      activeApplications
-    };
+  private loadMockData(): void {
+    // Generate mock application data
+    this.applicationData = this.generateMockApplicationData();
+    this.searchData = this.generateMockSearchData();
+    this.marketData = this.generateMockMarketData();
   }
 
-  private generateBenchmarks(metrics: any) {
-    // Industry benchmark data (these would be real industry averages in production)
-    const industryBenchmarks = {
-      responseRate: 25,
-      interviewRate: 15,
-      offerRate: 8
-    };
+  private generateMockApplicationData(): any[] {
+    const companies = ['Google', 'Microsoft', 'Apple', 'Amazon', 'Meta', 'Netflix', 'Uber', 'Airbnb'];
+    const jobTitles = ['Software Engineer', 'Data Scientist', 'Product Manager', 'DevOps Engineer', 'UI/UX Designer'];
+    const statuses = ['applied', 'reviewed', 'interview', 'offer', 'rejected'];
 
-    const compareToIndustry = (userRate: number, industryRate: number): 'above' | 'below' | 'average' => {
-      if (userRate > industryRate * 1.1) return 'above';
-      if (userRate < industryRate * 0.9) return 'below';
-      return 'average';
-    };
-
-    return {
-      industryAvgResponseRate: industryBenchmarks.responseRate,
-      industryAvgInterviewRate: industryBenchmarks.interviewRate,
-      industryAvgOfferRate: industryBenchmarks.offerRate,
-      yourPerformanceVsIndustry: {
-        responseRate: compareToIndustry(metrics.responseRate, industryBenchmarks.responseRate),
-        interviewRate: compareToIndustry(metrics.interviewRate, industryBenchmarks.interviewRate),
-        offerRate: compareToIndustry(metrics.offerRate, industryBenchmarks.offerRate)
-      }
-    };
-  }
-
-  private generateTrendAnalysis(applications: any[]) {
-    // Generate time series data for the last 30 days
-    const timeSeriesData = this.generateTimeSeriesData(applications, 30);
-    
-    const applicationsOverTime = timeSeriesData.map(data => ({
-      date: data.date,
-      count: data.applications
-    }));
-
-    const responseRateOverTime = timeSeriesData.map(data => ({
-      date: data.date,
-      rate: data.applications > 0 ? (data.responses / data.applications) * 100 : 0
-    }));
-
-    const statusCounts = this.calculateStatusDistribution(applications);
-    const total = applications.length;
-    const statusDistribution = statusCounts.map(item => ({
-      ...item,
-      percentage: total > 0 ? Math.round((item.count / total) * 100) : 0
-    }));
-
-    return {
-      applicationsOverTime,
-      responseRateOverTime,
-      statusDistribution
-    };
-  }
-
-  private generateTimeSeriesData(applications: any[], days: number): TimeSeriesData[] {
-    const now = new Date();
-    const data: TimeSeriesData[] = [];
-
-    for (let i = days - 1; i >= 0; i--) {
-      const date = new Date(now);
-      date.setDate(date.getDate() - i);
-      const dateString = date.toISOString().split('T')[0];
-
-      const dayApplications = applications.filter(app => {
-        const appDate = new Date(app.applied_at).toISOString().split('T')[0];
-        return appDate === dateString;
-      });
-
-      const responses = dayApplications.filter(app => 
-        ['phone_screen', 'interview_scheduled', 'interview_completed', 'offer_received', 'offer_accepted'].includes(app.status)
-      ).length;
-
-      const interviews = dayApplications.filter(app => 
-        ['interview_scheduled', 'interview_completed', 'offer_received', 'offer_accepted'].includes(app.status)
-      ).length;
-
-      const offers = dayApplications.filter(app => 
-        ['offer_received', 'offer_accepted'].includes(app.status)
-      ).length;
-
+    const data = [];
+    for (let i = 0; i < 100; i++) {
+      const appliedDate = new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000);
       data.push({
-        date: dateString,
-        applications: dayApplications.length,
-        responses,
-        interviews,
-        offers
+        id: `app-${i}`,
+        company: companies[Math.floor(Math.random() * companies.length)],
+        jobTitle: jobTitles[Math.floor(Math.random() * jobTitles.length)],
+        status: statuses[Math.floor(Math.random() * statuses.length)],
+        appliedDate,
+        responseDate: Math.random() > 0.3 ? new Date(appliedDate.getTime() + Math.random() * 14 * 24 * 60 * 60 * 1000) : null,
+        salary: 80000 + Math.random() * 120000,
+        location: ['San Francisco', 'New York', 'Seattle', 'Austin', 'Remote'][Math.floor(Math.random() * 5)]
       });
     }
-
     return data;
   }
 
-  private calculateStatusDistribution(applications: any[]) {
-    const statusCounts: Record<ApplicationStatus, number> = {
-      applied: 0,
-      phone_screen: 0,
-      interview_scheduled: 0,
-      interview_completed: 0,
-      offer_received: 0,
-      offer_accepted: 0,
-      rejected: 0,
-      withdrawn: 0
+  private generateMockSearchData(): any[] {
+    const keywords = ['software engineer', 'data scientist', 'product manager', 'frontend developer', 'backend engineer'];
+    const locations = ['San Francisco', 'New York', 'Seattle', 'Austin', 'Remote'];
+
+    const data = [];
+    for (let i = 0; i < 500; i++) {
+      const searchDate = new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000);
+      data.push({
+        id: `search-${i}`,
+        keyword: keywords[Math.floor(Math.random() * keywords.length)],
+        location: locations[Math.floor(Math.random() * locations.length)],
+        resultsCount: Math.floor(Math.random() * 100) + 10,
+        clickedJobs: Math.floor(Math.random() * 10),
+        savedJobs: Math.floor(Math.random() * 5),
+        appliedJobs: Math.floor(Math.random() * 3),
+        searchDate
+      });
+    }
+    return data;
+  }
+
+  private generateMockMarketData(): any[] {
+    return [
+      { jobTitle: 'Software Engineer', avgSalary: 145000, growth: 15.2 },
+      { jobTitle: 'Data Scientist', avgSalary: 135000, growth: 22.1 },
+      { jobTitle: 'Product Manager', avgSalary: 155000, growth: 8.7 },
+      { jobTitle: 'DevOps Engineer', avgSalary: 140000, growth: 18.5 },
+      { jobTitle: 'UI/UX Designer', avgSalary: 125000, growth: 12.3 }
+    ];
+  }
+
+  generateApplicationAnalytics(userId: string) {
+    console.log(`Generating analytics for user: ${userId}`);
+    
+    return {
+      overview: {
+        totalApplications: this.applicationData.length,
+        responseRate: this.calculateResponseRate(),
+        interviewRate: this.calculateInterviewRate(),
+        offerRate: this.calculateOfferRate(),
+        avgResponseTime: this.calculateAverageResponseTime(),
+        activeApplications: this.getActiveApplications()
+      },
+      trends: {
+        applicationsOverTime: this.getApplicationTrends(),
+        responseRateOverTime: this.getResponseRateTrends(),
+        statusDistribution: this.getStatusDistribution()
+      },
+      insights: {
+        topPerformingSkills: this.getTopPerformingSkills(),
+        bestCompanyTypes: this.getBestCompanyTypes(),
+        optimalApplicationTiming: this.getOptimalTiming(),
+        salaryAnalysis: {
+          avgOfferedSalary: this.getAverageSalary(),
+          salaryRangeDistribution: this.getSalaryDistribution()
+        }
+      },
+      recommendations: this.generateRecommendations(),
+      benchmarks: {
+        industryAvgResponseRate: 25,
+        industryAvgInterviewRate: 15,
+        industryAvgOfferRate: 8,
+        yourPerformanceVsIndustry: {
+          responseRate: this.calculateResponseRate() > 25 ? 'above' : 'below',
+          interviewRate: this.calculateInterviewRate() > 15 ? 'above' : 'below',
+          offerRate: this.calculateOfferRate() > 8 ? 'above' : 'below'
+        }
+      }
     };
+  }
 
-    applications.forEach(app => {
-      statusCounts[app.status as ApplicationStatus]++;
-    });
+  private calculateResponseRate(): number {
+    const responsesReceived = this.applicationData.filter(app => app.responseDate).length;
+    return this.applicationData.length > 0 ? (responsesReceived / this.applicationData.length) * 100 : 0;
+  }
 
-    return Object.entries(statusCounts).map(([status, count]) => ({
-      status: status as ApplicationStatus,
-      count
+  private calculateInterviewRate(): number {
+    const interviews = this.applicationData.filter(app => app.status === 'interview' || app.status === 'offer').length;
+    return this.applicationData.length > 0 ? (interviews / this.applicationData.length) * 100 : 0;
+  }
+
+  private calculateOfferRate(): number {
+    const offers = this.applicationData.filter(app => app.status === 'offer').length;
+    return this.applicationData.length > 0 ? (offers / this.applicationData.length) * 100 : 0;
+  }
+
+  private calculateAverageResponseTime(): number {
+    const responseTimes = this.applicationData
+      .filter(app => app.responseDate)
+      .map(app => app.responseDate.getTime() - app.appliedDate.getTime());
+    return responseTimes.length > 0 
+      ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length / (24 * 60 * 60 * 1000)
+      : 0;
+  }
+
+  private getActiveApplications(): number {
+    return this.applicationData.filter(app => 
+      app.status !== 'rejected' && app.status !== 'offer'
+    ).length;
+  }
+
+  private getApplicationTrends() {
+    const trends = this.applicationData.reduce((acc, app) => {
+      const date = app.appliedDate.toISOString().slice(0, 10);
+      acc[date] = (acc[date] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return Object.entries(trends)
+      .map(([date, count]) => ({ date, count: count as number }))
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(-30);
+  }
+
+  private getResponseRateTrends() {
+    // Generate mock response rate trends
+    return Array.from({ length: 30 }, (_, i) => ({
+      date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+      rate: Math.random() * 30 + 10
     }));
   }
 
-  private generateInsights(applications: any[]) {
-    return {
-      topPerformingSkills: this.analyzeSkillPerformance(applications),
-      bestCompanyTypes: this.analyzeCompanyTypePerformance(applications),
-      optimalApplicationTiming: this.analyzeApplicationTiming(applications),
-      salaryAnalysis: this.analyzeSalaryData(applications)
-    };
+  private getStatusDistribution() {
+    const distribution = this.applicationData.reduce((acc, app) => {
+      acc[app.status] = (acc[app.status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const total = this.applicationData.length;
+    return Object.entries(distribution).map(([status, count]) => ({
+      status,
+      count: count as number,
+      percentage: total > 0 ? (count as number / total) * 100 : 0
+    }));
   }
 
-  private analyzeSkillPerformance(applications: any[]) {
-    // This would analyze which skills in job descriptions correlate with higher response rates
-    // For now, returning mock data based on common tech skills
-    const mockSkillData = [
-      { skill: 'React', responseRate: 45, applications: 15 },
-      { skill: 'Python', responseRate: 42, applications: 12 },
-      { skill: 'TypeScript', responseRate: 38, applications: 8 },
-      { skill: 'AWS', responseRate: 35, applications: 10 },
-      { skill: 'Node.js', responseRate: 33, applications: 9 }
+  private getTopPerformingSkills() {
+    return [
+      { skill: 'React', responseRate: 45, applications: 25 },
+      { skill: 'TypeScript', responseRate: 42, applications: 18 },
+      { skill: 'Python', responseRate: 38, applications: 22 },
+      { skill: 'AWS', responseRate: 35, applications: 15 },
+      { skill: 'Node.js', responseRate: 33, applications: 20 }
     ];
-
-    return mockSkillData.sort((a, b) => b.responseRate - a.responseRate).slice(0, 5);
   }
 
-  private analyzeCompanyTypePerformance(applications: any[]) {
-    const companyTypeData: Record<string, { total: number; successful: number }> = {};
-
-    applications.forEach(app => {
-      // Mock company type extraction (in real implementation, this would come from job data)
-      const companyType = this.inferCompanyType(app);
-      
-      if (!companyTypeData[companyType]) {
-        companyTypeData[companyType] = { total: 0, successful: 0 };
-      }
-      
-      companyTypeData[companyType].total++;
-      
-      if (['phone_screen', 'interview_scheduled', 'interview_completed', 'offer_received', 'offer_accepted'].includes(app.status)) {
-        companyTypeData[companyType].successful++;
-      }
-    });
-
-    return Object.entries(companyTypeData)
-      .map(([type, data]) => ({
-        type,
-        successRate: data.total > 0 ? Math.round((data.successful / data.total) * 100) : 0,
-        applications: data.total
-      }))
-      .sort((a, b) => b.successRate - a.successRate)
-      .slice(0, 5);
+  private getBestCompanyTypes() {
+    return [
+      { type: 'Startup', successRate: 35, applications: 30 },
+      { type: 'Big Tech', successRate: 25, applications: 40 },
+      { type: 'Mid-size', successRate: 40, applications: 25 },
+      { type: 'Enterprise', successRate: 20, applications: 35 }
+    ];
   }
 
-  private inferCompanyType(application: any): string {
-    // Mock company type inference based on application data
-    const types = ['Startup', 'Mid-size', 'Enterprise', 'Non-profit', 'Government'];
-    return types[Math.floor(Math.random() * types.length)];
+  private getOptimalTiming() {
+    return [
+      { dayOfWeek: 'Tuesday', successRate: 35 },
+      { dayOfWeek: 'Wednesday', successRate: 32 },
+      { dayOfWeek: 'Thursday', successRate: 30 },
+      { dayOfWeek: 'Monday', successRate: 25 },
+      { dayOfWeek: 'Friday', successRate: 20 }
+    ];
   }
 
-  private analyzeApplicationTiming(applications: any[]) {
-    const dayPerformance: Record<string, { total: number; successful: number }> = {
-      'Monday': { total: 0, successful: 0 },
-      'Tuesday': { total: 0, successful: 0 },
-      'Wednesday': { total: 0, successful: 0 },
-      'Thursday': { total: 0, successful: 0 },
-      'Friday': { total: 0, successful: 0 },
-      'Saturday': { total: 0, successful: 0 },
-      'Sunday': { total: 0, successful: 0 }
-    };
-
-    applications.forEach(app => {
-      const dayOfWeek = new Date(app.applied_at).toLocaleDateString('en-US', { weekday: 'long' });
-      
-      dayPerformance[dayOfWeek].total++;
-      
-      if (['phone_screen', 'interview_scheduled', 'interview_completed', 'offer_received', 'offer_accepted'].includes(app.status)) {
-        dayPerformance[dayOfWeek].successful++;
-      }
-    });
-
-    return Object.entries(dayPerformance)
-      .map(([dayOfWeek, data]) => ({
-        dayOfWeek,
-        successRate: data.total > 0 ? Math.round((data.successful / data.total) * 100) : 0
-      }))
-      .sort((a, b) => b.successRate - a.successRate);
+  private getAverageSalary(): number {
+    const salaries = this.applicationData
+      .filter(app => app.salary)
+      .map(app => app.salary);
+    return salaries.length > 0 
+      ? salaries.reduce((sum, salary) => sum + salary, 0) / salaries.length
+      : 0;
   }
 
-  private analyzeSalaryData(applications: any[]) {
-    const salaryOffers = applications
-      .filter(app => app.salary_offered)
-      .map(app => app.salary_offered);
+  private getSalaryDistribution() {
+    return [
+      { range: 'Under $80k', count: 15 },
+      { range: '$80k - $120k', count: 35 },
+      { range: '$120k - $160k', count: 28 },
+      { range: '$160k - $200k', count: 15 },
+      { range: 'Over $200k', count: 7 }
+    ];
+  }
 
-    const avgOfferedSalary = salaryOffers.length > 0 
-      ? Math.round(salaryOffers.reduce((sum, salary) => sum + salary, 0) / salaryOffers.length)
+  private generateRecommendations(): string[] {
+    return [
+      'Consider applying to more mid-size companies for better response rates',
+      'Add TypeScript to your skill set to improve match rates',
+      'Tuesday and Wednesday show the highest success rates for applications',
+      'Follow up on applications after 1 week if no response received',
+      'Tailor your resume keywords to match job descriptions more closely'
+    ];
+  }
+
+  getJobApplicationMetrics(): JobApplicationMetrics {
+    const totalApplications = this.applicationData.length;
+    const responsesReceived = this.applicationData.filter(app => app.responseDate).length;
+    const interviews = this.applicationData.filter(app => app.status === 'interview' || app.status === 'offer').length;
+    const offers = this.applicationData.filter(app => app.status === 'offer').length;
+
+    const responseRate = totalApplications > 0 ? (responsesReceived / totalApplications) * 100 : 0;
+    const interviewRate = totalApplications > 0 ? (interviews / totalApplications) * 100 : 0;
+    const offerRate = totalApplications > 0 ? (offers / totalApplications) * 100 : 0;
+
+    // Calculate average response time
+    const responseTimes = this.applicationData
+      .filter(app => app.responseDate)
+      .map(app => app.responseDate.getTime() - app.appliedDate.getTime());
+    const averageResponseTime = responseTimes.length > 0 
+      ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length / (24 * 60 * 60 * 1000)
       : 0;
 
-    // Group salaries into ranges
+    // Group applications by status
+    const applicationsByStatus = this.applicationData.reduce((acc, app) => {
+      acc[app.status] = (acc[app.status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    // Group applications by month
+    const applicationsByMonth = this.groupByMonth(this.applicationData, 'appliedDate');
+
+    // Top companies
+    const topCompanies = this.getTopCompanies();
+
+    // Top job titles
+    const topJobTitles = this.getTopJobTitles();
+
+    // Salary ranges
+    const salaryRanges = this.getSalaryRanges();
+
+    return {
+      totalApplications,
+      responseRate,
+      interviewRate,
+      offerRate,
+      averageResponseTime,
+      applicationsByStatus,
+      applicationsByMonth,
+      topCompanies,
+      topJobTitles,
+      salaryRanges
+    };
+  }
+
+  getJobSearchMetrics(): JobSearchMetrics {
+    const totalSearches = this.searchData.length;
+    const totalResults = this.searchData.reduce((sum, search) => sum + search.resultsCount, 0);
+    const averageSearchResults = totalSearches > 0 ? totalResults / totalSearches : 0;
+
+    const totalClicks = this.searchData.reduce((sum, search) => sum + search.clickedJobs, 0);
+    const clickThroughRate = totalResults > 0 ? (totalClicks / totalResults) * 100 : 0;
+
+    const totalSaves = this.searchData.reduce((sum, search) => sum + search.savedJobs, 0);
+    const saveRate = totalClicks > 0 ? (totalSaves / totalClicks) * 100 : 0;
+
+    const popularKeywords = this.getPopularKeywords();
+    const popularLocations = this.getPopularLocations();
+    const searchTrends = this.getSearchTrends();
+
+    return {
+      totalSearches,
+      averageSearchResults,
+      clickThroughRate,
+      saveRate,
+      popularKeywords,
+      popularLocations,
+      searchTrends
+    };
+  }
+
+  getMarketInsights(): MarketInsights {
+    return {
+      salaryTrends: this.marketData,
+      demandBySkill: this.getDemandBySkill(),
+      industryGrowth: this.getIndustryGrowth(),
+      competitiveAnalysis: this.getCompetitiveAnalysis(),
+      locationTrends: this.getLocationTrends()
+    };
+  }
+
+  getUserPerformanceMetrics(): UserPerformanceMetrics {
+    return {
+      profileCompleteness: 85,
+      resumeViews: 156,
+      profileViews: 89,
+      networkConnections: 234,
+      skillsMatchRate: 72,
+      marketValue: 145000,
+      recommendations: [
+        'Add more technical skills to your profile',
+        'Update your work experience with recent projects',
+        'Get recommendations from former colleagues',
+        'Consider taking courses in emerging technologies'
+      ]
+    };
+  }
+
+  private groupByMonth(data: any[], dateField: string): Array<{ month: string; count: number }> {
+    const grouped = data.reduce((acc, item) => {
+      const month = item[dateField].toISOString().slice(0, 7); // YYYY-MM format
+      acc[month] = (acc[month] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return Object.entries(grouped)
+      .map(([month, count]) => ({ month, count: count as number }))
+      .sort((a, b) => a.month.localeCompare(b.month))
+      .slice(-12); // Last 12 months
+  }
+
+  private getTopCompanies(): Array<{ company: string; applications: number; responseRate: number }> {
+    const companyStats = this.applicationData.reduce((acc, app) => {
+      if (!acc[app.company]) {
+        acc[app.company] = { applications: 0, responses: 0 };
+      }
+      acc[app.company].applications++;
+      if (app.responseDate) {
+        acc[app.company].responses++;
+      }
+      return acc;
+    }, {} as Record<string, { applications: number; responses: number }>);
+
+    return Object.entries(companyStats)
+      .map(([company, stats]) => ({
+        company,
+        applications: stats.applications,
+        responseRate: stats.applications > 0 ? (stats.responses / stats.applications) * 100 : 0
+      }))
+      .sort((a, b) => b.applications - a.applications)
+      .slice(0, 10);
+  }
+
+  private getTopJobTitles(): Array<{ title: string; applications: number; successRate: number }> {
+    const titleStats = this.applicationData.reduce((acc, app) => {
+      if (!acc[app.jobTitle]) {
+        acc[app.jobTitle] = { applications: 0, successes: 0 };
+      }
+      acc[app.jobTitle].applications++;
+      if (app.status === 'offer' || app.status === 'interview') {
+        acc[app.jobTitle].successes++;
+      }
+      return acc;
+    }, {} as Record<string, { applications: number; successes: number }>);
+
+    return Object.entries(titleStats)
+      .map(([title, stats]) => ({
+        title,
+        applications: stats.applications,
+        successRate: stats.applications > 0 ? (stats.successes / stats.applications) * 100 : 0
+      }))
+      .sort((a, b) => b.applications - a.applications)
+      .slice(0, 10);
+  }
+
+  private getSalaryRanges(): Array<{ range: string; count: number; averageOffer: number }> {
     const ranges = [
-      { range: '< $60k', min: 0, max: 60000 },
-      { range: '$60k - $80k', min: 60000, max: 80000 },
-      { range: '$80k - $100k', min: 80000, max: 100000 },
-      { range: '$100k - $120k', min: 100000, max: 120000 },
-      { range: '$120k - $150k', min: 120000, max: 150000 },
-      { range: '> $150k', min: 150000, max: Infinity }
+      { min: 0, max: 80000, label: 'Under $80k' },
+      { min: 80000, max: 120000, label: '$80k - $120k' },
+      { min: 120000, max: 160000, label: '$120k - $160k' },
+      { min: 160000, max: 200000, label: '$160k - $200k' },
+      { min: 200000, max: Infinity, label: 'Over $200k' }
     ];
 
-    const salaryRangeDistribution = ranges.map(range => ({
-      range: range.range,
-      count: salaryOffers.filter(salary => salary >= range.min && salary < range.max).length
-    }));
+    return ranges.map(range => {
+      const applicationsInRange = this.applicationData.filter(
+        app => app.salary >= range.min && app.salary < range.max
+      );
+      const offers = applicationsInRange.filter(app => app.status === 'offer');
+      const averageOffer = offers.length > 0
+        ? offers.reduce((sum, app) => sum + app.salary, 0) / offers.length
+        : 0;
 
-    return {
-      avgOfferedSalary,
-      salaryRangeDistribution
-    };
-  }
-
-  private generateRecommendations(applications: any[], metrics: any): string[] {
-    const recommendations: string[] = [];
-
-    if (metrics.responseRate < 20) {
-      recommendations.push("Consider improving your resume and cover letter - your response rate is below average");
-      recommendations.push("Focus on applying to jobs that match your skills more closely");
-    } else if (metrics.responseRate < 35) {
-      recommendations.push("Your response rate is decent but could be improved with more targeted applications");
-    } else {
-      recommendations.push("Great response rate! You're doing well with targeting relevant positions");
-    }
-
-    if (metrics.interviewRate < 10) {
-      recommendations.push("Work on your application materials to convert more responses to interviews");
-    }
-
-    if (applications.length < 10) {
-      recommendations.push("Consider applying to more positions to increase your chances of success");
-    } else if (applications.length > 50) {
-      recommendations.push("You're applying to many positions - consider being more selective for better results");
-    }
-
-    const recentApplications = applications.filter(app => {
-      const appDate = new Date(app.applied_at);
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      return appDate > weekAgo;
+      return {
+        range: range.label,
+        count: applicationsInRange.length,
+        averageOffer
+      };
     });
-
-    if (recentApplications.length < 3) {
-      recommendations.push("Consider increasing your application frequency to maintain momentum");
-    }
-
-    return recommendations;
   }
 
-  // Generate weekly/monthly reports
-  generatePeriodicReport(userId: string, period: 'week' | 'month'): {
-    period: string;
-    summary: string;
-    keyMetrics: Record<string, number>;
-    achievements: string[];
-    areasForImprovement: string[];
-  } {
-    const applications = enhancedApplicationService.getUserApplications(userId);
-    const now = new Date();
-    const periodStart = new Date();
-    
-    if (period === 'week') {
-      periodStart.setDate(now.getDate() - 7);
-    } else {
-      periodStart.setMonth(now.getMonth() - 1);
-    }
+  private getPopularKeywords(): Array<{ keyword: string; searches: number; successRate: number }> {
+    const keywordStats = this.searchData.reduce((acc, search) => {
+      if (!acc[search.keyword]) {
+        acc[search.keyword] = { searches: 0, applications: 0 };
+      }
+      acc[search.keyword].searches++;
+      acc[search.keyword].applications += search.appliedJobs;
+      return acc;
+    }, {} as Record<string, { searches: number; applications: number }>);
 
-    const periodApplications = applications.filter(app => 
-      new Date(app.applied_at) >= periodStart
-    );
+    return Object.entries(keywordStats)
+      .map(([keyword, stats]) => ({
+        keyword,
+        searches: stats.searches,
+        successRate: stats.searches > 0 ? (stats.applications / stats.searches) * 100 : 0
+      }))
+      .sort((a, b) => b.searches - a.searches);
+  }
 
-    const responses = periodApplications.filter(app => 
-      ['phone_screen', 'interview_scheduled', 'interview_completed', 'offer_received', 'offer_accepted'].includes(app.status)
-    ).length;
+  private getPopularLocations(): Array<{ location: string; searches: number; avgSalary: number }> {
+    const locationStats = this.searchData.reduce((acc, search) => {
+      if (!acc[search.location]) {
+        acc[search.location] = { searches: 0, totalSalary: 0, salaryCount: 0 };
+      }
+      acc[search.location].searches++;
+      
+      const applicationsInLocation = this.applicationData.filter(app => app.location === search.location);
+      applicationsInLocation.forEach(app => {
+        acc[search.location].totalSalary += app.salary;
+        acc[search.location].salaryCount++;
+      });
+      
+      return acc;
+    }, {} as Record<string, { searches: number; totalSalary: number; salaryCount: number }>);
 
-    const interviews = periodApplications.filter(app => 
-      ['interview_scheduled', 'interview_completed', 'offer_received', 'offer_accepted'].includes(app.status)
-    ).length;
+    return Object.entries(locationStats)
+      .map(([location, stats]) => ({
+        location,
+        searches: stats.searches,
+        avgSalary: stats.salaryCount > 0 ? stats.totalSalary / stats.salaryCount : 0
+      }))
+      .sort((a, b) => b.searches - a.searches);
+  }
 
-    const offers = periodApplications.filter(app => 
-      ['offer_received', 'offer_accepted'].includes(app.status)
-    ).length;
+  private getSearchTrends(): Array<{ date: string; searches: number; applications: number }> {
+    const trends = this.searchData.reduce((acc, search) => {
+      const date = search.searchDate.toISOString().slice(0, 10);
+      if (!acc[date]) {
+        acc[date] = { searches: 0, applications: 0 };
+      }
+      acc[date].searches++;
+      acc[date].applications += search.appliedJobs;
+      return acc;
+    }, {} as Record<string, { searches: number; applications: number }>);
 
-    const responseRate = periodApplications.length > 0 ? (responses / periodApplications.length) * 100 : 0;
+    return Object.entries(trends)
+      .map(([date, stats]) => ({ date, searches: stats.searches, applications: stats.applications }))
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(-30);
+  }
 
-    return {
-      period: period === 'week' ? 'This Week' : 'This Month',
-      summary: `You applied to ${periodApplications.length} jobs this ${period} with a ${responseRate.toFixed(1)}% response rate.`,
-      keyMetrics: {
-        applications: periodApplications.length,
-        responses,
-        interviews,
-        offers,
-        responseRate: Math.round(responseRate * 10) / 10
-      },
-      achievements: this.generateAchievements(periodApplications, period),
-      areasForImprovement: this.generateImprovementAreas(periodApplications, responseRate)
+  private getDemandBySkill(): Array<{ skill: string; jobCount: number; growth: number }> {
+    return [
+      { skill: 'JavaScript', jobCount: 1250, growth: 12.5 },
+      { skill: 'Python', jobCount: 1180, growth: 18.3 },
+      { skill: 'React', jobCount: 980, growth: 15.7 },
+      { skill: 'Node.js', jobCount: 850, growth: 13.2 },
+      { skill: 'AWS', jobCount: 920, growth: 22.1 },
+      { skill: 'Docker', jobCount: 680, growth: 19.8 },
+      { skill: 'Kubernetes', jobCount: 520, growth: 28.5 },
+      { skill: 'TypeScript', jobCount: 780, growth: 25.3 }
+    ].sort((a, b) => b.jobCount - a.jobCount);
+  }
+
+  private getIndustryGrowth(): Array<{ industry: string; jobCount: number; growth: number }> {
+    return [
+      { industry: 'Technology', jobCount: 5420, growth: 16.8 },
+      { industry: 'Healthcare', jobCount: 3250, growth: 12.3 },
+      { industry: 'Finance', jobCount: 2890, growth: 8.7 },
+      { industry: 'E-commerce', jobCount: 2150, growth: 24.1 },
+      { industry: 'Education', jobCount: 1780, growth: 11.2 },
+      { industry: 'Gaming', jobCount: 1450, growth: 19.5 }
+    ].sort((a, b) => b.jobCount - a.jobCount);
+  }
+
+  private getCompetitiveAnalysis(): Array<{ company: string; openPositions: number; avgSalary: number }> {
+    return [
+      { company: 'Google', openPositions: 1250, avgSalary: 175000 },
+      { company: 'Microsoft', openPositions: 980, avgSalary: 165000 },
+      { company: 'Apple', openPositions: 850, avgSalary: 170000 },
+      { company: 'Amazon', openPositions: 1450, avgSalary: 155000 },
+      { company: 'Meta', openPositions: 720, avgSalary: 180000 },
+      { company: 'Netflix', openPositions: 380, avgSalary: 190000 }
+    ].sort((a, b) => b.openPositions - a.openPositions);
+  }
+
+  private getLocationTrends(): Array<{ location: string; jobCount: number; avgSalary: number; costOfLiving: number }> {
+    return [
+      { location: 'San Francisco', jobCount: 2850, avgSalary: 185000, costOfLiving: 180 },
+      { location: 'New York', jobCount: 2450, avgSalary: 165000, costOfLiving: 160 },
+      { location: 'Seattle', jobCount: 1890, avgSalary: 155000, costOfLiving: 140 },
+      { location: 'Austin', jobCount: 1250, avgSalary: 135000, costOfLiving: 110 },
+      { location: 'Remote', jobCount: 3200, avgSalary: 145000, costOfLiving: 100 }
+    ].sort((a, b) => b.jobCount - a.jobCount);
+  }
+
+  exportAnalytics(format: 'json' | 'csv'): string {
+    const data = {
+      applications: this.getJobApplicationMetrics(),
+      searches: this.getJobSearchMetrics(),
+      market: this.getMarketInsights(),
+      performance: this.getUserPerformanceMetrics(),
+      exportedAt: new Date().toISOString()
     };
+
+    if (format === 'json') {
+      return JSON.stringify(data, null, 2);
+    } else {
+      // Convert to CSV format
+      return this.convertToCSV(data);
+    }
   }
 
-  private generateAchievements(applications: any[], period: string): string[] {
-    const achievements: string[] = [];
-    
-    if (applications.length >= 10) {
-      achievements.push(`Applied to ${applications.length} jobs this ${period} - great activity level!`);
-    }
-    
-    const responses = applications.filter(app => 
-      ['phone_screen', 'interview_scheduled', 'interview_completed', 'offer_received', 'offer_accepted'].includes(app.status)
-    ).length;
-    
-    if (responses > 0) {
-      achievements.push(`Received ${responses} positive responses - your applications are getting noticed!`);
-    }
-    
-    const interviews = applications.filter(app => 
-      ['interview_scheduled', 'interview_completed', 'offer_received', 'offer_accepted'].includes(app.status)
-    ).length;
-    
-    if (interviews > 0) {
-      achievements.push(`Secured ${interviews} interviews - your profile is compelling to employers!`);
-    }
-    
-    return achievements;
-  }
+  private convertToCSV(data: any): string {
+    // Simplified CSV conversion - in a real implementation, this would be more comprehensive
+    const applications = data.applications.topCompanies.map((company: any) => 
+      `${company.company},${company.applications},${company.responseRate.toFixed(1)}%`
+    ).join('\n');
 
-  private generateImprovementAreas(applications: any[], responseRate: number): string[] {
-    const improvements: string[] = [];
-    
-    if (responseRate < 15) {
-      improvements.push("Focus on tailoring your applications to better match job requirements");
-      improvements.push("Consider reviewing and updating your resume and cover letter");
-    }
-    
-    if (applications.length < 5) {
-      improvements.push("Consider increasing your application volume to improve chances");
-    }
-    
-    if (applications.length > 20 && responseRate < 10) {
-      improvements.push("Quality over quantity - focus on more targeted applications");
-    }
-    
-    return improvements;
+    return `Company,Applications,Response Rate\n${applications}`;
   }
 }
 
