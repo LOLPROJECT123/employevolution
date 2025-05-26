@@ -18,6 +18,7 @@ import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
 import Calendar from "./pages/Calendar";
 import Communications from "./pages/Communications";
+import Analytics from "./pages/Analytics";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ function App() {
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/calendar" element={<Calendar />} />
                 <Route path="/communications" element={<Communications />} />
+                <Route path="/analytics" element={<Analytics />} />
                 <Route path="/interview-practice" element={<InterviewPractice />} />
                 <Route path="/referrals" element={<Referrals />} />
                 <Route path="/salary-negotiations" element={<SalaryNegotiations />} />

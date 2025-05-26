@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -32,6 +31,7 @@ import {
   TrendingUpIcon,
   ListIcon,
   PlusIcon,
+  Mail,
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -223,7 +223,7 @@ const Dashboard = () => {
                   </div>
                 </div>
               </CardContent>
-              <CardFooter>
+              <CardFooter className="space-y-2">
                 <Button 
                   variant="outline" 
                   className="w-full button-hover"
@@ -231,6 +231,14 @@ const Dashboard = () => {
                 >
                   View All Applications
                   <ArrowRightIcon className="w-4 h-4 ml-2" />
+                </Button>
+                <Button 
+                  variant="secondary" 
+                  className="w-full button-hover"
+                  onClick={() => navigate('/analytics')}
+                >
+                  <TrendingUpIcon className="w-4 h-4 mr-2" />
+                  View Detailed Analytics
                 </Button>
               </CardFooter>
             </Card>
@@ -262,6 +270,17 @@ const Dashboard = () => {
                   <div className="flex flex-col items-start">
                     <span>Cover Letter</span>
                     <span className="text-xs text-muted-foreground">Craft a personalized letter</span>
+                  </div>
+                </Button>
+                <Button 
+                  variant="secondary" 
+                  className="w-full justify-start text-left button-hover"
+                  onClick={() => navigate('/communications')}
+                >
+                  <Mail className="w-4 h-4 mr-2" />
+                  <div className="flex flex-col items-start">
+                    <span>Email Templates</span>
+                    <span className="text-xs text-muted-foreground">Manage communications</span>
                   </div>
                 </Button>
                 <Button 
