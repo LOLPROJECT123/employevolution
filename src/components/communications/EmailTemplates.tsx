@@ -25,6 +25,21 @@ interface EmailTemplate {
   updated_at: string;
 }
 
+// Type for database response
+interface DatabaseEmailTemplate {
+  id: string;
+  name: string;
+  category: string;
+  subject: string;
+  body: string;
+  variables: any; // Json type from database
+  is_default: boolean;
+  usage_count: number;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+}
+
 const TEMPLATE_CATEGORIES = [
   { value: 'follow_up', label: 'Follow-up' },
   { value: 'thank_you', label: 'Thank You' },
@@ -107,6 +122,22 @@ const EmailTemplates: React.FC = () => {
     variables: [] as string[]
   });
 
+  // Transform database response to EmailTemplate format
+  const transformDatabaseTemplate = (dbTemplate: DatabaseEmailTemplate): EmailTemplate => {
+    return {
+      id: dbTemplate.id,
+      name: dbTemplate.name,
+      category: dbTemplate.category,
+      subject: dbTemplate.subject,
+      body: dbTemplate.body,
+      variables: Array.isArray(dbTemplate.variables) ? dbTemplate.variables : [],
+      is_default: dbTemplate.is_default,
+      usage_count: dbTemplate.usage_count,
+      created_at: dbTemplate.created_at,
+      updated_at: dbTemplate.updated_at
+    };
+  };
+
   useEffect(() => {
     loadTemplates();
   }, []);
@@ -142,9 +173,11 @@ const EmailTemplates: React.FC = () => {
           .order('created_at', { ascending: false });
         
         if (newError) throw newError;
-        setTemplates(newData || []);
+        const transformedTemplates = (newData || []).map(transformDatabaseTemplate);
+        setTemplates(transformedTemplates);
       } else {
-        setTemplates(data);
+        const transformedTemplates = data.map(transformDatabaseTemplate);
+        setTemplates(transformedTemplates);
       }
     } catch (error: any) {
       console.error('Error loading templates:', error);
