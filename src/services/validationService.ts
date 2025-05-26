@@ -2,6 +2,12 @@
 import { z } from 'zod';
 import DOMPurify from 'dompurify';
 
+interface ValidationResult<T> {
+  success: boolean;
+  data?: T;
+  errors?: string[];
+}
+
 class ValidationService {
   private static instance: ValidationService;
 
@@ -14,35 +20,44 @@ class ValidationService {
     return ValidationService.instance;
   }
 
-  // Common validation schemas
-  emailSchema = z.string().email('Invalid email format').min(1, 'Email is required');
-  
-  passwordSchema = z.string()
-    .min(8, 'Password must be at least 8 characters')
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, 
-      'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character');
+  validateFormData<T>(data: any, schema: z.ZodSchema<T>): ValidationResult<T> {
+    try {
+      const result = schema.parse(data);
+      return {
+        success: true,
+        data: result
+      };
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return {
+          success: false,
+          errors: error.errors.map(err => `${err.path.join('.')}: ${err.message}`)
+        };
+      }
+      return {
+        success: false,
+        errors: ['Validation failed']
+      };
+    }
+  }
 
-  nameSchema = z.string()
-    .min(1, 'Name is required')
-    .max(100, 'Name must be less than 100 characters')
-    .regex(/^[a-zA-Z\s'-]+$/, 'Name can only contain letters, spaces, hyphens, and apostrophes');
+  sanitizeText(input: string): string {
+    if (!input) return '';
+    
+    // Remove potential XSS content
+    const sanitized = DOMPurify.sanitize(input, {
+      ALLOWED_TAGS: [],
+      ALLOWED_ATTR: []
+    });
+    
+    return sanitized.trim();
+  }
 
-  phoneSchema = z.string()
-    .regex(/^[\+]?[1-9][\d]{0,15}$/, 'Invalid phone number format');
-
-  urlSchema = z.string().url('Invalid URL format');
-
-  // Content validation schemas
-  jobTitleSchema = z.string()
-    .min(1, 'Job title is required')
-    .max(200, 'Job title must be less than 200 characters');
-
-  companyNameSchema = z.string()
-    .min(1, 'Company name is required')
-    .max(200, 'Company name must be less than 200 characters');
-
-  // File validation
-  validateFile(file: File, maxSizeMB = 10, allowedTypes: string[] = []): string | null {
+  validateFile(
+    file: File,
+    maxSizeMB: number = 10,
+    allowedTypes: string[] = []
+  ): string | null {
     // Check file size
     const maxSizeBytes = maxSizeMB * 1024 * 1024;
     if (file.size > maxSizeBytes) {
@@ -55,121 +70,63 @@ class ValidationService {
     }
 
     // Check for suspicious file names
-    const suspiciousPatterns = [/\.exe$/i, /\.bat$/i, /\.cmd$/i, /\.scr$/i, /\.pif$/i];
+    const suspiciousPatterns = [
+      /\.exe$/i,
+      /\.bat$/i,
+      /\.cmd$/i,
+      /\.scr$/i,
+      /\.vbs$/i,
+      /\.js$/i
+    ];
+
     if (suspiciousPatterns.some(pattern => pattern.test(file.name))) {
-      return 'This file type is not allowed for security reasons';
+      return 'File type not allowed for security reasons';
     }
 
-    return null; // File is valid
+    return null;
   }
 
-  // HTML sanitization
-  sanitizeHtml(input: string): string {
+  preventXSS(input: string): string {
+    if (!input) return '';
+    
     return DOMPurify.sanitize(input, {
-      ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'p', 'br', 'ul', 'ol', 'li'],
+      ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'p', 'br'],
       ALLOWED_ATTR: []
     });
   }
 
-  // General text sanitization
-  sanitizeText(input: string): string {
-    if (!input) return input;
-    
-    // Remove any HTML tags
-    const stripped = input.replace(/<[^>]*>/g, '');
-    
-    // Remove potentially dangerous characters
-    const sanitized = stripped.replace(/[<>'"&]/g, (char) => {
-      switch (char) {
-        case '<': return '&lt;';
-        case '>': return '&gt;';
-        case '"': return '&quot;';
-        case "'": return '&#x27;';
-        case '&': return '&amp;';
-        default: return char;
-      }
-    });
-
-    return sanitized.trim();
+  validateEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   }
 
-  // SQL injection prevention
-  sanitizeForDatabase(input: string): string {
-    if (!input) return input;
+  validatePassword(password: string): { isValid: boolean; errors: string[] } {
+    const errors: string[] = [];
     
-    // Remove common SQL injection patterns
-    const sqlPatterns = [
-      /('|(\\');|(;)|(\/\*)|(\*\/)|(\-\-)|(\bor\b)|(\bunion\b)|(\bselect\b)|(\binsert\b)|(\bdelete\b)|(\bdrop\b)|(\bcreate\b)|(\balter\b)|(\bexec\b)|(\bexecute\b)/gi
-    ];
-
-    let sanitized = input;
-    sqlPatterns.forEach(pattern => {
-      sanitized = sanitized.replace(pattern, '');
-    });
-
-    return sanitized.trim();
-  }
-
-  // Validate and sanitize form data
-  validateFormData<T>(data: any, schema: z.ZodSchema<T>): { success: boolean; data?: T; errors?: string[] } {
-    try {
-      // First sanitize text fields
-      const sanitizedData = this.sanitizeFormData(data);
-      
-      // Then validate with schema
-      const result = schema.parse(sanitizedData);
-      
-      return {
-        success: true,
-        data: result
-      };
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return {
-          success: false,
-          errors: error.errors.map(err => `${err.path.join('.')}: ${err.message}`)
-        };
-      }
-      
-      return {
-        success: false,
-        errors: ['Validation failed']
-      };
-    }
-  }
-
-  private sanitizeFormData(data: any): any {
-    if (typeof data === 'string') {
-      return this.sanitizeText(data);
+    if (password.length < 8) {
+      errors.push('Password must be at least 8 characters long');
     }
     
-    if (Array.isArray(data)) {
-      return data.map(item => this.sanitizeFormData(item));
+    if (!/[A-Z]/.test(password)) {
+      errors.push('Password must contain at least one uppercase letter');
     }
     
-    if (data && typeof data === 'object') {
-      const sanitized: any = {};
-      for (const [key, value] of Object.entries(data)) {
-        sanitized[key] = this.sanitizeFormData(value);
-      }
-      return sanitized;
+    if (!/[a-z]/.test(password)) {
+      errors.push('Password must contain at least one lowercase letter');
     }
     
-    return data;
-  }
-
-  // XSS prevention
-  preventXSS(input: string): string {
-    return this.sanitizeHtml(input);
-  }
-
-  // CSRF token validation (basic implementation)
-  generateCSRFToken(): string {
-    return crypto.randomUUID();
-  }
-
-  validateCSRFToken(token: string, storedToken: string): boolean {
-    return token === storedToken;
+    if (!/\d/.test(password)) {
+      errors.push('Password must contain at least one number');
+    }
+    
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      errors.push('Password must contain at least one special character');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
   }
 }
 

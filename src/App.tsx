@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,7 +8,6 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { JobApplicationProvider } from "@/contexts/JobApplicationContext";
 import Index from "./pages/Index";
 import Jobs from "./pages/Jobs";
-import JobAutomation from "./pages/JobAutomation";
 import ResumeTools from "./pages/ResumeTools";
 import Networking from "./pages/Networking";
 import Dashboard from "./pages/Dashboard";
@@ -18,9 +18,7 @@ import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
 import Calendar from "./pages/Calendar";
 import Communications from "./pages/Communications";
-import Analytics from "./pages/Analytics";
 import SecurityMiddleware from "@/components/security/SecurityMiddleware";
-import Security from "./pages/Security";
 
 const queryClient = new QueryClient();
 
@@ -37,15 +35,12 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/jobs" element={<Jobs />} />
-                  <Route path="/job-automation" element={<JobAutomation />} />
                   <Route path="/resume-tools" element={<ResumeTools />} />
                   <Route path="/resume-tools/:tab" element={<ResumeTools />} />
                   <Route path="/networking" element={<Networking />} />
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/calendar" element={<Calendar />} />
                   <Route path="/communications" element={<Communications />} />
-                  <Route path="/analytics" element={<Analytics />} />
-                  <Route path="/security" element={<Security />} />
                   <Route path="/interview-practice" element={<InterviewPractice />} />
                   <Route path="/referrals" element={<Referrals />} />
                   <Route path="/salary-negotiations" element={<SalaryNegotiations />} />

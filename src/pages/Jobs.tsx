@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -29,7 +30,9 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, User, LogOut, Bell, Save, TrendingUp } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2, User, LogOut, Bell, Save, TrendingUp, Zap } from "lucide-react";
+import JobApplicationAutomation from "@/components/resume/JobApplicationAutomation";
 
 type SortOption = 'relevance' | 'date-newest' | 'date-oldest' | 'salary-highest' | 'salary-lowest';
 
@@ -431,105 +434,121 @@ const Jobs = () => {
               </Card>
             </div>
           )}
-          
-          {/* Enhanced Job Filtering */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
-            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h2 className="font-semibold text-lg">Filter Jobs</h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Find jobs that match your preferences</p>
-                </div>
-                {user && (
-                  <Button variant="outline" size="sm" onClick={handleSaveSearch}>
-                    <Save className="w-4 h-4 mr-2" />
-                    Save Search
-                  </Button>
-                )}
-              </div>
-            </div>
-            <div className="p-4">
-              <JobFiltersSection onApplyFilters={applyFilters} />
-            </div>
-          </div>
 
-          {user && (
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
-              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                <h2 className="font-semibold text-lg">My Jobs</h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Saved and Applied Positions</p>
-              </div>
-              <div className="p-4">
-                <SavedAndAppliedJobs
-                  savedJobs={savedJobs}
-                  appliedJobs={appliedJobs}
-                  onApply={handleApplyJob}
-                  onSave={handleSaveJob}
-                  onSelect={handleJobSelect}
-                  selectedJobId={selectedJob?.id || null}
-                />
-              </div>
-            </div>
-          )}
-          
-          {/* Job Browser */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div>
-              <Card className="overflow-hidden h-full max-h-[calc(100vh-250px)]">
-                <CardHeader className="py-3 px-4 border-b flex flex-row justify-between items-center">
-                  <div>
-                    <CardTitle className="text-base font-medium">Browse Jobs</CardTitle>
-                    <p className="text-xs text-muted-foreground">
-                      Showing {filteredJobs.length} jobs
-                    </p>
+          <Tabs defaultValue="browse" className="space-y-6">
+            <TabsList>
+              <TabsTrigger value="browse">Browse Jobs</TabsTrigger>
+              <TabsTrigger value="automation">
+                <Zap className="w-4 h-4 mr-2" />
+                Job Automation
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="browse">
+              {/* Enhanced Job Filtering */}
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
+                <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h2 className="font-semibold text-lg">Filter Jobs</h2>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Find jobs that match your preferences</p>
+                    </div>
+                    {user && (
+                      <Button variant="outline" size="sm" onClick={handleSaveSearch}>
+                        <Save className="w-4 h-4 mr-2" />
+                        Save Search
+                      </Button>
+                    )}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Select defaultValue={sortOption} onValueChange={handleSortChange}>
-                      <SelectTrigger className="w-[180px] bg-white dark:bg-gray-800 h-8 text-sm">
-                        <SelectValue placeholder="Sort By: Relevance" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="relevance">Sort By: Relevance</SelectItem>
-                        <SelectItem value="date-newest">Date: Newest First</SelectItem>
-                        <SelectItem value="date-oldest">Date: Oldest First</SelectItem>
-                        <SelectItem value="salary-highest">Salary: Highest First</SelectItem>
-                        <SelectItem value="salary-lowest">Salary: Lowest First</SelectItem>
-                      </SelectContent>
-                    </Select>
+                </div>
+                <div className="p-4">
+                  <JobFiltersSection onApplyFilters={applyFilters} />
+                </div>
+              </div>
+
+              {user && (
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
+                  <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 className="font-semibold text-lg">My Jobs</h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Saved and Applied Positions</p>
                   </div>
-                </CardHeader>
+                  <div className="p-4">
+                    <SavedAndAppliedJobs
+                      savedJobs={savedJobs}
+                      appliedJobs={appliedJobs}
+                      onApply={handleApplyJob}
+                      onSave={handleSaveJob}
+                      onSelect={handleJobSelect}
+                      selectedJobId={selectedJob?.id || null}
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {/* Job Browser */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                  <Card className="overflow-hidden h-full max-h-[calc(100vh-250px)]">
+                    <CardHeader className="py-3 px-4 border-b flex flex-row justify-between items-center">
+                      <div>
+                        <CardTitle className="text-base font-medium">Browse Jobs</CardTitle>
+                        <p className="text-xs text-muted-foreground">
+                          Showing {filteredJobs.length} jobs
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Select defaultValue={sortOption} onValueChange={handleSortChange}>
+                          <SelectTrigger className="w-[180px] bg-white dark:bg-gray-800 h-8 text-sm">
+                            <SelectValue placeholder="Sort By: Relevance" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="relevance">Sort By: Relevance</SelectItem>
+                            <SelectItem value="date-newest">Date: Newest First</SelectItem>
+                            <SelectItem value="date-oldest">Date: Oldest First</SelectItem>
+                            <SelectItem value="salary-highest">Salary: Highest First</SelectItem>
+                            <SelectItem value="salary-lowest">Salary: Lowest First</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </CardHeader>
+                    
+                    <CardContent className="p-0 divide-y overflow-y-auto max-h-[calc(100vh-300px)]">
+                      {filteredJobs.map(job => (
+                        <div key={job.id} className="p-4">
+                          <EnhancedJobCard 
+                            job={job}
+                            onApply={handleApplyJob}
+                            onSave={handleSaveJob}
+                            onSelect={handleJobSelect}
+                            isSelected={selectedJob?.id === job.id}
+                            isSaved={savedJobIds.includes(job.id)}
+                            isApplied={appliedJobIds.includes(job.id)}
+                            variant="list"
+                          />
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                </div>
                 
-                <CardContent className="p-0 divide-y overflow-y-auto max-h-[calc(100vh-300px)]">
-                  {filteredJobs.map(job => (
-                    <div key={job.id} className="p-4">
-                      <EnhancedJobCard 
-                        job={job}
+                <div>
+                  <Card className="h-full max-h-[calc(100vh-250px)] overflow-hidden">
+                    <CardContent className="p-0">
+                      <JobDetailView 
+                        job={selectedJob} 
                         onApply={handleApplyJob}
                         onSave={handleSaveJob}
-                        onSelect={handleJobSelect}
-                        isSelected={selectedJob?.id === job.id}
-                        isSaved={savedJobIds.includes(job.id)}
-                        isApplied={appliedJobIds.includes(job.id)}
-                        variant="list"
                       />
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </div>
-            
-            <div>
-              <Card className="h-full max-h-[calc(100vh-250px)] overflow-hidden">
-                <CardContent className="p-0">
-                  <JobDetailView 
-                    job={selectedJob} 
-                    onApply={handleApplyJob}
-                    onSave={handleSaveJob}
-                  />
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="automation">
+              <JobApplicationAutomation />
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
       
