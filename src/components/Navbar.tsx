@@ -144,12 +144,15 @@ const Navbar = () => {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 bg-background">
               {user && (
-                <DropdownMenuItem asChild>
-                  <Link to="/profile" className="flex items-center">
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
-                  </Link>
-                </DropdownMenuItem>
+                <>
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="flex items-center">
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profile</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
               )}
               <DropdownMenuItem>
                 <MessageSquare className="mr-2 h-4 w-4" />
