@@ -17,6 +17,7 @@ import Referrals from "./pages/Referrals";
 import SalaryNegotiations from "./pages/SalaryNegotiations";
 import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
+import Calendar from "./pages/Calendar";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ function App() {
                 <Route path="/resume-tools/:tab" element={<ResumeTools />} />
                 <Route path="/networking" element={<Networking />} />
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/calendar" element={<Calendar />} />
                 <Route path="/interview-practice" element={<InterviewPractice />} />
                 <Route path="/referrals" element={<Referrals />} />
                 <Route path="/salary-negotiations" element={<SalaryNegotiations />} />

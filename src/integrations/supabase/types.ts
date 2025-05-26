@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      application_events: {
+        Row: {
+          application_id: string
+          created_at: string | null
+          description: string | null
+          event_date: string
+          event_type: string
+          id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          application_id: string
+          created_at?: string | null
+          description?: string | null
+          event_date: string
+          event_type: string
+          id?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          application_id?: string
+          created_at?: string | null
+          description?: string | null
+          event_date?: string
+          event_type?: string
+          id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       cover_letters: {
         Row: {
           content: string
@@ -87,6 +120,75 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      interviews: {
+        Row: {
+          application_id: string | null
+          company_name: string
+          created_at: string | null
+          duration_minutes: number | null
+          follow_up_date: string | null
+          follow_up_required: boolean | null
+          id: string
+          interview_type: string
+          interviewer_email: string | null
+          interviewer_name: string | null
+          interviewer_phone: string | null
+          location: string | null
+          notes: string | null
+          outcome: string | null
+          position_title: string
+          preparation_notes: string | null
+          scheduled_date: string
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          application_id?: string | null
+          company_name: string
+          created_at?: string | null
+          duration_minutes?: number | null
+          follow_up_date?: string | null
+          follow_up_required?: boolean | null
+          id?: string
+          interview_type: string
+          interviewer_email?: string | null
+          interviewer_name?: string | null
+          interviewer_phone?: string | null
+          location?: string | null
+          notes?: string | null
+          outcome?: string | null
+          position_title: string
+          preparation_notes?: string | null
+          scheduled_date: string
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          application_id?: string | null
+          company_name?: string
+          created_at?: string | null
+          duration_minutes?: number | null
+          follow_up_date?: string | null
+          follow_up_required?: boolean | null
+          id?: string
+          interview_type?: string
+          interviewer_email?: string | null
+          interviewer_name?: string | null
+          interviewer_phone?: string | null
+          location?: string | null
+          notes?: string | null
+          outcome?: string | null
+          position_title?: string
+          preparation_notes?: string | null
+          scheduled_date?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       job_alerts: {
         Row: {
@@ -253,6 +355,57 @@ export type Database = {
           full_name?: string | null
           id?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      reminders: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          due_date: string
+          id: string
+          is_completed: boolean | null
+          is_sent: boolean | null
+          priority: string | null
+          related_id: string | null
+          related_type: string | null
+          reminder_date: string
+          reminder_type: string
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          due_date: string
+          id?: string
+          is_completed?: boolean | null
+          is_sent?: boolean | null
+          priority?: string | null
+          related_id?: string | null
+          related_type?: string | null
+          reminder_date: string
+          reminder_type: string
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          due_date?: string
+          id?: string
+          is_completed?: boolean | null
+          is_sent?: boolean | null
+          priority?: string | null
+          related_id?: string | null
+          related_type?: string | null
+          reminder_date?: string
+          reminder_type?: string
+          title?: string
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
