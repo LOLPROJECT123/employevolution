@@ -9,6 +9,191 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      cover_letters: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_default: boolean
+          name: string
+          updated_at: string
+          usage_count: number
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name: string
+          updated_at?: string
+          usage_count?: number
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name?: string
+          updated_at?: string
+          usage_count?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cover_letters_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_alerts: {
+        Row: {
+          created_at: string
+          criteria: Json
+          frequency: string
+          id: string
+          is_active: boolean
+          last_triggered: string | null
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          criteria: Json
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          last_triggered?: string | null
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          criteria?: Json
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          last_triggered?: string | null
+          name?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_alerts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_applications: {
+        Row: {
+          application_url: string | null
+          applied_at: string
+          contact_person: string | null
+          cover_letter: string | null
+          follow_up_date: string | null
+          id: string
+          interview_date: string | null
+          job_id: string
+          next_action: string | null
+          notes: string | null
+          resume_version: string | null
+          salary_offered: number | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          application_url?: string | null
+          applied_at?: string
+          contact_person?: string | null
+          cover_letter?: string | null
+          follow_up_date?: string | null
+          id?: string
+          interview_date?: string | null
+          job_id: string
+          next_action?: string | null
+          notes?: string | null
+          resume_version?: string | null
+          salary_offered?: number | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          application_url?: string | null
+          applied_at?: string
+          contact_person?: string | null
+          cover_letter?: string | null
+          follow_up_date?: string | null
+          id?: string
+          interview_date?: string | null
+          job_id?: string
+          next_action?: string | null
+          notes?: string | null
+          resume_version?: string | null
+          salary_offered?: number | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_applications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          action_url: string | null
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          action_url?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          action_url?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -32,6 +217,117 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      resumes: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          is_default: boolean
+          name: string
+          updated_at: string
+          usage_count: number
+          user_id: string
+        }
+        Insert: {
+          content: Json
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name: string
+          updated_at?: string
+          usage_count?: number
+          user_id: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name?: string
+          updated_at?: string
+          usage_count?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resumes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      saved_jobs: {
+        Row: {
+          id: string
+          job_data: Json
+          job_id: string
+          notes: string | null
+          saved_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          job_data: Json
+          job_id: string
+          notes?: string | null
+          saved_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          job_data?: Json
+          job_id?: string
+          notes?: string | null
+          saved_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_jobs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      saved_searches: {
+        Row: {
+          created_at: string
+          filters: Json
+          id: string
+          last_used: string | null
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          filters: Json
+          id?: string
+          last_used?: string | null
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          filters?: Json
+          id?: string
+          last_used?: string | null
+          name?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_searches_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

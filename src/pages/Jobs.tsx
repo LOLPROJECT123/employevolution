@@ -11,12 +11,14 @@ import { SavedAndAppliedJobs } from "@/components/SavedAndAppliedJobs";
 import { toast } from "@/hooks/use-toast";
 import AutomationSettings from "@/components/AutomationSettings";
 import { AuthModal } from "@/components/auth/AuthModal";
-import { useAuth } from "@/hooks/useAuth";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { jobApi, JobSearchParams } from "@/services/jobApi";
-import { enhancedApplicationService } from "@/services/enhancedApplicationService";
+import { supabaseApplicationService } from "@/services/supabaseApplicationService";
+import { supabaseSavedJobsService } from "@/services/supabaseSavedJobsService";
 import { savedSearchService } from "@/services/savedSearchService";
 import { resumeService } from "@/services/resumeService";
 import { jobAlertService } from "@/services/jobAlertService";
+import { supabaseNotificationService } from "@/services/supabaseNotificationService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -32,7 +34,7 @@ import { Loader2, User, LogOut, Bell, Save, TrendingUp } from "lucide-react";
 type SortOption = 'relevance' | 'date-newest' | 'date-oldest' | 'salary-highest' | 'salary-lowest';
 
 const Jobs = () => {
-  const { user, userProfile, logout } = useAuth();
+  const { user, userProfile, logout, saveJob, unsaveJob, applyToJob } = useSupabaseAuth();
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
@@ -43,6 +45,7 @@ const Jobs = () => {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [applicationMetrics, setApplicationMetrics] = useState<any>(null);
   const [activeAlerts, setActiveAlerts] = useState(0);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [searchParams, setSearchParams] = useState<JobSearchParams>({
     query: '',
     location: '',
@@ -80,28 +83,55 @@ const Jobs = () => {
     setViewMode(isMobile ? 'swipe' : 'list');
   }, [isMobile]);
 
-  // Load user's saved and applied jobs
+  // Load user's saved and applied jobs from Supabase
   useEffect(() => {
     if (user) {
-      const applications = enhancedApplicationService.getUserApplications(user.id);
-      setAppliedJobIds(applications.map(app => app.job_id));
-      
-      // Load saved jobs from localStorage
-      const savedJobs = JSON.parse(localStorage.getItem(`saved_jobs_${user.id}`) || '[]');
-      setSavedJobIds(savedJobs);
+      loadSavedAndAppliedJobs();
+      loadNotificationCount();
     }
   }, [user]);
+
+  const loadSavedAndAppliedJobs = async () => {
+    if (!user) return;
+    
+    try {
+      // Load saved job IDs
+      const savedIds = await supabaseSavedJobsService.getSavedJobIds(user.id);
+      setSavedJobIds(savedIds);
+      
+      // Load applied job IDs
+      const applications = await supabaseApplicationService.getUserApplications(user.id);
+      setAppliedJobIds(applications.map(app => app.job_id));
+    } catch (error) {
+      console.error('Error loading saved and applied jobs:', error);
+    }
+  };
+
+  const loadNotificationCount = async () => {
+    if (!user) return;
+    
+    try {
+      const count = await supabaseNotificationService.getUnreadCount(user.id);
+      setUnreadNotifications(count);
+    } catch (error) {
+      console.error('Error loading notification count:', error);
+    }
+  };
 
   const loadUserData = async () => {
     if (!user) return;
     
-    // Load application metrics
-    const metrics = enhancedApplicationService.getApplicationMetrics(user.id);
-    setApplicationMetrics(metrics);
-    
-    // Load active alerts count
-    const alerts = jobAlertService.getAlerts(user.id);
-    setActiveAlerts(alerts.filter(alert => alert.is_active).length);
+    try {
+      // Load application metrics
+      const metrics = await supabaseApplicationService.getApplicationMetrics(user.id);
+      setApplicationMetrics(metrics);
+      
+      // Load active alerts count
+      const alerts = jobAlertService.getAlerts(user.id);
+      setActiveAlerts(alerts.filter(alert => alert.is_active).length);
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    }
   };
 
   const loadJobs = async (params: Partial<JobSearchParams> = {}) => {
@@ -138,25 +168,25 @@ const Jobs = () => {
     setSelectedJob(job);
   };
 
-  const handleSaveJob = (job: Job) => {
+  const handleSaveJob = async (job: Job) => {
     if (!user) {
       setAuthModalOpen(true);
       return;
     }
 
-    const newSavedJobs = savedJobIds.includes(job.id)
-      ? savedJobIds.filter(id => id !== job.id)
-      : [...savedJobIds, job.id];
+    const isCurrentlySaved = savedJobIds.includes(job.id);
     
-    setSavedJobIds(newSavedJobs);
-    localStorage.setItem(`saved_jobs_${user.id}`, JSON.stringify(newSavedJobs));
-    
-    toast({
-      title: savedJobIds.includes(job.id) ? "Job removed from saved" : "Job saved",
-      description: savedJobIds.includes(job.id) 
-        ? "Removed from your saved jobs" 
-        : "Added to your saved jobs",
-    });
+    if (isCurrentlySaved) {
+      const success = await unsaveJob(job.id);
+      if (success) {
+        setSavedJobIds(prev => prev.filter(id => id !== job.id));
+      }
+    } else {
+      const success = await saveJob(job);
+      if (success) {
+        setSavedJobIds(prev => [...prev, job.id]);
+      }
+    }
   };
 
   const handleApplyJob = async (job: Job) => {
@@ -191,40 +221,28 @@ const Jobs = () => {
       const defaultResume = resumeService.getDefaultResume(user.id);
       const defaultCoverLetter = resumeService.getDefaultCoverLetter(user.id);
 
-      // Submit application with enhanced tracking
-      await enhancedApplicationService.submitApplication(
-        job, 
-        user.id,
+      // Submit application
+      const success = await applyToJob(
+        job,
         defaultResume?.name,
         defaultCoverLetter?.name,
         `Applied via job search platform to ${job.company}`
       );
 
-      // Update usage counts
-      if (defaultResume) {
-        await resumeService.updateResumeUsage(user.id, defaultResume.id);
-      }
-
-      setAppliedJobIds([...appliedJobIds, job.id]);
-      
-      // Refresh metrics
-      loadUserData();
-      
-      toast({
-        title: "Application submitted",
-        description: `Applied to ${job.title} at ${job.company}`,
-      });
-
-      // Open application URL if available
-      if (job.applyUrl) {
-        window.open(job.applyUrl, '_blank');
+      if (success) {
+        setAppliedJobIds(prev => [...prev, job.id]);
+        
+        // Refresh user data
+        loadUserData();
+        loadNotificationCount();
+        
+        // Open application URL if available
+        if (job.applyUrl) {
+          window.open(job.applyUrl, '_blank');
+        }
       }
     } catch (error) {
-      toast({
-        title: "Application failed",
-        description: "Please try again later.",
-        variant: "destructive",
-      });
+      console.error('Error applying to job:', error);
     }
   };
 
@@ -307,6 +325,7 @@ const Jobs = () => {
     sortJobs(value as SortOption);
   };
 
+  // Get saved and applied jobs for display
   const savedJobs = jobs.filter(job => savedJobIds.includes(job.id));
   const appliedJobs = jobs.filter(job => appliedJobIds.includes(job.id));
 
@@ -346,6 +365,11 @@ const Jobs = () => {
                       <Badge variant="outline" className="bg-blue-50 text-blue-600">
                         <Bell className="w-3 h-3 mr-1" />
                         {activeAlerts} alerts
+                      </Badge>
+                    )}
+                    {unreadNotifications > 0 && (
+                      <Badge variant="outline" className="bg-red-50 text-red-600">
+                        {unreadNotifications} new
                       </Badge>
                     )}
                   </div>
