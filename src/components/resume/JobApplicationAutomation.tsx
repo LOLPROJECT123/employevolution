@@ -106,14 +106,9 @@ const JobApplicationAutomation = () => {
         duration: 2500
       });
       
-      // Wait for the toast to show before continuing
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Simulate API call to LinkedIn scraper
-      // In a real implementation, this would query LinkedIn via a backend API
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Generate mock LinkedIn contacts
       const mockContacts = generateMockLinkedInContacts(job.company);
       setLinkedInContacts(mockContacts);
       
@@ -121,7 +116,6 @@ const JobApplicationAutomation = () => {
         description: `Found ${mockContacts.filter(c => c.title.toLowerCase().includes('recruit')).length} recruiters and ${mockContacts.filter(c => c.isAlumni).length} alumni at ${job.company}`
       });
       
-      // Switch to LinkedIn tab to show contacts
       setActiveTab('linkedin');
     } catch (error) {
       console.error("Error finding LinkedIn contacts:", error);
@@ -142,17 +136,16 @@ const JobApplicationAutomation = () => {
     ];
     
     const universities = ['Stanford University', 'MIT', 'UC Berkeley', 'Harvard', 'UCLA'];
-    const userUniversity = 'Stanford University'; // Pretend this is the user's university
+    const userUniversity = 'Stanford University';
     
     const contacts: LinkedInContact[] = [];
     
-    // Generate 3-5 recruiters
     const recruiterCount = Math.floor(Math.random() * 3) + 3;
     for (let i = 0; i < recruiterCount; i++) {
       contacts.push({
         id: `recruiter-${i}`,
         name: `Recruiter ${i + 1}`,
-        title: titles[Math.floor(Math.random() * 3)], // Get a recruiting title
+        title: titles[Math.floor(Math.random() * 3)],
         company,
         profileUrl: `https://linkedin.com/in/recruiter-${i}`,
         avatar: `https://randomuser.me/api/portraits/${i % 2 === 0 ? 'women' : 'men'}/${i + 10}.jpg`,
@@ -163,13 +156,12 @@ const JobApplicationAutomation = () => {
       });
     }
     
-    // Generate 2-6 alumni
     const alumniCount = Math.floor(Math.random() * 5) + 2;
     for (let i = 0; i < alumniCount; i++) {
       contacts.push({
         id: `alumni-${i}`,
         name: `Alumni ${i + 1}`,
-        title: titles[Math.floor(Math.random() * 9)], // Get any title
+        title: titles[Math.floor(Math.random() * 9)],
         company,
         profileUrl: `https://linkedin.com/in/alumni-${i}`,
         avatar: `https://randomuser.me/api/portraits/${i % 2 === 0 ? 'men' : 'women'}/${i + 20}.jpg`,
@@ -190,13 +182,11 @@ const JobApplicationAutomation = () => {
     setIsSubmitting(true);
     
     try {
-      // Show a more informative progress notification
       toast.loading("Preparing to apply...", {
         description: "Verifying job listing and preparing your resume data",
         duration: 2000
       });
       
-      // Verify that the job URL is still valid
       const isValid = await verifyJobUrl(selectedJob.applyUrl);
       
       if (!isValid) {
@@ -208,16 +198,13 @@ const JobApplicationAutomation = () => {
         return;
       }
       
-      // Show application in progress toast
       toast.loading("Applying to position...", {
         description: "Submitting your application and resume",
         duration: 3000
       });
       
-      // Simulate API call for auto-application with improved feedback
       const result = await simulateJobApplication(selectedJob);
       
-      // Add to recent applications
       const updatedApplications = [selectedJob, ...recentApplications].slice(0, 5);
       setRecentApplications(updatedApplications);
       localStorage.setItem('recentApplications', JSON.stringify(updatedApplications));
@@ -226,10 +213,8 @@ const JobApplicationAutomation = () => {
         description: `Your application to ${selectedJob.company} for ${selectedJob.title} has been sent.`
       });
       
-      // After successful application, find LinkedIn contacts
       await findLinkedInContacts(selectedJob);
       
-      // Reset form
       setSelectedJob(null);
       setShowConfirmation(false);
     } catch (error) {
@@ -241,7 +226,6 @@ const JobApplicationAutomation = () => {
   };
   
   const simulateJobApplication = async (job: ScrapedJob) => {
-    // Simulate the application process with better feedback
     toast.loading("Filling out application form...", {
       duration: 1500
     });
@@ -257,10 +241,8 @@ const JobApplicationAutomation = () => {
     });
     await new Promise(resolve => setTimeout(resolve, 1500));
     
-    // In real implementation, this would be an actual API call to apply
     console.log("Applying to job:", job);
     
-    // Simulate 90% success rate
     const isSuccess = Math.random() < 0.9;
     
     if (!isSuccess) {
@@ -271,15 +253,12 @@ const JobApplicationAutomation = () => {
   };
   
   const verifyJobUrl = async (url: string): Promise<boolean> => {
-    // In real implementation, this would make a server-side request to check if URL is valid
     toast.loading("Verifying job listing availability...", {
       duration: 800
     });
     
     await new Promise(resolve => setTimeout(resolve, 800));
     
-    // Could check for redirect status, 404s, or listing removed text patterns
-    // For demo purposes, simulating validity check
     const isValid = Math.random() < 0.95;
     
     if (!isValid) {
@@ -328,7 +307,6 @@ const JobApplicationAutomation = () => {
               activeTab={activeTab} 
               onNavigateToProfile={handleNavigateToProfile} 
               onSuccess={(jobUrl) => {
-                // Track successful manual applications
                 const newApplication: ScrapedJob = {
                   id: `manual-${Date.now()}`,
                   title: "Custom Application",
@@ -354,7 +332,6 @@ const JobApplicationAutomation = () => {
               activeTab={activeTab} 
               onNavigateToProfile={handleNavigateToProfile} 
               onSuccess={(jobUrl) => {
-                // Track successful auto applications
                 const newApplication: ScrapedJob = {
                   id: `auto-${Date.now()}`,
                   title: "Automated Application",
