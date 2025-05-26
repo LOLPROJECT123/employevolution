@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import { 
   User, 
   BookOpen, 
@@ -32,13 +33,13 @@ import {
   Menu,
   MessageSquare,
   HelpCircle,
-  Settings,
   LogOut
 } from "lucide-react";
 
 const Navbar = () => {
   const isMobile = useMobile();
   const location = useLocation();
+  const { logout } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
 
   // Handle scroll effect for navbar
@@ -62,6 +63,10 @@ const Navbar = () => {
   // Check if the current path matches
   const isActive = (path: string) => {
     return location.pathname === path;
+  };
+
+  const handleSignOut = () => {
+    logout();
   };
 
   return (
@@ -192,12 +197,8 @@ const Navbar = () => {
                 <HelpCircle className="mr-2 h-4 w-4" />
                 <span>Support</span>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
-              </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSignOut}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Sign out</span>
               </DropdownMenuItem>
