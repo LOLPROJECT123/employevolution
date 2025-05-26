@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -37,7 +36,7 @@ import EditEqualEmployment from "@/components/profile/EditEqualEmployment";
 
 const Profile = () => {
   const isMobile = useMobile();
-  const { user, logout } = useAuth();
+  const { user, userProfile, logout } = useAuth();
   const [activeTab, setActiveTab] = useState("contact");
   const [showProfileToRecruiters, setShowProfileToRecruiters] = useState(true);
   const [jobSearchStatus, setJobSearchStatus] = useState(true);
@@ -54,12 +53,12 @@ const Profile = () => {
 
   // Sample data (in real app, this would come from user context)
   const [profileData, setProfileData] = useState({
-    name: user?.name || "Varun Veluri",
+    name: userProfile?.full_name || user?.email || "User",
     jobStatus: "Actively looking",
-    email: user?.email || "vveluri6@gmail.com",
+    email: user?.email || "",
     phone: "+1 (469) 551-9662",
     dateOfBirth: "06/19/2006",
-    location: user?.profile?.location || "Atlanta, GA, USA",
+    location: "Atlanta, GA, USA",
     workExperiences: [
       {
         id: 1,

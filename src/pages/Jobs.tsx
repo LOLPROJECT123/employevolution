@@ -32,7 +32,7 @@ import { Loader2, User, LogOut, Bell, Save, TrendingUp } from "lucide-react";
 type SortOption = 'relevance' | 'date-newest' | 'date-oldest' | 'salary-highest' | 'salary-lowest';
 
 const Jobs = () => {
-  const { user, logout } = useAuth();
+  const { user, userProfile, logout } = useAuth();
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
@@ -341,7 +341,7 @@ const Jobs = () => {
               {user ? (
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-600">Welcome, {user.name}</span>
+                    <span className="text-sm text-gray-600">Welcome, {userProfile?.full_name || user.email}</span>
                     {activeAlerts > 0 && (
                       <Badge variant="outline" className="bg-blue-50 text-blue-600">
                         <Bell className="w-3 h-3 mr-1" />
