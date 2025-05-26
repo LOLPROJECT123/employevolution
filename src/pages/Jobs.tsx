@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -31,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, User, LogOut, Bell, Save, TrendingUp, Zap } from "lucide-react";
+import { Loader2, LogOut, Bell, Save, TrendingUp, Zap } from "lucide-react";
 import JobApplicationAutomation from "@/components/resume/JobApplicationAutomation";
 
 type SortOption = 'relevance' | 'date-newest' | 'date-oldest' | 'salary-highest' | 'salary-lowest';
@@ -360,7 +359,7 @@ const Jobs = () => {
             </h1>
             
             <div className="flex items-center space-x-4">
-              {user ? (
+              {user && (
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-2">
                     <span className="text-sm text-gray-600">Welcome, {userProfile?.full_name || user.email}</span>
@@ -381,11 +380,6 @@ const Jobs = () => {
                     Logout
                   </Button>
                 </div>
-              ) : (
-                <Button onClick={() => setAuthModalOpen(true)}>
-                  <User className="w-4 h-4 mr-2" />
-                  Sign In
-                </Button>
               )}
               
               <div className="hidden md:block">
