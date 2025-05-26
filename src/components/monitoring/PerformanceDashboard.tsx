@@ -6,7 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { monitoringService } from '@/services/monitoringService';
 import { healthCheckService } from '@/services/healthCheckService';
 import { cacheService } from '@/services/cacheService';
-import { Activity, AlertTriangle, CheckCircle, Clock, Database, Memory, Network, Zap } from 'lucide-react';
+import { Activity, AlertTriangle, CheckCircle, Clock, Database, HardDrive, Network, Zap } from 'lucide-react';
 
 const PerformanceDashboard: React.FC = () => {
   const [healthStatus, setHealthStatus] = useState<any>(null);
@@ -139,7 +139,7 @@ const PerformanceDashboard: React.FC = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Memory Usage</CardTitle>
-            <Memory className="h-4 w-4 text-muted-foreground" />
+            <HardDrive className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -168,7 +168,7 @@ const PerformanceDashboard: React.FC = () => {
                 <div className="flex items-center gap-2">
                   {check.name === 'database' && <Database className="h-4 w-4" />}
                   {check.name === 'network' && <Network className="h-4 w-4" />}
-                  {check.name === 'memory' && <Memory className="h-4 w-4" />}
+                  {check.name === 'memory' && <HardDrive className="h-4 w-4" />}
                   {check.name === 'cache' && <Zap className="h-4 w-4" />}
                   <span className="font-medium capitalize">{check.name}</span>
                 </div>
