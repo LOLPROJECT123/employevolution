@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -8,20 +9,11 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import SwipeJobsInterface from "@/components/SwipeJobsInterface";
 import { SavedAndAppliedJobs } from "@/components/SavedAndAppliedJobs";
 import { toast } from "@/hooks/use-toast";
-import AutomationSettings from "@/components/AutomationSettings";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { SessionTimeoutWarning } from "@/components/auth/SessionTimeoutWarning";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
 import { useSessionTimeout } from "@/hooks/useSessionTimeout";
 import { jobApi, JobSearchParams } from "@/services/jobApi";
-import { supabaseApplicationService } from "@/services/supabaseApplicationService";
-import { supabaseSavedJobsService } from "@/services/supabaseSavedJobsService";
-import { savedSearchService } from "@/services/savedSearchService";
-import { resumeService } from "@/services/resumeService";
-import { jobAlertService } from "@/services/jobAlertService";
-import { supabaseNotificationService } from "@/services/supabaseNotificationService";
-import { jobDeduplicationService } from "@/services/jobDeduplicationService";
-import { errorMonitoringService } from "@/services/errorMonitoringService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -33,7 +25,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Bell, Save, TrendingUp, Plus } from "lucide-react";
+import { Loader2, Zap, Save } from "lucide-react";
 import JobApplicationSection from "@/components/jobs/JobApplicationSection";
 import UnifiedJobList from "@/components/jobs/UnifiedJobList";
 import { ScrapedJob } from "@/components/resume/job-application/types";
@@ -60,9 +52,7 @@ const Jobs = () => {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [applicationMetrics, setApplicationMetrics] = useState<any>(null);
-  const [activeAlerts, setActiveAlerts] = useState(0);
-  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [activeTab, setActiveTab] = useState<'browse' | 'automation'>('browse');
   
   // New state for unified job application features
   const [scrapedJobs, setScrapedJobs] = useState<ScrapedJob[]>([]);
@@ -94,7 +84,6 @@ const Jobs = () => {
   const isMobile = useIsMobile();
   const [viewMode, setViewMode] = useState<'list' | 'swipe'>(isMobile ? 'swipe' : 'list');
   const [showMyJobs, setShowMyJobs] = useState(false);
-  const [showJobDiscovery, setShowJobDiscovery] = useState(false);
   const [activeFilters, setActiveFilters] = useState<JobFilters>({
     search: "",
     location: "",
@@ -140,30 +129,14 @@ const Jobs = () => {
       
       const response = await jobApi.searchJobs(searchQuery);
       
-      // Apply deduplication to the jobs
-      const deduplicatedJobs = jobDeduplicationService.deduplicateJobs(response.jobs);
+      setJobs(response.jobs);
+      setFilteredJobs(response.jobs);
       
-      setJobs(deduplicatedJobs);
-      setFilteredJobs(deduplicatedJobs);
-      
-      if (deduplicatedJobs.length > 0 && !selectedJob) {
-        setSelectedJob(deduplicatedJobs[0]);
-      }
-
-      if (user) {
-        try {
-          const alertMatches = await jobAlertService.checkAlertsForNewJobs(user.id, deduplicatedJobs);
-          alertMatches.forEach(({ alert, matchingJobs }) => {
-            jobAlertService.triggerNotification(user.id, alert, matchingJobs);
-          });
-        } catch (error) {
-          errorMonitoringService.captureAPIError(error, 'job-alerts', { userId: user.id });
-          console.error('Error checking job alerts:', error);
-        }
+      if (response.jobs.length > 0 && !selectedJob) {
+        setSelectedJob(response.jobs[0]);
       }
     } catch (error) {
       console.error('Error loading jobs:', error);
-      errorMonitoringService.captureAPIError(error, 'job-search');
       toast({
         title: "Failed to load jobs",
         description: "Please try again later.",
@@ -174,51 +147,14 @@ const Jobs = () => {
       setInitialLoading(false);
       loadingRef.current = false;
     }
-  }, [stableSearchParams, selectedJob, user]);
-
-  // Load user data
-  const loadUserData = useCallback(async () => {
-    if (!user) return;
-    
-    try {
-      const metrics = await supabaseApplicationService.getApplicationMetrics(user.id);
-      setApplicationMetrics(metrics);
-      
-      const alerts = jobAlertService.getAlerts(user.id);
-      setActiveAlerts(alerts.filter(alert => alert.is_active).length);
-    } catch (error) {
-      console.error('Error loading user data:', error);
-      errorMonitoringService.captureAPIError(error, 'user-data', { userId: user.id });
-    }
-  }, [user]);
+  }, [stableSearchParams, selectedJob]);
 
   // Load saved and applied jobs
   const loadSavedAndAppliedJobs = useCallback(async () => {
     if (!user) return;
-    
-    try {
-      const savedIds = await supabaseSavedJobsService.getSavedJobIds(user.id);
-      setSavedJobIds(savedIds);
-      
-      const applications = await supabaseApplicationService.getUserApplications(user.id);
-      setAppliedJobIds(applications.map(app => app.job_id));
-    } catch (error) {
-      console.error('Error loading saved and applied jobs:', error);
-      errorMonitoringService.captureAPIError(error, 'saved-applied-jobs', { userId: user.id });
-    }
-  }, [user]);
-
-  // Load notification count
-  const loadNotificationCount = useCallback(async () => {
-    if (!user) return;
-    
-    try {
-      const count = await supabaseNotificationService.getUnreadCount(user.id);
-      setUnreadNotifications(count);
-    } catch (error) {
-      console.error('Error loading notification count:', error);
-      errorMonitoringService.captureAPIError(error, 'notifications', { userId: user.id });
-    }
+    // Mock implementation for now
+    setSavedJobIds([]);
+    setAppliedJobIds([]);
   }, [user]);
 
   // Initial load jobs
@@ -229,11 +165,9 @@ const Jobs = () => {
   // Load user data when user changes
   useEffect(() => {
     if (user) {
-      loadUserData();
       loadSavedAndAppliedJobs();
-      loadNotificationCount();
     }
-  }, [user, loadUserData, loadSavedAndAppliedJobs, loadNotificationCount]);
+  }, [user, loadSavedAndAppliedJobs]);
 
   // Update view mode based on screen size
   useEffect(() => {
@@ -298,31 +232,10 @@ const Jobs = () => {
     }
 
     try {
-      const isAvailable = await jobApi.checkJobAvailability(job.applyUrl || '');
-      
-      if (!isAvailable) {
-        toast({
-          title: "Job no longer available",
-          description: "This position has been filled or removed.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const defaultResume = resumeService.getDefaultResume(user.id);
-      const defaultCoverLetter = resumeService.getDefaultCoverLetter(user.id);
-
-      const success = await applyToJob(
-        job,
-        defaultResume?.name,
-        defaultCoverLetter?.name,
-        `Applied via job search platform to ${job.company}`
-      );
+      const success = await applyToJob(job);
 
       if (success) {
         setAppliedJobIds(prev => [...prev, job.id]);
-        loadUserData();
-        loadNotificationCount();
         
         if (job.applyUrl) {
           window.open(job.applyUrl, '_blank');
@@ -330,7 +243,6 @@ const Jobs = () => {
       }
     } catch (error) {
       console.error('Error applying to job:', error);
-      errorMonitoringService.captureAPIError(error, 'job-application', { userId: user.id });
     }
   };
 
@@ -412,12 +324,6 @@ const Jobs = () => {
     localStorage.setItem('recentApplications', JSON.stringify(updatedApplications));
   };
 
-  const handleSearch = useCallback((query: string) => {
-    const newParams = { ...searchParams, query, page: 1 };
-    setSearchParams(newParams);
-    loadJobs(newParams);
-  }, [searchParams, loadJobs]);
-
   const applyFilters = useCallback((filters: JobFilters) => {
     setActiveFilters(filters);
     
@@ -468,30 +374,6 @@ const Jobs = () => {
     sortJobs(value as SortOption);
   }, [sortJobs]);
 
-  const handleSaveSearch = useCallback(async () => {
-    if (!user) {
-      setAuthModalOpen(true);
-      return;
-    }
-
-    try {
-      const searchName = `Search - ${activeFilters.search || 'All Jobs'} ${new Date().toLocaleDateString()}`;
-      await savedSearchService.saveSearch(user.id, searchName, activeFilters);
-      
-      toast({
-        title: "Search saved successfully",
-        description: "You can access this search from your saved searches.",
-      });
-    } catch (error) {
-      console.error('Error saving search:', error);
-      toast({
-        title: "Failed to save search",
-        description: "Please try again later.",
-        variant: "destructive",
-      });
-    }
-  }, [user, activeFilters]);
-
   // Memoized computed values
   const savedJobs = useMemo(() => 
     jobs.filter(job => savedJobIds.includes(job.id)), 
@@ -528,50 +410,117 @@ const Jobs = () => {
       {isMobile && <MobileHeader />}
       
       <main className={`flex-1 ${isMobile ? 'pt-16' : 'pt-20'}`}>
-        <div className="container px-4 py-8 mx-auto max-w-7xl">
-          {/* Header section */}
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Job Search</h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-1">
-                Discover and apply to your next opportunity
-              </p>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              {user && applicationMetrics && (
-                <div className="flex items-center gap-4 text-sm">
-                  <div className="flex items-center gap-1">
-                    <TrendingUp className="h-4 w-4 text-green-600" />
-                    <span>{applicationMetrics.totalApplications} applications</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Bell className="h-4 w-4 text-blue-600" />
-                    <span>{activeAlerts} alerts</span>
+        <div className="container px-4 py-6 mx-auto max-w-7xl">
+          {/* Main Tabs - Browse Jobs and Job Automation */}
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'browse' | 'automation')} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="browse" className="flex items-center gap-2">
+                Browse Jobs
+              </TabsTrigger>
+              <TabsTrigger value="automation" className="flex items-center gap-2">
+                <Zap className="h-4 w-4" />
+                Job Automation
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="browse" className="mt-0">
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                {/* Filters Sidebar */}
+                <div className="lg:col-span-1">
+                  <JobFiltersSection onFiltersApply={applyFilters} />
+                </div>
+
+                {/* Jobs List */}
+                <div className="lg:col-span-2">
+                  <div className="space-y-4">
+                    {/* Header with sort and count */}
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h2 className="text-lg font-semibold">Browse Jobs</h2>
+                        <p className="text-sm text-gray-600">Showing {filteredJobs.length} jobs</p>
+                      </div>
+                      
+                      <div className="flex items-center gap-4">
+                        <Select value={sortOption} onValueChange={handleSortChange}>
+                          <SelectTrigger className="w-40">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="relevance">Relevance</SelectItem>
+                            <SelectItem value="date-newest">Newest First</SelectItem>
+                            <SelectItem value="date-oldest">Oldest First</SelectItem>
+                            <SelectItem value="salary-highest">Highest Salary</SelectItem>
+                            <SelectItem value="salary-lowest">Lowest Salary</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        
+                        <Button
+                          variant={showMyJobs ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setShowMyJobs(!showMyJobs)}
+                        >
+                          My Jobs
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Jobs list or My Jobs */}
+                    {showMyJobs ? (
+                      <SavedAndAppliedJobs
+                        savedJobs={savedJobs}
+                        appliedJobs={appliedJobs}
+                        onApply={handleApplyJob}
+                        onSave={handleSaveJob}
+                        onSelect={handleJobSelect}
+                        selectedJobId={selectedJob?.id || null}
+                      />
+                    ) : viewMode === 'swipe' ? (
+                      <SwipeJobsInterface
+                        jobs={filteredJobs}
+                        onApply={handleApplyJob}
+                        onSave={handleSaveJob}
+                        onReject={(job: Job) => console.log('Rejected job:', job.id)}
+                      />
+                    ) : (
+                      <UnifiedJobList
+                        apiJobs={filteredJobs}
+                        scrapedJobs={scrapedJobs}
+                        selectedJobId={selectedJob?.id || selectedScrapedJob?.id || null}
+                        savedJobIds={savedJobIds}
+                        appliedJobIds={appliedJobIds}
+                        onJobSelect={handleJobSelect}
+                        onSaveJob={handleSaveJob}
+                        onApplyJob={handleApplyJob}
+                        onSelectScrapedJob={handleScrapedJobSelected}
+                      />
+                    )}
+
+                    {loading && (
+                      <div className="flex justify-center py-8">
+                        <Loader2 className="h-6 w-6 animate-spin" />
+                      </div>
+                    )}
                   </div>
                 </div>
-              )}
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowJobDiscovery(!showJobDiscovery)}
-                className="flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Job Discovery
-              </Button>
-              
-              <Button variant="outline" size="sm" onClick={handleSaveSearch}>
-                <Save className="h-4 w-4 mr-2" />
-                Save Search
-              </Button>
-            </div>
-          </div>
 
-          {/* Job Discovery Section */}
-          {showJobDiscovery && (
-            <div className="mb-6">
+                {/* Job Details Panel */}
+                <div className="lg:col-span-1">
+                  {!isMobile && (
+                    <div className="sticky top-24">
+                      <JobDetailView
+                        job={selectedJob}
+                        onApply={handleApplyJob}
+                        onSave={handleSaveJob}
+                        isSaved={selectedJob ? savedJobIds.includes(selectedJob.id) : false}
+                        isApplied={selectedJob ? appliedJobIds.includes(selectedJob.id) : false}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="automation" className="mt-0">
               <JobApplicationSection
                 onJobsScraped={handleJobsScraped}
                 onJobSelected={handleScrapedJobSelected}
@@ -597,106 +546,8 @@ const Jobs = () => {
                 onNavigateToProfile={handleNavigateToProfile}
                 onApplicationSuccess={handleApplicationSuccess}
               />
-            </div>
-          )}
-
-          {/* Main content */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Filters sidebar */}
-            <div className="lg:col-span-3">
-              <JobFiltersSection 
-                onFiltersApply={applyFilters}
-                loading={loading}
-              />
-            </div>
-
-            {/* Jobs list */}
-            <div className="lg:col-span-6">
-              <div className="space-y-4">
-                {/* Sort and view controls */}
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-4">
-                    <Select value={sortOption} onValueChange={handleSortChange}>
-                      <SelectTrigger className="w-48">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="relevance">Most Relevant</SelectItem>
-                        <SelectItem value="date-newest">Newest First</SelectItem>
-                        <SelectItem value="date-oldest">Oldest First</SelectItem>
-                        <SelectItem value="salary-highest">Highest Salary</SelectItem>
-                        <SelectItem value="salary-lowest">Lowest Salary</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    
-                    <Button
-                      variant={showMyJobs ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setShowMyJobs(!showMyJobs)}
-                    >
-                      My Jobs
-                    </Button>
-                  </div>
-                  
-                  <Badge variant="secondary">
-                    {filteredJobs.length + scrapedJobs.length} jobs
-                  </Badge>
-                </div>
-
-                {/* Jobs list or My Jobs */}
-                {showMyJobs ? (
-                  <SavedAndAppliedJobs
-                    savedJobs={savedJobs}
-                    appliedJobs={appliedJobs}
-                    onApply={handleApplyJob}
-                    onSave={handleSaveJob}
-                    onSelect={handleJobSelect}
-                    selectedJobId={selectedJob?.id || null}
-                  />
-                ) : viewMode === 'swipe' ? (
-                  <SwipeJobsInterface
-                    jobs={filteredJobs}
-                    onApply={handleApplyJob}
-                    onSave={handleSaveJob}
-                    onReject={(job: Job) => console.log('Rejected job:', job.id)}
-                  />
-                ) : (
-                  <UnifiedJobList
-                    apiJobs={filteredJobs}
-                    scrapedJobs={scrapedJobs}
-                    selectedJobId={selectedJob?.id || selectedScrapedJob?.id || null}
-                    savedJobIds={savedJobIds}
-                    appliedJobIds={appliedJobIds}
-                    onJobSelect={handleJobSelect}
-                    onSaveJob={handleSaveJob}
-                    onApplyJob={handleApplyJob}
-                    onSelectScrapedJob={handleScrapedJobSelected}
-                  />
-                )}
-
-                {loading && (
-                  <div className="flex justify-center py-8">
-                    <Loader2 className="h-6 w-6 animate-spin" />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Job details */}
-            <div className="lg:col-span-3">
-              {!isMobile && (
-                <div className="sticky top-24">
-                  <JobDetailView
-                    job={selectedJob}
-                    onApply={handleApplyJob}
-                    onSave={handleSaveJob}
-                    isSaved={selectedJob ? savedJobIds.includes(selectedJob.id) : false}
-                    isApplied={selectedJob ? appliedJobIds.includes(selectedJob.id) : false}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
+            </TabsContent>
+          </Tabs>
         </div>
 
         {/* Confirmation modal for auto-apply */}

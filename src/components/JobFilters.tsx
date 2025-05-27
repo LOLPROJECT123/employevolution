@@ -14,7 +14,12 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { X, Search, MapPin, Filter } from "lucide-react";
+import { X, Search, MapPin, Filter, ChevronDown, ChevronUp } from "lucide-react";
+import { 
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 interface JobFiltersSectionProps {
   onFiltersApply: (filters: JobFilters) => void;
@@ -37,6 +42,9 @@ export const JobFiltersSection = ({ onFiltersApply }: JobFiltersSectionProps) =>
     companies: [],
     title: ""
   });
+
+  const [isAllFiltersOpen, setIsAllFiltersOpen] = useState(false);
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
 
   const jobTypes = ['full-time', 'part-time', 'contract', 'internship', 'temporary'];
   const experienceLevels = ['intern', 'entry', 'mid', 'senior', 'lead', 'executive', 'manager', 'director'];
@@ -83,156 +91,240 @@ export const JobFiltersSection = ({ onFiltersApply }: JobFiltersSectionProps) =>
     onFiltersApply(filters);
   };
 
+  const toggleSection = (section: string) => {
+    setOpenSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  const FilterSection = ({ 
+    title, 
+    icon, 
+    children, 
+    sectionKey 
+  }: { 
+    title: string; 
+    icon: React.ReactNode; 
+    children: React.ReactNode; 
+    sectionKey: string;
+  }) => (
+    <Collapsible 
+      open={openSections[sectionKey]} 
+      onOpenChange={() => toggleSection(sectionKey)}
+    >
+      <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg">
+        <div className="flex items-center gap-2">
+          {icon}
+          <span className="font-medium">{title}</span>
+        </div>
+        {openSections[sectionKey] ? (
+          <ChevronUp className="h-4 w-4" />
+        ) : (
+          <ChevronDown className="h-4 w-4" />
+        )}
+      </CollapsibleTrigger>
+      <CollapsibleContent className="px-3 pb-3">
+        {children}
+      </CollapsibleContent>
+    </Collapsible>
+  );
+
   return (
-    <div className="space-y-6">
-      {/* Search and Location */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="search">Job Title or Keywords</Label>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              id="search"
-              placeholder="e.g. Software Engineer, Product Manager"
-              className="pl-10"
-              value={filters.search}
-              onChange={(e) => handleFilterChange('search', e.target.value)}
-            />
-          </div>
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="location">Location</Label>
-          <div className="relative">
-            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              id="location"
-              placeholder="e.g. San Francisco, CA"
-              className="pl-10"
-              value={filters.location}
-              onChange={(e) => handleFilterChange('location', e.target.value)}
-            />
-          </div>
-        </div>
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <h3 className="font-semibold text-lg">Filter Jobs</h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400">Find jobs that match your preferences</p>
       </div>
 
-      {/* Job Type */}
-      <div className="space-y-3">
-        <Label>Job Type</Label>
-        <div className="flex flex-wrap gap-2">
-          {jobTypes.map(type => (
-            <Button
-              key={type}
-              variant={filters.jobType.includes(type) ? "default" : "outline"}
-              size="sm"
-              onClick={() => toggleArrayFilter('jobType', type)}
+      <div className="p-4">
+        <Collapsible open={isAllFiltersOpen} onOpenChange={setIsAllFiltersOpen}>
+          <CollapsibleTrigger className="flex items-center justify-between w-full p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-blue-600" />
+              <span className="font-medium">All Filters</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-500">Reset All</span>
+              {isAllFiltersOpen ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </div>
+          </CollapsibleTrigger>
+
+          <CollapsibleContent className="mt-4 space-y-2">
+            <FilterSection 
+              title="Location" 
+              icon={<MapPin className="h-4 w-4 text-blue-600" />}
+              sectionKey="location"
             >
-              {type.charAt(0).toUpperCase() + type.slice(1)}
-            </Button>
-          ))}
-        </div>
-      </div>
+              <Input
+                placeholder="e.g. San Francisco, CA"
+                value={filters.location}
+                onChange={(e) => handleFilterChange('location', e.target.value)}
+              />
+            </FilterSection>
 
-      {/* Experience Level */}
-      <div className="space-y-3">
-        <Label>Experience Level</Label>
-        <div className="flex flex-wrap gap-2">
-          {experienceLevels.map(level => (
-            <Button
-              key={level}
-              variant={filters.experienceLevels.includes(level) ? "default" : "outline"}
-              size="sm"
-              onClick={() => toggleArrayFilter('experienceLevels', level)}
+            <FilterSection 
+              title="Salary Range" 
+              icon={<div className="w-4 h-4 rounded-full bg-green-600" />}
+              sectionKey="salary"
             >
-              {level.charAt(0).toUpperCase() + level.slice(1)}
-            </Button>
-          ))}
-        </div>
-      </div>
+              <div className="space-y-3">
+                <Label>Salary Range (${filters.salaryRange[0].toLocaleString()} - ${filters.salaryRange[1].toLocaleString()})</Label>
+                <Slider
+                  value={filters.salaryRange}
+                  onValueChange={(value) => handleFilterChange('salaryRange', value as [number, number])}
+                  max={300000}
+                  min={0}
+                  step={5000}
+                  className="w-full"
+                />
+              </div>
+            </FilterSection>
 
-      {/* Job Function */}
-      <div className="space-y-3">
-        <Label>Job Function</Label>
-        <div className="flex flex-wrap gap-2">
-          {jobFunctions.map(func => (
-            <Button
-              key={func}
-              variant={filters.jobFunction.includes(func) ? "default" : "outline"}
-              size="sm"
-              onClick={() => toggleArrayFilter('jobFunction', func)}
+            <FilterSection 
+              title="Job Type" 
+              icon={<div className="w-4 h-4 rounded bg-purple-600" />}
+              sectionKey="jobType"
             >
-              {func}
-            </Button>
-          ))}
-        </div>
-      </div>
+              <div className="flex flex-wrap gap-2">
+                {jobTypes.map(type => (
+                  <Button
+                    key={type}
+                    variant={filters.jobType.includes(type) ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => toggleArrayFilter('jobType', type)}
+                  >
+                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                  </Button>
+                ))}
+              </div>
+            </FilterSection>
 
-      {/* Remote Work */}
-      <div className="flex items-center space-x-2">
-        <Checkbox
-          id="remote"
-          checked={filters.remote}
-          onCheckedChange={(checked) => handleFilterChange('remote', checked)}
-        />
-        <Label htmlFor="remote">Remote work only</Label>
-      </div>
-
-      {/* Salary Range */}
-      <div className="space-y-3">
-        <Label>Salary Range (${filters.salaryRange[0].toLocaleString()} - ${filters.salaryRange[1].toLocaleString()})</Label>
-        <Slider
-          value={filters.salaryRange}
-          onValueChange={(value) => handleFilterChange('salaryRange', value as [number, number])}
-          max={300000}
-          min={0}
-          step={5000}
-          className="w-full"
-        />
-      </div>
-
-      {/* Company Type */}
-      <div className="space-y-3">
-        <Label>Company Type</Label>
-        <div className="flex flex-wrap gap-2">
-          {companyTypes.map(type => (
-            <Button
-              key={type}
-              variant={filters.companyTypes.includes(type) ? "default" : "outline"}
-              size="sm"
-              onClick={() => toggleArrayFilter('companyTypes', type)}
+            <FilterSection 
+              title="Experience Level" 
+              icon={<div className="w-4 h-4 rounded bg-orange-600" />}
+              sectionKey="experience"
             >
-              {type.charAt(0).toUpperCase() + type.slice(1)}
-            </Button>
-          ))}
-        </div>
-      </div>
+              <div className="flex flex-wrap gap-2">
+                {experienceLevels.map(level => (
+                  <Button
+                    key={level}
+                    variant={filters.experienceLevels.includes(level) ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => toggleArrayFilter('experienceLevels', level)}
+                  >
+                    {level.charAt(0).toUpperCase() + level.slice(1)}
+                  </Button>
+                ))}
+              </div>
+            </FilterSection>
 
-      {/* Company Size */}
-      <div className="space-y-3">
-        <Label>Company Size</Label>
-        <div className="flex flex-wrap gap-2">
-          {companySizes.map(size => (
-            <Button
-              key={size}
-              variant={filters.companySize.includes(size) ? "default" : "outline"}
-              size="sm"
-              onClick={() => toggleArrayFilter('companySize', size)}
+            <FilterSection 
+              title="Job Function" 
+              icon={<div className="w-4 h-4 rounded bg-red-600" />}
+              sectionKey="jobFunction"
             >
-              {size.charAt(0).toUpperCase() + size.slice(1)}
-            </Button>
-          ))}
-        </div>
-      </div>
+              <div className="flex flex-wrap gap-2">
+                {jobFunctions.map(func => (
+                  <Button
+                    key={func}
+                    variant={filters.jobFunction.includes(func) ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => toggleArrayFilter('jobFunction', func)}
+                  >
+                    {func}
+                  </Button>
+                ))}
+              </div>
+            </FilterSection>
 
-      {/* Action Buttons */}
-      <div className="flex space-x-3 pt-4">
-        <Button onClick={applyFilters} className="flex-1">
-          <Filter className="h-4 w-4 mr-2" />
-          Apply Filters
-        </Button>
-        <Button variant="outline" onClick={clearFilters}>
-          Clear All
-        </Button>
+            <FilterSection 
+              title="Skills" 
+              icon={<div className="w-4 h-4 rounded bg-teal-600" />}
+              sectionKey="skills"
+            >
+              <Input
+                placeholder="Add skills..."
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const value = e.currentTarget.value.trim();
+                    if (value && !filters.skills.includes(value)) {
+                      handleFilterChange('skills', [...filters.skills, value]);
+                      e.currentTarget.value = '';
+                    }
+                  }
+                }}
+              />
+              <div className="flex flex-wrap gap-2 mt-2">
+                {filters.skills.map(skill => (
+                  <Badge key={skill} variant="secondary" className="flex items-center gap-1">
+                    {skill}
+                    <X 
+                      className="h-3 w-3 cursor-pointer" 
+                      onClick={() => handleFilterChange('skills', filters.skills.filter(s => s !== skill))}
+                    />
+                  </Badge>
+                ))}
+              </div>
+            </FilterSection>
+
+            <FilterSection 
+              title="Companies" 
+              icon={<div className="w-4 h-4 rounded bg-indigo-600" />}
+              sectionKey="companies"
+            >
+              <Input
+                placeholder="Company names..."
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const value = e.currentTarget.value.trim();
+                    if (value && !filters.companies.includes(value)) {
+                      handleFilterChange('companies', [...filters.companies, value]);
+                      e.currentTarget.value = '';
+                    }
+                  }
+                }}
+              />
+              <div className="flex flex-wrap gap-2 mt-2">
+                {filters.companies.map(company => (
+                  <Badge key={company} variant="secondary" className="flex items-center gap-1">
+                    {company}
+                    <X 
+                      className="h-3 w-3 cursor-pointer" 
+                      onClick={() => handleFilterChange('companies', filters.companies.filter(c => c !== company))}
+                    />
+                  </Badge>
+                ))}
+              </div>
+            </FilterSection>
+
+            <FilterSection 
+              title="Job Titles" 
+              icon={<div className="w-4 h-4 rounded bg-yellow-600" />}
+              sectionKey="jobTitles"
+            >
+              <Input
+                placeholder="e.g. Software Engineer, Product Manager"
+                value={filters.title}
+                onChange={(e) => handleFilterChange('title', e.target.value)}
+              />
+            </FilterSection>
+          </CollapsibleContent>
+        </Collapsible>
+
+        <div className="mt-6">
+          <Button 
+            onClick={applyFilters} 
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Filter className="h-4 w-4 mr-2" />
+            Apply Filters
+          </Button>
+        </div>
       </div>
     </div>
   );
