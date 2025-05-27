@@ -31,7 +31,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, LogOut, Bell, Save, TrendingUp } from "lucide-react";
-import JobApplicationAutomation from "@/components/resume/JobApplicationAutomation";
 
 type SortOption = 'relevance' | 'date-newest' | 'date-oldest' | 'salary-highest' | 'salary-lowest';
 
@@ -195,7 +194,7 @@ const Jobs = () => {
     setViewMode(isMobile ? 'swipe' : 'list');
   }, [isMobile]);
 
-  // ... keep existing code (all handler functions remain the same)
+  // ... keep existing code (all handler functions: handleJobSelect, handleSaveJob, handleApplyJob, handleSaveSearch, handleSearch, applyFilters, sortJobs, handleSortChange)
 
   const handleJobSelect = (job: Job) => {
     setSelectedJob(job);
@@ -385,7 +384,7 @@ const Jobs = () => {
       
       <main className={`flex-1 ${isMobile ? 'pt-16' : 'pt-20'}`}>
         <div className="container px-4 py-8 mx-auto max-w-7xl">
-          {/* ... keep existing code (header section) */}
+          {/* Header section */}
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
               Find Your Next Opportunity
@@ -421,7 +420,7 @@ const Jobs = () => {
             </div>
           </div>
 
-          {/* ... keep existing code (metrics dashboard, content sections) */}
+          {/* Metrics dashboard */}
           {user && applicationMetrics && (
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
               <Card>
