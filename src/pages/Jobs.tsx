@@ -1,19 +1,24 @@
-
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
 import { Job, JobFilters } from "@/types/job";
 import { JobDetailView } from "@/components/JobDetailView";
 import { JobFiltersSection } from "@/components/JobFilters";
+import { EnhancedJobCard } from "@/components/jobs/EnhancedJobCard";
 import { useIsMobile } from "@/hooks/use-mobile";
 import SwipeJobsInterface from "@/components/SwipeJobsInterface";
 import { SavedAndAppliedJobs } from "@/components/SavedAndAppliedJobs";
 import { toast } from "@/hooks/use-toast";
+import AutomationSettings from "@/components/AutomationSettings";
 import { AuthModal } from "@/components/auth/AuthModal";
-import { SessionTimeoutWarning } from "@/components/auth/SessionTimeoutWarning";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
-import { useSessionTimeout } from "@/hooks/useSessionTimeout";
 import { jobApi, JobSearchParams } from "@/services/jobApi";
+import { supabaseApplicationService } from "@/services/supabaseApplicationService";
+import { supabaseSavedJobsService } from "@/services/supabaseSavedJobsService";
+import { savedSearchService } from "@/services/savedSearchService";
+import { resumeService } from "@/services/resumeService";
+import { jobAlertService } from "@/services/jobAlertService";
+import { supabaseNotificationService } from "@/services/supabaseNotificationService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -25,55 +30,24 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Zap, Save } from "lucide-react";
-import JobApplicationSection from "@/components/jobs/JobApplicationSection";
-import UnifiedJobList from "@/components/jobs/UnifiedJobList";
-import { ScrapedJob } from "@/components/resume/job-application/types";
-import { LinkedInContact, OutreachTemplate } from "@/types/resumePost";
-import ConfirmationModal from "@/components/resume/job-application/ConfirmationModal";
+import { Loader2, LogOut, Bell, Save, TrendingUp } from "lucide-react";
+import JobApplicationAutomation from "@/components/resume/JobApplicationAutomation";
 
 type SortOption = 'relevance' | 'date-newest' | 'date-oldest' | 'salary-highest' | 'salary-lowest';
 
 const Jobs = () => {
   const { user, userProfile, logout, saveJob, unsaveJob, applyToJob } = useSupabaseAuth();
-  
-  // Session timeout hook
-  const { showWarning, timeLeft, extendSession, formatTimeLeft } = useSessionTimeout({
-    timeoutMinutes: 30,
-    warningMinutes: 5
-  });
-
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
   const [savedJobIds, setSavedJobIds] = useState<string[]>([]);
   const [appliedJobIds, setAppliedJobIds] = useState<string[]>([]);
   const [sortOption, setSortOption] = useState<SortOption>('relevance');
-  const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'browse' | 'automation'>('browse');
-  
-  // New state for unified job application features
-  const [scrapedJobs, setScrapedJobs] = useState<ScrapedJob[]>([]);
-  const [selectedScrapedJob, setSelectedScrapedJob] = useState<ScrapedJob | null>(null);
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [recentApplications, setRecentApplications] = useState<ScrapedJob[]>([]);
-  const [linkedInContacts, setLinkedInContacts] = useState<LinkedInContact[]>([]);
-  const [isScrapingLinkedIn, setIsScrapingLinkedIn] = useState(false);
-  const [outreachTemplates, setOutreachTemplates] = useState<OutreachTemplate[]>([
-    {
-      id: "template-1",
-      name: "Alumni Referral Request",
-      subject: "Fellow [University] Alumnus Seeking Advice on [Company] Application",
-      body: "Hi [Name],\n\nI hope this message finds you well. I noticed that you're a fellow [University] alumnus currently working at [Company]. I recently applied for the [Position] role and I'm very excited about the opportunity.\n\nWould you be open to a quick chat about your experience at [Company] or possibly helping with an internal referral? Any insights you could share would be greatly appreciated.\n\nThank you for your time!\n\nBest regards,\n[Your Name]",
-      type: "alumni",
-      variables: ["University", "Company", "Position", "Name", "Your Name"]
-    }
-  ]);
-  
-  // Stable search parameters with proper memoization
+  const [applicationMetrics, setApplicationMetrics] = useState<any>(null);
+  const [activeAlerts, setActiveAlerts] = useState(0);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [searchParams, setSearchParams] = useState<JobSearchParams>({
     query: '',
     location: '',
@@ -95,48 +69,93 @@ const Jobs = () => {
     skills: [],
     companyTypes: [],
     companySize: [],
-    benefits: [],
-    jobFunction: [],
-    companies: [],
-    title: ""
+    benefits: []
   });
 
-  // Prevent multiple simultaneous API calls
-  const loadingRef = useRef(false);
-
-  // Memoized search parameters to prevent unnecessary re-renders
-  const stableSearchParams = useMemo(() => searchParams, [
-    searchParams.query,
-    searchParams.location,
-    searchParams.page,
-    searchParams.limit,
-    searchParams.remote
-  ]);
-
-  // Load jobs with caching and prevent duplicate calls
-  const loadJobs = useCallback(async (params: Partial<JobSearchParams> = {}) => {
-    if (loadingRef.current) {
-      console.log('Skipping duplicate job load request');
-      return;
+  // Load initial jobs and user data
+  useEffect(() => {
+    loadJobs();
+    if (user) {
+      loadUserData();
     }
+  }, [user]);
 
-    loadingRef.current = true;
-    setLoading(true);
+  // Update view mode based on screen size
+  useEffect(() => {
+    setViewMode(isMobile ? 'swipe' : 'list');
+  }, [isMobile]);
+
+  // Load user's saved and applied jobs from Supabase
+  useEffect(() => {
+    if (user) {
+      loadSavedAndAppliedJobs();
+      loadNotificationCount();
+    }
+  }, [user]);
+
+  const loadSavedAndAppliedJobs = async () => {
+    if (!user) return;
     
     try {
-      const searchQuery = { ...stableSearchParams, ...params };
-      console.log('Loading jobs with params:', searchQuery);
+      // Load saved job IDs
+      const savedIds = await supabaseSavedJobsService.getSavedJobIds(user.id);
+      setSavedJobIds(savedIds);
       
+      // Load applied job IDs
+      const applications = await supabaseApplicationService.getUserApplications(user.id);
+      setAppliedJobIds(applications.map(app => app.job_id));
+    } catch (error) {
+      console.error('Error loading saved and applied jobs:', error);
+    }
+  };
+
+  const loadNotificationCount = async () => {
+    if (!user) return;
+    
+    try {
+      const count = await supabaseNotificationService.getUnreadCount(user.id);
+      setUnreadNotifications(count);
+    } catch (error) {
+      console.error('Error loading notification count:', error);
+    }
+  };
+
+  const loadUserData = async () => {
+    if (!user) return;
+    
+    try {
+      // Load application metrics
+      const metrics = await supabaseApplicationService.getApplicationMetrics(user.id);
+      setApplicationMetrics(metrics);
+      
+      // Load active alerts count
+      const alerts = jobAlertService.getAlerts(user.id);
+      setActiveAlerts(alerts.filter(alert => alert.is_active).length);
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    }
+  };
+
+  const loadJobs = async (params: Partial<JobSearchParams> = {}) => {
+    setLoading(true);
+    try {
+      const searchQuery = { ...searchParams, ...params };
       const response = await jobApi.searchJobs(searchQuery);
-      
       setJobs(response.jobs);
       setFilteredJobs(response.jobs);
       
       if (response.jobs.length > 0 && !selectedJob) {
         setSelectedJob(response.jobs[0]);
       }
+
+      // Check for job alerts if user is logged in
+      if (user) {
+        const alertMatches = await jobAlertService.checkAlertsForNewJobs(user.id, response.jobs);
+        alertMatches.forEach(({ alert, matchingJobs }) => {
+          jobAlertService.triggerNotification(user.id, alert, matchingJobs);
+        });
+      }
     } catch (error) {
-      console.error('Error loading jobs:', error);
       toast({
         title: "Failed to load jobs",
         description: "Please try again later.",
@@ -144,52 +163,8 @@ const Jobs = () => {
       });
     } finally {
       setLoading(false);
-      setInitialLoading(false);
-      loadingRef.current = false;
     }
-  }, [stableSearchParams, selectedJob]);
-
-  // Load saved and applied jobs
-  const loadSavedAndAppliedJobs = useCallback(async () => {
-    if (!user) return;
-    // Mock implementation for now
-    setSavedJobIds([]);
-    setAppliedJobIds([]);
-  }, [user]);
-
-  // Initial load jobs
-  useEffect(() => {
-    loadJobs();
-  }, []); // Only run once on mount
-
-  // Load user data when user changes
-  useEffect(() => {
-    if (user) {
-      loadSavedAndAppliedJobs();
-    }
-  }, [user, loadSavedAndAppliedJobs]);
-
-  // Update view mode based on screen size
-  useEffect(() => {
-    setViewMode(isMobile ? 'swipe' : 'list');
-  }, [isMobile]);
-
-  // Load saved preferences
-  useEffect(() => {
-    try {
-      const savedApplications = localStorage.getItem('recentApplications');
-      if (savedApplications) {
-        setRecentApplications(JSON.parse(savedApplications));
-      }
-      
-      const savedTemplates = localStorage.getItem('outreachTemplates');
-      if (savedTemplates) {
-        setOutreachTemplates(JSON.parse(savedTemplates));
-      }
-    } catch (error) {
-      console.error("Error loading preferences:", error);
-    }
-  }, []);
+  };
 
   const handleJobSelect = (job: Job) => {
     setSelectedJob(job);
@@ -232,11 +207,38 @@ const Jobs = () => {
     }
 
     try {
-      const success = await applyToJob(job);
+      // Check if job is still available
+      const isAvailable = await jobApi.checkJobAvailability(job.applyUrl || '');
+      
+      if (!isAvailable) {
+        toast({
+          title: "Job no longer available",
+          description: "This position has been filled or removed.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Get user's default resume and cover letter
+      const defaultResume = resumeService.getDefaultResume(user.id);
+      const defaultCoverLetter = resumeService.getDefaultCoverLetter(user.id);
+
+      // Submit application
+      const success = await applyToJob(
+        job,
+        defaultResume?.name,
+        defaultCoverLetter?.name,
+        `Applied via job search platform to ${job.company}`
+      );
 
       if (success) {
         setAppliedJobIds(prev => [...prev, job.id]);
         
+        // Refresh user data
+        loadUserData();
+        loadNotificationCount();
+        
+        // Open application URL if available
         if (job.applyUrl) {
           window.open(job.applyUrl, '_blank');
         }
@@ -246,85 +248,36 @@ const Jobs = () => {
     }
   };
 
-  const handleJobsScraped = (newJobs: ScrapedJob[]) => {
-    setScrapedJobs(newJobs);
-  };
-
-  const handleScrapedJobSelected = (job: ScrapedJob) => {
-    if (!job.verified) {
-      toast({
-        title: "Cannot apply to unverified job listing",
-        description: "This job listing could not be verified and may no longer be available.",
-        variant: "destructive",
-      });
+  const handleSaveSearch = async () => {
+    if (!user) {
+      setAuthModalOpen(true);
       return;
     }
-    
-    setSelectedScrapedJob(job);
-    setShowConfirmation(true);
-  };
 
-  const handleAutoApply = async () => {
-    if (!selectedScrapedJob) return;
-    
-    setIsSubmitting(true);
+    const searchName = `Search: ${activeFilters.search || 'All jobs'} in ${activeFilters.location || 'All locations'}`;
     
     try {
+      await savedSearchService.saveSearch(searchName, activeFilters, user.id);
       toast({
-        title: "Preparing to apply...",
-        description: "Verifying job listing and preparing your resume data",
+        title: "Search saved",
+        description: "You can access this search from your saved searches.",
       });
-      
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const updatedApplications = [selectedScrapedJob, ...recentApplications].slice(0, 5);
-      setRecentApplications(updatedApplications);
-      localStorage.setItem('recentApplications', JSON.stringify(updatedApplications));
-      
-      toast({
-        title: "Application submitted successfully!",
-        description: `Your application to ${selectedScrapedJob.company} for ${selectedScrapedJob.title} has been sent.`,
-      });
-      
-      setSelectedScrapedJob(null);
-      setShowConfirmation(false);
     } catch (error) {
-      console.error("Error auto-applying:", error);
       toast({
-        title: "Failed to submit application automatically.",
-        description: "Try manual application.",
+        title: "Failed to save search",
+        description: "Please try again later.",
         variant: "destructive",
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
-  const handleNavigateToProfile = () => {
-    toast({
-      title: "Profile settings will open in a new tab",
-    });
+  const handleSearch = (query: string) => {
+    const newParams = { ...searchParams, query, page: 1 };
+    setSearchParams(newParams);
+    loadJobs(newParams);
   };
 
-  const handleApplicationSuccess = (jobUrl: string) => {
-    const newApplication: ScrapedJob = {
-      id: `manual-${Date.now()}`,
-      title: "Custom Application",
-      company: "Manual Entry",
-      location: "Unknown",
-      applyUrl: jobUrl,
-      source: "Manual",
-      datePosted: new Date().toLocaleDateString(),
-      description: "Manually submitted application",
-      verified: true
-    };
-    
-    const updatedApplications = [newApplication, ...recentApplications].slice(0, 5);
-    setRecentApplications(updatedApplications);
-    localStorage.setItem('recentApplications', JSON.stringify(updatedApplications));
-  };
-
-  const applyFilters = useCallback((filters: JobFilters) => {
+  const applyFilters = (filters: JobFilters) => {
     setActiveFilters(filters);
     
     const searchQuery: JobSearchParams = {
@@ -340,9 +293,9 @@ const Jobs = () => {
     
     setSearchParams(searchQuery);
     loadJobs(searchQuery);
-  }, [loadJobs]);
+  };
 
-  const sortJobs = useCallback((option: SortOption) => {
+  const sortJobs = (option: SortOption) => {
     let sortedJobs = [...filteredJobs];
     
     switch (option) {
@@ -367,29 +320,18 @@ const Jobs = () => {
     if (sortedJobs.length > 0) {
       setSelectedJob(sortedJobs[0]);
     }
-  }, [filteredJobs]);
+  };
 
-  const handleSortChange = useCallback((value: string) => {
+  const handleSortChange = (value: string) => {
     setSortOption(value as SortOption);
     sortJobs(value as SortOption);
-  }, [sortJobs]);
+  };
 
-  // Memoized computed values
-  const savedJobs = useMemo(() => 
-    jobs.filter(job => savedJobIds.includes(job.id)), 
-    [jobs, savedJobIds]
-  );
-  
-  const appliedJobs = useMemo(() => 
-    jobs.filter(job => appliedJobIds.includes(job.id)), 
-    [jobs, appliedJobIds]
-  );
+  // Get saved and applied jobs for display
+  const savedJobs = jobs.filter(job => savedJobIds.includes(job.id));
+  const appliedJobs = jobs.filter(job => appliedJobIds.includes(job.id));
 
-  const handleSessionLogout = useCallback(async () => {
-    await logout();
-  }, [logout]);
-
-  if (initialLoading) {
+  if (loading && jobs.length === 0) {
     return (
       <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900/30">
         {!isMobile && <Navbar />}
@@ -410,173 +352,196 @@ const Jobs = () => {
       {isMobile && <MobileHeader />}
       
       <main className={`flex-1 ${isMobile ? 'pt-16' : 'pt-20'}`}>
-        <div className="container px-4 py-6 mx-auto max-w-7xl">
-          {/* Main Tabs - Browse Jobs and Job Automation */}
-          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'browse' | 'automation')} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="browse" className="flex items-center gap-2">
-                Browse Jobs
-              </TabsTrigger>
-              <TabsTrigger value="automation" className="flex items-center gap-2">
-                <Zap className="h-4 w-4" />
-                Job Automation
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="browse" className="mt-0">
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                {/* Filters Sidebar */}
-                <div className="lg:col-span-1">
-                  <JobFiltersSection onFiltersApply={applyFilters} />
-                </div>
-
-                {/* Jobs List */}
-                <div className="lg:col-span-2">
-                  <div className="space-y-4">
-                    {/* Header with sort and count */}
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h2 className="text-lg font-semibold">Browse Jobs</h2>
-                        <p className="text-sm text-gray-600">Showing {filteredJobs.length} jobs</p>
-                      </div>
-                      
-                      <div className="flex items-center gap-4">
-                        <Select value={sortOption} onValueChange={handleSortChange}>
-                          <SelectTrigger className="w-40">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="relevance">Relevance</SelectItem>
-                            <SelectItem value="date-newest">Newest First</SelectItem>
-                            <SelectItem value="date-oldest">Oldest First</SelectItem>
-                            <SelectItem value="salary-highest">Highest Salary</SelectItem>
-                            <SelectItem value="salary-lowest">Lowest Salary</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        
-                        <Button
-                          variant={showMyJobs ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setShowMyJobs(!showMyJobs)}
-                        >
-                          My Jobs
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Jobs list or My Jobs */}
-                    {showMyJobs ? (
-                      <SavedAndAppliedJobs
-                        savedJobs={savedJobs}
-                        appliedJobs={appliedJobs}
-                        onApply={handleApplyJob}
-                        onSave={handleSaveJob}
-                        onSelect={handleJobSelect}
-                        selectedJobId={selectedJob?.id || null}
-                      />
-                    ) : viewMode === 'swipe' ? (
-                      <SwipeJobsInterface
-                        jobs={filteredJobs}
-                        onApply={handleApplyJob}
-                        onSave={handleSaveJob}
-                        onReject={(job: Job) => console.log('Rejected job:', job.id)}
-                      />
-                    ) : (
-                      <UnifiedJobList
-                        apiJobs={filteredJobs}
-                        scrapedJobs={scrapedJobs}
-                        selectedJobId={selectedJob?.id || selectedScrapedJob?.id || null}
-                        savedJobIds={savedJobIds}
-                        appliedJobIds={appliedJobIds}
-                        onJobSelect={handleJobSelect}
-                        onSaveJob={handleSaveJob}
-                        onApplyJob={handleApplyJob}
-                        onSelectScrapedJob={handleScrapedJobSelected}
-                      />
+        <div className="container px-4 py-8 mx-auto max-w-7xl">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
+              Find Your Next Opportunity
+            </h1>
+            
+            <div className="flex items-center space-x-4">
+              {user && (
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-gray-600">Welcome, {userProfile?.full_name || user.email}</span>
+                    {activeAlerts > 0 && (
+                      <Badge variant="outline" className="bg-blue-50 text-blue-600">
+                        <Bell className="w-3 h-3 mr-1" />
+                        {activeAlerts} alerts
+                      </Badge>
                     )}
-
-                    {loading && (
-                      <div className="flex justify-center py-8">
-                        <Loader2 className="h-6 w-6 animate-spin" />
-                      </div>
+                    {unreadNotifications > 0 && (
+                      <Badge variant="outline" className="bg-red-50 text-red-600">
+                        {unreadNotifications} new
+                      </Badge>
                     )}
                   </div>
+                  <Button variant="outline" size="sm" onClick={logout}>
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Logout
+                  </Button>
                 </div>
+              )}
+              
+              <div className="hidden md:block">
+                <AutomationSettings />
+              </div>
+            </div>
+          </div>
 
-                {/* Job Details Panel */}
-                <div className="lg:col-span-1">
-                  {!isMobile && (
-                    <div className="sticky top-24">
-                      <JobDetailView
-                        job={selectedJob}
-                        onApply={handleApplyJob}
-                        onSave={handleSaveJob}
-                        isSaved={selectedJob ? savedJobIds.includes(selectedJob.id) : false}
-                        isApplied={selectedJob ? appliedJobIds.includes(selectedJob.id) : false}
-                      />
+          {/* Application Metrics Dashboard */}
+          {user && applicationMetrics && (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-2">
+                    <TrendingUp className="h-4 w-4 text-blue-600" />
+                    <div>
+                      <p className="text-sm text-gray-600">Total Applied</p>
+                      <p className="text-2xl font-bold">{applicationMetrics.totalApplications}</p>
                     </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Response Rate</p>
+                    <p className="text-2xl font-bold text-green-600">{applicationMetrics.responseRate.toFixed(1)}%</p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Interview Rate</p>
+                    <p className="text-2xl font-bold text-purple-600">{applicationMetrics.interviewRate.toFixed(1)}%</p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Offer Rate</p>
+                    <p className="text-2xl font-bold text-orange-600">{applicationMetrics.offerRate.toFixed(1)}%</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Main Content Section */}
+          <div className="space-y-6">
+            {/* Enhanced Job Filtering */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="font-semibold text-lg">Filter Jobs</h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Find jobs that match your preferences</p>
+                  </div>
+                  {user && (
+                    <Button variant="outline" size="sm" onClick={handleSaveSearch}>
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Search
+                    </Button>
                   )}
                 </div>
               </div>
-            </TabsContent>
+              <div className="p-4">
+                <JobFiltersSection onApplyFilters={applyFilters} />
+              </div>
+            </div>
 
-            <TabsContent value="automation" className="mt-0">
-              <JobApplicationSection
-                onJobsScraped={handleJobsScraped}
-                onJobSelected={handleScrapedJobSelected}
-                linkedInContacts={linkedInContacts}
-                isScrapingLinkedIn={isScrapingLinkedIn}
-                outreachTemplates={outreachTemplates}
-                onSaveTemplate={(template) => {
-                  const updatedTemplates = outreachTemplates.map(t => 
-                    t.id === template.id ? template : t
-                  );
-                  setOutreachTemplates(updatedTemplates);
-                  localStorage.setItem('outreachTemplates', JSON.stringify(updatedTemplates));
-                }}
-                onCreateTemplate={(template) => {
-                  const newTemplate = {
-                    ...template,
-                    id: `template-${Date.now()}`
-                  };
-                  const updatedTemplates = [...outreachTemplates, newTemplate];
-                  setOutreachTemplates(updatedTemplates);
-                  localStorage.setItem('outreachTemplates', JSON.stringify(updatedTemplates));
-                }}
-                onNavigateToProfile={handleNavigateToProfile}
-                onApplicationSuccess={handleApplicationSuccess}
-              />
-            </TabsContent>
-          </Tabs>
+            {/* Job Application Automation Section */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <JobApplicationAutomation />
+            </div>
+
+            {user && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                  <h2 className="font-semibold text-lg">My Jobs</h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Saved and Applied Positions</p>
+                </div>
+                <div className="p-4">
+                  <SavedAndAppliedJobs
+                    savedJobs={savedJobs}
+                    appliedJobs={appliedJobs}
+                    onApply={handleApplyJob}
+                    onSave={handleSaveJob}
+                    onSelect={handleJobSelect}
+                    selectedJobId={selectedJob?.id || null}
+                  />
+                </div>
+              </div>
+            )}
+            
+            {/* Job Browser */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div>
+                <Card className="overflow-hidden h-full max-h-[calc(100vh-250px)]">
+                  <CardHeader className="py-3 px-4 border-b flex flex-row justify-between items-center">
+                    <div>
+                      <CardTitle className="text-base font-medium">Browse Jobs</CardTitle>
+                      <p className="text-xs text-muted-foreground">
+                        Showing {filteredJobs.length} jobs
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Select defaultValue={sortOption} onValueChange={handleSortChange}>
+                        <SelectTrigger className="w-[180px] bg-white dark:bg-gray-800 h-8 text-sm">
+                          <SelectValue placeholder="Sort By: Relevance" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="relevance">Sort By: Relevance</SelectItem>
+                          <SelectItem value="date-newest">Date: Newest First</SelectItem>
+                          <SelectItem value="date-oldest">Date: Oldest First</SelectItem>
+                          <SelectItem value="salary-highest">Salary: Highest First</SelectItem>
+                          <SelectItem value="salary-lowest">Salary: Lowest First</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </CardHeader>
+                  
+                  <CardContent className="p-0 divide-y overflow-y-auto max-h-[calc(100vh-300px)]">
+                    {filteredJobs.map(job => (
+                      <div key={job.id} className="p-4">
+                        <EnhancedJobCard 
+                          job={job}
+                          onApply={handleApplyJob}
+                          onSave={handleSaveJob}
+                          onSelect={handleJobSelect}
+                          isSelected={selectedJob?.id === job.id}
+                          isSaved={savedJobIds.includes(job.id)}
+                          isApplied={appliedJobIds.includes(job.id)}
+                          variant="list"
+                        />
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              </div>
+              
+              <div>
+                <Card className="h-full max-h-[calc(100vh-250px)] overflow-hidden">
+                  <CardContent className="p-0">
+                    <JobDetailView 
+                      job={selectedJob} 
+                      onApply={handleApplyJob}
+                      onSave={handleSaveJob}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
         </div>
-
-        {/* Confirmation modal for auto-apply */}
-        {showConfirmation && selectedScrapedJob && (
-          <ConfirmationModal 
-            selectedJob={selectedScrapedJob}
-            isSubmitting={isSubmitting}
-            onConfirm={handleAutoApply}
-            onCancel={() => {
-              setShowConfirmation(false);
-              setSelectedScrapedJob(null);
-            }}
-          />
-        )}
-
-        {/* Auth modal */}
-        <AuthModal
-          isOpen={authModalOpen}
-          onClose={() => setAuthModalOpen(false)}
-        />
-
-        {/* Session timeout warning */}
-        <SessionTimeoutWarning
-          isOpen={showWarning}
-          timeLeft={formatTimeLeft()}
-          onExtend={extendSession}
-          onLogout={handleSessionLogout}
-        />
       </main>
+      
+      <AuthModal 
+        isOpen={authModalOpen} 
+        onClose={() => setAuthModalOpen(false)} 
+      />
     </div>
   );
 };

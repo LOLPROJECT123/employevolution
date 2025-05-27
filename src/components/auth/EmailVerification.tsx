@@ -3,9 +3,9 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, Mail } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { Loader2 } from 'lucide-react';
 
 interface EmailVerificationProps {
   onEmailVerified: (email: string, exists: boolean) => void;
@@ -14,35 +14,7 @@ interface EmailVerificationProps {
 export const EmailVerification = ({ onEmailVerified }: EmailVerificationProps) => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const checkEmailExists = async (email: string): Promise<boolean> => {
-    try {
-      // Try to sign in with a dummy password to check if email exists
-      // This is a more reliable method than the previous approach
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password: 'dummy-password-check-12345'
-      });
-
-      if (error) {
-        // If the error is "Invalid login credentials", the email might exist but password is wrong
-        // If the error is "Email not confirmed", the email exists but needs confirmation
-        if (error.message.includes('Invalid login credentials') || 
-            error.message.includes('Email not confirmed')) {
-          return true;
-        }
-        // For other errors, assume email doesn't exist
-        return false;
-      }
-      
-      // If no error, email exists and password was correct (unlikely with dummy password)
-      return true;
-    } catch (error) {
-      console.error('Email check error:', error);
-      // On any unexpected error, default to signup flow
-      return false;
-    }
-  };
+  const { checkEmailExists } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +41,8 @@ export const EmailVerification = ({ onEmailVerified }: EmailVerificationProps) =
     setLoading(true);
 
     try {
-      console.log('Checking email existence for:', email);
+      // For new users, we'll default to allowing signup
+      // The checkEmailExists function might not work reliably in all cases
       const emailExists = await checkEmailExists(email);
       
       console.log('Email check result:', { email, emailExists });
@@ -79,12 +52,12 @@ export const EmailVerification = ({ onEmailVerified }: EmailVerificationProps) =
       if (emailExists) {
         toast({
           title: "Welcome back!",
-          description: "Please enter your password to sign in",
+          description: "Please sign in with your password",
         });
       } else {
         toast({
-          title: "Create your account",
-          description: "This email is not registered yet. Let's create your account!",
+          title: "Let's get you started",
+          description: "Please create your account",
         });
       }
     } catch (error) {
@@ -92,8 +65,8 @@ export const EmailVerification = ({ onEmailVerified }: EmailVerificationProps) =
       // If email check fails, default to signup flow
       onEmailVerified(email, false);
       toast({
-        title: "Let's get started",
-        description: "We'll help you create your account",
+        title: "Let's get you started",
+        description: "Please create your account",
       });
     } finally {
       setLoading(false);
@@ -102,12 +75,6 @@ export const EmailVerification = ({ onEmailVerified }: EmailVerificationProps) =
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="text-center mb-6">
-        <Mail className="mx-auto h-12 w-12 text-primary mb-4" />
-        <h2 className="text-2xl font-bold">Welcome to Streamline</h2>
-        <p className="text-muted-foreground">Enter your email to get started</p>
-      </div>
-      
       <div>
         <Label htmlFor="email">Email Address</Label>
         <Input
@@ -119,7 +86,6 @@ export const EmailVerification = ({ onEmailVerified }: EmailVerificationProps) =
           required
           disabled={loading}
           autoFocus
-          className="mt-1"
         />
       </div>
       

@@ -1,8 +1,9 @@
+
 /**
  * Utilities for synchronizing data between the extension and web app
  */
 
-import { Job, JobApplicationStatus } from '@/types/job';
+import { Job, JobApplicationStatus } from "@/types/job";
 
 // Define Chrome extension types
 interface ChromeRuntime {
@@ -302,14 +303,4 @@ export const saveExtensionSettings = async (settings: {
     console.error("Error saving extension settings:", error);
     return false;
   }
-};
-
-export const syncJobData = async (jobs: Job[]) => {
-  // Placeholder for job data synchronization
-  console.log('Syncing job data:', jobs.length, 'jobs');
-  return true;
-};
-
-export const validateJobData = (job: Job): boolean => {
-  return !!(job.id && job.title && job.company && job.location);
 };

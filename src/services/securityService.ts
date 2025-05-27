@@ -36,11 +36,10 @@ class SecurityService {
       
       const clientInfo = await this.getClientInfo();
 
-      // Only log if we have proper authentication or if it's a system event
       const { error } = await supabase
         .from('security_events')
         .insert({
-          user_id: user.user?.id || null, // Allow null for system events
+          user_id: user.user?.id,
           event_type: event.eventType,
           severity: event.severity,
           description: event.description,
@@ -51,7 +50,6 @@ class SecurityService {
 
       if (error) {
         console.error('Failed to log security event:', error);
-        // Don't throw here to avoid breaking auth flow
       }
 
       // Alert on high/critical events
@@ -60,7 +58,6 @@ class SecurityService {
       }
     } catch (error) {
       console.error('Security event logging failed:', error);
-      // Don't throw here to avoid breaking auth flow
     }
   }
 
@@ -86,7 +83,6 @@ class SecurityService {
     const newAttempts = attempts + 1;
     this.failedLoginAttempts.set(email, newAttempts);
 
-    // Log the failed login attempt but don't break if it fails
     await this.logSecurityEvent({
       eventType: 'failed_login',
       severity: newAttempts > 3 ? 'medium' : 'low',
