@@ -86,7 +86,7 @@ const Jobs = () => {
     searchParams.remote
   ]);
 
-  // Load jobs with caching and prevent duplicate calls
+  
   const loadJobs = useCallback(async (params: Partial<JobSearchParams> = {}) => {
     if (loadingRef.current) {
       console.log('Skipping duplicate job load request');
@@ -194,7 +194,7 @@ const Jobs = () => {
     setViewMode(isMobile ? 'swipe' : 'list');
   }, [isMobile]);
 
-  // ... keep existing code (all handler functions: handleJobSelect, handleSaveJob, handleApplyJob, handleSaveSearch, handleSearch, applyFilters, sortJobs, handleSortChange)
+  
 
   const handleJobSelect = (job: Job) => {
     setSelectedJob(job);
@@ -482,9 +482,7 @@ const Jobs = () => {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-              <JobApplicationAutomation />
-            </div>
+            
 
             {user && (
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
