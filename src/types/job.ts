@@ -37,6 +37,8 @@ export interface Job {
     platform?: string;
   };
   sponsorH1b?: boolean;
+  category?: string;
+  jobFunction?: string;
 }
 
 export interface JobFilters {
@@ -51,4 +53,23 @@ export interface JobFilters {
   companyTypes: string[];
   companySize: string[];
   benefits: string[];
+  jobFunction: string[];
+  companies: string[];
+  title: string;
 }
+
+export interface SavedSearch {
+  id: string;
+  name: string;
+  filters: JobFilters;
+  createdAt: string;
+  lastUsed?: string;
+}
+
+export type JobApplicationStatus = 
+  | 'applied' 
+  | 'screening' 
+  | 'interviewing' 
+  | 'offer' 
+  | 'rejected' 
+  | 'withdrawn';

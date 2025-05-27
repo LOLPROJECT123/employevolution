@@ -6,17 +6,27 @@ import { Search, Menu, X } from "lucide-react";
 
 interface MobileHeaderProps {
   title?: string;
+  showLogo?: boolean;
 }
 
-const MobileHeader = ({ title = "Jobs" }: MobileHeaderProps) => {
+const MobileHeader = ({ title = "Jobs", showLogo = false }: MobileHeaderProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
       <div className="flex items-center justify-between px-4 h-14">
-        <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
-          {title}
-        </h1>
+        {showLogo ? (
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">J</span>
+            </div>
+            <span className="font-semibold text-gray-900 dark:text-white">JobSearch</span>
+          </div>
+        ) : (
+          <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
+            {title}
+          </h1>
+        )}
         
         <Button
           variant="ghost"
