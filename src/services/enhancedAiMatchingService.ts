@@ -25,6 +25,15 @@ interface PersonalizedRecommendation {
   deadline?: string;
 }
 
+interface UserPreferences {
+  remote?: boolean;
+  flexible_schedule?: boolean;
+  company_sizes?: string[];
+  industries?: string[];
+  benefits?: string[];
+  job_types?: string[];
+}
+
 class EnhancedAiMatchingService {
   async calculateAdvancedMatch(job: Job, userProfile: User): Promise<AIJobMatchScore> {
     // Enhanced AI matching with multiple criteria
@@ -201,7 +210,7 @@ class EnhancedAiMatchingService {
   private async calculateCulturalFitAdvanced(job: Job, userProfile: User): Promise<number> {
     let score = 70; // Base score
     
-    const preferences = userProfile.profile?.preferences || {};
+    const preferences = (userProfile.profile?.preferences || {}) as UserPreferences;
     
     // Work model preference - safely access properties
     if (job.workModel === 'remote' && preferences.remote === true) score += 15;
