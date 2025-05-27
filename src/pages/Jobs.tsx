@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -335,7 +334,6 @@ const Jobs = () => {
     }
   };
 
-  // New handlers for unified job application features
   const handleJobsScraped = (newJobs: ScrapedJob[]) => {
     setScrapedJobs(newJobs);
   };
