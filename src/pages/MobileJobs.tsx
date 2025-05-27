@@ -40,7 +40,10 @@ export default function MobileJobs() {
     skills: [],
     companyTypes: [],
     companySize: [],
-    benefits: []
+    benefits: [],
+    jobFunction: [],
+    companies: [],
+    title: ""
   });
 
   // Use ref to track if the toast was already shown for the current search
@@ -307,7 +310,10 @@ export default function MobileJobs() {
       skills: [],
       companyTypes: [],
       companySize: [],
-      benefits: []
+      benefits: [],
+      jobFunction: [],
+      companies: [],
+      title: ""
     });
     
     // Toast is now handled by the useEffect

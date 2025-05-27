@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -83,7 +84,10 @@ const Jobs = () => {
     skills: [],
     companyTypes: [],
     companySize: [],
-    benefits: []
+    benefits: [],
+    jobFunction: [],
+    companies: [],
+    title: ""
   });
 
   // Prevent multiple simultaneous API calls
@@ -289,7 +293,7 @@ const Jobs = () => {
       }
     } catch (error) {
       console.error('Error applying to job:', error);
-      errorMonitoringService.captureAPIError(error, 'job-application', { userId: user.id, jobId: job.id });
+      errorMonitoringService.captureAPIError(error, 'job-application', { userId: user.id });
     }
   };
 

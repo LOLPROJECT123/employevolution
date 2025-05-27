@@ -2,7 +2,7 @@
  * Utilities for synchronizing data between the extension and web app
  */
 
-import { Job } from '@/types/job';
+import { Job, JobApplicationStatus } from '@/types/job';
 
 // Define Chrome extension types
 interface ChromeRuntime {

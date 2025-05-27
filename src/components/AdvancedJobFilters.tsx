@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { JobFilters } from '@/types/job';
 import { Button } from '@/components/ui/button';
@@ -29,7 +28,10 @@ export const AdvancedJobFilters = ({ onApplyFilters, initialFilters }: AdvancedJ
     skills: [],
     companyTypes: [],
     companySize: [],
-    benefits: []
+    benefits: [],
+    jobFunction: [],
+    companies: [],
+    title: ""
   });
 
   const [advancedSearch, setAdvancedSearch] = useState('');
@@ -72,7 +74,10 @@ export const AdvancedJobFilters = ({ onApplyFilters, initialFilters }: AdvancedJ
       skills: [],
       companyTypes: [],
       companySize: [],
-      benefits: []
+      benefits: [],
+      jobFunction: [],
+      companies: [],
+      title: ""
     };
     setFilters(clearedFilters);
     setAdvancedSearch('');
