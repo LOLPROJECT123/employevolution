@@ -1,239 +1,261 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { analyticsService, AnalyticsData } from "@/services/analyticsService";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  Legend
-} from 'recharts';
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
-export const AnalyticsDashboard = () => {
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { TrendingUp, TrendingDown, Target, Award, Users, DollarSign, Clock, Lightbulb } from 'lucide-react';
+import { analyticsService } from '@/services/analyticsService';
+import ApplicationTrendsChart from './ApplicationTrendsChart';
+import SuccessPatternAnalysis from './SuccessPatternAnalysis';
+import SalaryBenchmarking from './SalaryBenchmarking';
+import IndustryInsights from './IndustryInsights';
+import RecommendationEngine from './RecommendationEngine';
+
+interface AnalyticsData {
+  overview: {
+    totalApplications: number;
+    responseRate: number;
+    interviewRate: number;
+    offerRate: number;
+    avgResponseTime: number;
+    activeApplications: number;
+  };
+  trends: {
+    applicationsOverTime: { date: string; count: number }[];
+    responseRateOverTime: { date: string; rate: number }[];
+    statusDistribution: { status: string; count: number; percentage: number }[];
+  };
+  insights: {
+    topPerformingSkills: { skill: string; responseRate: number; applications: number }[];
+    bestCompanyTypes: { type: string; successRate: number; applications: number }[];
+    optimalApplicationTiming: { dayOfWeek: string; successRate: number }[];
+    salaryAnalysis: {
+      avgOfferedSalary: number;
+      salaryRangeDistribution: { range: string; count: number }[];
+    };
+  };
+  recommendations: string[];
+  benchmarks: {
+    industryAvgResponseRate: number;
+    industryAvgInterviewRate: number;
+    industryAvgOfferRate: number;
+    yourPerformanceVsIndustry: {
+      responseRate: 'above' | 'below' | 'average';
+      interviewRate: 'above' | 'below' | 'average';
+      offerRate: 'above' | 'below' | 'average';
+    };
+  };
+}
+
+const AnalyticsDashboard: React.FC = () => {
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [timeRange, setTimeRange] = useState('30d');
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    const loadAnalytics = async () => {
-      try {
-        setLoading(true);
-        const data = await analyticsService.generateApplicationAnalytics();
-        setAnalyticsData(data);
-      } catch (err) {
-        setError('Failed to load analytics data');
-        console.error('Analytics error:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    loadAnalyticsData();
+  }, [timeRange]);
 
-    loadAnalytics();
-  }, []);
+  const loadAnalyticsData = async () => {
+    try {
+      setLoading(true);
+      // Mock user ID - in real app, get from auth context
+      const userId = 'mock-user-id';
+      const data = analyticsService.generateApplicationAnalytics(userId);
+      setAnalyticsData(data);
+    } catch (error) {
+      console.error('Error loading analytics:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const refreshData = async () => {
+    setRefreshing(true);
+    await loadAnalyticsData();
+    setRefreshing(false);
+  };
+
+  const getPerformanceColor = (performance: 'above' | 'below' | 'average') => {
+    switch (performance) {
+      case 'above': return 'text-green-600';
+      case 'below': return 'text-red-600';
+      case 'average': return 'text-yellow-600';
+      default: return 'text-gray-600';
+    }
+  };
+
+  const getPerformanceIcon = (performance: 'above' | 'below' | 'average') => {
+    switch (performance) {
+      case 'above': return <TrendingUp className="h-4 w-4" />;
+      case 'below': return <TrendingDown className="h-4 w-4" />;
+      case 'average': return <Target className="h-4 w-4" />;
+      default: return null;
+    }
+  };
 
   if (loading) {
-    return <div className="p-6">Loading analytics data...</div>;
-  }
-
-  if (error) {
-    return <div className="p-6 text-red-500">Error: {error}</div>;
+    return (
+      <Card>
+        <CardContent className="p-8 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading analytics data...</p>
+        </CardContent>
+      </Card>
+    );
   }
 
   if (!analyticsData) {
-    return <div className="p-6">No analytics data available.</div>;
+    return (
+      <Card>
+        <CardContent className="p-8 text-center">
+          <p className="text-muted-foreground">No analytics data available</p>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
-    <ScrollArea className="h-[calc(100vh-250px)]">
-      <div className="p-6 space-y-6">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold">Analytics & Insights</h2>
+          <p className="text-muted-foreground">
+            Deep dive into your job search performance and get actionable recommendations.
+          </p>
+        </div>
+        <div className="flex items-center gap-4">
+          <Select value={timeRange} onValueChange={setTimeRange}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7d">Last 7 days</SelectItem>
+              <SelectItem value="30d">Last 30 days</SelectItem>
+              <SelectItem value="90d">Last 3 months</SelectItem>
+              <SelectItem value="1y">Last year</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button onClick={refreshData} disabled={refreshing}>
+            {refreshing ? 'Refreshing...' : 'Refresh'}
+          </Button>
+        </div>
+      </div>
+
+      {/* Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
-          <CardHeader>
-            <CardTitle>Application Overview</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
-              <div className="text-sm font-medium text-muted-foreground">Total Applications</div>
-              <div className="text-2xl font-bold">{analyticsData.overview.totalApplications}</div>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Applications</p>
+                <p className="text-2xl font-bold">{analyticsData.overview.totalApplications}</p>
+              </div>
+              <Users className="h-8 w-8 text-muted-foreground" />
             </div>
-            <div>
-              <div className="text-sm font-medium text-muted-foreground">Response Rate</div>
-              <div className="text-2xl font-bold">{analyticsData.overview.responseRate.toFixed(1)}%</div>
-            </div>
-            <div>
-              <div className="text-sm font-medium text-muted-foreground">Interview Rate</div>
-              <div className="text-2xl font-bold">{analyticsData.overview.interviewRate.toFixed(1)}%</div>
-            </div>
-            <div>
-              <div className="text-sm font-medium text-muted-foreground">Offer Rate</div>
-              <div className="text-2xl font-bold">{analyticsData.overview.offerRate.toFixed(1)}%</div>
+            <div className="mt-4 flex items-center gap-2">
+              <Badge variant="outline">{analyticsData.overview.activeApplications} active</Badge>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Application Trends</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="mb-4">
-              <div className="text-sm font-medium text-muted-foreground mb-2">Applications Over Time</div>
-              <ResponsiveContainer width="100%" height={200}>
-                <AreaChart data={analyticsData.trends.applicationsOverTime}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Area type="monotone" dataKey="count" stroke="#8884d8" fill="#8884d8" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-
-            <div>
-              <div className="text-sm font-medium text-muted-foreground mb-2">Response Rate Over Time</div>
-              <ResponsiveContainer width="100%" height={200}>
-                <AreaChart data={analyticsData.trends.responseRateOverTime}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Area type="monotone" dataKey="count" stroke="#82ca9d" fill="#82ca9d" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Application Status Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={analyticsData.trends.statusDistribution}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="status" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="count" fill="#a855f7" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Insights</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <div className="text-sm font-medium text-muted-foreground">Top Performing Skills</div>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {analyticsData.insights.topPerformingSkills.map((skill, index) => (
-                  <Badge key={index}>{skill}</Badge>
-                ))}
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Response Rate</p>
+                <p className="text-2xl font-bold">{analyticsData.overview.responseRate.toFixed(1)}%</p>
+              </div>
+              <div className={`flex items-center ${getPerformanceColor(analyticsData.benchmarks.yourPerformanceVsIndustry.responseRate)}`}>
+                {getPerformanceIcon(analyticsData.benchmarks.yourPerformanceVsIndustry.responseRate)}
               </div>
             </div>
-
-            <div>
-              <div className="text-sm font-medium text-muted-foreground">Industry Comparison</div>
-              <div className="mt-2 space-y-2">
-                <div>
-                  Response Rate:
-                  <Badge className={analyticsData.insights.industryComparison.responseRate === 'above' ? 'bg-green-100 text-green-800' : analyticsData.insights.industryComparison.responseRate === 'below' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}>
-                    {analyticsData.insights.industryComparison.responseRate}
-                  </Badge>
-                </div>
-                <div>
-                  Time to Interview:
-                  <Badge className={analyticsData.insights.industryComparison.timeToInterview === 'faster' ? 'bg-green-100 text-green-800' : analyticsData.insights.industryComparison.timeToInterview === 'slower' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}>
-                    {analyticsData.insights.industryComparison.timeToInterview}
-                  </Badge>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <div className="text-sm font-medium text-muted-foreground">Recommendations</div>
-              <ul className="list-disc pl-5 mt-2">
-                {analyticsData.insights.recommendations.map((recommendation, index) => (
-                  <li key={index}>{recommendation}</li>
-                ))}
-              </ul>
+            <div className="mt-4">
+              <p className="text-xs text-muted-foreground">
+                Industry avg: {analyticsData.benchmarks.industryAvgResponseRate}%
+              </p>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Benchmarks</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <div className="text-sm font-medium text-muted-foreground">Industry Averages</div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                <div>
-                  <div className="text-sm font-medium">Response Rate</div>
-                  <div className="text-xl font-bold">{analyticsData.benchmarks.industryAverages.responseRate}%</div>
-                </div>
-                <div>
-                  <div className="text-sm font-medium">Interview Rate</div>
-                  <div className="text-xl font-bold">{analyticsData.benchmarks.industryAverages.interviewRate}%</div>
-                </div>
-                <div>
-                  <div className="text-sm font-medium">Offer Rate</div>
-                  <div className="text-xl font-bold">{analyticsData.benchmarks.industryAverages.offerRate}%</div>
-                </div>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Interview Rate</p>
+                <p className="text-2xl font-bold">{analyticsData.overview.interviewRate.toFixed(1)}%</p>
+              </div>
+              <div className={`flex items-center ${getPerformanceColor(analyticsData.benchmarks.yourPerformanceVsIndustry.interviewRate)}`}>
+                {getPerformanceIcon(analyticsData.benchmarks.yourPerformanceVsIndustry.interviewRate)}
               </div>
             </div>
-
-            <div>
-              <div className="text-sm font-medium text-muted-foreground">Your Performance vs Industry</div>
-              <div className="mt-2 space-y-2">
-                <div>
-                  Response Rate:
-                  <Badge className={analyticsData.benchmarks.yourPerformanceVsIndustry.responseRate === 'above' ? 'bg-green-100 text-green-800' : analyticsData.benchmarks.yourPerformanceVsIndustry.responseRate === 'below' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}>
-                    {analyticsData.benchmarks.yourPerformanceVsIndustry.responseRate}
-                  </Badge>
-                </div>
-                <div>
-                  Interview Rate:
-                  <Badge className={analyticsData.benchmarks.yourPerformanceVsIndustry.interviewRate === 'above' ? 'bg-green-100 text-green-800' : analyticsData.benchmarks.yourPerformanceVsIndustry.interviewRate === 'below' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}>
-                    {analyticsData.benchmarks.yourPerformanceVsIndustry.interviewRate}
-                  </Badge>
-                </div>
-                <div>
-                  Offer Rate:
-                  <Badge className={analyticsData.benchmarks.yourPerformanceVsIndustry.offerRate === 'above' ? 'bg-green-100 text-green-800' : analyticsData.benchmarks.yourPerformanceVsIndustry.offerRate === 'below' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}>
-                    {analyticsData.benchmarks.yourPerformanceVsIndustry.offerRate}
-                  </Badge>
-                </div>
-              </div>
+            <div className="mt-4">
+              <p className="text-xs text-muted-foreground">
+                Industry avg: {analyticsData.benchmarks.industryAvgInterviewRate}%
+              </p>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Recommendations</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="list-disc pl-5">
-              {analyticsData.recommendations.map((recommendation, index) => (
-                <li key={index}>{recommendation}</li>
-              ))}
-            </ul>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Offer Rate</p>
+                <p className="text-2xl font-bold">{analyticsData.overview.offerRate.toFixed(1)}%</p>
+              </div>
+              <div className={`flex items-center ${getPerformanceColor(analyticsData.benchmarks.yourPerformanceVsIndustry.offerRate)}`}>
+                {getPerformanceIcon(analyticsData.benchmarks.yourPerformanceVsIndustry.offerRate)}
+              </div>
+            </div>
+            <div className="mt-4">
+              <p className="text-xs text-muted-foreground">
+                Industry avg: {analyticsData.benchmarks.industryAvgOfferRate}%
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
-    </ScrollArea>
+
+      {/* Main Analytics Content */}
+      <Tabs defaultValue="trends" className="w-full">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="trends">Trends</TabsTrigger>
+          <TabsTrigger value="patterns">Success Patterns</TabsTrigger>
+          <TabsTrigger value="salary">Salary Insights</TabsTrigger>
+          <TabsTrigger value="industry">Market Data</TabsTrigger>
+          <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="trends" className="space-y-6">
+          <ApplicationTrendsChart data={analyticsData.trends} />
+        </TabsContent>
+
+        <TabsContent value="patterns" className="space-y-6">
+          <SuccessPatternAnalysis data={analyticsData.insights} />
+        </TabsContent>
+
+        <TabsContent value="salary" className="space-y-6">
+          <SalaryBenchmarking data={analyticsData.insights.salaryAnalysis} />
+        </TabsContent>
+
+        <TabsContent value="industry" className="space-y-6">
+          <IndustryInsights />
+        </TabsContent>
+
+        <TabsContent value="recommendations" className="space-y-6">
+          <RecommendationEngine 
+            recommendations={analyticsData.recommendations}
+            performanceData={analyticsData.benchmarks}
+          />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
+
+export default AnalyticsDashboard;

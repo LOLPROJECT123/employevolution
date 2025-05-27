@@ -1,16 +1,10 @@
 interface ErrorContext {
-  route?: string;
-  timestamp?: string;
-  jobId?: string;
-  query?: string;
-  location?: string;
-  searchParams?: string;
   userId?: string;
-  sessionId?: string;
+  route?: string;
   userAgent?: string;
-  component?: string;
-  action?: string;
-  metadata?: Record<string, any>;
+  timestamp?: string;
+  sessionId?: string;
+  buildVersion?: string;
 }
 
 interface ErrorReport {
@@ -18,10 +12,7 @@ interface ErrorReport {
   stack?: string;
   context: ErrorContext;
   severity: 'low' | 'medium' | 'high' | 'critical';
-  category: 'ui' | 'api' | 'auth' | 'data' | 'network' | 'performance';
-  timestamp?: string;
-  userId?: string;
-  sessionId?: string;
+  category: 'auth' | 'api' | 'ui' | 'performance' | 'security' | 'other';
 }
 
 class ErrorMonitoringService {
@@ -46,7 +37,7 @@ class ErrorMonitoringService {
           timestamp: new Date().toISOString()
         },
         severity: 'high',
-        category: 'ui'
+        category: 'other'
       });
     };
 
@@ -61,7 +52,7 @@ class ErrorMonitoringService {
           timestamp: new Date().toISOString()
         },
         severity: 'high',
-        category: 'api'
+        category: 'other'
       });
     };
   }

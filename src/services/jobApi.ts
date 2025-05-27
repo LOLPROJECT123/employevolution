@@ -1,3 +1,4 @@
+
 import { Job } from '@/types/job';
 import { cacheService } from './cacheService';
 
@@ -22,7 +23,7 @@ export interface JobApiResponse {
   has_more: boolean;
 }
 
-class JobApi {
+class JobApiService {
   private baseUrl = '/api/jobs'; // This would be your backend API
 
   async searchJobs(params: JobSearchParams): Promise<JobApiResponse> {
@@ -318,78 +319,6 @@ class JobApi {
       ]
     };
   }
-
-  private transformToJob(data: any, source: string = 'api'): Job {
-    return {
-      id: data.id || this.generateJobId(),
-      title: data.title || data.job_title || 'Unknown Position',
-      company: data.company || data.company_name || 'Unknown Company',
-      location: data.location || 'Location not specified',
-      description: data.description || data.job_description || 'No description available',
-      requirements: data.requirements || data.job_requirements || [],
-      responsibilities: data.responsibilities || [],
-      salary: data.salary || {
-        min: 50000,
-        max: 100000,
-        currency: 'USD'
-      },
-      type: this.mapJobType(data.employment_type || data.job_type || 'full-time'),
-      level: this.mapExperienceLevel(data.experience_level || data.seniority_level || 'mid'),
-      postedAt: data.posted_at || data.publication_time || new Date().toISOString(),
-      skills: data.skills || data.technologies || [],
-      remote: data.remote || data.location?.toLowerCase().includes('remote') || false,
-      applyUrl: data.apply_url || data.redirect_url || `https://example.com/apply/${data.id}`,
-      source: source,
-      matchPercentage: data.match_percentage,
-      workModel: data.work_model || (data.remote ? 'remote' : 'onsite'),
-      companySize: data.company_size,
-      companyType: data.company_type,
-      category: data.category,
-      jobFunction: data.job_function,
-      applicationDetails: {
-        isAvailable: data.is_available !== false,
-        applicantCount: data.applicant_count,
-        easyApply: data.easy_apply || false
-      },
-      matchCriteria: data.match_criteria,
-      aiMatchData: data.ai_match_data
-    };
-  }
-
-  private mapJobType(type: string): Job['type'] {
-    const typeMap: Record<string, Job['type']> = {
-      'FULLTIME': 'full-time',
-      'PARTTIME': 'part-time',
-      'CONTRACT': 'contract',
-      'INTERNSHIP': 'internship',
-      'TEMPORARY': 'temporary',
-      'full_time': 'full-time',
-      'part_time': 'part-time'
-    };
-    
-    return typeMap[type.toUpperCase()] || 'full-time';
-  }
-
-  private mapExperienceLevel(level: string): Job['level'] {
-    const levelMap: Record<string, Job['level']> = {
-      'INTERNSHIP': 'intern',
-      'ENTRY_LEVEL': 'entry',
-      'MID_LEVEL': 'mid',
-      'SENIOR_LEVEL': 'senior',
-      'EXECUTIVE': 'executive',
-      'DIRECTOR': 'executive',
-      'LEAD': 'lead',
-      'entry_level': 'entry',
-      'mid_level': 'mid',
-      'senior_level': 'senior'
-    };
-    
-    return levelMap[level.toUpperCase()] || 'mid';
-  }
-
-  private generateJobId(): string {
-    return `job-${Math.random().toString(36).substr(2, 9)}`;
-  }
 }
 
-export const jobApi = new JobApi();
+export const jobApi = new JobApiService();
