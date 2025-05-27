@@ -17,10 +17,10 @@ import { Badge } from "@/components/ui/badge";
 import { X, Search, MapPin, Filter } from "lucide-react";
 
 interface JobFiltersSectionProps {
-  onFiltersApply: (filters: JobFilters) => void;
+  onApplyFilters: (filters: JobFilters) => void;
 }
 
-export const JobFiltersSection = ({ onFiltersApply }: JobFiltersSectionProps) => {
+export const JobFiltersSection = ({ onApplyFilters }: JobFiltersSectionProps) => {
   const [filters, setFilters] = useState<JobFilters>({
     search: "",
     location: "",
@@ -80,7 +80,7 @@ export const JobFiltersSection = ({ onFiltersApply }: JobFiltersSectionProps) =>
   };
 
   const applyFilters = () => {
-    onFiltersApply(filters);
+    onApplyFilters(filters);
   };
 
   return (
