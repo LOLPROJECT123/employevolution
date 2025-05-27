@@ -12,7 +12,7 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Check, Linkedin, UserRound } from "lucide-react";
+import { AlertTriangle, Check, Linkedin, UserRound, Link } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Import components
@@ -25,6 +25,8 @@ import LinkedInContactFinder from "./job-application/LinkedInContactFinder";
 import { JOB_TABS } from "./job-application/constants";
 import { ScrapedJob, JobApplicationTab } from "./job-application/types";
 import { LinkedInContact, OutreachTemplate } from "@/types/resumePost";
+
+// Remove the duplicate type definition that was here
 
 const JobApplicationAutomation = () => {
   const [activeTab, setActiveTab] = useState<JobApplicationTab>("manual");
@@ -314,7 +316,7 @@ const JobApplicationAutomation = () => {
               <Linkedin className="h-4 w-4 mr-1" /> LinkedIn
             </TabsTrigger>
             <TabsTrigger value="custom-urls" className="flex-1">
-              Custom URLs
+              <Link className="h-4 w-4 mr-1" /> Custom URLs
             </TabsTrigger>
           </TabsList>
           
