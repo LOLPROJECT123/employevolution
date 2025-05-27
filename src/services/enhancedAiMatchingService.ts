@@ -203,23 +203,27 @@ class EnhancedAiMatchingService {
     
     const preferences = userProfile.profile?.preferences || {};
     
-    // Work model preference
-    if (job.workModel === 'remote' && preferences.remote) score += 15;
-    if (job.workModel === 'hybrid' && (preferences.remote || preferences.flexible_schedule)) score += 10;
+    // Work model preference - safely access properties
+    if (job.workModel === 'remote' && preferences.remote === true) score += 15;
+    if (job.workModel === 'hybrid' && (preferences.remote === true || preferences.flexible_schedule === true)) score += 10;
     
-    // Company size preference
-    if (preferences.company_sizes?.includes(job.companySize || '')) score += 10;
+    // Company size preference - safely access array
+    const companySizes = preferences.company_sizes || [];
+    if (Array.isArray(companySizes) && companySizes.includes(job.companySize || '')) score += 10;
     
-    // Industry preference
-    if (preferences.industries?.includes(job.category || '')) score += 10;
+    // Industry preference - safely access array
+    const industries = preferences.industries || [];
+    if (Array.isArray(industries) && industries.includes(job.category || '')) score += 10;
     
-    // Benefits alignment
-    if (job.benefits) {
+    // Benefits alignment - safely access arrays
+    if (job.benefits && Array.isArray(job.benefits)) {
       const userBenefitPrefs = preferences.benefits || [];
-      const matchingBenefits = job.benefits.filter(benefit => 
-        userBenefitPrefs.some(pref => benefit.toLowerCase().includes(pref.toLowerCase()))
-      );
-      score += Math.min(15, matchingBenefits.length * 3);
+      if (Array.isArray(userBenefitPrefs)) {
+        const matchingBenefits = job.benefits.filter(benefit => 
+          userBenefitPrefs.some(pref => benefit.toLowerCase().includes(pref.toLowerCase()))
+        );
+        score += Math.min(15, matchingBenefits.length * 3);
+      }
     }
     
     return Math.min(100, score);
@@ -249,7 +253,7 @@ class EnhancedAiMatchingService {
     if (job.remote) score += 20;
     if (job.workModel === 'hybrid') score += 15;
     
-    if (job.benefits) {
+    if (job.benefits && Array.isArray(job.benefits)) {
       const workLifeBenefits = ['flexible pto', 'work life balance', 'flexible hours', 'mental health'];
       const hasWorkLifeBenefits = job.benefits.some(benefit =>
         workLifeBenefits.some(wlb => benefit.toLowerCase().includes(wlb))
