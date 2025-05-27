@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -257,8 +258,6 @@ const Jobs = () => {
     }
   }, []);
 
-  // ... keep existing code (all the useEffect hooks and handler functions)
-
   const handleJobSelect = (job: Job) => {
     setSelectedJob(job);
   };
@@ -471,6 +470,30 @@ const Jobs = () => {
     sortJobs(value as SortOption);
   }, [sortJobs]);
 
+  const handleSaveSearch = useCallback(async () => {
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
+
+    try {
+      const searchName = `Search - ${activeFilters.search || 'All Jobs'} ${new Date().toLocaleDateString()}`;
+      await savedSearchService.saveSearch(user.id, searchName, activeFilters);
+      
+      toast({
+        title: "Search saved successfully",
+        description: "You can access this search from your saved searches.",
+      });
+    } catch (error) {
+      console.error('Error saving search:', error);
+      toast({
+        title: "Failed to save search",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    }
+  }, [user, activeFilters]);
+
   // Memoized computed values
   const savedJobs = useMemo(() => 
     jobs.filter(job => savedJobIds.includes(job.id)), 
@@ -584,7 +607,7 @@ const Jobs = () => {
             {/* Filters sidebar */}
             <div className="lg:col-span-3">
               <JobFiltersSection 
-                onFiltersChange={applyFilters}
+                onFiltersApply={applyFilters}
                 loading={loading}
               />
             </div>
@@ -637,8 +660,7 @@ const Jobs = () => {
                     jobs={filteredJobs}
                     onApply={handleApplyJob}
                     onSave={handleSaveJob}
-                    savedJobIds={savedJobIds}
-                    appliedJobIds={appliedJobIds}
+                    onReject={(job: Job) => console.log('Rejected job:', job.id)}
                   />
                 ) : (
                   <UnifiedJobList

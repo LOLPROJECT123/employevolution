@@ -47,7 +47,7 @@ const UnifiedJobList = ({
                 isSaved={savedJobIds.includes(job.id)}
                 isApplied={appliedJobIds.includes(job.id)}
                 onApply={() => onApplyJob(job)}
-                onClick={() => onJobSelect(job)}
+                onSelect={() => onJobSelect(job)}
                 onSave={() => onSaveJob(job)}
                 variant="list"
               />
