@@ -11,7 +11,9 @@ import { SavedAndAppliedJobs } from "@/components/SavedAndAppliedJobs";
 import { toast } from "@/hooks/use-toast";
 import AutomationSettings from "@/components/AutomationSettings";
 import { AuthModal } from "@/components/auth/AuthModal";
+import { SessionTimeoutWarning } from "@/components/auth/SessionTimeoutWarning";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { useSessionTimeout } from "@/hooks/useSessionTimeout";
 import { jobApi, JobSearchParams } from "@/services/jobApi";
 import { supabaseApplicationService } from "@/services/supabaseApplicationService";
 import { supabaseSavedJobsService } from "@/services/supabaseSavedJobsService";
@@ -19,6 +21,8 @@ import { savedSearchService } from "@/services/savedSearchService";
 import { resumeService } from "@/services/resumeService";
 import { jobAlertService } from "@/services/jobAlertService";
 import { supabaseNotificationService } from "@/services/supabaseNotificationService";
+import { jobDeduplicationService } from "@/services/jobDeduplicationService";
+import { errorMonitoringService } from "@/services/errorMonitoringService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -30,13 +34,20 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, LogOut, Bell, Save, TrendingUp } from "lucide-react";
+import { Loader2, Bell, Save, TrendingUp } from "lucide-react";
 import JobApplicationAutomation from "@/components/resume/JobApplicationAutomation";
 
 type SortOption = 'relevance' | 'date-newest' | 'date-oldest' | 'salary-highest' | 'salary-lowest';
 
 const Jobs = () => {
   const { user, userProfile, logout, saveJob, unsaveJob, applyToJob } = useSupabaseAuth();
+  
+  // Session timeout hook
+  const { showWarning, timeLeft, extendSession, formatTimeLeft } = useSessionTimeout({
+    timeoutMinutes: 30,
+    warningMinutes: 5
+  });
+
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
@@ -72,7 +83,10 @@ const Jobs = () => {
     skills: [],
     companyTypes: [],
     companySize: [],
-    benefits: []
+    benefits: [],
+    jobFunction: [],
+    companies: [],
+    title: ""
   });
 
   // Prevent multiple simultaneous API calls
@@ -102,26 +116,31 @@ const Jobs = () => {
       console.log('Loading jobs with params:', searchQuery);
       
       const response = await jobApi.searchJobs(searchQuery);
-      setJobs(response.jobs);
-      setFilteredJobs(response.jobs);
       
-      if (response.jobs.length > 0 && !selectedJob) {
-        setSelectedJob(response.jobs[0]);
+      // Apply deduplication to the jobs
+      const deduplicatedJobs = jobDeduplicationService.deduplicateJobs(response.jobs);
+      
+      setJobs(deduplicatedJobs);
+      setFilteredJobs(deduplicatedJobs);
+      
+      if (deduplicatedJobs.length > 0 && !selectedJob) {
+        setSelectedJob(deduplicatedJobs[0]);
       }
 
-      // Check for job alerts if user is logged in
       if (user) {
         try {
-          const alertMatches = await jobAlertService.checkAlertsForNewJobs(user.id, response.jobs);
+          const alertMatches = await jobAlertService.checkAlertsForNewJobs(user.id, deduplicatedJobs);
           alertMatches.forEach(({ alert, matchingJobs }) => {
             jobAlertService.triggerNotification(user.id, alert, matchingJobs);
           });
         } catch (error) {
+          errorMonitoringService.captureAPIError(error, 'job-alerts', { userId: user.id });
           console.error('Error checking job alerts:', error);
         }
       }
     } catch (error) {
       console.error('Error loading jobs:', error);
+      errorMonitoringService.captureAPIError(error, 'job-search');
       toast({
         title: "Failed to load jobs",
         description: "Please try again later.",
@@ -146,6 +165,7 @@ const Jobs = () => {
       setActiveAlerts(alerts.filter(alert => alert.is_active).length);
     } catch (error) {
       console.error('Error loading user data:', error);
+      errorMonitoringService.captureAPIError(error, 'user-data', { userId: user.id });
     }
   }, [user]);
 
@@ -161,6 +181,7 @@ const Jobs = () => {
       setAppliedJobIds(applications.map(app => app.job_id));
     } catch (error) {
       console.error('Error loading saved and applied jobs:', error);
+      errorMonitoringService.captureAPIError(error, 'saved-applied-jobs', { userId: user.id });
     }
   }, [user]);
 
@@ -173,6 +194,7 @@ const Jobs = () => {
       setUnreadNotifications(count);
     } catch (error) {
       console.error('Error loading notification count:', error);
+      errorMonitoringService.captureAPIError(error, 'notifications', { userId: user.id });
     }
   }, [user]);
 
@@ -270,6 +292,7 @@ const Jobs = () => {
       }
     } catch (error) {
       console.error('Error applying to job:', error);
+      errorMonitoringService.captureAPIError(error, 'job-application', { userId: user.id });
     }
   };
 
@@ -363,6 +386,10 @@ const Jobs = () => {
     [jobs, appliedJobIds]
   );
 
+  const handleSessionLogout = useCallback(async () => {
+    await logout();
+  }, [logout]);
+
   if (initialLoading) {
     return (
       <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900/30">
@@ -385,7 +412,7 @@ const Jobs = () => {
       
       <main className={`flex-1 ${isMobile ? 'pt-16' : 'pt-20'}`}>
         <div className="container px-4 py-8 mx-auto max-w-7xl">
-          {/* ... keep existing code (header section) */}
+          {/* Header section without welcome message */}
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
               Find Your Next Opportunity
@@ -395,7 +422,6 @@ const Jobs = () => {
               {user && (
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-600">Welcome, {userProfile?.full_name || user.email}</span>
                     {activeAlerts > 0 && (
                       <Badge variant="outline" className="bg-blue-50 text-blue-600">
                         <Bell className="w-3 h-3 mr-1" />
@@ -408,10 +434,6 @@ const Jobs = () => {
                       </Badge>
                     )}
                   </div>
-                  <Button variant="outline" size="sm" onClick={logout}>
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Logout
-                  </Button>
                 </div>
               )}
               
@@ -571,6 +593,13 @@ const Jobs = () => {
       <AuthModal 
         isOpen={authModalOpen} 
         onClose={() => setAuthModalOpen(false)} 
+      />
+
+      <SessionTimeoutWarning
+        isOpen={showWarning}
+        timeLeft={formatTimeLeft()}
+        onExtend={extendSession}
+        onLogout={handleSessionLogout}
       />
     </div>
   );

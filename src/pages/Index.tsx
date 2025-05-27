@@ -1,4 +1,3 @@
-
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import Navbar from "@/components/Navbar";
@@ -34,7 +33,8 @@ const sampleJobs = [
     description: 'We are looking for a Senior Software Engineer...',
     requirements: ['5+ years experience', 'React', 'Node.js'],
     postedAt: new Date().toISOString(),
-    skills: ['React', 'TypeScript', 'Node.js', 'AWS', 'Docker']
+    skills: ['React', 'TypeScript', 'Node.js', 'AWS', 'Docker'],
+    remote: true
   },
   {
     id: '2',
@@ -51,7 +51,8 @@ const sampleJobs = [
     description: 'Seeking an experienced Product Manager...',
     requirements: ['3+ years experience', 'Agile', 'Technical background'],
     postedAt: new Date(Date.now() - 86400000).toISOString(),
-    skills: ['Product Strategy', 'Agile', 'User Research', 'Data Analysis']
+    skills: ['Product Strategy', 'Agile', 'User Research', 'Data Analysis'],
+    remote: false
   }
 ];
 

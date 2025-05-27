@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -33,7 +32,7 @@ function App() {
               <Sonner />
               <BrowserRouter>
                 <Routes>
-                  <Route path="/" element={<Index />} />
+                  <Route path="/" element={<Jobs />} />
                   <Route path="/jobs" element={<Jobs />} />
                   <Route path="/resume-tools" element={<ResumeTools />} />
                   <Route path="/resume-tools/:tab" element={<ResumeTools />} />
