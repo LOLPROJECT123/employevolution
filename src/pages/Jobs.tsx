@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -35,7 +34,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, LogOut, Bell, Save, TrendingUp } from "lucide-react";
+import { Loader2, Bell, Save, TrendingUp } from "lucide-react";
 import JobApplicationAutomation from "@/components/resume/JobApplicationAutomation";
 
 type SortOption = 'relevance' | 'date-newest' | 'date-oldest' | 'salary-highest' | 'salary-lowest';
@@ -413,7 +412,7 @@ const Jobs = () => {
       
       <main className={`flex-1 ${isMobile ? 'pt-16' : 'pt-20'}`}>
         <div className="container px-4 py-8 mx-auto max-w-7xl">
-          {/* ... keep existing code (header section) */}
+          {/* Header section without logout button */}
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
               Find Your Next Opportunity
@@ -436,10 +435,6 @@ const Jobs = () => {
                       </Badge>
                     )}
                   </div>
-                  <Button variant="outline" size="sm" onClick={logout}>
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Logout
-                  </Button>
                 </div>
               )}
               
