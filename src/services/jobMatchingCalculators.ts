@@ -83,7 +83,7 @@ export class JobMatchingCalculators {
     
     // Industry preference - safely access array
     const industries = preferences.industries || [];
-    if (Array.isArray(industries) && job.category && industries.includes(job.category)) score += 10;
+    if (Array.isArray(industries) && industries.includes(job.category || '')) score += 10;
     
     // Benefits alignment - safely access arrays
     if (job.benefits && Array.isArray(job.benefits)) {
@@ -103,9 +103,9 @@ export class JobMatchingCalculators {
     let score = 60; // Base score
     
     // Company size often correlates with growth opportunities
-    if (job.companySize === 'enterprise') score += 15;
+    if (job.companySize === 'large' || job.companySize === 'enterprise') score += 15;
     if (job.companySize === 'mid-size') score += 10;
-    if (job.companySize === 'startup') score += 20; // High growth potential
+    if (job.companySize === 'early') score += 20; // High growth potential
     
     // Job level advancement potential
     const currentLevel = userProfile.profile?.experience || 'mid';
@@ -132,8 +132,8 @@ export class JobMatchingCalculators {
     }
     
     // Startup vs established company considerations
-    if (job.companySize === 'startup') score -= 10; // Startups often have longer hours
-    if (job.companySize === 'enterprise') score += 10;
+    if (job.companySize === 'early' || job.companySize === 'seed') score -= 10; // Startups often have longer hours
+    if (job.companySize === 'large' || job.companySize === 'enterprise') score += 10;
     
     return Math.min(100, score);
   }
