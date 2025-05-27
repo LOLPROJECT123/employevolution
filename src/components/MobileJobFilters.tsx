@@ -32,10 +32,6 @@ export const MobileJobFilters = ({
     setIsOpen(false);
   };
 
-  const handleClose = () => {
-    setIsOpen(false);
-  };
-
   const handleResetAll = () => {
     // Reset all filters
     onClose();
@@ -76,10 +72,7 @@ export const MobileJobFilters = ({
               </div>
             </SheetHeader>
             <div className="p-3">
-              <MobileJobFiltersSection 
-                onApplyFilters={handleApplyFilters} 
-                onClose={handleClose}
-              />
+              <MobileJobFiltersSection onApplyFilters={handleApplyFilters} />
             </div>
             <div className="p-3 border-t border-gray-200 dark:border-gray-700">
               <Button 
