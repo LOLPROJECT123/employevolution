@@ -412,7 +412,7 @@ const Jobs = () => {
       
       <main className={`flex-1 ${isMobile ? 'pt-16' : 'pt-20'}`}>
         <div className="container px-4 py-8 mx-auto max-w-7xl">
-          {/* Header section without logout button */}
+          {/* Header section without welcome message */}
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
               Find Your Next Opportunity
@@ -422,7 +422,6 @@ const Jobs = () => {
               {user && (
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-600">Welcome, {userProfile?.full_name || user.email}</span>
                     {activeAlerts > 0 && (
                       <Badge variant="outline" className="bg-blue-50 text-blue-600">
                         <Bell className="w-3 h-3 mr-1" />
