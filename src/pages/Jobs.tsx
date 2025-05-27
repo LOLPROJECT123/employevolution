@@ -11,9 +11,7 @@ import { SavedAndAppliedJobs } from "@/components/SavedAndAppliedJobs";
 import { toast } from "@/hooks/use-toast";
 import AutomationSettings from "@/components/AutomationSettings";
 import { AuthModal } from "@/components/auth/AuthModal";
-import { SessionTimeoutWarning } from "@/components/auth/SessionTimeoutWarning";
 import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
-import { useSessionTimeout } from "@/hooks/useSessionTimeout";
 import { jobApi, JobSearchParams } from "@/services/jobApi";
 import { supabaseApplicationService } from "@/services/supabaseApplicationService";
 import { supabaseSavedJobsService } from "@/services/supabaseSavedJobsService";
@@ -21,8 +19,6 @@ import { savedSearchService } from "@/services/savedSearchService";
 import { resumeService } from "@/services/resumeService";
 import { jobAlertService } from "@/services/jobAlertService";
 import { supabaseNotificationService } from "@/services/supabaseNotificationService";
-import { jobDeduplicationService } from "@/services/jobDeduplicationService";
-import { errorMonitoringService } from "@/services/errorMonitoringService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -41,13 +37,6 @@ type SortOption = 'relevance' | 'date-newest' | 'date-oldest' | 'salary-highest'
 
 const Jobs = () => {
   const { user, userProfile, logout, saveJob, unsaveJob, applyToJob } = useSupabaseAuth();
-  
-  // Session timeout hook
-  const { showWarning, timeLeft, extendSession, formatTimeLeft } = useSessionTimeout({
-    timeoutMinutes: 30,
-    warningMinutes: 5
-  });
-
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
@@ -113,31 +102,26 @@ const Jobs = () => {
       console.log('Loading jobs with params:', searchQuery);
       
       const response = await jobApi.searchJobs(searchQuery);
+      setJobs(response.jobs);
+      setFilteredJobs(response.jobs);
       
-      // Apply deduplication to the jobs
-      const deduplicatedJobs = jobDeduplicationService.deduplicateJobs(response.jobs);
-      
-      setJobs(deduplicatedJobs);
-      setFilteredJobs(deduplicatedJobs);
-      
-      if (deduplicatedJobs.length > 0 && !selectedJob) {
-        setSelectedJob(deduplicatedJobs[0]);
+      if (response.jobs.length > 0 && !selectedJob) {
+        setSelectedJob(response.jobs[0]);
       }
 
+      // Check for job alerts if user is logged in
       if (user) {
         try {
-          const alertMatches = await jobAlertService.checkAlertsForNewJobs(user.id, deduplicatedJobs);
+          const alertMatches = await jobAlertService.checkAlertsForNewJobs(user.id, response.jobs);
           alertMatches.forEach(({ alert, matchingJobs }) => {
             jobAlertService.triggerNotification(user.id, alert, matchingJobs);
           });
         } catch (error) {
-          errorMonitoringService.captureAPIError(error, 'job-alerts', { userId: user.id });
           console.error('Error checking job alerts:', error);
         }
       }
     } catch (error) {
       console.error('Error loading jobs:', error);
-      errorMonitoringService.captureAPIError(error, 'job-search');
       toast({
         title: "Failed to load jobs",
         description: "Please try again later.",
@@ -162,7 +146,6 @@ const Jobs = () => {
       setActiveAlerts(alerts.filter(alert => alert.is_active).length);
     } catch (error) {
       console.error('Error loading user data:', error);
-      errorMonitoringService.captureAPIError(error, 'user-data', { userId: user.id });
     }
   }, [user]);
 
@@ -178,7 +161,6 @@ const Jobs = () => {
       setAppliedJobIds(applications.map(app => app.job_id));
     } catch (error) {
       console.error('Error loading saved and applied jobs:', error);
-      errorMonitoringService.captureAPIError(error, 'saved-applied-jobs', { userId: user.id });
     }
   }, [user]);
 
@@ -191,7 +173,6 @@ const Jobs = () => {
       setUnreadNotifications(count);
     } catch (error) {
       console.error('Error loading notification count:', error);
-      errorMonitoringService.captureAPIError(error, 'notifications', { userId: user.id });
     }
   }, [user]);
 
@@ -289,7 +270,6 @@ const Jobs = () => {
       }
     } catch (error) {
       console.error('Error applying to job:', error);
-      errorMonitoringService.captureAPIError(error, 'job-application', { userId: user.id, jobId: job.id });
     }
   };
 
@@ -382,10 +362,6 @@ const Jobs = () => {
     jobs.filter(job => appliedJobIds.includes(job.id)), 
     [jobs, appliedJobIds]
   );
-
-  const handleSessionLogout = useCallback(async () => {
-    await logout();
-  }, [logout]);
 
   if (initialLoading) {
     return (
@@ -595,13 +571,6 @@ const Jobs = () => {
       <AuthModal 
         isOpen={authModalOpen} 
         onClose={() => setAuthModalOpen(false)} 
-      />
-
-      <SessionTimeoutWarning
-        isOpen={showWarning}
-        timeLeft={formatTimeLeft()}
-        onExtend={extendSession}
-        onLogout={handleSessionLogout}
       />
     </div>
   );
