@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -5,6 +6,7 @@ import { Job, JobFilters } from "@/types/job";
 import { JobDetailView } from "@/components/JobDetailView";
 import { JobFiltersSection } from "@/components/JobFilters";
 import { EnhancedJobCard } from "@/components/jobs/EnhancedJobCard";
+import { EnhancedJobScraper } from "@/components/jobs/EnhancedJobScraper";
 import { useIsMobile } from "@/hooks/use-mobile";
 import SwipeJobsInterface from "@/components/SwipeJobsInterface";
 import { SavedAndAppliedJobs } from "@/components/SavedAndAppliedJobs";
@@ -31,6 +33,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, LogOut, Bell, Save, TrendingUp } from "lucide-react";
+import { ScrapedJob } from "@/components/resume/job-application/types";
+import { convertScrapedJobToJob } from "@/utils/jobApplicationUtils";
 
 type SortOption = 'relevance' | 'date-newest' | 'date-oldest' | 'salary-highest' | 'salary-lowest';
 
@@ -351,6 +355,22 @@ const Jobs = () => {
     sortJobs(value as SortOption);
   }, [sortJobs]);
 
+  // Handle scraped jobs from enhanced scraper
+  const handleScrapedJobs = useCallback((scrapedJobs: ScrapedJob[]) => {
+    const convertedJobs = scrapedJobs.map(convertScrapedJobToJob);
+    setJobs(prev => [...prev, ...convertedJobs]);
+    setFilteredJobs(prev => [...prev, ...convertedJobs]);
+    
+    if (convertedJobs.length > 0 && !selectedJob) {
+      setSelectedJob(convertedJobs[0]);
+    }
+
+    toast({
+      title: "Jobs Updated",
+      description: `Added ${convertedJobs.length} new jobs from scraping.`,
+    });
+  }, [selectedJob]);
+
   // Memoized computed values
   const savedJobs = useMemo(() => 
     jobs.filter(job => savedJobIds.includes(job.id)), 
@@ -482,7 +502,16 @@ const Jobs = () => {
               </div>
             </div>
 
-            
+            {/* Enhanced Job Scraper */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                <h2 className="font-semibold text-lg">Enhanced Job Scraper</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Scrape jobs from multiple platforms and ATS systems</p>
+              </div>
+              <div className="p-4">
+                <EnhancedJobScraper onJobsFound={handleScrapedJobs} />
+              </div>
+            </div>
 
             {user && (
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
