@@ -1,124 +1,240 @@
-
-import React from 'react';
-import { Job } from '@/types/job';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  MapPin, 
-  DollarSign, 
-  Clock, 
-  Building, 
-  Users, 
-  ExternalLink,
-  Heart,
-  Briefcase,
-  GraduationCap,
-  CheckCircle
-} from 'lucide-react';
-import { JobMatchAnalysis } from '@/components/jobs/JobMatchAnalysis';
-import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import { useState } from "react";
+import { Job } from "@/types/job";
+import { getMatchBgColor, getMatchColor, getMatchLabel } from "@/utils/jobMatchingUtils";
+import { JobMatchDetails } from "@/components/JobMatchDetails";
+import { Button } from "@/components/ui/button";
+import { BookmarkIcon, ExternalLink, FileText, Zap, Users } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import AutoApplyModal from "@/components/AutoApplyModal";
+import { toast } from "sonner";
 
 interface JobDetailViewProps {
   job: Job | null;
   onApply: (job: Job) => void;
   onSave: (job: Job) => void;
+  isSaved?: boolean;
+  isApplied?: boolean;
 }
 
-export const JobDetailView = ({ job, onApply, onSave }: JobDetailViewProps) => {
-  const { userProfile } = useSupabaseAuth();
-
+export const JobDetailView = ({ 
+  job, 
+  onApply, 
+  onSave,
+  isSaved,
+  isApplied
+}: JobDetailViewProps) => {
+  const [showAutoApplyModal, setShowAutoApplyModal] = useState(false);
+  
   if (!job) {
     return (
-      <div className="h-full flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Job Selected</h3>
-          <p className="text-gray-500">Select a job from the list to view details</p>
-        </div>
+      <div className="h-full flex items-center justify-center p-6">
+        <p>No job selected</p>
       </div>
     );
   }
 
-  // Calculate mock match score based on job data
-  const calculateMatchScore = () => {
-    const userSkills = userProfile?.profile?.skills || [];
-    const jobSkills = job.skills || [];
-    
-    const matchingSkills = jobSkills.filter(skill => 
-      userSkills.some(userSkill => 
-        userSkill.toLowerCase().includes(skill.toLowerCase()) ||
-        skill.toLowerCase().includes(userSkill.toLowerCase())
-      )
-    );
-    
-    const missingSkills = jobSkills.filter(skill => 
-      !userSkills.some(userSkill => 
-        userSkill.toLowerCase().includes(skill.toLowerCase()) ||
-        skill.toLowerCase().includes(userSkill.toLowerCase())
-      )
-    );
-
-    const skillsPercentage = jobSkills.length > 0 
-      ? Math.round((matchingSkills.length / jobSkills.length) * 100)
-      : 100;
-
-    return {
-      overall: job.matchPercentage || skillsPercentage,
-      skills: skillsPercentage,
-      experience: skillsPercentage > 60,
-      education: skillsPercentage > 50,
-      location: !job.remote ? job.location.toLowerCase().includes('austin') : true,
-      missingSkills: missingSkills.slice(0, 6),
-      matchingSkills: matchingSkills.slice(0, 8)
-    };
+  const handleApply = () => {
+    if (job.applyUrl) {
+      // Check if job is available before proceeding
+      if (!job.applicationDetails?.isAvailable) {
+        toast.error("Job no longer available", {
+          description: "This job posting is no longer active. It may have been filled or removed by the employer."
+        });
+        return;
+      }
+      
+      const canAutoApply = job.applyUrl && detectPlatform(job.applyUrl) !== null;
+      
+      if (canAutoApply) {
+        setShowAutoApplyModal(true);
+      } else {
+        if (typeof window !== 'undefined' && 
+            window.chrome?.runtime?.sendMessage) {
+          window.chrome.runtime.sendMessage({ 
+            action: "openJobUrl", 
+            url: job.applyUrl 
+          });
+        } else {
+          window.open(job.applyUrl, '_blank', 'noopener,noreferrer');
+        }
+        onApply(job);
+      }
+    } else {
+      toast.error("Application URL not available", {
+        description: "This job doesn't have an application link."
+      });
+      onApply(job);
+    }
   };
-
-  const matchScore = calculateMatchScore();
-
-  const formatSalary = (salary: Job['salary']) => {
-    if (!salary || salary.min === 0) return 'Not specified';
-    
-    const formatter = new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    });
-    
-    if (salary.min === salary.max) {
-      return formatter.format(salary.min);
+  
+  const handleViewJob = () => {
+    if (!job.applyUrl) {
+      toast.error("Job URL not available", {
+        description: "This job doesn't have a URL to view details."
+      });
+      return;
     }
     
-    return `${formatter.format(salary.min)} - ${formatter.format(salary.max)}`;
+    // Check if job is available before opening URL
+    if (!job.applicationDetails?.isAvailable) {
+      toast.error("Job no longer available", {
+        description: "This job posting is no longer active. It may have been filled or removed by the employer."
+      });
+      return;
+    }
+    
+    window.open(job.applyUrl, '_blank', 'noopener,noreferrer');
   };
-
-  const getTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+  
+  const detectPlatform = (url: string): string | null => {
+    if (!url) return null;
     
-    if (diffInHours < 24) {
-      return `${diffInHours}h ago`;
-    }
+    const lowerUrl = url.toLowerCase();
     
-    const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays < 7) {
-      return `${diffInDays}d ago`;
-    }
+    if (lowerUrl.includes('google.com') || lowerUrl.includes('careers.google')) return 'Google';
+    if (lowerUrl.includes('microsoft.com') || lowerUrl.includes('careers.microsoft')) return 'Microsoft';
+    if (lowerUrl.includes('apple.com') || lowerUrl.includes('jobs.apple')) return 'Apple';
+    if (lowerUrl.includes('amazon.jobs') || lowerUrl.includes('amazon.com/jobs')) return 'Amazon';
+    if (lowerUrl.includes('meta.com') || lowerUrl.includes('metacareers')) return 'Meta';
+    if (lowerUrl.includes('netflix.com') || lowerUrl.includes('jobs.netflix')) return 'Netflix';
+    if (lowerUrl.includes('uber.com/careers') || lowerUrl.includes('uber.com/us/en/careers')) return 'Uber';
+    if (lowerUrl.includes('airbnb.com/careers') || lowerUrl.includes('careers.airbnb')) return 'Airbnb';
+    if (lowerUrl.includes('twitter.com/careers') || lowerUrl.includes('careers.twitter')) return 'Twitter';
+    if (lowerUrl.includes('linkedin.com/jobs') || lowerUrl.includes('careers.linkedin')) return 'LinkedIn';
     
-    const diffInWeeks = Math.floor(diffInDays / 7);
-    return `${diffInWeeks}w ago`;
+    if (lowerUrl.includes('greenhouse.io')) return 'Greenhouse';
+    if (lowerUrl.includes('lever.co')) return 'Lever';
+    if (lowerUrl.includes('workday')) return 'Workday';
+    if (lowerUrl.includes('indeed.com')) return 'Indeed';
+    if (lowerUrl.includes('taleo')) return 'Taleo';
+    if (lowerUrl.includes('icims')) return 'iCIMS';
+    if (lowerUrl.includes('brassring')) return 'BrassRing';
+    if (lowerUrl.includes('smartrecruiters')) return 'SmartRecruiters';
+    if (lowerUrl.includes('jobvite')) return 'Jobvite';
+    
+    return null; // Unknown platform
   };
 
   return (
-    <ScrollArea className="h-full">
-      <div className="p-6 space-y-6">
-        <JobMatchAnalysis 
+    <ScrollArea className="h-[calc(100vh-250px)]">
+      <div className="p-6">
+        {job.matchPercentage !== undefined && (
+          <div className={`p-4 rounded-lg ${getMatchBgColor(job.matchPercentage)} mb-4`}>
+            <div className="flex items-center gap-2">
+              <div className={`text-xl font-bold ${getMatchColor(job.matchPercentage)}`}>{job.matchPercentage}%</div>
+              <div className={`font-semibold ${getMatchColor(job.matchPercentage)}`}>
+                {getMatchLabel(job.matchPercentage)}
+              </div>
+            </div>
+            <p className="text-sm mt-1">Based on your profile, skills, and experience</p>
+            
+            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+              <JobMatchDetails job={job} compact={true} />
+            </div>
+          </div>
+        )}
+        
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <h1 className="text-2xl font-bold">{job.title}</h1>
+            <div className="mt-2 text-lg">{job.company}</div>
+            <div className="mt-1 text-gray-500">{job.location}</div>
+            <div className="mt-2 text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
+              <Users className="h-4 w-4" />
+              <span>{job.applicationDetails?.applicantCount || '0'} applicants</span>
+            </div>
+          </div>
+          
+          <div className="flex flex-col gap-2">
+            <Button 
+              onClick={handleApply}
+              disabled={isApplied}
+              className={isApplied ? "bg-green-600 hover:bg-green-700" : ""}
+            >
+              {isApplied ? (
+                <>Applied</>
+              ) : job.applyUrl && detectPlatform(job.applyUrl) ? (
+                <>
+                  <Zap className="mr-2 h-4 w-4" />
+                  Auto Apply
+                </>
+              ) : (
+                <>
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  Apply
+                </>
+              )}
+            </Button>
+            
+            <Button 
+              variant="outline"
+              onClick={() => onSave(job)}
+              className={isSaved ? "border-primary-500 text-primary" : ""}
+            >
+              <BookmarkIcon className={`mr-2 h-4 w-4 ${isSaved ? "fill-primary" : ""}`} />
+              {isSaved ? "Saved" : "Save"}
+            </Button>
+            
+            {job.applyUrl && (
+              <Button 
+                variant="outline"
+                onClick={handleViewJob}
+              >
+                <FileText className="mr-2 h-4 w-4" />
+                View Job
+              </Button>
+            )}
+          </div>
+        </div>
+        
+        <div className="mt-4 p-4 border rounded-lg">
+          <div className="font-semibold">Salary Range</div>
+          <div className="text-xl font-bold mt-1">
+            {job.salary.currency}{job.salary.min.toLocaleString()} - {job.salary.currency}{job.salary.max.toLocaleString()}
+          </div>
+        </div>
+        
+        <div className="mt-6">
+          <h2 className="text-xl font-semibold mb-2">Description</h2>
+          <p className="whitespace-pre-line">{job.description}</p>
+        </div>
+        
+        {job.requirements && job.requirements.length > 0 && (
+          <div className="mt-6">
+            <h2 className="text-xl font-semibold mb-2">Requirements</h2>
+            <ul className="list-disc pl-5 space-y-2">
+              {job.requirements.map((req, index) => (
+                <li key={index}>{req}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+        
+        {job.skills && job.skills.length > 0 && (
+          <div className="mt-6">
+            <h2 className="text-xl font-semibold mb-2">Required Skills</h2>
+            <div className="flex flex-wrap gap-2">
+              {job.skills.map((skill, index) => (
+                <span key={index} className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-sm">
+                  {skill}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {job.matchPercentage !== undefined && (
+          <div className="mt-8 border-t pt-6">
+            <h2 className="text-xl font-semibold mb-3">Detailed Match Analysis</h2>
+            <JobMatchDetails job={job} />
+          </div>
+        )}
+        
+        <AutoApplyModal
           job={job}
-          userProfile={userProfile}
-          matchScore={matchScore}
+          open={showAutoApplyModal}
+          onClose={() => setShowAutoApplyModal(false)}
+          onSuccess={onApply}
         />
       </div>
     </ScrollArea>
