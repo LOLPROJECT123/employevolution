@@ -37,6 +37,7 @@ export interface Job {
   excludedSkills?: string[];
   jobFunction?: string;
   applicationStatus?: JobApplicationStatus;
+  applicantCount?: number; // Added this field
   applicationDetails?: {
     appliedDate?: string;
     platform?: string;
