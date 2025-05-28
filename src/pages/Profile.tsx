@@ -20,8 +20,12 @@ import {
   Briefcase,
   GraduationCap,
   Edit,
+  Upload,
+  Download,
   Plus,
-  X
+  Settings as SettingsIcon,
+  X,
+  FileText
 } from "lucide-react";
 import EditProfileHeader from "@/components/profile/EditProfileHeader";
 import EditContactInfo from "@/components/profile/EditContactInfo";
@@ -50,11 +54,11 @@ const Profile = () => {
   const [showEditJobPrefs, setShowEditJobPrefs] = useState(false);
   const [showEditEqualEmployment, setShowEditEqualEmployment] = useState(false);
 
-  // Initialize with empty profile data
+  // Initialize with empty profile data - email comes from user account
   const [profileData, setProfileData] = useState({
     name: "",
     jobStatus: "Actively looking",
-    email: user?.email || "",
+    email: "",
     phone: "",
     dateOfBirth: "",
     location: "",
@@ -104,13 +108,13 @@ const Profile = () => {
     calculateCompletion();
   }, [profileData]);
 
-  // Initialize profile data when user loads
+  // Initialize profile data when user loads - set email from account
   useEffect(() => {
     if (user) {
       setProfileData(prev => ({
         ...prev,
         name: userProfile?.full_name || "",
-        email: user.email || ""
+        email: user.email || "" // Always use the account email as default
       }));
     }
   }, [user, userProfile]);
@@ -124,11 +128,13 @@ const Profile = () => {
     }
   };
 
-  // Handle resume data update
+  // Handle resume data update - prioritize resume email if provided
   const handleResumeDataUpdate = (resumeData) => {
     const updatedProfile = {
       ...profileData,
       name: resumeData.personalInfo?.name || profileData.name,
+      // Use resume email if provided, otherwise keep account email
+      email: resumeData.personalInfo?.email || profileData.email,
       phone: resumeData.personalInfo?.phone || profileData.phone,
       location: resumeData.personalInfo?.location || profileData.location,
       workExperiences: resumeData.workExperiences || [],
