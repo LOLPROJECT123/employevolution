@@ -44,6 +44,7 @@ const Profile = () => {
   const [showProfileToRecruiters, setShowProfileToRecruiters] = useState(true);
   const [jobSearchStatus, setJobSearchStatus] = useState(true);
   const [profileCompletion, setProfileCompletion] = useState(0);
+  const [isProfileComplete, setIsProfileComplete] = useState(false);
   
   // Profile edit states
   const [showEditHeader, setShowEditHeader] = useState(false);
@@ -54,7 +55,7 @@ const Profile = () => {
   const [showEditJobPrefs, setShowEditJobPrefs] = useState(false);
   const [showEditEqualEmployment, setShowEditEqualEmployment] = useState(false);
 
-  // Initialize with empty profile data - email comes from user account
+  // Initialize with empty profile data - name and email come from user account or resume
   const [profileData, setProfileData] = useState({
     name: "",
     jobStatus: "Actively looking",
@@ -89,7 +90,7 @@ const Profile = () => {
   useEffect(() => {
     const calculateCompletion = () => {
       let completedFields = 0;
-      const totalFields = 10;
+      const totalFields = 12;
 
       if (profileData.name) completedFields++;
       if (profileData.email) completedFields++;
@@ -101,14 +102,18 @@ const Profile = () => {
       if (profileData.socialLinks.linkedin) completedFields++;
       if (profileData.skills.length > 0) completedFields++;
       if (profileData.languages.length > 0) completedFields++;
+      if (profileData.jobPreferences.desiredRoles.length > 0) completedFields++;
+      if (profileData.jobPreferences.workModel) completedFields++;
 
-      setProfileCompletion(Math.round((completedFields / totalFields) * 100));
+      const completion = Math.round((completedFields / totalFields) * 100);
+      setProfileCompletion(completion);
+      setIsProfileComplete(completion >= 80); // Consider profile complete at 80%
     };
 
     calculateCompletion();
   }, [profileData]);
 
-  // Initialize profile data when user loads - set email from account
+  // Initialize profile data when user loads - set name and email from account
   useEffect(() => {
     if (user) {
       setProfileData(prev => ({
@@ -119,19 +124,22 @@ const Profile = () => {
     }
   }, [user, userProfile]);
 
-  // Save profile data to user account
+  // Save profile data to user account and database
   const saveProfileData = async (updatedData) => {
     try {
       await updateProfile(updatedData);
+      // TODO: Save to database once tables are created
+      console.log('Profile data saved:', updatedData);
     } catch (error) {
       console.error('Failed to save profile data:', error);
     }
   };
 
-  // Handle resume data update - prioritize resume email if provided
+  // Handle resume data update - prioritize resume data for name, keep account email as fallback
   const handleResumeDataUpdate = (resumeData) => {
     const updatedProfile = {
       ...profileData,
+      // Use resume name if provided, otherwise keep account name
       name: resumeData.personalInfo?.name || profileData.name,
       // Use resume email if provided, otherwise keep account email
       email: resumeData.personalInfo?.email || profileData.email,
@@ -199,6 +207,25 @@ const Profile = () => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
 
+  // Block navigation if profile is not complete
+  const handleTabChange = (value) => {
+    setActiveTab(value);
+  };
+
+  // Block leaving the page if profile is not complete
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (!isProfileComplete) {
+        e.preventDefault();
+        e.returnValue = 'Your profile setup is not complete. Are you sure you want to leave?';
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isProfileComplete]);
+
   if (!user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -225,17 +252,35 @@ const Profile = () => {
       {isMobile && <MobileHeader title="Profile" />}
       
       <div className={`container mx-auto px-4 ${isMobile ? 'pt-4' : 'pt-20'} pb-12 max-w-4xl`}>
+        {/* Profile Completion Warning */}
+        {!isProfileComplete && (
+          <Card className="mb-6 border-orange-200 bg-orange-50">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+                <div>
+                  <h3 className="font-semibold text-orange-800">Complete Your Profile Setup</h3>
+                  <p className="text-sm text-orange-700">
+                    You need to complete your profile setup before accessing other features. 
+                    Progress: {profileCompletion}%
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Profile Header */}
         <Card className="mb-6">
           <CardContent className="pt-6">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-4">
-                {/* Empty avatar circle - no hardcoded initials */}
-                <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-xl border">
-                  {getInitials(profileData.name)}
+                {/* Empty avatar circle - no hardcoded initials, only show if name exists */}
+                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 font-semibold text-xl border">
+                  {profileData.name ? getInitials(profileData.name) : <User className="h-8 w-8" />}
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold">{profileData.name || "Your Name"}</h1>
+                  <h1 className="text-2xl font-bold">{profileData.name || "Complete your profile"}</h1>
                   <p className="text-muted-foreground">Job Search Status</p>
                   <Badge variant={profileData.jobStatus === "Actively looking" ? "default" : "secondary"} className="mt-1">
                     {profileData.jobStatus}
@@ -282,7 +327,7 @@ const Profile = () => {
         </Card>
 
         {/* Main Content Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
           <TabsList className="grid grid-cols-6 w-full">
             <TabsTrigger value="contact">Contact</TabsTrigger>
             <TabsTrigger value="resume">Resume</TabsTrigger>
