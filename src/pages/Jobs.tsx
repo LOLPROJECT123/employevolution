@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, LogOut, Bell, Save, TrendingUp, RefreshCw } from "lucide-react";
+import { Loader2, LogOut, Bell, Save, TrendingUp, RefreshCw, Zap } from "lucide-react";
 import { EnhancedJobCard } from "@/components/jobs/EnhancedJobCard";
 
 type SortOption = 'relevance' | 'date-newest' | 'date-oldest' | 'salary-highest' | 'salary-lowest';
@@ -51,6 +51,7 @@ const Jobs = () => {
   const [applicationMetrics, setApplicationMetrics] = useState<any>(null);
   const [activeAlerts, setActiveAlerts] = useState(0);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [scrapedJobsCount, setScrapedJobsCount] = useState(0);
   
   // Stable search parameters with proper memoization
   const [searchParams, setSearchParams] = useState<JobSearchParams>({
@@ -99,8 +100,8 @@ const Jobs = () => {
     try {
       console.log('Starting automatic job scraping...');
       toast({
-        title: "Searching for jobs",
-        description: "Finding the best opportunities for you across multiple platforms...",
+        title: "🚀 Finding Amazing Jobs",
+        description: "Searching across LinkedIn, Indeed, ATS systems, and more platforms...",
       });
 
       const scrapedJobs = await automaticJobScraperService.startAutoScraping(
@@ -125,17 +126,19 @@ const Jobs = () => {
           return uniqueJobs;
         });
 
+        setScrapedJobsCount(scrapedJobs.length);
+
         if (!selectedJob && scrapedJobs.length > 0) {
           setSelectedJob(scrapedJobs[0]);
         }
 
         toast({
-          title: "Jobs Found!",
-          description: `Found ${scrapedJobs.length} new opportunities from multiple platforms.`,
+          title: "✅ Jobs Found!",
+          description: `Found ${scrapedJobs.length} new opportunities from multiple platforms. Check them out!`,
         });
       } else {
         toast({
-          title: "No new jobs found",
+          title: "🔍 No new jobs found",
           description: "Try adjusting your search criteria for better results.",
           variant: "destructive",
         });
@@ -143,8 +146,8 @@ const Jobs = () => {
     } catch (error) {
       console.error('Auto scraping error:', error);
       toast({
-        title: "Scraping failed",
-        description: "Unable to find new jobs. Please try again later.",
+        title: "⚠️ Scraping paused",
+        description: "Unable to find new jobs right now. Please try again later.",
         variant: "destructive",
       });
     } finally {
@@ -190,7 +193,7 @@ const Jobs = () => {
       if (!autoScrapingActive) {
         setTimeout(() => {
           startAutoScraping(searchQuery.query, searchQuery.location);
-        }, 2000);
+        }, 1000);
       }
     } catch (error) {
       console.error('Error loading jobs:', error);
@@ -452,7 +455,7 @@ const Jobs = () => {
         <main className={`flex-1 ${isMobile ? 'pt-16' : 'pt-20'} flex items-center justify-center`}>
           <div className="text-center">
             <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">Loading jobs...</p>
+            <p className="text-gray-600">Loading jobs and starting automatic job discovery...</p>
           </div>
         </main>
       </div>
@@ -504,23 +507,23 @@ const Jobs = () => {
 
           {/* Auto-scraping status */}
           <div className="mb-6">
-            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+            <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     {autoScrapingActive ? (
-                      <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                      <Loader2 className="h-5 w-5 animate-spin text-green-600" />
                     ) : (
-                      <RefreshCw className="h-5 w-5 text-blue-600" />
+                      <Zap className="h-5 w-5 text-green-600" />
                     )}
                     <div>
-                      <h3 className="font-semibold text-blue-800">
-                        {autoScrapingActive ? 'Automatically Finding Jobs...' : 'Automatic Job Discovery Active'}
+                      <h3 className="font-semibold text-green-800">
+                        {autoScrapingActive ? '🚀 Discovering Fresh Jobs...' : '✅ Automatic Job Discovery Complete'}
                       </h3>
-                      <p className="text-sm text-blue-600">
+                      <p className="text-sm text-green-600">
                         {autoScrapingActive 
-                          ? 'Searching across LinkedIn, Indeed, ATS systems, and more...'
-                          : `Found ${jobs.length} opportunities from multiple platforms`
+                          ? 'Searching LinkedIn, Indeed, ATS systems (Greenhouse, Lever, iCims), and more...'
+                          : `Found ${jobs.length} total jobs${scrapedJobsCount > 0 ? ` (${scrapedJobsCount} newly discovered)` : ''} from multiple platforms`
                         }
                       </p>
                     </div>
@@ -530,10 +533,10 @@ const Jobs = () => {
                     size="sm" 
                     onClick={handleRefreshJobs}
                     disabled={autoScrapingActive}
-                    className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                    className="border-green-300 text-green-700 hover:bg-green-50"
                   >
                     <RefreshCw className="w-4 h-4 mr-2" />
-                    Find More Jobs
+                    {autoScrapingActive ? 'Searching...' : 'Find More Jobs'}
                   </Button>
                 </div>
               </CardContent>
@@ -626,10 +629,17 @@ const Jobs = () => {
                 <Card className="overflow-hidden h-full max-h-[calc(100vh-250px)]">
                   <CardHeader className="py-3 px-4 border-b flex flex-row justify-between items-center">
                     <div>
-                      <CardTitle className="text-base font-medium">Browse Jobs</CardTitle>
+                      <CardTitle className="text-base font-medium">
+                        🎯 Browse Jobs 
+                        {scrapedJobsCount > 0 && (
+                          <Badge variant="secondary" className="ml-2 bg-green-100 text-green-800">
+                            {scrapedJobsCount} New
+                          </Badge>
+                        )}
+                      </CardTitle>
                       <p className="text-xs text-muted-foreground">
-                        Showing {filteredJobs.length} jobs
-                        {(loading || autoScrapingActive) && <span className="ml-2 text-blue-600">• Finding more...</span>}
+                        Showing {filteredJobs.length} jobs from multiple platforms
+                        {(loading || autoScrapingActive) && <span className="ml-2 text-blue-600 animate-pulse">• Finding more...</span>}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -649,20 +659,30 @@ const Jobs = () => {
                   </CardHeader>
                   
                   <CardContent className="p-0 divide-y overflow-y-auto max-h-[calc(100vh-300px)]">
-                    {filteredJobs.map(job => (
-                      <div key={job.id} className="p-4">
-                        <EnhancedJobCard 
-                          job={job}
-                          onApply={handleApplyJob}
-                          onSave={handleSaveJob}
-                          onSelect={handleJobSelect}
-                          isSelected={selectedJob?.id === job.id}
-                          isSaved={savedJobIds.includes(job.id)}
-                          isApplied={appliedJobIds.includes(job.id)}
-                          variant="list"
-                        />
+                    {filteredJobs.length === 0 && !loading && !autoScrapingActive ? (
+                      <div className="p-6 text-center">
+                        <p className="text-gray-500 mb-4">No jobs found. Let's discover some opportunities!</p>
+                        <Button onClick={handleRefreshJobs} className="bg-green-600 hover:bg-green-700">
+                          <Zap className="w-4 h-4 mr-2" />
+                          Start Job Discovery
+                        </Button>
                       </div>
-                    ))}
+                    ) : (
+                      filteredJobs.map(job => (
+                        <div key={job.id} className="p-4">
+                          <EnhancedJobCard 
+                            job={job}
+                            onApply={handleApplyJob}
+                            onSave={handleSaveJob}
+                            onSelect={handleJobSelect}
+                            isSelected={selectedJob?.id === job.id}
+                            isSaved={savedJobIds.includes(job.id)}
+                            isApplied={appliedJobIds.includes(job.id)}
+                            variant="list"
+                          />
+                        </div>
+                      ))
+                    )}
                   </CardContent>
                 </Card>
               </div>

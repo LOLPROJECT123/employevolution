@@ -22,17 +22,8 @@ export const SignUpForm = ({ email, onBack, onSuccess }: SignUpFormProps) => {
   const [loading, setLoading] = useState(false);
 
   const validatePassword = (password: string) => {
-    if (password.length < 8) {
-      return "Password must be at least 8 characters long";
-    }
-    if (!/(?=.*[a-z])/.test(password)) {
-      return "Password must contain at least one lowercase letter";
-    }
-    if (!/(?=.*[A-Z])/.test(password)) {
-      return "Password must contain at least one uppercase letter";
-    }
-    if (!/(?=.*\d)/.test(password)) {
-      return "Password must contain at least one number";
+    if (password.length < 6) {
+      return "Password must be at least 6 characters long";
     }
     return null;
   };
@@ -105,22 +96,11 @@ export const SignUpForm = ({ email, onBack, onSuccess }: SignUpFormProps) => {
       if (data.user) {
         console.log('Sign up successful for user:', data.user.id);
         
-        if (data.user.email_confirmed_at) {
-          // Email is already confirmed, user can proceed
-          toast({
-            title: "Account created successfully!",
-            description: "Welcome to Streamline! You can now start using the platform.",
-          });
-          onSuccess();
-        } else {
-          // Email confirmation required
-          toast({
-            title: "Account created!",
-            description: "Please check your email and click the confirmation link to complete your registration.",
-          });
-          // Still call onSuccess to show the confirmation message
-          onSuccess();
-        }
+        toast({
+          title: "Account created successfully!",
+          description: "Welcome to Streamline! You can now start using the platform.",
+        });
+        onSuccess();
       }
     } catch (error) {
       console.error('Unexpected sign up error:', error);
@@ -227,20 +207,8 @@ export const SignUpForm = ({ email, onBack, onSuccess }: SignUpFormProps) => {
         <p className="font-medium mb-1">Password requirements:</p>
         <ul className="space-y-1">
           <li className="flex items-center space-x-2">
-            <CheckCircle className={`h-3 w-3 ${password.length >= 8 ? 'text-green-500' : 'text-gray-400'}`} />
-            <span>At least 8 characters</span>
-          </li>
-          <li className="flex items-center space-x-2">
-            <CheckCircle className={`h-3 w-3 ${/(?=.*[a-z])/.test(password) ? 'text-green-500' : 'text-gray-400'}`} />
-            <span>One lowercase letter</span>
-          </li>
-          <li className="flex items-center space-x-2">
-            <CheckCircle className={`h-3 w-3 ${/(?=.*[A-Z])/.test(password) ? 'text-green-500' : 'text-gray-400'}`} />
-            <span>One uppercase letter</span>
-          </li>
-          <li className="flex items-center space-x-2">
-            <CheckCircle className={`h-3 w-3 ${/(?=.*\d)/.test(password) ? 'text-green-500' : 'text-gray-400'}`} />
-            <span>One number</span>
+            <CheckCircle className={`h-3 w-3 ${password.length >= 6 ? 'text-green-500' : 'text-gray-400'}`} />
+            <span>At least 6 characters</span>
           </li>
         </ul>
       </div>

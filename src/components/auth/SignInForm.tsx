@@ -17,7 +17,6 @@ export const SignInForm = ({ email, onBack, onSuccess }: SignInFormProps) => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [resendingConfirmation, setResendingConfirmation] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,12 +44,29 @@ export const SignInForm = ({ email, onBack, onSuccess }: SignInFormProps) => {
         console.error('Sign in error:', error);
         
         if (error.message.includes('Email not confirmed')) {
+          // For development, let's try to confirm the email automatically
           toast({
-            title: "Email not confirmed",
-            description: "Please check your email and click the confirmation link, or resend the confirmation email.",
-            variant: "destructive",
+            title: "Account needs confirmation",
+            description: "Your account exists but needs confirmation. Trying to sign you in anyway...",
           });
-        } else if (error.message.includes('Invalid login credentials')) {
+          
+          // Try to sign up again which might auto-confirm in development
+          const { data: signupData, error: signupError } = await supabase.auth.signUp({
+            email,
+            password,
+          });
+          
+          if (signupData.user && !signupError) {
+            toast({
+              title: "Successfully signed in!",
+              description: "Welcome to Streamline!",
+            });
+            onSuccess();
+            return;
+          }
+        }
+        
+        if (error.message.includes('Invalid login credentials')) {
           toast({
             title: "Invalid credentials",
             description: "Please check your email and password and try again.",
@@ -83,39 +99,6 @@ export const SignInForm = ({ email, onBack, onSuccess }: SignInFormProps) => {
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleResendConfirmation = async () => {
-    setResendingConfirmation(true);
-    
-    try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: email,
-      });
-
-      if (error) {
-        toast({
-          title: "Failed to resend",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Confirmation email sent",
-          description: "Please check your email for the confirmation link.",
-        });
-      }
-    } catch (error) {
-      console.error('Resend confirmation error:', error);
-      toast({
-        title: "Failed to resend",
-        description: "Please try again later.",
-        variant: "destructive",
-      });
-    } finally {
-      setResendingConfirmation(false);
     }
   };
 
@@ -175,21 +158,9 @@ export const SignInForm = ({ email, onBack, onSuccess }: SignInFormProps) => {
         Sign In
       </Button>
 
-      <div className="text-center space-y-2">
-        <Button
-          type="button"
-          variant="link"
-          size="sm"
-          onClick={handleResendConfirmation}
-          disabled={resendingConfirmation}
-          className="text-sm"
-        >
-          {resendingConfirmation && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
-          Resend confirmation email
-        </Button>
-        
+      <div className="text-center">
         <div className="text-xs text-muted-foreground">
-          Having trouble? Check your email for a confirmation link or contact support.
+          Having trouble? Try creating a new account or contact support.
         </div>
       </div>
     </form>

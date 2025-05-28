@@ -18,15 +18,13 @@ export const EmailVerification = ({ onEmailVerified }: EmailVerificationProps) =
   const checkEmailExists = async (email: string): Promise<boolean> => {
     try {
       // Try to sign in with a dummy password to check if email exists
-      // This is a more reliable method than the previous approach
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password: 'dummy-password-check-12345'
       });
 
       if (error) {
-        // If the error is "Invalid login credentials", the email might exist but password is wrong
-        // If the error is "Email not confirmed", the email exists but needs confirmation
+        // If the error mentions invalid credentials or email not confirmed, email exists
         if (error.message.includes('Invalid login credentials') || 
             error.message.includes('Email not confirmed')) {
           return true;
@@ -35,11 +33,9 @@ export const EmailVerification = ({ onEmailVerified }: EmailVerificationProps) =
         return false;
       }
       
-      // If no error, email exists and password was correct (unlikely with dummy password)
       return true;
     } catch (error) {
       console.error('Email check error:', error);
-      // On any unexpected error, default to signup flow
       return false;
     }
   };
@@ -71,8 +67,6 @@ export const EmailVerification = ({ onEmailVerified }: EmailVerificationProps) =
     try {
       console.log('Checking email existence for:', email);
       const emailExists = await checkEmailExists(email);
-      
-      console.log('Email check result:', { email, emailExists });
       
       onEmailVerified(email, emailExists);
       
@@ -106,6 +100,9 @@ export const EmailVerification = ({ onEmailVerified }: EmailVerificationProps) =
         <Mail className="mx-auto h-12 w-12 text-primary mb-4" />
         <h2 className="text-2xl font-bold">Welcome to Streamline</h2>
         <p className="text-muted-foreground">Enter your email to get started</p>
+        <p className="text-xs text-muted-foreground mt-2">
+          Note: For testing, email confirmation is disabled. You can sign in immediately after creating an account.
+        </p>
       </div>
       
       <div>
