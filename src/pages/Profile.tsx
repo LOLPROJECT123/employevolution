@@ -20,12 +20,8 @@ import {
   Briefcase,
   GraduationCap,
   Edit,
-  Upload,
-  Download,
   Plus,
-  Settings as SettingsIcon,
-  X,
-  FileText
+  X
 } from "lucide-react";
 import EditProfileHeader from "@/components/profile/EditProfileHeader";
 import EditContactInfo from "@/components/profile/EditContactInfo";
@@ -36,15 +32,18 @@ import EditJobPreferences from "@/components/profile/EditJobPreferences";
 import EditEqualEmployment from "@/components/profile/EditEqualEmployment";
 import DocumentManager from "@/components/documents/DocumentManager";
 import ProfileDetails from "@/components/profile/ProfileDetails";
+import { profileService } from "@/services/profileService";
+import { ParsedResume } from "@/types/resume";
+import { toast } from "sonner";
 
 const Profile = () => {
   const isMobile = useMobile();
-  const { user, userProfile, logout, updateProfile } = useAuth();
+  const { user, userProfile } = useAuth();
   const [activeTab, setActiveTab] = useState("contact");
   const [showProfileToRecruiters, setShowProfileToRecruiters] = useState(true);
   const [jobSearchStatus, setJobSearchStatus] = useState(true);
   const [profileCompletion, setProfileCompletion] = useState(0);
-  const [isProfileComplete, setIsProfileComplete] = useState(false);
+  const [loading, setLoading] = useState(true);
   
   // Profile edit states
   const [showEditHeader, setShowEditHeader] = useState(false);
@@ -55,7 +54,7 @@ const Profile = () => {
   const [showEditJobPrefs, setShowEditJobPrefs] = useState(false);
   const [showEditEqualEmployment, setShowEditEqualEmployment] = useState(false);
 
-  // Initialize with empty profile data - name and email come from user account or resume
+  // Profile data state
   const [profileData, setProfileData] = useState({
     name: "",
     jobStatus: "Actively looking",
@@ -66,6 +65,7 @@ const Profile = () => {
     workExperiences: [],
     education: [],
     projects: [],
+    activities: [],
     socialLinks: {
       linkedin: "",
       github: "",
@@ -85,6 +85,48 @@ const Profile = () => {
       workModel: ""
     }
   });
+
+  // Load user data on component mount
+  useEffect(() => {
+    if (user) {
+      loadUserData();
+    }
+  }, [user]);
+
+  const loadUserData = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      const userData = await profileService.loadUserData(user.id);
+      
+      setProfileData(prev => ({
+        ...prev,
+        name: userData.profile?.name || userProfile?.full_name || "",
+        email: user.email || "",
+        phone: userData.profile?.phone || "",
+        location: userData.profile?.location || "",
+        jobStatus: userData.profile?.job_status || "Actively looking",
+        workExperiences: userData.workExperiences || [],
+        education: userData.education || [],
+        projects: userData.projects || [],
+        activities: userData.activities || [],
+        skills: userData.skills || [],
+        languages: userData.languages || [],
+        socialLinks: {
+          linkedin: userData.profile?.linkedin_url || "",
+          github: userData.profile?.github_url || "",
+          portfolio: userData.profile?.portfolio_url || "",
+          other: userData.profile?.other_url || ""
+        }
+      }));
+    } catch (error) {
+      console.error('Error loading user data:', error);
+      toast.error("Failed to load profile data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Calculate profile completion percentage
   useEffect(() => {
@@ -107,59 +149,44 @@ const Profile = () => {
 
       const completion = Math.round((completedFields / totalFields) * 100);
       setProfileCompletion(completion);
-      setIsProfileComplete(completion >= 80); // Consider profile complete at 80%
     };
 
     calculateCompletion();
   }, [profileData]);
 
-  // Initialize profile data when user loads - set name and email from account
-  useEffect(() => {
-    if (user) {
-      setProfileData(prev => ({
-        ...prev,
-        name: userProfile?.full_name || "",
-        email: user.email || "" // Always use the account email as default
-      }));
-    }
-  }, [user, userProfile]);
+  // Handle resume data update and save to database
+  const handleResumeDataUpdate = async (resumeData: ParsedResume) => {
+    if (!user) return;
 
-  // Save profile data to user account and database
-  const saveProfileData = async (updatedData) => {
     try {
-      await updateProfile(updatedData);
-      // TODO: Save to database once tables are created
-      console.log('Profile data saved:', updatedData);
+      // Save to database
+      await profileService.saveResumeData(user.id, resumeData);
+      
+      // Update local state
+      const updatedProfile = {
+        ...profileData,
+        name: resumeData.personalInfo?.name || profileData.name,
+        phone: resumeData.personalInfo?.phone || profileData.phone,
+        location: resumeData.personalInfo?.location || profileData.location,
+        workExperiences: resumeData.workExperiences || [],
+        education: resumeData.education || [],
+        projects: resumeData.projects || [],
+        socialLinks: {
+          linkedin: resumeData.socialLinks?.linkedin || profileData.socialLinks.linkedin,
+          github: resumeData.socialLinks?.github || profileData.socialLinks.github,
+          portfolio: resumeData.socialLinks?.portfolio || profileData.socialLinks.portfolio,
+          other: resumeData.socialLinks?.other || profileData.socialLinks.other
+        },
+        skills: resumeData.skills || [],
+        languages: resumeData.languages || []
+      };
+      
+      setProfileData(updatedProfile);
+      toast.success("Resume data saved to your profile!");
     } catch (error) {
-      console.error('Failed to save profile data:', error);
+      console.error('Error saving resume data:', error);
+      toast.error("Failed to save resume data");
     }
-  };
-
-  // Handle resume data update - prioritize resume data for name, keep account email as fallback
-  const handleResumeDataUpdate = (resumeData) => {
-    const updatedProfile = {
-      ...profileData,
-      // Use resume name if provided, otherwise keep account name
-      name: resumeData.personalInfo?.name || profileData.name,
-      // Use resume email if provided, otherwise keep account email
-      email: resumeData.personalInfo?.email || profileData.email,
-      phone: resumeData.personalInfo?.phone || profileData.phone,
-      location: resumeData.personalInfo?.location || profileData.location,
-      workExperiences: resumeData.workExperiences || [],
-      education: resumeData.education || [],
-      projects: resumeData.projects || [],
-      socialLinks: {
-        linkedin: resumeData.socialLinks?.linkedin || profileData.socialLinks.linkedin,
-        github: resumeData.socialLinks?.github || profileData.socialLinks.github,
-        portfolio: resumeData.socialLinks?.portfolio || profileData.socialLinks.portfolio,
-        other: resumeData.socialLinks?.other || profileData.socialLinks.other
-      },
-      skills: resumeData.skills || [],
-      languages: resumeData.languages || []
-    };
-    
-    setProfileData(updatedProfile);
-    saveProfileData(updatedProfile);
   };
 
   // Add/remove skills
@@ -170,7 +197,6 @@ const Profile = () => {
       const updatedSkills = [...profileData.skills, newSkill.trim()];
       const updatedProfile = { ...profileData, skills: updatedSkills };
       setProfileData(updatedProfile);
-      saveProfileData(updatedProfile);
       setNewSkill("");
     }
   };
@@ -179,7 +205,6 @@ const Profile = () => {
     const updatedSkills = profileData.skills.filter(skill => skill !== skillToRemove);
     const updatedProfile = { ...profileData, skills: updatedSkills };
     setProfileData(updatedProfile);
-    saveProfileData(updatedProfile);
   };
 
   // Add/remove languages
@@ -190,7 +215,6 @@ const Profile = () => {
       const updatedLanguages = [...profileData.languages, newLanguage.trim()];
       const updatedProfile = { ...profileData, languages: updatedLanguages };
       setProfileData(updatedProfile);
-      saveProfileData(updatedProfile);
       setNewLanguage("");
     }
   };
@@ -199,7 +223,6 @@ const Profile = () => {
     const updatedLanguages = profileData.languages.filter(lang => lang !== languageToRemove);
     const updatedProfile = { ...profileData, languages: updatedLanguages };
     setProfileData(updatedProfile);
-    saveProfileData(updatedProfile);
   };
 
   const getInitials = (name) => {
@@ -207,24 +230,13 @@ const Profile = () => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
 
-  // Block navigation if profile is not complete
-  const handleTabChange = (value) => {
-    setActiveTab(value);
-  };
-
-  // Block leaving the page if profile is not complete
-  useEffect(() => {
-    const handleBeforeUnload = (e) => {
-      if (!isProfileComplete) {
-        e.preventDefault();
-        e.returnValue = 'Your profile setup is not complete. Are you sure you want to leave?';
-        return e.returnValue;
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [isProfileComplete]);
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
@@ -252,30 +264,11 @@ const Profile = () => {
       {isMobile && <MobileHeader title="Profile" />}
       
       <div className={`container mx-auto px-4 ${isMobile ? 'pt-4' : 'pt-20'} pb-12 max-w-4xl`}>
-        {/* Profile Completion Warning */}
-        {!isProfileComplete && (
-          <Card className="mb-6 border-orange-200 bg-orange-50">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
-                <div>
-                  <h3 className="font-semibold text-orange-800">Complete Your Profile Setup</h3>
-                  <p className="text-sm text-orange-700">
-                    You need to complete your profile setup before accessing other features. 
-                    Progress: {profileCompletion}%
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Profile Header */}
         <Card className="mb-6">
           <CardContent className="pt-6">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-4">
-                {/* Empty avatar circle - no hardcoded initials, only show if name exists */}
                 <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 font-semibold text-xl border">
                   {profileData.name ? getInitials(profileData.name) : <User className="h-8 w-8" />}
                 </div>
@@ -327,7 +320,7 @@ const Profile = () => {
         </Card>
 
         {/* Main Content Tabs */}
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid grid-cols-6 w-full">
             <TabsTrigger value="contact">Contact</TabsTrigger>
             <TabsTrigger value="resume">Resume</TabsTrigger>
@@ -508,6 +501,31 @@ const Profile = () => {
               </CardContent>
             </Card>
 
+            {/* Activities and Leadership */}
+            {profileData.activities && profileData.activities.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Activities & Leadership</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {profileData.activities.map((activity, index) => (
+                    <div key={index} className="border rounded-lg p-4 bg-gray-50">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h4 className="font-semibold text-lg">{activity.organization}</h4>
+                          <p className="font-medium">{activity.role}</p>
+                          {activity.description && <p className="text-sm text-muted-foreground mt-1">{activity.description}</p>}
+                        </div>
+                        <Button variant="ghost" size="sm">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
             {/* Social Links */}
             <Card>
               <CardHeader>
@@ -541,6 +559,40 @@ const Profile = () => {
               </CardContent>
             </Card>
 
+            {/* Skills Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Skills</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">Add or remove your skills</p>
+                
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {profileData.skills.map((skill, index) => (
+                    <Badge key={index} variant="outline" className="flex items-center gap-1">
+                      {skill}
+                      <button 
+                        onClick={() => removeSkill(skill)}
+                        className="ml-1 hover:text-red-500"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+                
+                <div className="flex gap-2">
+                  <Input 
+                    placeholder="Add a new skill" 
+                    value={newSkill}
+                    onChange={(e) => setNewSkill(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && addSkill()}
+                  />
+                  <Button onClick={addSkill}>Add</Button>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Languages Section */}
             <Card>
               <CardHeader>
@@ -551,7 +603,7 @@ const Profile = () => {
                 
                 <div className="flex flex-wrap gap-2 mb-4">
                   {profileData.languages.map((language, index) => (
-                    <Badge key={index} className="flex items-center gap-1">
+                    <Badge key={index} variant="outline" className="flex items-center gap-1">
                       {language}
                       <button 
                         onClick={() => removeLanguage(language)}
@@ -581,7 +633,7 @@ const Profile = () => {
             <DocumentManager />
           </TabsContent>
 
-          {/* Job Preferences Tab - Must be manually updated */}
+          {/* Job Preferences Tab */}
           <TabsContent value="preferences" className="space-y-6">
             <Card>
               <CardHeader>
@@ -627,115 +679,6 @@ const Profile = () => {
                   </div>
                 </div>
 
-                <Separator />
-
-                <div>
-                  <h3 className="font-semibold mb-3">Industries & Companies</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm font-medium mb-2">Industries</p>
-                      <div className="flex flex-wrap gap-2">
-                        {profileData.jobPreferences.industries.length > 0 ? (
-                          profileData.jobPreferences.industries.map((industry, i) => (
-                            <Badge key={i} variant="outline">{industry}</Badge>
-                          ))
-                        ) : (
-                          <p className="text-sm text-muted-foreground">No industries specified</p>
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium mb-2">Company Size</p>
-                      <div className="flex flex-wrap gap-2">
-                        {profileData.jobPreferences.companySize.length > 0 ? (
-                          profileData.jobPreferences.companySize.map((size, i) => (
-                            <Badge key={i} variant="outline">{size}</Badge>
-                          ))
-                        ) : (
-                          <p className="text-sm text-muted-foreground">No company size specified</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div>
-                  <h3 className="font-semibold mb-3">Compensation</h3>
-                  <div>
-                    <p className="text-sm font-medium mb-2">Salary Expectation</p>
-                    <p className="text-sm">{profileData.jobPreferences.salaryExpectation || "Not specified"}</p>
-                  </div>
-                  <div className="mt-4">
-                    <p className="text-sm font-medium mb-2">Benefits</p>
-                    <div className="flex flex-wrap gap-2">
-                      {profileData.jobPreferences.benefits.length > 0 ? (
-                        profileData.jobPreferences.benefits.map((benefit, i) => (
-                          <Badge key={i} variant="outline">{benefit}</Badge>
-                        ))
-                      ) : (
-                        <p className="text-sm text-muted-foreground">No benefits specified</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div>
-                  <h3 className="font-semibold mb-3">Location & Work Model</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm font-medium mb-2">Preferred Locations</p>
-                      <div className="flex flex-wrap gap-2">
-                        {profileData.jobPreferences.preferredLocations.length > 0 ? (
-                          profileData.jobPreferences.preferredLocations.map((location, i) => (
-                            <Badge key={i} variant="outline">{location}</Badge>
-                          ))
-                        ) : (
-                          <p className="text-sm text-muted-foreground">No locations specified</p>
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium mb-2">Work Model</p>
-                      <Badge>{profileData.jobPreferences.workModel || "Not specified"}</Badge>
-                    </div>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div>
-                  <h3 className="font-semibold mb-3">Skills & Qualifications</h3>
-                  <div>
-                    <p className="text-sm font-medium mb-2">Skills</p>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {profileData.skills.map((skill, index) => (
-                        <Badge key={index} variant="outline" className="flex items-center gap-1">
-                          {skill}
-                          <button 
-                            onClick={() => removeSkill(skill)}
-                            className="ml-1 hover:text-red-500"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </Badge>
-                      ))}
-                    </div>
-                    <div className="flex gap-2">
-                      <Input 
-                        placeholder="Add a new skill" 
-                        value={newSkill}
-                        onChange={(e) => setNewSkill(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && addSkill()}
-                      />
-                      <Button onClick={addSkill}>Add</Button>
-                    </div>
-                  </div>
-                </div>
-
                 <div className="mt-6">
                   <Button className="w-full">Update Job Preferences</Button>
                 </div>
@@ -756,7 +699,6 @@ const Profile = () => {
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
-                
                 <div>
                   <h3 className="font-semibold mb-3">Ethnicity</h3>
                   <p className="text-sm">Not specified</p>
@@ -788,7 +730,7 @@ const Profile = () => {
             </Card>
           </TabsContent>
 
-          {/* Settings Tab - Skills section removed */}
+          {/* Settings Tab */}
           <TabsContent value="settings" className="space-y-6">
             <Card>
               <CardHeader>
@@ -839,7 +781,6 @@ const Profile = () => {
         onSave={(data) => {
           const updatedProfile = { ...profileData, name: data.name, jobStatus: data.jobStatus };
           setProfileData(updatedProfile);
-          saveProfileData(updatedProfile);
           setShowEditHeader(false);
         }}
       />
@@ -856,7 +797,6 @@ const Profile = () => {
         onSave={(data) => {
           const updatedProfile = { ...profileData, ...data };
           setProfileData(updatedProfile);
-          saveProfileData(updatedProfile);
           setShowEditContact(false);
         }}
       />
@@ -873,7 +813,6 @@ const Profile = () => {
             updatedProfile.education.push(edu);
           }
           setProfileData(updatedProfile);
-          saveProfileData(updatedProfile);
           setShowEditEducation(false);
         }}
         onDelete={(id) => {
@@ -882,7 +821,6 @@ const Profile = () => {
             education: profileData.education.filter(e => e.id !== id)
           };
           setProfileData(updatedProfile);
-          saveProfileData(updatedProfile);
         }}
       />
     </div>

@@ -34,4 +34,9 @@ export interface ParsedResume {
     portfolio: string;
     other: string;
   };
+  activities?: Array<{
+    organization: string;
+    role: string;
+    description?: string;
+  }>;
 }
