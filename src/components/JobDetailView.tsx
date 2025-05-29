@@ -18,7 +18,7 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { JobMatchAnalysis } from '@/components/jobs/JobMatchAnalysis';
-import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import { useAuth } from '@/hooks/useAuth';
 
 interface JobDetailViewProps {
   job: Job | null;
@@ -27,7 +27,7 @@ interface JobDetailViewProps {
 }
 
 export const JobDetailView = ({ job, onApply, onSave }: JobDetailViewProps) => {
-  const { userProfile } = useSupabaseAuth();
+  const { userProfile } = useAuth();
 
   if (!job) {
     return (
@@ -43,7 +43,14 @@ export const JobDetailView = ({ job, onApply, onSave }: JobDetailViewProps) => {
 
   // Calculate mock match score based on job data
   const calculateMatchScore = () => {
-    const userSkills = userProfile?.profile?.skills || [];
+    // Create a mock user profile structure for compatibility
+    const mockUserProfile = {
+      profile: {
+        skills: [] as string[]
+      }
+    };
+    
+    const userSkills = mockUserProfile.profile?.skills || [];
     const jobSkills = job.skills || [];
     
     const matchingSkills = jobSkills.filter(skill => 

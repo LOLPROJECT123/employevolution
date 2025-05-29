@@ -56,7 +56,7 @@ class ResumeFileService {
         .update({ is_current: false })
         .eq('user_id', userId);
 
-      // Insert new resume file
+      // Insert new resume file with proper JSON casting
       const { error } = await supabase
         .from('user_resume_files')
         .insert({
@@ -65,7 +65,7 @@ class ResumeFileService {
           file_type: file.type,
           file_size: file.size,
           file_content: fileContent,
-          parsed_data: parsedData,
+          parsed_data: parsedData as any, // Cast to any to satisfy JSON type
           is_current: true
         });
 
@@ -100,7 +100,15 @@ class ResumeFileService {
         return null;
       }
 
-      return data;
+      // Cast parsed_data back to ParsedResume type
+      if (data) {
+        return {
+          ...data,
+          parsed_data: data.parsed_data as ParsedResume
+        } as ResumeFile;
+      }
+
+      return null;
     } catch (error) {
       console.error('Error in getCurrentResumeFile:', error);
       return null;

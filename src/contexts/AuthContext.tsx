@@ -1,3 +1,4 @@
+
 import React, {
   createContext,
   useState,
@@ -23,6 +24,9 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<any>;
   signUp: (email: string, password: string, fullName?: string) => Promise<any>;
   signOut: () => Promise<void>;
+  login: (email: string, password: string) => Promise<any>;
+  register: (email: string, password: string, data?: { full_name?: string }) => Promise<any>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -149,6 +153,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // Add aliases for backward compatibility
+  const login = signIn;
+  const register = async (email: string, password: string, data?: { full_name?: string }) => {
+    return signUp(email, password, data?.full_name);
+  };
+  const logout = signOut;
+
   const value = {
     user,
     session,
@@ -157,9 +168,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     signIn,
     signUp,
     signOut,
+    login,
+    register,
+    logout,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-
-export { useAuth };
