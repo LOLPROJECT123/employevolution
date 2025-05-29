@@ -47,6 +47,13 @@ const ProfileDetails = ({ onResumeDataUpdate }: ProfileDetailsProps) => {
     }
   };
 
+  const triggerFileUpload = () => {
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.click();
+    }
+  };
+
   return (
     <div className="space-y-4">
       {/* File Upload Area */}
@@ -87,7 +94,7 @@ const ProfileDetails = ({ onResumeDataUpdate }: ProfileDetailsProps) => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => document.querySelector('input[type="file"]')?.click()}
+                onClick={triggerFileUpload}
               >
                 Replace
               </Button>
