@@ -1159,6 +1159,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_onboarding: {
+        Row: {
+          created_at: string
+          id: string
+          onboarding_completed: boolean | null
+          profile_completed: boolean | null
+          resume_uploaded: boolean | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          onboarding_completed?: boolean | null
+          profile_completed?: boolean | null
+          resume_uploaded?: boolean | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          onboarding_completed?: boolean | null
+          profile_completed?: boolean | null
+          resume_uploaded?: boolean | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           created_at: string | null
@@ -1203,6 +1233,45 @@ export type Database = {
           portfolio_url?: string | null
           profile_completion?: number | null
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_resume_files: {
+        Row: {
+          created_at: string
+          file_content: string | null
+          file_name: string
+          file_size: number | null
+          file_type: string
+          id: string
+          is_current: boolean | null
+          parsed_data: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_content?: string | null
+          file_name: string
+          file_size?: number | null
+          file_type: string
+          id?: string
+          is_current?: boolean | null
+          parsed_data?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_content?: string | null
+          file_name?: string
+          file_size?: number | null
+          file_type?: string
+          id?: string
+          is_current?: boolean | null
+          parsed_data?: Json | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []

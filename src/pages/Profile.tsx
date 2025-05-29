@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -33,6 +34,7 @@ import EditEqualEmployment from "@/components/profile/EditEqualEmployment";
 import DocumentManager from "@/components/documents/DocumentManager";
 import ProfileDetails from "@/components/profile/ProfileDetails";
 import { profileService } from "@/services/profileService";
+import { resumeFileService } from "@/services/resumeFileService";
 import { ParsedResume } from "@/types/resume";
 import { toast } from "sonner";
 
