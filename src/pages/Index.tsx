@@ -1,4 +1,3 @@
-
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import Navbar from "@/components/Navbar";
@@ -6,6 +5,7 @@ import MobileHeader from "@/components/MobileHeader";
 import { useMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { JobCard } from "@/components/JobCard";
+import { useAuth } from "@/hooks/useAuth";
 import { 
   BriefcaseIcon, 
   FileTextIcon, 
@@ -102,6 +102,7 @@ const features = [
 
 const Index = () => {
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
   const [animationReady, setAnimationReady] = useState(false);
   const isMobile = useMobile();
 
@@ -110,10 +111,39 @@ const Index = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  const handleGetStarted = () => {
+    if (user) {
+      navigate('/dashboard');
+    } else {
+      navigate('/auth?mode=signup');
+    }
+  };
+
+  const handleBrowseJobs = () => {
+    if (user) {
+      navigate('/jobs');
+    } else {
+      navigate('/auth?mode=signin');
+    }
+  };
+
   // Now accepting a Job object instead of a string
   const handleApply = (job: any) => {
-    navigate(`/auth?mode=signup&redirect=/jobs/${job.id}`);
+    if (user) {
+      navigate(`/jobs/${job.id}`);
+    } else {
+      navigate(`/auth?mode=signup&redirect=/jobs/${job.id}`);
+    }
   };
+
+  // Show loading state while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -139,7 +169,7 @@ const Index = () => {
             <div className={`${animationReady ? 'slide-up' : 'opacity-0'} flex flex-col sm:flex-row justify-center gap-4 mb-12 transition-all duration-700 delay-200`}>
               <Button 
                 size="lg"
-                onClick={() => navigate('/auth?mode=signup')}
+                onClick={handleGetStarted}
                 className="bg-primary hover:bg-primary/90"
               >
                 Get Started
@@ -147,7 +177,7 @@ const Index = () => {
               <Button 
                 variant="outline" 
                 size="lg"
-                onClick={() => navigate('/jobs')}
+                onClick={handleBrowseJobs}
               >
                 Browse Jobs
               </Button>

@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 import { resumeFileService, OnboardingStatus } from '@/services/resumeFileService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -15,6 +16,7 @@ interface OnboardingGuardProps {
 
 const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
   const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [onboardingStatus, setOnboardingStatus] = useState<OnboardingStatus | null>(null);
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
@@ -88,6 +90,10 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
     }
   };
 
+  const handleCompleteProfile = () => {
+    navigate('/profile');
+  };
+
   const handleProfileCompleted = async () => {
     if (!user) return;
 
@@ -114,7 +120,7 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
     );
   }
 
-  // If no user is authenticated, show the main app (which should handle auth redirects)
+  // If no user is authenticated, this should not happen due to ProtectedRoute
   if (!user) {
     return <>{children}</>;
   }
@@ -203,7 +209,7 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
                 </p>
                 <div className="text-center">
                   <button
-                    onClick={() => window.location.href = '/profile'}
+                    onClick={handleCompleteProfile}
                     className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium"
                   >
                     Complete Profile

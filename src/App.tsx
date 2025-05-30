@@ -23,6 +23,7 @@ import ResumeTools from "./pages/ResumeTools";
 import SalaryNegotiations from "./pages/SalaryNegotiations";
 import { AuthProvider } from "./contexts/AuthContext";
 import OnboardingGuard from "./components/auth/OnboardingGuard";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -33,27 +34,112 @@ function App() {
         <TooltipProvider>
           <AuthProvider>
             <BrowserRouter>
-              <OnboardingGuard>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/jobs" element={<Jobs />} />
-                  <Route path="/mobile-jobs" element={<MobileJobs />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/calendar" element={<Calendar />} />
-                  <Route path="/communications" element={<Communications />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/interview-practice" element={<InterviewPractice />} />
-                  <Route path="/leetcode-patterns" element={<LeetcodePatterns />} />
-                  <Route path="/networking" element={<Networking />} />
-                  <Route path="/networking-tools" element={<NetworkingTools />} />
-                  <Route path="/referrals" element={<Referrals />} />
-                  <Route path="/resume-post" element={<ResumePost />} />
-                  <Route path="/resume-tools" element={<ResumeTools />} />
-                  <Route path="/salary-negotiations" element={<SalaryNegotiations />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </OnboardingGuard>
+              <Routes>
+                {/* Public routes - accessible to everyone */}
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                
+                {/* Protected routes - require authentication and completed onboarding */}
+                <Route path="/jobs" element={
+                  <ProtectedRoute>
+                    <OnboardingGuard>
+                      <Jobs />
+                    </OnboardingGuard>
+                  </ProtectedRoute>
+                } />
+                <Route path="/mobile-jobs" element={
+                  <ProtectedRoute>
+                    <OnboardingGuard>
+                      <MobileJobs />
+                    </OnboardingGuard>
+                  </ProtectedRoute>
+                } />
+                <Route path="/profile" element={
+                  <ProtectedRoute>
+                    <OnboardingGuard>
+                      <Profile />
+                    </OnboardingGuard>
+                  </ProtectedRoute>
+                } />
+                <Route path="/calendar" element={
+                  <ProtectedRoute>
+                    <OnboardingGuard>
+                      <Calendar />
+                    </OnboardingGuard>
+                  </ProtectedRoute>
+                } />
+                <Route path="/communications" element={
+                  <ProtectedRoute>
+                    <OnboardingGuard>
+                      <Communications />
+                    </OnboardingGuard>
+                  </ProtectedRoute>
+                } />
+                <Route path="/dashboard" element={
+                  <ProtectedRoute>
+                    <OnboardingGuard>
+                      <Dashboard />
+                    </OnboardingGuard>
+                  </ProtectedRoute>
+                } />
+                <Route path="/interview-practice" element={
+                  <ProtectedRoute>
+                    <OnboardingGuard>
+                      <InterviewPractice />
+                    </OnboardingGuard>
+                  </ProtectedRoute>
+                } />
+                <Route path="/leetcode-patterns" element={
+                  <ProtectedRoute>
+                    <OnboardingGuard>
+                      <LeetcodePatterns />
+                    </OnboardingGuard>
+                  </ProtectedRoute>
+                } />
+                <Route path="/networking" element={
+                  <ProtectedRoute>
+                    <OnboardingGuard>
+                      <Networking />
+                    </OnboardingGuard>
+                  </ProtectedRoute>
+                } />
+                <Route path="/networking-tools" element={
+                  <ProtectedRoute>
+                    <OnboardingGuard>
+                      <NetworkingTools />
+                    </OnboardingGuard>
+                  </ProtectedRoute>
+                } />
+                <Route path="/referrals" element={
+                  <ProtectedRoute>
+                    <OnboardingGuard>
+                      <Referrals />
+                    </OnboardingGuard>
+                  </ProtectedRoute>
+                } />
+                <Route path="/resume-post" element={
+                  <ProtectedRoute>
+                    <OnboardingGuard>
+                      <ResumePost />
+                    </OnboardingGuard>
+                  </ProtectedRoute>
+                } />
+                <Route path="/resume-tools" element={
+                  <ProtectedRoute>
+                    <OnboardingGuard>
+                      <ResumeTools />
+                    </OnboardingGuard>
+                  </ProtectedRoute>
+                } />
+                <Route path="/salary-negotiations" element={
+                  <ProtectedRoute>
+                    <OnboardingGuard>
+                      <SalaryNegotiations />
+                    </OnboardingGuard>
+                  </ProtectedRoute>
+                } />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
               <Toaster />
             </BrowserRouter>
           </AuthProvider>
