@@ -58,17 +58,28 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
     if (!user) return;
 
     try {
+      console.log('Resume uploaded, updating onboarding status...');
+      
       // Update onboarding status in the database
       const success = await resumeFileService.updateOnboardingStatus(user.id, {
         resume_uploaded: true
       });
 
       if (success) {
-        // Update local state
+        console.log('Onboarding status updated successfully');
+        
+        // Update local state to advance to next step
         setOnboardingStatus(prev => prev ? { ...prev, resume_uploaded: true } : null);
         setCurrentStep(1);
+        
         toast.success("Resume uploaded successfully! Please complete your profile.");
+        
+        // Force a reload of the onboarding status to ensure consistency
+        setTimeout(() => {
+          loadOnboardingStatus();
+        }, 1000);
       } else {
+        console.error('Failed to update onboarding status');
         toast.error("Failed to update onboarding status. Please try again.");
       }
     } catch (error) {
@@ -178,7 +189,7 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
               <div>
                 <h3 className="text-xl font-semibold mb-4">Step 1: Upload Your Resume</h3>
                 <p className="text-gray-600 mb-6">
-                  Upload your resume to automatically populate your profile with your experience, education, and skills.
+                  Upload your resume to automatically populate your profile with your experience, education, and skills. Don't worry if automatic parsing doesn't work perfectly - you can fill in details manually in the next step.
                 </p>
                 <ProfileDetails onResumeDataUpdate={handleResumeUploaded} />
               </div>
@@ -188,7 +199,7 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
               <div>
                 <h3 className="text-xl font-semibold mb-4">Step 2: Complete Your Profile</h3>
                 <p className="text-gray-600 mb-6">
-                  Your resume has been uploaded! Now please review and complete your profile information.
+                  Great! Your resume has been uploaded. Now please review and complete your profile information.
                 </p>
                 <div className="text-center">
                   <button

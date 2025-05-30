@@ -4,7 +4,7 @@ import { parseResume } from "@/utils/resumeParser";
 import { ParsedResume } from "@/types/resume";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Upload, FileText, CheckCircle, X } from "lucide-react";
+import { Upload, FileText, CheckCircle, X, AlertCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { resumeFileService, ResumeFile } from "@/services/resumeFileService";
 import { toast } from "sonner";
@@ -20,6 +20,7 @@ const ProfileDetails = ({ onResumeDataUpdate }: ProfileDetailsProps) => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [existingResumeFile, setExistingResumeFile] = useState<ResumeFile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [parsingSuccess, setParsingSuccess] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -43,6 +44,7 @@ const ProfileDetails = ({ onResumeDataUpdate }: ProfileDetailsProps) => {
           { type: resumeFile.file_type }
         );
         setUploadedFile(virtualFile);
+        setParsingSuccess(true);
       }
     } catch (error) {
       console.error('Error loading existing resume:', error);
@@ -57,30 +59,49 @@ const ProfileDetails = ({ onResumeDataUpdate }: ProfileDetailsProps) => {
     
     setUploadedFile(file);
     setParsing(true);
+    setParsingSuccess(null);
     
     try {
-      const parsed = await parseResume(file, true);
+      console.log('Starting resume upload and parsing...');
+      const parsed = await parseResume(file, false); // Don't show toast here, we'll handle it
       setResume(parsed);
       
-      // Save to database
+      // Save to database - this should always succeed
       const success = await resumeFileService.saveResumeFile(user.id, file, parsed);
       
       if (success) {
-        toast.success("Resume uploaded and saved successfully!");
+        console.log('Resume saved successfully to database');
         
-        // Pass the resume data to parent component
+        // Determine if parsing was successful based on extracted data
+        const hasPersonalInfo = parsed.personalInfo.name || parsed.personalInfo.email;
+        const hasWorkExp = parsed.workExperiences.length > 0;
+        const hasEducation = parsed.education.length > 0;
+        const hasSkills = parsed.skills.length > 0;
+        
+        const parsedSuccessfully = hasPersonalInfo || hasWorkExp || hasEducation || hasSkills;
+        setParsingSuccess(parsedSuccessfully);
+        
+        if (parsedSuccessfully) {
+          toast.success("Resume uploaded and parsed successfully! Some information was extracted automatically.");
+        } else {
+          toast.success("Resume uploaded successfully! Please complete your profile information manually.");
+        }
+        
+        // Always pass the resume data to parent, even if parsing was minimal
         if (onResumeDataUpdate) {
           onResumeDataUpdate(parsed);
         }
 
-        // Reload the existing resume data
+        // Reload the existing resume data to ensure UI is in sync
         await loadExistingResume();
       } else {
         toast.error("Failed to save resume. Please try again.");
+        setParsingSuccess(false);
       }
     } catch (error) {
-      console.error('Resume parsing failed:', error);
-      toast.error("Failed to parse resume. Please try again.");
+      console.error('Resume upload/parsing failed:', error);
+      toast.error("Failed to process resume. Please try again.");
+      setParsingSuccess(false);
     } finally {
       setParsing(false);
     }
@@ -90,6 +111,7 @@ const ProfileDetails = ({ onResumeDataUpdate }: ProfileDetailsProps) => {
     setResume(null);
     setUploadedFile(null);
     setExistingResumeFile(null);
+    setParsingSuccess(null);
     // Reset the file input
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
     if (fileInput) {
@@ -142,17 +164,21 @@ const ProfileDetails = ({ onResumeDataUpdate }: ProfileDetailsProps) => {
               <FileText className="h-8 w-8 text-blue-500" />
               <div>
                 <p className="font-medium">{uploadedFile.name}</p>
-                <p className="text-sm text-muted-foreground">
-                  {existingResumeFile ? 'Saved to your profile' : 'Ready to upload'}
-                </p>
+                <div className="flex items-center gap-2">
+                  {parsingSuccess === true && <CheckCircle className="h-4 w-4 text-green-500" />}
+                  {parsingSuccess === false && <AlertCircle className="h-4 w-4 text-yellow-500" />}
+                  <p className="text-sm text-muted-foreground">
+                    {existingResumeFile ? 'Saved to your profile' : 'Uploaded successfully'}
+                  </p>
+                </div>
               </div>
-              <CheckCircle className="h-5 w-5 text-green-500" />
             </div>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={triggerFileUpload}
+                disabled={parsing}
               >
                 Replace
               </Button>
@@ -160,6 +186,7 @@ const ProfileDetails = ({ onResumeDataUpdate }: ProfileDetailsProps) => {
                 variant="ghost"
                 size="sm"
                 onClick={clearUpload}
+                disabled={parsing}
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -179,31 +206,44 @@ const ProfileDetails = ({ onResumeDataUpdate }: ProfileDetailsProps) => {
       {parsing && (
         <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
           <span className="animate-spin inline-block h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></span>
-          Parsing your resume and saving to your profile...
+          Processing your resume and saving to your profile...
         </div>
       )}
 
-      {resume && (
+      {resume && !parsing && (
         <div className="space-y-4">
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <h4 className="font-medium text-green-800 mb-2">✅ Resume Successfully Parsed & Saved!</h4>
-            <p className="text-sm text-green-700">
-              Your resume has been saved to your profile and the data has been extracted. 
-              Your profile will be updated with this information across all tabs.
-            </p>
+          <div className={`border rounded-lg p-4 ${parsingSuccess ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'}`}>
+            <div className="flex items-start gap-2">
+              {parsingSuccess ? (
+                <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+              ) : (
+                <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
+              )}
+              <div>
+                <h4 className={`font-medium ${parsingSuccess ? 'text-green-800' : 'text-yellow-800'}`}>
+                  {parsingSuccess ? '✅ Resume Successfully Parsed & Saved!' : '⚠️ Resume Uploaded - Manual Entry Required'}
+                </h4>
+                <p className={`text-sm ${parsingSuccess ? 'text-green-700' : 'text-yellow-700'}`}>
+                  {parsingSuccess 
+                    ? 'Your resume has been saved and some information was extracted automatically. Please review and complete your profile.'
+                    : 'Your resume has been saved but automatic parsing was limited. Please complete your profile information manually.'
+                  }
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Quick Preview of Parsed Data */}
           <div className="border rounded-lg p-4 bg-gray-50">
-            <h4 className="font-medium mb-3">Extracted Information Preview:</h4>
+            <h4 className="font-medium mb-3">Resume Information Preview:</h4>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="font-medium">Contact Info:</p>
-                <p>Name: {resume.personalInfo.name || 'Not found'}</p>
-                <p>Email: {resume.personalInfo.email || 'Not found'}</p>
-                <p>Phone: {resume.personalInfo.phone || 'Not found'}</p>
-                <p>Location: {resume.personalInfo.location || 'Not found'}</p>
+                <p>Name: {resume.personalInfo.name || 'Please fill manually'}</p>
+                <p>Email: {resume.personalInfo.email || 'Please fill manually'}</p>
+                <p>Phone: {resume.personalInfo.phone || 'Please fill manually'}</p>
+                <p>Location: {resume.personalInfo.location || 'Please fill manually'}</p>
               </div>
               
               <div>
