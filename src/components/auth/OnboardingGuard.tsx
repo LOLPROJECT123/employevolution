@@ -14,16 +14,21 @@ interface OnboardingGuardProps {
 }
 
 const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [onboardingStatus, setOnboardingStatus] = useState<OnboardingStatus | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
-    if (user) {
+    // Only load onboarding status if we have an authenticated user
+    if (user && !authLoading) {
       loadOnboardingStatus();
+    } else if (!authLoading && !user) {
+      // Clear any existing onboarding state for unauthenticated users
+      setOnboardingStatus(null);
+      setLoading(false);
     }
-  }, [user]);
+  }, [user, authLoading]);
 
   const loadOnboardingStatus = async () => {
     if (!user) return;
@@ -76,6 +81,21 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
     toast.success("Profile completed! Welcome to Streamline!");
   };
 
+  // If auth is still loading, show loading state
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+
+  // If no user is authenticated, show the main app (which should handle auth redirects)
+  if (!user) {
+    return <>{children}</>;
+  }
+
+  // If we're still loading onboarding status for an authenticated user
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -84,16 +104,12 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
     );
   }
 
-  if (!user) {
-    return <>{children}</>;
-  }
-
   // If onboarding is complete, show the main app
   if (onboardingStatus?.onboarding_completed) {
     return <>{children}</>;
   }
 
-  // Show onboarding flow
+  // Show onboarding flow for authenticated users who haven't completed it
   const steps = [
     { title: "Upload Resume", icon: Upload, completed: onboardingStatus?.resume_uploaded || false },
     { title: "Complete Profile", icon: User, completed: onboardingStatus?.profile_completed || false },
