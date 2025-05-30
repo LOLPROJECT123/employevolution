@@ -19,29 +19,39 @@ export const EmailVerification = ({ onEmailVerified }: EmailVerificationProps) =
     try {
       console.log('Checking if email exists:', email);
       
-      // Use the resetPasswordForEmail function to check if email exists
-      // This will return different error messages based on whether the email exists
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`
+      // Try to sign in with the email and a dummy password
+      // This is the most reliable way to check if an account exists
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password: 'dummy-password-for-checking-existence-12345'
       });
 
       if (error) {
-        console.log('Reset password error:', error.message);
+        console.log('Sign in attempt error:', error.message);
         
-        // If the error indicates the user doesn't exist, return false
-        if (error.message.includes('User not found') || 
-            error.message.includes('Unable to validate email address') ||
+        // Check the specific error message to determine if user exists
+        if (error.message.includes('Invalid login credentials') || 
             error.message.includes('Email not confirmed')) {
+          // These errors indicate the user exists but either:
+          // 1. Wrong password (which is expected since we used a dummy)
+          // 2. Email not confirmed (user exists but hasn't verified)
+          console.log('User exists (wrong password or unconfirmed email)');
+          return true;
+        } else if (error.message.includes('User not found') ||
+                   error.message.includes('Unable to validate email address')) {
+          // These errors indicate the user doesn't exist
+          console.log('User does not exist');
+          return false;
+        } else {
+          // For any other error, default to signup flow to be safe
+          console.log('Unknown error, defaulting to signup flow');
           return false;
         }
-        
-        // For other errors, we assume the user exists but there's another issue
-        // In most cases, no error means the email exists and reset was sent
-        return true;
       }
       
-      // No error means the reset email was sent successfully, so user exists
-      console.log('Reset email sent successfully, user exists');
+      // If no error, it means the dummy password actually worked (very unlikely)
+      // In this case, the user definitely exists
+      console.log('No error with dummy password - user exists');
       return true;
     } catch (error) {
       console.error('Email check error:', error);
