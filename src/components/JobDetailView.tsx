@@ -119,12 +119,31 @@ export const JobDetailView = ({ job, onApply, onSave }: JobDetailViewProps) => {
     return `${diffInWeeks}w ago`;
   };
 
+  // Create a mock user object for JobMatchAnalysis compatibility
+  const mockUser = userProfile ? {
+    id: userProfile.id || '',
+    email: userProfile.full_name || '',
+    name: userProfile.full_name || '',
+    profile: {
+      skills: [] as string[],
+      experience: 'entry' as const,
+      location: '',
+      salary_range: { min: 0, max: 0 },
+      preferences: {
+        remote: false,
+        job_types: [],
+        industries: []
+      }
+    },
+    created_at: new Date().toISOString()
+  } : null;
+
   return (
     <ScrollArea className="h-full">
       <div className="p-6 space-y-6">
         <JobMatchAnalysis 
           job={job}
-          userProfile={userProfile}
+          userProfile={mockUser}
           matchScore={matchScore}
         />
       </div>

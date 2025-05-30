@@ -100,11 +100,11 @@ class ResumeFileService {
         return null;
       }
 
-      // Cast parsed_data back to ParsedResume type
+      // Cast parsed_data back to ParsedResume type with proper type conversion
       if (data) {
         return {
           ...data,
-          parsed_data: data.parsed_data as ParsedResume
+          parsed_data: data.parsed_data as unknown as ParsedResume
         } as ResumeFile;
       }
 
