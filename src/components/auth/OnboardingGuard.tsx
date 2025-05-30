@@ -57,11 +57,24 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
   const handleResumeUploaded = async (resumeData: ParsedResume) => {
     if (!user) return;
 
-    // The ProfileDetails component should now save to database
-    // Update our local state
-    setOnboardingStatus(prev => prev ? { ...prev, resume_uploaded: true } : null);
-    setCurrentStep(1);
-    toast.success("Resume uploaded successfully! Please complete your profile.");
+    try {
+      // Update onboarding status in the database
+      const success = await resumeFileService.updateOnboardingStatus(user.id, {
+        resume_uploaded: true
+      });
+
+      if (success) {
+        // Update local state
+        setOnboardingStatus(prev => prev ? { ...prev, resume_uploaded: true } : null);
+        setCurrentStep(1);
+        toast.success("Resume uploaded successfully! Please complete your profile.");
+      } else {
+        toast.error("Failed to update onboarding status. Please try again.");
+      }
+    } catch (error) {
+      console.error('Error updating onboarding status:', error);
+      toast.error("Error updating profile status. Please try again.");
+    }
   };
 
   const handleProfileCompleted = async () => {
