@@ -78,7 +78,7 @@ const ProfileDetails = ({ onResumeDataUpdate }: ProfileDetailsProps) => {
         const hasEducation = parsed.education.length > 0;
         const hasSkills = parsed.skills.length > 0;
         
-        const parsedSuccessfully = hasPersonalInfo || hasWorkExp || hasEducation || hasSkills;
+        const parsedSuccessfully = Boolean(hasPersonalInfo || hasWorkExp || hasEducation || hasSkills);
         setParsingSuccess(parsedSuccessfully);
         
         if (parsedSuccessfully) {
