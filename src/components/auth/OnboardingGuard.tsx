@@ -73,7 +73,7 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
       onboarding_completed: true 
     } : null);
     
-    toast.success("Profile completed! Welcome to EmploEvolution!");
+    toast.success("Profile completed! Welcome to Streamline!");
   };
 
   if (loading) {
@@ -109,7 +109,7 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
         <Card className="shadow-lg">
           <CardHeader className="text-center pb-4">
             <CardTitle className="text-3xl font-bold text-gray-900 mb-2">
-              Welcome to EmploEvolution!
+              Welcome to Streamline!
             </CardTitle>
             <p className="text-gray-600 mb-4">
               Let's get your profile set up so you can start finding amazing opportunities
