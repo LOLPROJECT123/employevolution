@@ -5,6 +5,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
+import OnboardingGuard from "./components/auth/OnboardingGuard";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Jobs from "./pages/Jobs";
@@ -30,20 +32,93 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+            {/* Public routes - accessible without authentication */}
             <Route path="/" element={<Index />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/jobs" element={<Jobs />} />
-            <Route path="/applications" element={<Applications />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/interview-practice" element={<InterviewPractice />} />
-            <Route path="/resume-tools" element={<ResumeTools />} />
-            <Route path="/resume-tools/:tab" element={<ResumeTools />} />
-            <Route path="/networking" element={<Networking />} />
-            <Route path="/networking-tools" element={<NetworkingTools />} />
-            <Route path="/referrals" element={<Referrals />} />
-            <Route path="/salary-negotiations" element={<SalaryNegotiations />} />
-            <Route path="/job-alerts" element={<JobAlerts />} />
             <Route path="/auth" element={<Auth />} />
+            
+            {/* Protected routes - require authentication */}
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <OnboardingGuard>
+                  <Dashboard />
+                </OnboardingGuard>
+              </ProtectedRoute>
+            } />
+            <Route path="/jobs" element={
+              <ProtectedRoute>
+                <OnboardingGuard>
+                  <Jobs />
+                </OnboardingGuard>
+              </ProtectedRoute>
+            } />
+            <Route path="/applications" element={
+              <ProtectedRoute>
+                <OnboardingGuard>
+                  <Applications />
+                </OnboardingGuard>
+              </ProtectedRoute>
+            } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            } />
+            <Route path="/interview-practice" element={
+              <ProtectedRoute>
+                <OnboardingGuard>
+                  <InterviewPractice />
+                </OnboardingGuard>
+              </ProtectedRoute>
+            } />
+            <Route path="/resume-tools" element={
+              <ProtectedRoute>
+                <OnboardingGuard>
+                  <ResumeTools />
+                </OnboardingGuard>
+              </ProtectedRoute>
+            } />
+            <Route path="/resume-tools/:tab" element={
+              <ProtectedRoute>
+                <OnboardingGuard>
+                  <ResumeTools />
+                </OnboardingGuard>
+              </ProtectedRoute>
+            } />
+            <Route path="/networking" element={
+              <ProtectedRoute>
+                <OnboardingGuard>
+                  <Networking />
+                </OnboardingGuard>
+              </ProtectedRoute>
+            } />
+            <Route path="/networking-tools" element={
+              <ProtectedRoute>
+                <OnboardingGuard>
+                  <NetworkingTools />
+                </OnboardingGuard>
+              </ProtectedRoute>
+            } />
+            <Route path="/referrals" element={
+              <ProtectedRoute>
+                <OnboardingGuard>
+                  <Referrals />
+                </OnboardingGuard>
+              </ProtectedRoute>
+            } />
+            <Route path="/salary-negotiations" element={
+              <ProtectedRoute>
+                <OnboardingGuard>
+                  <SalaryNegotiations />
+                </OnboardingGuard>
+              </ProtectedRoute>
+            } />
+            <Route path="/job-alerts" element={
+              <ProtectedRoute>
+                <OnboardingGuard>
+                  <JobAlerts />
+                </OnboardingGuard>
+              </ProtectedRoute>
+            } />
           </Routes>
           <PWAInstallPrompt />
         </BrowserRouter>
