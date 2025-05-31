@@ -21,12 +21,12 @@ export const AuthModal = ({ isOpen, onClose, defaultMode = 'email-check' }: Auth
   const [mode, setMode] = useState<'email-check' | 'login' | 'signup'>(defaultMode);
   const [email, setEmail] = useState('');
 
-  const handleEmailVerified = (verifiedEmail: string, isSignIn: boolean) => {
-    console.log('Email submitted:', verifiedEmail, 'isSignIn:', isSignIn);
+  const handleEmailVerified = (verifiedEmail: string, emailExists: boolean) => {
+    console.log('Email submitted:', verifiedEmail, 'emailExists:', emailExists);
     setEmail(verifiedEmail);
     
-    // Route to the appropriate form based on user choice
-    if (isSignIn) {
+    // Route to the appropriate form based on email existence
+    if (emailExists) {
       setMode('login');
     } else {
       setMode('signup');

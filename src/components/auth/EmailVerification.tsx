@@ -14,6 +14,7 @@ interface EmailVerificationProps {
 
 export const EmailVerification = ({ onEmailVerified, onSocialSuccess }: EmailVerificationProps) => {
   const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
 
   const validateEmail = (email: string) => {
@@ -21,30 +22,27 @@ export const EmailVerification = ({ onEmailVerified, onSocialSuccess }: EmailVer
     return emailRegex.test(email);
   };
 
-  const handleSignIn = () => {
-    if (!email) {
-      toast({
-        title: "Email required",
-        description: "Please enter your email address",
-        variant: "destructive",
-      });
-      return;
-    }
+  const checkEmailExists = async (email: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email)
+        .maybeSingle();
 
-    if (!validateEmail(email)) {
-      toast({
-        title: "Invalid email",
-        description: "Please enter a valid email address",
-        variant: "destructive",
-      });
-      return;
-    }
+      if (error) {
+        console.error('Error checking email existence:', error);
+        return false;
+      }
 
-    // Route to sign-in form
-    onEmailVerified(email, true);
+      return !!data;
+    } catch (error) {
+      console.error('Error checking email existence:', error);
+      return false;
+    }
   };
 
-  const handleSignUp = () => {
+  const handleContinue = async () => {
     if (!email) {
       toast({
         title: "Email required",
@@ -63,8 +61,21 @@ export const EmailVerification = ({ onEmailVerified, onSocialSuccess }: EmailVer
       return;
     }
 
-    // Route to sign-up form
-    onEmailVerified(email, false);
+    setLoading(true);
+
+    try {
+      const emailExists = await checkEmailExists(email);
+      onEmailVerified(email, emailExists);
+    } catch (error) {
+      console.error('Error during email verification:', error);
+      toast({
+        title: "Something went wrong",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSocialLogin = async (provider: 'github' | 'google' | 'linkedin_oidc' | 'azure') => {
@@ -98,6 +109,12 @@ export const EmailVerification = ({ onEmailVerified, onSocialSuccess }: EmailVer
     }
   };
 
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleContinue();
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="text-center mb-6">
@@ -112,7 +129,7 @@ export const EmailVerification = ({ onEmailVerified, onSocialSuccess }: EmailVer
           variant="outline"
           className="w-full"
           onClick={() => handleSocialLogin('github')}
-          disabled={socialLoading !== null}
+          disabled={socialLoading !== null || loading}
         >
           {socialLoading === 'github' ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -126,7 +143,7 @@ export const EmailVerification = ({ onEmailVerified, onSocialSuccess }: EmailVer
           variant="outline"
           className="w-full"
           onClick={() => handleSocialLogin('google')}
-          disabled={socialLoading !== null}
+          disabled={socialLoading !== null || loading}
         >
           {socialLoading === 'google' ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -145,7 +162,7 @@ export const EmailVerification = ({ onEmailVerified, onSocialSuccess }: EmailVer
           variant="outline"
           className="w-full"
           onClick={() => handleSocialLogin('linkedin_oidc')}
-          disabled={socialLoading !== null}
+          disabled={socialLoading !== null || loading}
         >
           {socialLoading === 'linkedin_oidc' ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -161,7 +178,7 @@ export const EmailVerification = ({ onEmailVerified, onSocialSuccess }: EmailVer
           variant="outline"
           className="w-full"
           onClick={() => handleSocialLogin('azure')}
-          disabled={socialLoading !== null}
+          disabled={socialLoading !== null || loading}
         >
           {socialLoading === 'azure' ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -170,7 +187,7 @@ export const EmailVerification = ({ onEmailVerified, onSocialSuccess }: EmailVer
               <path d="M0 0v11.408h11.408V0H0zm12.594 0v11.408H24V0H12.594zM0 12.594V24h11.408V12.594H0zm12.594 0V24H24V12.594H12.594z"/>
             </svg>
           )}
-          Continue with Microsoft
+          Continue with Outlook
         </Button>
       </div>
 
@@ -191,34 +208,25 @@ export const EmailVerification = ({ onEmailVerified, onSocialSuccess }: EmailVer
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            onKeyPress={handleKeyPress}
             placeholder="Enter your email"
-            disabled={socialLoading !== null}
+            disabled={loading || socialLoading !== null}
             autoFocus
             className="mt-1"
           />
         </div>
         
-        <div className="grid grid-cols-2 gap-3">
-          <Button 
-            onClick={handleSignIn} 
-            variant="outline" 
-            className="w-full" 
-            disabled={!email || socialLoading !== null}
-          >
-            Sign In
-          </Button>
-          
-          <Button 
-            onClick={handleSignUp} 
-            className="w-full" 
-            disabled={!email || socialLoading !== null}
-          >
-            Sign Up
-          </Button>
-        </div>
+        <Button 
+          onClick={handleContinue} 
+          className="w-full" 
+          disabled={!email || loading || socialLoading !== null}
+        >
+          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {loading ? "Checking account..." : "Continue"}
+        </Button>
 
         <div className="text-xs text-muted-foreground text-center">
-          Choose "Sign In" if you already have an account, or "Sign Up" to create a new one
+          We'll automatically detect if you have an existing account
         </div>
       </div>
     </div>
