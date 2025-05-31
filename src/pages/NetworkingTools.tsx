@@ -18,16 +18,8 @@ const NetworkingTools = () => {
     <div className="min-h-screen bg-background">
       {!isMobile && <Navbar />}
       {isMobile && <MobileHeader title="Networking" />}
-      
-      <div className="bg-blue-600 dark:bg-blue-900 py-4 px-4 md:py-6 md:px-6">
-        <div className="container mx-auto max-w-screen-xl">
-          <h1 className="text-xl md:text-3xl font-bold text-white">
-            Find Your Next Opportunity
-          </h1>
-        </div>
-      </div>
 
-      <div className="container mx-auto px-4 max-w-screen-xl space-y-6">
+      <div className="container mx-auto px-4 max-w-screen-xl space-y-6 pt-6">
         <Card className="shadow-sm">
           <div className="p-0">
             <div className="p-4 border-b">

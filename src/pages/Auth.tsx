@@ -1,46 +1,46 @@
 
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { AuthModal } from '@/components/auth/AuthModal';
-import { useAuth } from '@/hooks/useAuth';
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import SignInForm from "@/components/auth/SignInForm";
+import SignUpForm from "@/components/auth/SignUpForm";
 
 const Auth = () => {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const { user, loading } = useAuth();
-  const [isOpen, setIsOpen] = useState(true);
-  
-  const redirectPath = searchParams.get('redirect') || '/dashboard';
-
-  useEffect(() => {
-    if (!loading && user) {
-      navigate(redirectPath);
-    }
-  }, [user, loading, navigate, redirectPath]);
-
-  const handleClose = () => {
-    setIsOpen(false);
-    navigate('/');
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <AuthModal 
-        isOpen={isOpen} 
-        onClose={handleClose} 
-        defaultMode="email-check"
-      />
+    <div className="min-h-screen bg-background flex items-center justify-center px-4">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <img 
+            src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" 
+            alt="Streamline" 
+            className="h-12 w-12 mx-auto mb-4" 
+          />
+          <h1 className="text-2xl font-bold">Welcome to Streamline</h1>
+          <p className="text-muted-foreground mt-2">
+            Your AI-powered job search assistant
+          </p>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-center">Get Started</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="signin" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="signin">Sign In</TabsTrigger>
+                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              </TabsList>
+              <TabsContent value="signin" className="space-y-4">
+                <SignInForm />
+              </TabsContent>
+              <TabsContent value="signup" className="space-y-4">
+                <SignUpForm />
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
