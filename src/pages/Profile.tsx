@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -37,6 +36,9 @@ import { profileService } from "@/services/profileService";
 import { resumeFileService } from "@/services/resumeFileService";
 import { ParsedResume } from "@/types/resume";
 import { toast } from "sonner";
+import ProfileCompletionWidget from "@/components/profile/ProfileCompletionWidget";
+import MultiLanguageSelector from "@/components/profile/MultiLanguageSelector";
+import ResumeVersionManager from "@/components/resume/ResumeVersionManager";
 
 const Profile = () => {
   const isMobile = useMobile();
@@ -56,7 +58,7 @@ const Profile = () => {
   const [showEditJobPrefs, setShowEditJobPrefs] = useState(false);
   const [showEditEqualEmployment, setShowEditEqualEmployment] = useState(false);
 
-  // Profile data state
+  // Profile data state with languages support
   const [profileData, setProfileData] = useState({
     name: "",
     jobStatus: "Actively looking",
@@ -76,6 +78,7 @@ const Profile = () => {
     },
     skills: [],
     languages: [],
+    primaryLanguage: "English",
     jobPreferences: {
       desiredRoles: [],
       experienceLevel: "",
@@ -109,12 +112,13 @@ const Profile = () => {
         phone: userData.profile?.phone || "",
         location: userData.profile?.location || "",
         jobStatus: userData.profile?.job_status || "Actively looking",
+        primaryLanguage: userData.profile?.primary_language || "English",
         workExperiences: userData.workExperiences || [],
         education: userData.education || [],
         projects: userData.projects || [],
         activities: userData.activities || [],
         skills: userData.skills || [],
-        languages: userData.languages || [],
+        languages: userData.profile?.languages || [],
         socialLinks: {
           linkedin: userData.profile?.linkedin_url || "",
           github: userData.profile?.github_url || "",
@@ -188,6 +192,37 @@ const Profile = () => {
     } catch (error) {
       console.error('Error saving resume data:', error);
       toast.error("Failed to save resume data");
+    }
+  };
+
+  // Handle language updates
+  const handleLanguagesUpdate = async (languages: any[]) => {
+    if (!user) return;
+
+    const updatedProfile = { ...profileData, languages };
+    setProfileData(updatedProfile);
+
+    try {
+      await profileService.saveUserProfile(user.id, { languages });
+      toast.success("Languages updated successfully");
+    } catch (error) {
+      console.error('Error updating languages:', error);
+      toast.error("Failed to update languages");
+    }
+  };
+
+  const handlePrimaryLanguageUpdate = async (primaryLanguage: string) => {
+    if (!user) return;
+
+    const updatedProfile = { ...profileData, primaryLanguage };
+    setProfileData(updatedProfile);
+
+    try {
+      await profileService.saveUserProfile(user.id, { primary_language: primaryLanguage });
+      toast.success("Primary language updated successfully");
+    } catch (error) {
+      console.error('Error updating primary language:', error);
+      toast.error("Failed to update primary language");
     }
   };
 
@@ -266,60 +301,67 @@ const Profile = () => {
       {isMobile && <MobileHeader title="Profile" />}
       
       <div className={`container mx-auto px-4 ${isMobile ? 'pt-4' : 'pt-20'} pb-12 max-w-4xl`}>
-        {/* Profile Header */}
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 font-semibold text-xl border">
-                  {profileData.name ? getInitials(profileData.name) : <User className="h-8 w-8" />}
+        {/* Profile Header with completion widget */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div className="lg:col-span-2">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 font-semibold text-xl border">
+                      {profileData.name ? getInitials(profileData.name) : <User className="h-8 w-8" />}
+                    </div>
+                    <div>
+                      <h1 className="text-2xl font-bold">{profileData.name || "Complete your profile"}</h1>
+                      <p className="text-muted-foreground">Job Search Status</p>
+                      <Badge variant={profileData.jobStatus === "Actively looking" ? "default" : "secondary"} className="mt-1">
+                        {profileData.jobStatus}
+                      </Badge>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => setShowEditHeader(true)}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
                 </div>
-                <div>
-                  <h1 className="text-2xl font-bold">{profileData.name || "Complete your profile"}</h1>
-                  <p className="text-muted-foreground">Job Search Status</p>
-                  <Badge variant={profileData.jobStatus === "Actively looking" ? "default" : "secondary"} className="mt-1">
-                    {profileData.jobStatus}
-                  </Badge>
-                </div>
-              </div>
-              <Button variant="outline" size="sm" onClick={() => setShowEditHeader(true)}>
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
-              </Button>
-            </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm">⚡ Show Profile to Recruiters</span>
-                </div>
-                <Switch
-                  checked={showProfileToRecruiters}
-                  onCheckedChange={setShowProfileToRecruiters}
-                />
-              </div>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">⚡ Show Profile to Recruiters</span>
+                    </div>
+                    <Switch
+                      checked={showProfileToRecruiters}
+                      onCheckedChange={setShowProfileToRecruiters}
+                    />
+                  </div>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Briefcase className="h-4 w-4" />
-                  <span className="text-sm">Job Search Status</span>
-                </div>
-                <Switch
-                  checked={jobSearchStatus}
-                  onCheckedChange={setJobSearchStatus}
-                />
-              </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Briefcase className="h-4 w-4" />
+                      <span className="text-sm">Job Search Status</span>
+                    </div>
+                    <Switch
+                      checked={jobSearchStatus}
+                      onCheckedChange={setJobSearchStatus}
+                    />
+                  </div>
 
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span>Profile Completion</span>
-                  <span>{profileCompletion}%</span>
+                  <div>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span>Profile Completion</span>
+                      <span>{profileCompletion}%</span>
+                    </div>
+                    <Progress value={profileCompletion} className="h-2" />
+                  </div>
                 </div>
-                <Progress value={profileCompletion} className="h-2" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </div>
+          <div>
+            <ProfileCompletionWidget />
+          </div>
+        </div>
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -369,10 +411,21 @@ const Profile = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Multi-language Support */}
+            <MultiLanguageSelector
+              languages={profileData.languages}
+              onLanguagesChange={handleLanguagesUpdate}
+              primaryLanguage={profileData.primaryLanguage}
+              onPrimaryLanguageChange={handlePrimaryLanguageUpdate}
+            />
           </TabsContent>
 
           {/* Resume Tab */}
           <TabsContent value="resume" className="space-y-6">
+            {/* Resume Version Manager */}
+            <ResumeVersionManager />
+
             {/* Resume Upload */}
             <ProfileDetails onResumeDataUpdate={handleResumeDataUpdate} />
 

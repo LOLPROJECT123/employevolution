@@ -192,6 +192,42 @@ export type Database = {
           },
         ]
       }
+      company_insights: {
+        Row: {
+          company_name: string
+          created_at: string | null
+          culture_insights: Json | null
+          glassdoor_rating: number | null
+          glassdoor_reviews: Json | null
+          id: string
+          interview_experiences: Json | null
+          last_updated: string | null
+          salary_data: Json | null
+        }
+        Insert: {
+          company_name: string
+          created_at?: string | null
+          culture_insights?: Json | null
+          glassdoor_rating?: number | null
+          glassdoor_reviews?: Json | null
+          id?: string
+          interview_experiences?: Json | null
+          last_updated?: string | null
+          salary_data?: Json | null
+        }
+        Update: {
+          company_name?: string
+          created_at?: string | null
+          culture_insights?: Json | null
+          glassdoor_rating?: number | null
+          glassdoor_reviews?: Json | null
+          id?: string
+          interview_experiences?: Json | null
+          last_updated?: string | null
+          salary_data?: Json | null
+        }
+        Relationships: []
+      }
       contacts: {
         Row: {
           company_name: string
@@ -704,6 +740,81 @@ export type Database = {
         }
         Relationships: []
       }
+      job_recommendations: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_viewed: boolean | null
+          job_data: Json
+          match_percentage: number
+          matching_skills: Json | null
+          missing_skills: Json | null
+          recommendation_reason: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_viewed?: boolean | null
+          job_data: Json
+          match_percentage: number
+          matching_skills?: Json | null
+          missing_skills?: Json | null
+          recommendation_reason?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_viewed?: boolean | null
+          job_data?: Json
+          match_percentage?: number
+          matching_skills?: Json | null
+          missing_skills?: Json | null
+          recommendation_reason?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notification_preferences: {
+        Row: {
+          application_updates: boolean | null
+          created_at: string | null
+          email_notifications: boolean | null
+          id: string
+          interview_reminders: boolean | null
+          job_match_alerts: boolean | null
+          profile_completion_reminders: boolean | null
+          push_notifications: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          application_updates?: boolean | null
+          created_at?: string | null
+          email_notifications?: boolean | null
+          id?: string
+          interview_reminders?: boolean | null
+          job_match_alerts?: boolean | null
+          profile_completion_reminders?: boolean | null
+          push_notifications?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          application_updates?: boolean | null
+          created_at?: string | null
+          email_notifications?: boolean | null
+          id?: string
+          interview_reminders?: boolean | null
+          job_match_alerts?: boolean | null
+          profile_completion_reminders?: boolean | null
+          push_notifications?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           action_url: string | null
@@ -733,6 +844,33 @@ export type Database = {
           message?: string
           title?: string
           type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profile_completion_tracking: {
+        Row: {
+          completion_percentage: number | null
+          created_at: string | null
+          id: string
+          last_updated: string | null
+          missing_fields: Json | null
+          user_id: string
+        }
+        Insert: {
+          completion_percentage?: number | null
+          created_at?: string | null
+          id?: string
+          last_updated?: string | null
+          missing_fields?: Json | null
+          user_id: string
+        }
+        Update: {
+          completion_percentage?: number | null
+          created_at?: string | null
+          id?: string
+          last_updated?: string | null
+          missing_fields?: Json | null
           user_id?: string
         }
         Relationships: []
@@ -875,6 +1013,45 @@ export type Database = {
           title?: string
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      resume_versions: {
+        Row: {
+          created_at: string | null
+          file_content: string | null
+          file_path: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          parsed_data: Json | null
+          updated_at: string | null
+          user_id: string
+          version_number: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          file_content?: string | null
+          file_path?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          parsed_data?: Json | null
+          updated_at?: string | null
+          user_id: string
+          version_number?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          file_content?: string | null
+          file_path?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          parsed_data?: Json | null
+          updated_at?: string | null
+          user_id?: string
+          version_number?: number | null
         }
         Relationships: []
       }
@@ -1139,12 +1316,14 @@ export type Database = {
           github_url: string | null
           id: string
           job_status: string | null
+          languages: Json | null
           linkedin_url: string | null
           location: string | null
           name: string | null
           other_url: string | null
           phone: string | null
           portfolio_url: string | null
+          primary_language: string | null
           profile_completion: number | null
           updated_at: string | null
           user_id: string
@@ -1154,12 +1333,14 @@ export type Database = {
           github_url?: string | null
           id?: string
           job_status?: string | null
+          languages?: Json | null
           linkedin_url?: string | null
           location?: string | null
           name?: string | null
           other_url?: string | null
           phone?: string | null
           portfolio_url?: string | null
+          primary_language?: string | null
           profile_completion?: number | null
           updated_at?: string | null
           user_id: string
@@ -1169,12 +1350,14 @@ export type Database = {
           github_url?: string | null
           id?: string
           job_status?: string | null
+          languages?: Json | null
           linkedin_url?: string | null
           location?: string | null
           name?: string | null
           other_url?: string | null
           phone?: string | null
           portfolio_url?: string | null
+          primary_language?: string | null
           profile_completion?: number | null
           updated_at?: string | null
           user_id?: string
