@@ -3,9 +3,9 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from '@/hooks/use-toast';
-import { Loader2, Eye, EyeOff, ArrowLeft, Mail, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 interface SignUpFormProps {
   email: string;
@@ -22,10 +22,24 @@ export const SignUpForm = ({ email, onBack, onSuccess }: SignUpFormProps) => {
   const [loading, setLoading] = useState(false);
 
   const validatePassword = (password: string) => {
-    if (password.length < 6) {
-      return "Password must be at least 6 characters long";
-    }
-    return null;
+    const minLength = password.length >= 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+    const noSpaces = !/\s/.test(password);
+
+    return {
+      isValid: minLength && hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChar && noSpaces,
+      requirements: {
+        minLength,
+        hasUpperCase,
+        hasLowerCase,
+        hasNumbers,
+        hasSpecialChar,
+        noSpaces
+      }
+    };
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,18 +47,18 @@ export const SignUpForm = ({ email, onBack, onSuccess }: SignUpFormProps) => {
     
     if (!fullName.trim()) {
       toast({
-        title: "Full name required",
+        title: "Name required",
         description: "Please enter your full name",
         variant: "destructive",
       });
       return;
     }
 
-    const passwordError = validatePassword(password);
-    if (passwordError) {
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
       toast({
-        title: "Password requirements not met",
-        description: passwordError,
+        title: "Invalid password",
+        description: "Please ensure your password meets all requirements",
         variant: "destructive",
       });
       return;
@@ -53,7 +67,7 @@ export const SignUpForm = ({ email, onBack, onSuccess }: SignUpFormProps) => {
     if (password !== confirmPassword) {
       toast({
         title: "Passwords don't match",
-        description: "Please make sure both passwords are the same",
+        description: "Please make sure both passwords are identical",
         variant: "destructive",
       });
       return;
@@ -62,12 +76,11 @@ export const SignUpForm = ({ email, onBack, onSuccess }: SignUpFormProps) => {
     setLoading(true);
 
     try {
-      console.log('Attempting sign up for:', email);
-      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
+          emailRedirectTo: `${window.location.origin}/auth`,
           data: {
             full_name: fullName.trim(),
           }
@@ -76,37 +89,26 @@ export const SignUpForm = ({ email, onBack, onSuccess }: SignUpFormProps) => {
 
       if (error) {
         console.error('Sign up error:', error);
-        
-        if (error.message.includes('User already registered')) {
-          toast({
-            title: "Account already exists",
-            description: "An account with this email already exists. Please sign in instead.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Sign up failed",
-            description: error.message || "An unexpected error occurred. Please try again.",
-            variant: "destructive",
-          });
-        }
+        toast({
+          title: "Sign up failed",
+          description: error.message,
+          variant: "destructive",
+        });
         return;
       }
 
       if (data.user) {
-        console.log('Sign up successful for user:', data.user.id);
-        
         toast({
           title: "Account created successfully!",
-          description: "Welcome to Streamline! You can now start using the platform.",
+          description: "Welcome to Streamline! You can now start using the app.",
         });
         onSuccess();
       }
     } catch (error) {
       console.error('Unexpected sign up error:', error);
       toast({
-        title: "Sign up failed",
-        description: "An unexpected error occurred. Please try again.",
+        title: "Something went wrong",
+        description: "Please try again later",
         variant: "destructive",
       });
     } finally {
@@ -114,31 +116,20 @@ export const SignUpForm = ({ email, onBack, onSuccess }: SignUpFormProps) => {
     }
   };
 
+  const passwordValidation = validatePassword(password);
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="flex items-center space-x-2 mb-6">
-        <Button 
-          type="button" 
-          variant="ghost" 
-          size="sm" 
-          onClick={onBack}
-          className="p-1"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div>
-          <h2 className="text-xl font-semibold">Create your account</h2>
-          <p className="text-sm text-muted-foreground">Join Streamline to get started</p>
-        </div>
-      </div>
-
-      <div>
-        <Label htmlFor="email-display">Email</Label>
-        <div className="flex items-center mt-1 p-2 border rounded-md bg-muted">
-          <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
-          <span className="text-sm">{email}</span>
-        </div>
-      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={onBack}
+        className="mb-4 p-0 h-auto"
+      >
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Back
+      </Button>
 
       <div>
         <Label htmlFor="fullName">Full Name</Label>
@@ -150,33 +141,80 @@ export const SignUpForm = ({ email, onBack, onSuccess }: SignUpFormProps) => {
           placeholder="Enter your full name"
           required
           disabled={loading}
-          autoFocus
           className="mt-1"
         />
       </div>
-      
+
+      <div>
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          type="email"
+          value={email}
+          disabled
+          className="mt-1 bg-muted"
+        />
+      </div>
+
       <div>
         <Label htmlFor="password">Password</Label>
         <div className="relative mt-1">
           <Input
             id="password"
-            type={showPassword ? 'text' : 'password'}
+            type={showPassword ? "text" : "password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Create a password"
             required
             disabled={loading}
+            className="pr-10"
           />
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 h-auto p-1"
+            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
             onClick={() => setShowPassword(!showPassword)}
           >
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {showPassword ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
           </Button>
         </div>
+        
+        {password && (
+          <div className="mt-2 text-sm space-y-1">
+            <p className="font-medium text-muted-foreground">Password requirements:</p>
+            <ul className="space-y-1">
+              <li className={`flex items-center ${passwordValidation.requirements.minLength ? 'text-green-600' : 'text-red-600'}`}>
+                <span className="mr-2">{passwordValidation.requirements.minLength ? '✓' : '✗'}</span>
+                At least 8 characters
+              </li>
+              <li className={`flex items-center ${passwordValidation.requirements.hasUpperCase ? 'text-green-600' : 'text-red-600'}`}>
+                <span className="mr-2">{passwordValidation.requirements.hasUpperCase ? '✓' : '✗'}</span>
+                One uppercase letter
+              </li>
+              <li className={`flex items-center ${passwordValidation.requirements.hasLowerCase ? 'text-green-600' : 'text-red-600'}`}>
+                <span className="mr-2">{passwordValidation.requirements.hasLowerCase ? '✓' : '✗'}</span>
+                One lowercase letter
+              </li>
+              <li className={`flex items-center ${passwordValidation.requirements.hasNumbers ? 'text-green-600' : 'text-red-600'}`}>
+                <span className="mr-2">{passwordValidation.requirements.hasNumbers ? '✓' : '✗'}</span>
+                One number
+              </li>
+              <li className={`flex items-center ${passwordValidation.requirements.hasSpecialChar ? 'text-green-600' : 'text-red-600'}`}>
+                <span className="mr-2">{passwordValidation.requirements.hasSpecialChar ? '✓' : '✗'}</span>
+                One special character
+              </li>
+              <li className={`flex items-center ${passwordValidation.requirements.noSpaces ? 'text-green-600' : 'text-red-600'}`}>
+                <span className="mr-2">{passwordValidation.requirements.noSpaces ? '✓' : '✗'}</span>
+                No spaces
+              </li>
+            </ul>
+          </div>
+        )}
       </div>
 
       <div>
@@ -184,43 +222,38 @@ export const SignUpForm = ({ email, onBack, onSuccess }: SignUpFormProps) => {
         <div className="relative mt-1">
           <Input
             id="confirmPassword"
-            type={showConfirmPassword ? 'text' : 'password'}
+            type={showConfirmPassword ? "text" : "password"}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="Confirm your password"
             required
             disabled={loading}
+            className="pr-10"
           />
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 h-auto p-1"
+            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
           >
-            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {showConfirmPassword ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
           </Button>
         </div>
       </div>
 
-      <div className="text-xs text-muted-foreground bg-muted p-3 rounded-md">
-        <p className="font-medium mb-1">Password requirements:</p>
-        <ul className="space-y-1">
-          <li className="flex items-center space-x-2">
-            <CheckCircle className={`h-3 w-3 ${password.length >= 6 ? 'text-green-500' : 'text-gray-400'}`} />
-            <span>At least 6 characters</span>
-          </li>
-        </ul>
-      </div>
-      
-      <Button type="submit" className="w-full" disabled={loading}>
+      <Button 
+        type="submit" 
+        className="w-full" 
+        disabled={loading || !passwordValidation.isValid || password !== confirmPassword}
+      >
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         Create Account
       </Button>
-
-      <div className="text-xs text-muted-foreground text-center">
-        By creating an account, you agree to our Terms of Service and Privacy Policy.
-      </div>
     </form>
   );
 };

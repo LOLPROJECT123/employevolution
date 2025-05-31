@@ -3,9 +3,9 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from '@/hooks/use-toast';
-import { Loader2, Eye, EyeOff, ArrowLeft, Mail } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 interface SignInFormProps {
   email: string;
@@ -33,8 +33,6 @@ export const SignInForm = ({ email, onBack, onSuccess }: SignInFormProps) => {
     setLoading(true);
 
     try {
-      console.log('Attempting sign in for:', email);
-      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -43,39 +41,22 @@ export const SignInForm = ({ email, onBack, onSuccess }: SignInFormProps) => {
       if (error) {
         console.error('Sign in error:', error);
         
-        if (error.message.includes('Email not confirmed')) {
-          // For development, let's try to confirm the email automatically
-          toast({
-            title: "Account needs confirmation",
-            description: "Your account exists but needs confirmation. Trying to sign you in anyway...",
-          });
-          
-          // Try to sign up again which might auto-confirm in development
-          const { data: signupData, error: signupError } = await supabase.auth.signUp({
-            email,
-            password,
-          });
-          
-          if (signupData.user && !signupError) {
-            toast({
-              title: "Successfully signed in!",
-              description: "Welcome to Streamline!",
-            });
-            onSuccess();
-            return;
-          }
-        }
-        
         if (error.message.includes('Invalid login credentials')) {
           toast({
             title: "Invalid credentials",
-            description: "Please check your email and password and try again.",
+            description: "The email or password you entered is incorrect",
+            variant: "destructive",
+          });
+        } else if (error.message.includes('Email not confirmed')) {
+          toast({
+            title: "Email not confirmed",
+            description: "Please check your email and click the confirmation link",
             variant: "destructive",
           });
         } else {
           toast({
             title: "Sign in failed",
-            description: error.message || "An unexpected error occurred. Please try again.",
+            description: error.message,
             variant: "destructive",
           });
         }
@@ -83,18 +64,17 @@ export const SignInForm = ({ email, onBack, onSuccess }: SignInFormProps) => {
       }
 
       if (data.user) {
-        console.log('Sign in successful for user:', data.user.id);
         toast({
           title: "Welcome back!",
-          description: "You have successfully signed in.",
+          description: "You have successfully signed in",
         });
         onSuccess();
       }
     } catch (error) {
       console.error('Unexpected sign in error:', error);
       toast({
-        title: "Sign in failed",
-        description: "An unexpected error occurred. Please try again.",
+        title: "Something went wrong",
+        description: "Please try again later",
         variant: "destructive",
       });
     } finally {
@@ -104,64 +84,67 @@ export const SignInForm = ({ email, onBack, onSuccess }: SignInFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="flex items-center space-x-2 mb-6">
-        <Button 
-          type="button" 
-          variant="ghost" 
-          size="sm" 
-          onClick={onBack}
-          className="p-1"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div>
-          <h2 className="text-xl font-semibold">Welcome back</h2>
-          <p className="text-sm text-muted-foreground">Sign in to your account</p>
-        </div>
-      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={onBack}
+        className="mb-4 p-0 h-auto"
+      >
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Back
+      </Button>
 
       <div>
-        <Label htmlFor="email-display">Email</Label>
-        <div className="flex items-center mt-1 p-2 border rounded-md bg-muted">
-          <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
-          <span className="text-sm">{email}</span>
-        </div>
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          type="email"
+          value={email}
+          disabled
+          className="mt-1 bg-muted"
+        />
       </div>
-      
+
       <div>
         <Label htmlFor="password">Password</Label>
         <div className="relative mt-1">
           <Input
             id="password"
-            type={showPassword ? 'text' : 'password'}
+            type={showPassword ? "text" : "password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Enter your password"
             required
             disabled={loading}
             autoFocus
+            className="pr-10"
           />
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 h-auto p-1"
+            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
             onClick={() => setShowPassword(!showPassword)}
           >
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {showPassword ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
           </Button>
         </div>
       </div>
-      
-      <Button type="submit" className="w-full" disabled={loading}>
+
+      <Button type="submit" className="w-full" disabled={loading || !password}>
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         Sign In
       </Button>
 
       <div className="text-center">
-        <div className="text-xs text-muted-foreground">
-          Having trouble? Try creating a new account or contact support.
-        </div>
+        <Button variant="link" size="sm" className="text-muted-foreground">
+          Forgot your password?
+        </Button>
       </div>
     </form>
   );

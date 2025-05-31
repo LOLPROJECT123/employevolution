@@ -22,11 +22,9 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
   const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
-    // Only load onboarding status if we have an authenticated user
     if (user && !authLoading) {
       loadOnboardingStatus();
     } else if (!authLoading && !user) {
-      // Clear any existing onboarding state for unauthenticated users
       setOnboardingStatus(null);
       setLoading(false);
     }
@@ -62,21 +60,15 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
     try {
       console.log('Resume uploaded, updating onboarding status...');
       
-      // Update onboarding status in the database
       const success = await resumeFileService.updateOnboardingStatus(user.id, {
         resume_uploaded: true
       });
 
       if (success) {
         console.log('Onboarding status updated successfully');
-        
-        // Update local state to advance to next step
         setOnboardingStatus(prev => prev ? { ...prev, resume_uploaded: true } : null);
         setCurrentStep(1);
-        
         toast.success("Resume uploaded successfully! Please complete your profile.");
-        
-        // Force a reload of the onboarding status to ensure consistency
         setTimeout(() => {
           loadOnboardingStatus();
         }, 1000);
@@ -111,7 +103,6 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
     toast.success("Profile completed! Welcome to Streamline!");
   };
 
-  // If auth is still loading, show loading state
   if (authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -120,12 +111,10 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
     );
   }
 
-  // If no user is authenticated, this should not happen due to ProtectedRoute
   if (!user) {
     return <>{children}</>;
   }
 
-  // If we're still loading onboarding status for an authenticated user
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -134,12 +123,10 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
     );
   }
 
-  // If onboarding is complete, show the main app
   if (onboardingStatus?.onboarding_completed) {
     return <>{children}</>;
   }
 
-  // Show onboarding flow for authenticated users who haven't completed it
   const steps = [
     { title: "Upload Resume", icon: Upload, completed: onboardingStatus?.resume_uploaded || false },
     { title: "Complete Profile", icon: User, completed: onboardingStatus?.profile_completed || false },
@@ -161,7 +148,6 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
               Let's get your profile set up so you can start finding amazing opportunities
             </p>
             
-            {/* Progress indicator */}
             <div className="space-y-4">
               <Progress value={progressPercentage} className="h-2" />
               <div className="flex justify-between">
@@ -205,7 +191,7 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
               <div>
                 <h3 className="text-xl font-semibold mb-4">Step 2: Complete Your Profile</h3>
                 <p className="text-gray-600 mb-6">
-                  Great! Your resume has been uploaded. Now please review and complete your profile information.
+                  Great! Your resume has been uploaded. Now please review and complete your profile information including your address, date of birth, work experience, education, and projects.
                 </p>
                 <div className="text-center">
                   <button

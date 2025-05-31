@@ -26,7 +26,6 @@ export interface OnboardingStatus {
 }
 
 class ResumeFileService {
-  // Convert file to base64
   private async fileToBase64(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -42,21 +41,17 @@ class ResumeFileService {
     });
   }
 
-  // Save uploaded resume file
   async saveResumeFile(userId: string, file: File, parsedData: ParsedResume): Promise<boolean> {
     try {
       console.log('Saving resume file for user:', userId);
       
-      // Convert file to base64
       const fileContent = await this.fileToBase64(file);
       
-      // Mark all existing resumes as not current
       await supabase
         .from('user_resume_files')
         .update({ is_current: false })
         .eq('user_id', userId);
 
-      // Insert new resume file with proper JSON casting
       const { error } = await supabase
         .from('user_resume_files')
         .insert({
@@ -65,7 +60,7 @@ class ResumeFileService {
           file_type: file.type,
           file_size: file.size,
           file_content: fileContent,
-          parsed_data: parsedData as any, // Cast to any to satisfy JSON type
+          parsed_data: parsedData as any,
           is_current: true
         });
 
@@ -74,7 +69,6 @@ class ResumeFileService {
         return false;
       }
 
-      // Update onboarding status
       await this.updateOnboardingStatus(userId, { resume_uploaded: true });
       
       console.log('Resume file saved successfully');
@@ -85,7 +79,6 @@ class ResumeFileService {
     }
   }
 
-  // Get current resume file
   async getCurrentResumeFile(userId: string): Promise<ResumeFile | null> {
     try {
       const { data, error } = await supabase
@@ -100,7 +93,6 @@ class ResumeFileService {
         return null;
       }
 
-      // Cast parsed_data back to ParsedResume type with proper type conversion
       if (data) {
         return {
           ...data,
@@ -115,7 +107,6 @@ class ResumeFileService {
     }
   }
 
-  // Get onboarding status
   async getOnboardingStatus(userId: string): Promise<OnboardingStatus | null> {
     try {
       const { data, error } = await supabase
@@ -129,7 +120,6 @@ class ResumeFileService {
         return null;
       }
 
-      // If no onboarding record exists, create one
       if (!data) {
         const { data: newData, error: insertError } = await supabase
           .from('user_onboarding')
@@ -157,7 +147,6 @@ class ResumeFileService {
     }
   }
 
-  // Update onboarding status
   async updateOnboardingStatus(userId: string, updates: Partial<Omit<OnboardingStatus, 'id' | 'user_id' | 'created_at' | 'updated_at'>>): Promise<boolean> {
     try {
       const { error } = await supabase
@@ -180,14 +169,8 @@ class ResumeFileService {
     }
   }
 
-  // Check if profile is complete
   async checkProfileCompletion(userId: string, profileData: any): Promise<boolean> {
-    const requiredFields = [
-      'name',
-      'email',
-      'phone',
-      'location'
-    ];
+    const requiredFields = ['name', 'email', 'phone', 'location'];
 
     const isComplete = requiredFields.every(field => {
       const value = profileData[field];
@@ -197,7 +180,6 @@ class ResumeFileService {
     profileData.education?.length > 0 &&
     profileData.skills?.length > 0;
 
-    // Update onboarding status if profile is complete
     if (isComplete) {
       await this.updateOnboardingStatus(userId, { 
         profile_completed: true,

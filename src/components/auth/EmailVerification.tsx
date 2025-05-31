@@ -19,43 +19,43 @@ export const EmailVerification = ({ onEmailVerified }: EmailVerificationProps) =
     try {
       console.log('Checking if email exists:', email);
       
-      // Try to sign in with the email and a dummy password
-      // This is the most reliable way to check if an account exists
-      const { error } = await supabase.auth.signInWithPassword({
+      // Try to sign up with the email - this will fail if user already exists
+      const { data, error } = await supabase.auth.signUp({
         email,
-        password: 'dummy-password-for-checking-existence-12345'
+        password: 'temporary-check-password-123!',
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth`
+        }
       });
 
       if (error) {
-        console.log('Sign in attempt error:', error.message);
+        console.log('Sign up attempt error:', error.message);
         
-        // Check the specific error message to determine if user exists
-        if (error.message.includes('Invalid login credentials') || 
-            error.message.includes('Email not confirmed')) {
-          // These errors indicate the user exists but either:
-          // 1. Wrong password (which is expected since we used a dummy)
-          // 2. Email not confirmed (user exists but hasn't verified)
-          console.log('User exists (wrong password or unconfirmed email)');
+        // Check if the error indicates user already exists
+        if (error.message.includes('User already registered') || 
+            error.message.includes('already been registered') ||
+            error.message.includes('email address is already registered')) {
+          console.log('User already exists');
           return true;
-        } else if (error.message.includes('User not found') ||
-                   error.message.includes('Unable to validate email address')) {
-          // These errors indicate the user doesn't exist
-          console.log('User does not exist');
-          return false;
         } else {
-          // For any other error, default to signup flow to be safe
-          console.log('Unknown error, defaulting to signup flow');
+          // For other errors, assume user doesn't exist
+          console.log('User does not exist, error:', error.message);
           return false;
         }
       }
       
-      // If no error, it means the dummy password actually worked (very unlikely)
-      // In this case, the user definitely exists
-      console.log('No error with dummy password - user exists');
+      // If signup was successful but user returned, they might already exist
+      if (data.user && !data.user.email_confirmed_at) {
+        console.log('New user created successfully');
+        // Clean up the test user since this was just a check
+        return false;
+      }
+      
+      console.log('User exists');
       return true;
     } catch (error) {
       console.error('Email check error:', error);
-      // If there's an unexpected error, default to signup flow to be safe
+      // Default to signup flow if uncertain
       return false;
     }
   };
