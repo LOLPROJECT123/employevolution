@@ -76,11 +76,13 @@ export const SignUpForm = ({ email, onBack, onSuccess }: SignUpFormProps) => {
     setLoading(true);
 
     try {
+      console.log('Attempting to sign up user with email:', email);
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth`,
+          emailRedirectTo: `${window.location.origin}/dashboard`,
           data: {
             full_name: fullName.trim(),
           }
@@ -89,20 +91,47 @@ export const SignUpForm = ({ email, onBack, onSuccess }: SignUpFormProps) => {
 
       if (error) {
         console.error('Sign up error:', error);
-        toast({
-          title: "Sign up failed",
-          description: error.message,
-          variant: "destructive",
-        });
+        
+        if (error.message.includes('User already registered')) {
+          toast({
+            title: "Account already exists",
+            description: "This email is already registered. Please sign in instead.",
+            variant: "destructive",
+          });
+        } else if (error.message.includes('Invalid email')) {
+          toast({
+            title: "Invalid email",
+            description: "Please enter a valid email address",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Sign up failed",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
         return;
       }
 
       if (data.user) {
-        toast({
-          title: "Account created successfully!",
-          description: "Welcome to Streamline! You can now start using the app.",
-        });
-        onSuccess();
+        console.log('Sign up successful for user:', data.user.id);
+        
+        if (data.user.email_confirmed_at) {
+          // User is immediately confirmed (no email verification required)
+          toast({
+            title: "Account created successfully!",
+            description: "Welcome to Streamline! Let's get your profile set up.",
+          });
+          onSuccess();
+        } else {
+          // Email verification required
+          toast({
+            title: "Account created!",
+            description: "Please check your email to verify your account before signing in.",
+          });
+          onSuccess();
+        }
       }
     } catch (error) {
       console.error('Unexpected sign up error:', error);
@@ -132,7 +161,7 @@ export const SignUpForm = ({ email, onBack, onSuccess }: SignUpFormProps) => {
       </Button>
 
       <div>
-        <Label htmlFor="fullName">Full Name</Label>
+        <Label htmlFor="fullName">Full Name *</Label>
         <Input
           id="fullName"
           type="text"
@@ -141,6 +170,7 @@ export const SignUpForm = ({ email, onBack, onSuccess }: SignUpFormProps) => {
           placeholder="Enter your full name"
           required
           disabled={loading}
+          autoFocus
           className="mt-1"
         />
       </div>
@@ -157,14 +187,14 @@ export const SignUpForm = ({ email, onBack, onSuccess }: SignUpFormProps) => {
       </div>
 
       <div>
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password">Password *</Label>
         <div className="relative mt-1">
           <Input
             id="password"
             type={showPassword ? "text" : "password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Create a password"
+            placeholder="Create a strong password"
             required
             disabled={loading}
             className="pr-10"
@@ -194,19 +224,19 @@ export const SignUpForm = ({ email, onBack, onSuccess }: SignUpFormProps) => {
               </li>
               <li className={`flex items-center ${passwordValidation.requirements.hasUpperCase ? 'text-green-600' : 'text-red-600'}`}>
                 <span className="mr-2">{passwordValidation.requirements.hasUpperCase ? '✓' : '✗'}</span>
-                One uppercase letter
+                One uppercase letter (A-Z)
               </li>
               <li className={`flex items-center ${passwordValidation.requirements.hasLowerCase ? 'text-green-600' : 'text-red-600'}`}>
                 <span className="mr-2">{passwordValidation.requirements.hasLowerCase ? '✓' : '✗'}</span>
-                One lowercase letter
+                One lowercase letter (a-z)
               </li>
               <li className={`flex items-center ${passwordValidation.requirements.hasNumbers ? 'text-green-600' : 'text-red-600'}`}>
                 <span className="mr-2">{passwordValidation.requirements.hasNumbers ? '✓' : '✗'}</span>
-                One number
+                One number (0-9)
               </li>
               <li className={`flex items-center ${passwordValidation.requirements.hasSpecialChar ? 'text-green-600' : 'text-red-600'}`}>
                 <span className="mr-2">{passwordValidation.requirements.hasSpecialChar ? '✓' : '✗'}</span>
-                One special character
+                One special character (!@#$%^&*)
               </li>
               <li className={`flex items-center ${passwordValidation.requirements.noSpaces ? 'text-green-600' : 'text-red-600'}`}>
                 <span className="mr-2">{passwordValidation.requirements.noSpaces ? '✓' : '✗'}</span>
@@ -218,7 +248,7 @@ export const SignUpForm = ({ email, onBack, onSuccess }: SignUpFormProps) => {
       </div>
 
       <div>
-        <Label htmlFor="confirmPassword">Confirm Password</Label>
+        <Label htmlFor="confirmPassword">Confirm Password *</Label>
         <div className="relative mt-1">
           <Input
             id="confirmPassword"
@@ -244,16 +274,23 @@ export const SignUpForm = ({ email, onBack, onSuccess }: SignUpFormProps) => {
             )}
           </Button>
         </div>
+        {confirmPassword && password !== confirmPassword && (
+          <p className="text-red-600 text-sm mt-1">Passwords do not match</p>
+        )}
       </div>
 
       <Button 
         type="submit" 
         className="w-full" 
-        disabled={loading || !passwordValidation.isValid || password !== confirmPassword}
+        disabled={loading || !passwordValidation.isValid || password !== confirmPassword || !fullName.trim()}
       >
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         Create Account
       </Button>
+
+      <div className="text-xs text-muted-foreground text-center">
+        By creating an account, you agree to our Terms of Service and Privacy Policy
+      </div>
     </form>
   );
 };

@@ -58,7 +58,7 @@ export const AuthModal = ({ isOpen, onClose, defaultMode = 'email-check' }: Auth
   const getDescription = () => {
     switch (mode) {
       case 'email-check':
-        return 'Enter your email to get started';
+        return 'Choose your preferred sign-in method';
       case 'login':
         return 'Enter your password to sign in';
       case 'signup':
@@ -77,7 +77,10 @@ export const AuthModal = ({ isOpen, onClose, defaultMode = 'email-check' }: Auth
         </DialogHeader>
         
         {mode === 'email-check' && (
-          <EmailVerification onEmailVerified={handleEmailVerified} />
+          <EmailVerification 
+            onEmailVerified={handleEmailVerified}
+            onSocialSuccess={handleSuccess}
+          />
         )}
         
         {mode === 'login' && (
