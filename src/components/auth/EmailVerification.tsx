@@ -16,29 +16,36 @@ export const EmailVerification = ({ onEmailVerified, onSocialSuccess }: EmailVer
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
+  const [showManualOptions, setShowManualOptions] = useState(false);
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  const checkEmailExists = async (email: string): Promise<boolean> => {
+  const checkEmailExists = async (email: string): Promise<{ exists: boolean; error?: string }> => {
     try {
+      console.log('Checking if email exists:', email);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('id')
         .eq('email', email)
         .maybeSingle();
 
+      console.log('Email check result:', { data, error });
+
       if (error) {
         console.error('Error checking email existence:', error);
-        return false;
+        return { exists: false, error: error.message };
       }
 
-      return !!data;
+      const exists = !!data;
+      console.log('Email exists:', exists);
+      return { exists };
     } catch (error) {
-      console.error('Error checking email existence:', error);
-      return false;
+      console.error('Unexpected error checking email existence:', error);
+      return { exists: false, error: 'Network error occurred' };
     }
   };
 
@@ -62,20 +69,41 @@ export const EmailVerification = ({ onEmailVerified, onSocialSuccess }: EmailVer
     }
 
     setLoading(true);
+    setShowManualOptions(false);
 
     try {
-      const emailExists = await checkEmailExists(email);
-      onEmailVerified(email, emailExists);
+      const result = await checkEmailExists(email);
+      
+      if (result.error) {
+        console.error('Email check failed:', result.error);
+        toast({
+          title: "Unable to verify account",
+          description: "Please choose sign in or sign up below",
+          variant: "destructive",
+        });
+        setShowManualOptions(true);
+        setLoading(false);
+        return;
+      }
+
+      console.log('Routing user based on email existence:', result.exists);
+      onEmailVerified(email, result.exists);
     } catch (error) {
       console.error('Error during email verification:', error);
       toast({
         title: "Something went wrong",
-        description: "Please try again later",
+        description: "Please choose sign in or sign up below",
         variant: "destructive",
       });
+      setShowManualOptions(true);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleManualSelection = (exists: boolean) => {
+    console.log('Manual selection:', exists ? 'Sign In' : 'Sign Up');
+    onEmailVerified(email, exists);
   };
 
   const handleSocialLogin = async (provider: 'github' | 'google' | 'linkedin_oidc' | 'azure') => {
@@ -225,8 +253,35 @@ export const EmailVerification = ({ onEmailVerified, onSocialSuccess }: EmailVer
           {loading ? "Checking account..." : "Continue"}
         </Button>
 
+        {showManualOptions && (
+          <div className="space-y-2 pt-4 border-t">
+            <p className="text-sm text-muted-foreground text-center">
+              Choose how you'd like to continue:
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => handleManualSelection(true)}
+                disabled={loading || socialLoading !== null}
+              >
+                Sign In
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => handleManualSelection(false)}
+                disabled={loading || socialLoading !== null}
+              >
+                Sign Up
+              </Button>
+            </div>
+          </div>
+        )}
+
         <div className="text-xs text-muted-foreground text-center">
-          We'll automatically detect if you have an existing account
+          {showManualOptions ? 
+            "We couldn't automatically detect your account status" :
+            "We'll automatically detect if you have an existing account"
+          }
         </div>
       </div>
     </div>
