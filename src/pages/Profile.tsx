@@ -116,7 +116,7 @@ const Profile = () => {
         portfolio_url: profile.portfolio_url,
         other_url: profile.other_url,
         job_status: profile.job_status,
-        languages: profile.languages || [],
+        languages: profile.languages || [] as any, // Cast to any to satisfy Json type
         primary_language: profile.primary_language || 'English'
       };
 
