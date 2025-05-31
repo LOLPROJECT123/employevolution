@@ -14,48 +14,14 @@ interface EmailVerificationProps {
 
 export const EmailVerification = ({ onEmailVerified, onSocialSuccess }: EmailVerificationProps) => {
   const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
 
-  const checkEmailExists = async (email: string): Promise<boolean> => {
-    try {
-      console.log('Checking if email exists:', email);
-      
-      // Try to sign in with a dummy password to check if email exists
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password: 'dummy-password-that-will-fail'
-      });
-
-      if (error) {
-        // If the error is about invalid credentials, the email exists
-        if (error.message.includes('Invalid login credentials')) {
-          console.log('Email exists - got invalid credentials error');
-          return true;
-        }
-        // If it's user not found or similar, email doesn't exist
-        if (error.message.includes('User not found') || 
-            error.message.includes('Invalid email')) {
-          console.log('Email does not exist');
-          return false;
-        }
-        // For any other error, default to new user flow to be safe
-        console.log('Unknown error, defaulting to new user:', error.message);
-        return false;
-      }
-      
-      // If no error somehow, assume user exists
-      return true;
-    } catch (error) {
-      console.error('Email check error:', error);
-      // Default to signup flow if uncertain
-      return false;
-    }
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleSignIn = () => {
     if (!email) {
       toast({
         title: "Email required",
@@ -65,8 +31,7 @@ export const EmailVerification = ({ onEmailVerified, onSocialSuccess }: EmailVer
       return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!validateEmail(email)) {
       toast({
         title: "Invalid email",
         description: "Please enter a valid email address",
@@ -75,38 +40,31 @@ export const EmailVerification = ({ onEmailVerified, onSocialSuccess }: EmailVer
       return;
     }
 
-    setLoading(true);
+    // Route to sign-in form
+    onEmailVerified(email, true);
+  };
 
-    try {
-      console.log('Checking email existence for:', email);
-      const emailExists = await checkEmailExists(email);
-      
-      console.log('Email exists result:', emailExists);
-      
-      if (emailExists) {
-        toast({
-          title: "Welcome back!",
-          description: "Please enter your password to sign in",
-        });
-        onEmailVerified(email, true);
-      } else {
-        toast({
-          title: "Create your account",
-          description: "Let's create your new account!",
-        });
-        onEmailVerified(email, false);
-      }
-    } catch (error) {
-      console.error('Email verification error:', error);
-      // If email check fails, default to signup flow to be safe
+  const handleSignUp = () => {
+    if (!email) {
       toast({
-        title: "Let's get started",
-        description: "We'll help you create your account",
+        title: "Email required",
+        description: "Please enter your email address",
+        variant: "destructive",
       });
-      onEmailVerified(email, false);
-    } finally {
-      setLoading(false);
+      return;
     }
+
+    if (!validateEmail(email)) {
+      toast({
+        title: "Invalid email",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Route to sign-up form
+    onEmailVerified(email, false);
   };
 
   const handleSocialLogin = async (provider: 'github' | 'google' | 'linkedin_oidc' | 'azure') => {
@@ -225,7 +183,7 @@ export const EmailVerification = ({ onEmailVerified, onSocialSuccess }: EmailVer
         </div>
       </div>
       
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-4">
         <div>
           <Label htmlFor="email">Email Address</Label>
           <Input
@@ -234,22 +192,35 @@ export const EmailVerification = ({ onEmailVerified, onSocialSuccess }: EmailVer
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter your email"
-            required
-            disabled={loading || socialLoading !== null}
+            disabled={socialLoading !== null}
             autoFocus
             className="mt-1"
           />
         </div>
         
-        <Button type="submit" className="w-full" disabled={loading || socialLoading !== null}>
-          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Continue with Email
-        </Button>
+        <div className="grid grid-cols-2 gap-3">
+          <Button 
+            onClick={handleSignIn} 
+            variant="outline" 
+            className="w-full" 
+            disabled={!email || socialLoading !== null}
+          >
+            Sign In
+          </Button>
+          
+          <Button 
+            onClick={handleSignUp} 
+            className="w-full" 
+            disabled={!email || socialLoading !== null}
+          >
+            Sign Up
+          </Button>
+        </div>
 
         <div className="text-xs text-muted-foreground text-center">
-          We'll check if you have an account and guide you to the right place
+          Choose "Sign In" if you already have an account, or "Sign Up" to create a new one
         </div>
-      </form>
+      </div>
     </div>
   );
 };
