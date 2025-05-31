@@ -75,9 +75,18 @@ const Profile = () => {
       }
 
       if (data) {
+        // Properly handle the languages field conversion from Json to Language[]
+        const languagesData = data.languages as any;
+        const languages: Language[] = Array.isArray(languagesData) 
+          ? languagesData.map((lang: any) => ({
+              language: lang.language || '',
+              proficiency: lang.proficiency || 'Conversational'
+            }))
+          : [];
+
         setProfile({
           ...data,
-          languages: Array.isArray(data.languages) ? data.languages : [],
+          languages,
           primary_language: data.primary_language || 'English'
         });
       }

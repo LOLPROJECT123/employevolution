@@ -50,7 +50,16 @@ class CompanyInsightsService {
         return null;
       }
 
-      return data;
+      if (!data) return null;
+
+      // Convert the Supabase Json types to proper TypeScript types
+      return {
+        ...data,
+        glassdoor_reviews: Array.isArray(data.glassdoor_reviews) ? data.glassdoor_reviews : [],
+        salary_data: typeof data.salary_data === 'object' && data.salary_data !== null ? data.salary_data : {},
+        culture_insights: typeof data.culture_insights === 'object' && data.culture_insights !== null ? data.culture_insights : {},
+        interview_experiences: Array.isArray(data.interview_experiences) ? data.interview_experiences : []
+      } as CompanyInsight;
     } catch (error) {
       console.error('Error in getCompanyInsights:', error);
       return null;
@@ -92,7 +101,14 @@ class CompanyInsightsService {
         return null;
       }
 
-      return data;
+      // Convert the returned data to proper types
+      return {
+        ...data,
+        glassdoor_reviews: Array.isArray(data.glassdoor_reviews) ? data.glassdoor_reviews : [],
+        salary_data: typeof data.salary_data === 'object' && data.salary_data !== null ? data.salary_data : {},
+        culture_insights: typeof data.culture_insights === 'object' && data.culture_insights !== null ? data.culture_insights : {},
+        interview_experiences: Array.isArray(data.interview_experiences) ? data.interview_experiences : []
+      } as CompanyInsight;
     } catch (error) {
       console.error('Error in fetchAndStoreCompanyData:', error);
       return null;
@@ -214,11 +230,101 @@ class CompanyInsightsService {
         return [];
       }
 
-      return data || [];
+      // Convert all items to proper types
+      return (data || []).map(item => ({
+        ...item,
+        glassdoor_reviews: Array.isArray(item.glassdoor_reviews) ? item.glassdoor_reviews : [],
+        salary_data: typeof item.salary_data === 'object' && item.salary_data !== null ? item.salary_data : {},
+        culture_insights: typeof item.culture_insights === 'object' && item.culture_insights !== null ? item.culture_insights : {},
+        interview_experiences: Array.isArray(item.interview_experiences) ? item.interview_experiences : []
+      })) as CompanyInsight[];
     } catch (error) {
       console.error('Error in getTopRatedCompanies:', error);
       return [];
     }
+  }
+
+  private generateMockCompanyData(companyName: string): Omit<CompanyInsight, 'id' | 'created_at' | 'last_updated'> {
+    // Generate realistic mock data based on company name
+    const rating = 3.5 + Math.random() * 1.5; // 3.5 to 5.0
+    
+    return {
+      company_name: companyName,
+      glassdoor_rating: Number(rating.toFixed(1)),
+      glassdoor_reviews: [
+        {
+          rating: 4,
+          title: "Great place to work",
+          pros: "Good work-life balance, competitive salary, great benefits",
+          cons: "Limited growth opportunities in some departments",
+          jobTitle: "Software Engineer",
+          date: "2024-01-15"
+        },
+        {
+          rating: 5,
+          title: "Amazing company culture",
+          pros: "Innovative projects, supportive management, flexible schedule",
+          cons: "Fast-paced environment might not suit everyone",
+          jobTitle: "Product Manager",
+          date: "2024-01-10"
+        },
+        {
+          rating: 3,
+          title: "Good for entry level",
+          pros: "Learning opportunities, mentorship programs",
+          cons: "Below market compensation, limited remote work",
+          jobTitle: "Junior Developer",
+          date: "2024-01-05"
+        }
+      ],
+      salary_data: {
+        averageSalary: 85000 + Math.random() * 40000,
+        salaryRange: { min: 60000, max: 150000 },
+        salaryByRole: {
+          "Software Engineer": { min: 70000, max: 120000 },
+          "Senior Software Engineer": { min: 90000, max: 150000 },
+          "Product Manager": { min: 80000, max: 140000 },
+          "Data Scientist": { min: 75000, max: 130000 }
+        }
+      },
+      culture_insights: {
+        workLifeBalance: 3.5 + Math.random() * 1.5,
+        cultureValues: 3.8 + Math.random() * 1.2,
+        careerOpportunities: 3.2 + Math.random() * 1.8,
+        compensation: 3.6 + Math.random() * 1.4,
+        management: 3.4 + Math.random() * 1.6
+      },
+      interview_experiences: [
+        {
+          difficulty: 'medium' as const,
+          experience: 'positive' as const,
+          process: "1. Phone screening 2. Technical interview 3. System design 4. Cultural fit",
+          questions: [
+            "Tell me about a challenging project you worked on",
+            "How would you design a URL shortener?",
+            "Why do you want to work at this company?"
+          ],
+          tips: [
+            "Be prepared for coding questions in your preferred language",
+            "Research the company's products and values",
+            "Ask thoughtful questions about the team and role"
+          ]
+        },
+        {
+          difficulty: 'hard' as const,
+          experience: 'neutral' as const,
+          process: "Multiple rounds including peer interviews",
+          questions: [
+            "Design a distributed cache system",
+            "Explain your approach to handling technical debt"
+          ],
+          tips: [
+            "Practice system design problems",
+            "Be ready to discuss trade-offs in your solutions"
+          ]
+        }
+      ]
+    };
   }
 }
 

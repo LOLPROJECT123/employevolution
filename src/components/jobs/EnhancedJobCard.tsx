@@ -24,18 +24,28 @@ import { Job } from '@/types/job';
 
 interface EnhancedJobCardProps {
   job: Job;
-  userSkills: string[];
+  userSkills?: string[];
   onApply: (job: Job) => void;
   onSave: (job: Job) => void;
-  onViewDetails: (job: Job) => void;
+  onSelect?: (job: Job) => void;
+  onViewDetails?: (job: Job) => void;
+  isSelected?: boolean;
+  isSaved?: boolean;
+  isApplied?: boolean;
+  variant?: 'list' | 'card';
 }
 
 const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
   job,
-  userSkills,
+  userSkills = [],
   onApply,
   onSave,
-  onViewDetails
+  onSelect,
+  onViewDetails,
+  isSelected = false,
+  isSaved = false,
+  isApplied = false,
+  variant = 'card'
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -53,7 +63,7 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
 
   const skillMatchPercentage = job.skills?.length 
     ? Math.round((matchingSkills.length / job.skills.length) * 100)
-    : 0;
+    : job.matchPercentage || 75; // Use job's match percentage or default
 
   const getMatchColor = (percentage: number) => {
     if (percentage >= 80) return 'text-green-600 bg-green-50';
@@ -98,13 +108,24 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
     return `${diffInWeeks}w ago`;
   };
 
+  const handleCardClick = () => {
+    if (onSelect) {
+      onSelect(job);
+    } else if (onViewDetails) {
+      onViewDetails(job);
+    }
+  };
+
+  const cardClassName = `hover:shadow-lg transition-shadow duration-200 cursor-pointer ${
+    isSelected ? 'ring-2 ring-blue-500 bg-blue-50/50' : ''
+  } ${variant === 'list' ? 'border-l-4 border-l-transparent hover:border-l-blue-500' : ''}`;
+
   return (
-    <Card className="hover:shadow-lg transition-shadow duration-200">
+    <Card className={cardClassName} onClick={handleCardClick}>
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <CardTitle className="text-xl mb-2 hover:text-blue-600 cursor-pointer" 
-                       onClick={() => onViewDetails(job)}>
+            <CardTitle className="text-xl mb-2 hover:text-blue-600 cursor-pointer">
               {job.title}
             </CardTitle>
             <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
@@ -139,42 +160,46 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
           </span>
           <Badge variant="outline">{job.type}</Badge>
           <Badge variant="outline">{job.level}</Badge>
+          {isSaved && <Badge className="bg-red-100 text-red-800">Saved</Badge>}
+          {isApplied && <Badge className="bg-green-100 text-green-800">Applied</Badge>}
         </div>
       </CardHeader>
 
       <CardContent className="space-y-4">
         {/* Skills Overview */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="font-medium">Skill Match</span>
-            <span className="text-sm text-muted-foreground">
-              {matchingSkills.length} of {job.skills?.length || 0} skills
-            </span>
+        {job.skills && job.skills.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="font-medium">Skill Match</span>
+              <span className="text-sm text-muted-foreground">
+                {matchingSkills.length} of {job.skills?.length || 0} skills
+              </span>
+            </div>
+            
+            <Progress value={skillMatchPercentage} className="h-2" />
+            
+            {/* Quick Skills Preview */}
+            <div className="flex flex-wrap gap-2">
+              {matchingSkills.slice(0, 3).map((skill, index) => (
+                <Badge key={index} className="bg-green-100 text-green-800">
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  {skill}
+                </Badge>
+              ))}
+              {missingSkills.slice(0, 2).map((skill, index) => (
+                <Badge key={index} variant="outline" className="text-orange-600">
+                  <AlertCircle className="h-3 w-3 mr-1" />
+                  {skill}
+                </Badge>
+              ))}
+              {(matchingSkills.length + missingSkills.length > 5) && (
+                <Badge variant="secondary">
+                  +{(job.skills?.length || 0) - 5} more
+                </Badge>
+              )}
+            </div>
           </div>
-          
-          <Progress value={skillMatchPercentage} className="h-2" />
-          
-          {/* Quick Skills Preview */}
-          <div className="flex flex-wrap gap-2">
-            {matchingSkills.slice(0, 3).map((skill, index) => (
-              <Badge key={index} className="bg-green-100 text-green-800">
-                <CheckCircle className="h-3 w-3 mr-1" />
-                {skill}
-              </Badge>
-            ))}
-            {missingSkills.slice(0, 2).map((skill, index) => (
-              <Badge key={index} variant="outline" className="text-orange-600">
-                <AlertCircle className="h-3 w-3 mr-1" />
-                {skill}
-              </Badge>
-            ))}
-            {(matchingSkills.length + missingSkills.length > 5) && (
-              <Badge variant="secondary">
-                +{(job.skills?.length || 0) - 5} more
-              </Badge>
-            )}
-          </div>
-        </div>
+        )}
 
         {/* Expandable Details */}
         <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
@@ -189,38 +214,40 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
           
           <CollapsibleContent className="space-y-4 mt-4">
             {/* All Required Skills */}
-            <div>
-              <h4 className="font-medium mb-2">Required Skills Analysis</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium text-green-700 mb-2">
-                    ✓ Skills You Have ({matchingSkills.length})
-                  </p>
-                  <div className="space-y-1">
-                    {matchingSkills.map((skill, index) => (
-                      <div key={index} className="flex items-center gap-2 text-sm">
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                        <span>{skill}</span>
-                      </div>
-                    ))}
+            {job.skills && job.skills.length > 0 && (
+              <div>
+                <h4 className="font-medium mb-2">Required Skills Analysis</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-green-700 mb-2">
+                      ✓ Skills You Have ({matchingSkills.length})
+                    </p>
+                    <div className="space-y-1">
+                      {matchingSkills.map((skill, index) => (
+                        <div key={index} className="flex items-center gap-2 text-sm">
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <span>{skill}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-                
-                <div>
-                  <p className="text-sm font-medium text-orange-700 mb-2">
-                    ⚠ Skills to Develop ({missingSkills.length})
-                  </p>
-                  <div className="space-y-1">
-                    {missingSkills.map((skill, index) => (
-                      <div key={index} className="flex items-center gap-2 text-sm">
-                        <XCircle className="h-4 w-4 text-orange-600" />
-                        <span>{skill}</span>
-                      </div>
-                    ))}
+                  
+                  <div>
+                    <p className="text-sm font-medium text-orange-700 mb-2">
+                      ⚠ Skills to Develop ({missingSkills.length})
+                    </p>
+                    <div className="space-y-1">
+                      {missingSkills.map((skill, index) => (
+                        <div key={index} className="flex items-center gap-2 text-sm">
+                          <XCircle className="h-4 w-4 text-orange-600" />
+                          <span>{skill}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Learning Recommendations */}
             {missingSkills.length > 0 && (
@@ -272,18 +299,44 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
         </Collapsible>
 
         {/* Action Buttons */}
-        <div className="flex gap-2 pt-4">
-          <Button onClick={() => onApply(job)} className="flex-1">
-            Apply Now
+        <div className="flex gap-2 pt-4" onClick={(e) => e.stopPropagation()}>
+          <Button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onApply(job);
+            }} 
+            className="flex-1"
+            disabled={isApplied}
+          >
+            {isApplied ? 'Applied' : 'Apply Now'}
           </Button>
-          <Button onClick={() => onSave(job)} variant="outline">
-            <Heart className="h-4 w-4" />
+          <Button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onSave(job);
+            }} 
+            variant="outline"
+            className={isSaved ? 'bg-red-50 text-red-600' : ''}
+          >
+            <Heart className={`h-4 w-4 ${isSaved ? 'fill-current' : ''}`} />
           </Button>
-          <Button onClick={() => onViewDetails(job)} variant="outline">
-            <Eye className="h-4 w-4" />
-          </Button>
+          {onViewDetails && (
+            <Button 
+              onClick={(e) => {
+                e.stopPropagation();
+                onViewDetails(job);
+              }} 
+              variant="outline"
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+          )}
           {job.applyUrl && (
-            <Button asChild variant="outline">
+            <Button 
+              asChild 
+              variant="outline"
+              onClick={(e) => e.stopPropagation()}
+            >
               <a href={job.applyUrl} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="h-4 w-4" />
               </a>
