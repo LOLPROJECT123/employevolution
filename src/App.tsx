@@ -16,6 +16,7 @@ import Networking from "./pages/Networking";
 import NetworkingTools from "./pages/NetworkingTools";
 import Referrals from "./pages/Referrals";
 import SalaryNegotiations from "./pages/SalaryNegotiations";
+import JobAlerts from "./pages/JobAlerts";
 import Auth from "./pages/Auth";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
 
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/networking-tools" element={<NetworkingTools />} />
             <Route path="/referrals" element={<Referrals />} />
             <Route path="/salary-negotiations" element={<SalaryNegotiations />} />
+            <Route path="/job-alerts" element={<JobAlerts />} />
             <Route path="/auth" element={<Auth />} />
           </Routes>
           <PWAInstallPrompt />

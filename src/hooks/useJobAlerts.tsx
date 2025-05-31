@@ -37,7 +37,19 @@ export const useJobAlerts = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setAlerts(data || []);
+      
+      // Type assertion to match our interface
+      const typedAlerts: JobAlert[] = (data || []).map(alert => ({
+        id: alert.id,
+        name: alert.name,
+        criteria: alert.criteria as JobAlert['criteria'],
+        frequency: alert.frequency as 'daily' | 'weekly' | 'instant',
+        is_active: alert.is_active,
+        last_triggered: alert.last_triggered || undefined,
+        created_at: alert.created_at
+      }));
+
+      setAlerts(typedAlerts);
     } catch (error) {
       console.error('Error fetching job alerts:', error);
     } finally {
@@ -63,7 +75,18 @@ export const useJobAlerts = () => {
 
       if (error) throw error;
 
-      setAlerts(prev => [data, ...prev]);
+      // Type assertion for the new alert
+      const newAlert: JobAlert = {
+        id: data.id,
+        name: data.name,
+        criteria: data.criteria as JobAlert['criteria'],
+        frequency: data.frequency as 'daily' | 'weekly' | 'instant',
+        is_active: data.is_active,
+        last_triggered: data.last_triggered || undefined,
+        created_at: data.created_at
+      };
+
+      setAlerts(prev => [newAlert, ...prev]);
       toast({
         title: "Job Alert Created",
         description: `"${alertData.name}" alert has been set up successfully.`,
@@ -94,8 +117,19 @@ export const useJobAlerts = () => {
 
       if (error) throw error;
 
+      // Type assertion for the updated alert
+      const updatedAlert: JobAlert = {
+        id: data.id,
+        name: data.name,
+        criteria: data.criteria as JobAlert['criteria'],
+        frequency: data.frequency as 'daily' | 'weekly' | 'instant',
+        is_active: data.is_active,
+        last_triggered: data.last_triggered || undefined,
+        created_at: data.created_at
+      };
+
       setAlerts(prev => prev.map(alert => 
-        alert.id === id ? { ...alert, ...data } : alert
+        alert.id === id ? updatedAlert : alert
       ));
       
       toast({

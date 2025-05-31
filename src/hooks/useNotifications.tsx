@@ -32,8 +32,19 @@ export const useNotifications = () => {
 
       if (error) throw error;
 
-      setNotifications(data || []);
-      setUnreadCount((data || []).filter(n => !n.is_read).length);
+      // Type assertion to match our interface
+      const typedNotifications = (data || []).map(notification => ({
+        id: notification.id,
+        title: notification.title,
+        message: notification.message,
+        type: notification.type as 'info' | 'success' | 'warning' | 'error',
+        is_read: notification.is_read,
+        action_url: notification.action_url || undefined,
+        created_at: notification.created_at
+      }));
+
+      setNotifications(typedNotifications);
+      setUnreadCount(typedNotifications.filter(n => !n.is_read).length);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     } finally {
@@ -104,7 +115,18 @@ export const useNotifications = () => {
 
       if (error) throw error;
 
-      setNotifications(prev => [data, ...prev]);
+      // Type assertion for the new notification
+      const newNotification: Notification = {
+        id: data.id,
+        title: data.title,
+        message: data.message,
+        type: data.type as 'info' | 'success' | 'warning' | 'error',
+        is_read: data.is_read,
+        action_url: data.action_url || undefined,
+        created_at: data.created_at
+      };
+
+      setNotifications(prev => [newNotification, ...prev]);
       setUnreadCount(prev => prev + 1);
     } catch (error) {
       console.error('Error creating notification:', error);
@@ -128,7 +150,15 @@ export const useNotifications = () => {
           filter: `user_id=eq.${user.id}`
         },
         (payload) => {
-          const newNotification = payload.new as Notification;
+          const newNotification: Notification = {
+            id: payload.new.id as string,
+            title: payload.new.title as string,
+            message: payload.new.message as string,
+            type: payload.new.type as 'info' | 'success' | 'warning' | 'error',
+            is_read: payload.new.is_read as boolean,
+            action_url: payload.new.action_url as string || undefined,
+            created_at: payload.new.created_at as string
+          };
           setNotifications(prev => [newNotification, ...prev]);
           setUnreadCount(prev => prev + 1);
         }

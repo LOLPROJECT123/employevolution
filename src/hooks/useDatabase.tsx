@@ -50,8 +50,8 @@ export const useDatabase = () => {
     }
   };
 
-  // Generic database operations
-  const saveData = async (table: string, data: any) => {
+  // Specific database operations for common tables
+  const saveUserProfile = async (data: any) => {
     if (!user) {
       toast({
         title: "Authentication required",
@@ -64,21 +64,21 @@ export const useDatabase = () => {
     setLoading(true);
     try {
       const { error } = await supabase
-        .from(table)
+        .from('user_profiles')
         .upsert({ ...data, user_id: user.id });
 
       if (error) throw error;
       
       toast({
-        title: "Data saved",
-        description: "Your information has been saved successfully.",
+        title: "Profile saved",
+        description: "Your profile has been saved successfully.",
       });
       return true;
     } catch (error) {
-      console.error(`Error saving to ${table}:`, error);
+      console.error('Error saving profile:', error);
       toast({
         title: "Save failed",
-        description: "There was an error saving your data.",
+        description: "There was an error saving your profile.",
         variant: "destructive",
       });
       return false;
@@ -87,61 +87,84 @@ export const useDatabase = () => {
     }
   };
 
-  const fetchData = async (table: string, filters?: Record<string, any>) => {
+  const saveJobApplication = async (data: any) => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to save data.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('job_applications')
+        .upsert({ ...data, user_id: user.id });
+
+      if (error) throw error;
+      
+      toast({
+        title: "Application saved",
+        description: "Your job application has been saved successfully.",
+      });
+      return true;
+    } catch (error) {
+      console.error('Error saving application:', error);
+      toast({
+        title: "Save failed",
+        description: "There was an error saving your application.",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUserProfile = async () => {
+    if (!user) return null;
+
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      return null;
+    }
+  };
+
+  const fetchJobApplications = async () => {
     if (!user) return [];
 
     try {
-      let query = supabase.from(table).select('*').eq('user_id', user.id);
-      
-      if (filters) {
-        Object.entries(filters).forEach(([key, value]) => {
-          query = query.eq(key, value);
-        });
-      }
-
-      const { data, error } = await query.order('created_at', { ascending: false });
+      const { data, error } = await supabase
+        .from('job_applications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
       
       if (error) throw error;
       return data || [];
     } catch (error) {
-      console.error(`Error fetching from ${table}:`, error);
+      console.error('Error fetching applications:', error);
       return [];
-    }
-  };
-
-  const deleteData = async (table: string, id: string) => {
-    if (!user) return false;
-
-    try {
-      const { error } = await supabase
-        .from(table)
-        .delete()
-        .eq('id', id)
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-      
-      toast({
-        title: "Deleted",
-        description: "Item has been deleted successfully.",
-      });
-      return true;
-    } catch (error) {
-      console.error(`Error deleting from ${table}:`, error);
-      toast({
-        title: "Delete failed",
-        description: "There was an error deleting the item.",
-        variant: "destructive",
-      });
-      return false;
     }
   };
 
   return {
     loading,
-    saveData,
-    fetchData,
-    deleteData,
-    ensureUserProfile
+    ensureUserProfile,
+    saveUserProfile,
+    saveJobApplication,
+    fetchUserProfile,
+    fetchJobApplications
   };
 };
