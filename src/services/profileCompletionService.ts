@@ -30,7 +30,14 @@ class ProfileCompletionService {
       return null;
     }
 
-    return data;
+    if (!data) return null;
+
+    return {
+      ...data,
+      missing_fields: Array.isArray(data.missing_fields) 
+        ? data.missing_fields as string[]
+        : []
+    };
   }
 
   async updateProfileCompletion(userId: string, completionData: Partial<ProfileCompletionData>): Promise<boolean> {

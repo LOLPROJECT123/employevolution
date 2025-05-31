@@ -30,7 +30,7 @@ class ResumeVersionService {
     return data || [];
   }
 
-  async createResumeVersion(userId: string, resumeData: Partial<ResumeVersion>): Promise<ResumeVersion | null> {
+  async createResumeVersion(userId: string, resumeData: { name: string; file_path?: string; file_content?: string; parsed_data?: any }): Promise<ResumeVersion | null> {
     const existingVersions = await this.getResumeVersions(userId);
     const nextVersionNumber = Math.max(...existingVersions.map(v => v.version_number), 0) + 1;
 
@@ -38,8 +38,12 @@ class ResumeVersionService {
       .from('resume_versions')
       .insert({
         user_id: userId,
+        name: resumeData.name,
+        file_path: resumeData.file_path,
+        file_content: resumeData.file_content,
+        parsed_data: resumeData.parsed_data,
         version_number: nextVersionNumber,
-        ...resumeData
+        is_active: false
       })
       .select()
       .single();

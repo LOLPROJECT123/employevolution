@@ -1,44 +1,77 @@
 
-import React from 'react';
-import { Job } from '@/types/job';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   MapPin, 
   DollarSign, 
   Clock, 
-  Users, 
-  Star,
-  Building,
-  Briefcase,
+  Building, 
+  ChevronDown, 
+  ChevronUp, 
+  CheckCircle, 
+  XCircle, 
+  AlertCircle,
+  TrendingUp,
+  Eye,
   Heart,
   ExternalLink
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Job } from '@/types/job';
 
 interface EnhancedJobCardProps {
   job: Job;
+  userSkills: string[];
   onApply: (job: Job) => void;
   onSave: (job: Job) => void;
-  onSelect: (job: Job) => void;
-  isSelected?: boolean;
-  isSaved?: boolean;
-  isApplied?: boolean;
-  variant?: 'list' | 'grid';
+  onViewDetails: (job: Job) => void;
 }
 
-export const EnhancedJobCard = ({
+const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
   job,
+  userSkills,
   onApply,
   onSave,
-  onSelect,
-  isSelected = false,
-  isSaved = false,
-  isApplied = false,
-  variant = 'list'
-}: EnhancedJobCardProps) => {
+  onViewDetails
+}) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  // Calculate skill matches
+  const normalizedUserSkills = userSkills.map(skill => skill.toLowerCase());
+  const normalizedJobSkills = job.skills?.map(skill => skill.toLowerCase()) || [];
+  
+  const matchingSkills = job.skills?.filter(skill => 
+    normalizedUserSkills.includes(skill.toLowerCase())
+  ) || [];
+  
+  const missingSkills = job.skills?.filter(skill => 
+    !normalizedUserSkills.includes(skill.toLowerCase())
+  ) || [];
+
+  const skillMatchPercentage = job.skills?.length 
+    ? Math.round((matchingSkills.length / job.skills.length) * 100)
+    : 0;
+
+  const getMatchColor = (percentage: number) => {
+    if (percentage >= 80) return 'text-green-600 bg-green-50';
+    if (percentage >= 60) return 'text-blue-600 bg-blue-50';
+    if (percentage >= 40) return 'text-yellow-600 bg-yellow-50';
+    return 'text-red-600 bg-red-50';
+  };
+
+  const getMatchLabel = (percentage: number) => {
+    if (percentage >= 80) return 'Excellent Match';
+    if (percentage >= 60) return 'Good Match';
+    if (percentage >= 40) return 'Fair Match';
+    return 'Skills Gap';
+  };
+
   const formatSalary = (salary: Job['salary']) => {
+    if (!salary || salary.min === 0) return 'Not specified';
+    
     const formatter = new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
@@ -58,190 +91,208 @@ export const EnhancedJobCard = ({
     const now = new Date();
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
     
-    if (diffInHours < 24) {
-      return `${diffInHours}h ago`;
-    }
-    
+    if (diffInHours < 24) return `${diffInHours}h ago`;
     const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays < 7) {
-      return `${diffInDays}d ago`;
-    }
-    
+    if (diffInDays < 7) return `${diffInDays}d ago`;
     const diffInWeeks = Math.floor(diffInDays / 7);
     return `${diffInWeeks}w ago`;
   };
 
-  const getMatchColor = (percentage: number) => {
-    if (percentage >= 90) return 'text-green-600 bg-green-50';
-    if (percentage >= 75) return 'text-blue-600 bg-blue-50';
-    if (percentage >= 60) return 'text-yellow-600 bg-yellow-50';
-    return 'text-gray-600 bg-gray-50';
-  };
-
   return (
-    <Card 
-      className={cn(
-        "cursor-pointer transition-all duration-200 hover:shadow-md border",
-        isSelected && "ring-2 ring-blue-500 border-blue-500",
-        !job.applicationDetails?.isAvailable && "opacity-60",
-        variant === 'grid' ? "h-full" : ""
-      )}
-      onClick={() => onSelect(job)}
-    >
-      <CardHeader className="pb-3">
-        <div className="flex justify-between items-start">
-          <div className="flex items-start space-x-3 flex-1">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-semibold">
-              {job.company.substring(0, 2).toUpperCase()}
-            </div>
-            
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-lg leading-tight mb-1 truncate">
-                {job.title}
-              </h3>
-              <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
-                <Building className="w-4 h-4" />
-                <span className="font-medium">{job.company}</span>
-                {job.companySize && (
-                  <>
-                    <span>•</span>
-                    <span className="capitalize">{job.companySize}</span>
-                  </>
-                )}
-              </div>
-              
-              <div className="flex items-center space-x-4 text-sm text-gray-500">
-                <div className="flex items-center space-x-1">
-                  <MapPin className="w-4 h-4" />
-                  <span>{job.location}</span>
-                </div>
-                
-                <div className="flex items-center space-x-1">
-                  <DollarSign className="w-4 h-4" />
-                  <span>{formatSalary(job.salary)}</span>
-                </div>
-                
-                <div className="flex items-center space-x-1">
-                  <Clock className="w-4 h-4" />
-                  <span>{getTimeAgo(job.postedAt)}</span>
-                </div>
-              </div>
+    <Card className="hover:shadow-lg transition-shadow duration-200">
+      <CardHeader>
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <CardTitle className="text-xl mb-2 hover:text-blue-600 cursor-pointer" 
+                       onClick={() => onViewDetails(job)}>
+              {job.title}
+            </CardTitle>
+            <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
+              <span className="flex items-center gap-1">
+                <Building className="h-4 w-4" />
+                {job.company}
+              </span>
+              <span className="flex items-center gap-1">
+                <MapPin className="h-4 w-4" />
+                {job.location}
+                {job.remote && <Badge variant="secondary" className="ml-1">Remote</Badge>}
+              </span>
+              <span className="flex items-center gap-1">
+                <Clock className="h-4 w-4" />
+                {getTimeAgo(job.postedAt)}
+              </span>
             </div>
           </div>
           
-          <div className="flex flex-col items-end space-y-2">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onSave(job);
-              }}
-              className={cn(
-                "p-2 rounded-full transition-colors",
-                isSaved 
-                  ? "text-red-500 bg-red-50 hover:bg-red-100" 
-                  : "text-gray-400 hover:text-red-500 hover:bg-red-50"
-              )}
-            >
-              <Heart className={cn("w-5 h-5", isSaved && "fill-current")} />
-            </button>
-            
-            {job.matchPercentage && (
-              <Badge className={cn("text-xs font-medium", getMatchColor(job.matchPercentage))}>
-                {job.matchPercentage}% match
+          {/* Match Score */}
+          <div className={`px-3 py-2 rounded-lg text-center ${getMatchColor(skillMatchPercentage)}`}>
+            <div className="text-2xl font-bold">{skillMatchPercentage}%</div>
+            <div className="text-xs font-medium">{getMatchLabel(skillMatchPercentage)}</div>
+          </div>
+        </div>
+
+        {/* Salary and Job Type */}
+        <div className="flex items-center gap-4 text-sm">
+          <span className="flex items-center gap-1">
+            <DollarSign className="h-4 w-4" />
+            {formatSalary(job.salary)}
+          </span>
+          <Badge variant="outline">{job.type}</Badge>
+          <Badge variant="outline">{job.level}</Badge>
+        </div>
+      </CardHeader>
+
+      <CardContent className="space-y-4">
+        {/* Skills Overview */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="font-medium">Skill Match</span>
+            <span className="text-sm text-muted-foreground">
+              {matchingSkills.length} of {job.skills?.length || 0} skills
+            </span>
+          </div>
+          
+          <Progress value={skillMatchPercentage} className="h-2" />
+          
+          {/* Quick Skills Preview */}
+          <div className="flex flex-wrap gap-2">
+            {matchingSkills.slice(0, 3).map((skill, index) => (
+              <Badge key={index} className="bg-green-100 text-green-800">
+                <CheckCircle className="h-3 w-3 mr-1" />
+                {skill}
+              </Badge>
+            ))}
+            {missingSkills.slice(0, 2).map((skill, index) => (
+              <Badge key={index} variant="outline" className="text-orange-600">
+                <AlertCircle className="h-3 w-3 mr-1" />
+                {skill}
+              </Badge>
+            ))}
+            {(matchingSkills.length + missingSkills.length > 5) && (
+              <Badge variant="secondary">
+                +{(job.skills?.length || 0) - 5} more
               </Badge>
             )}
           </div>
         </div>
-      </CardHeader>
-      
-      <CardContent className="pt-0">
-        <div className="space-y-3">
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="outline" className="text-xs">
-              <Briefcase className="w-3 h-3 mr-1" />
-              {job.type}
-            </Badge>
-            
-            <Badge variant="outline" className="text-xs">
-              {job.level}
-            </Badge>
-            
-            {job.remote && (
-              <Badge variant="outline" className="text-xs text-green-600 border-green-200">
-                Remote
-              </Badge>
-            )}
-            
-            {job.workModel && job.workModel !== 'onsite' && (
-              <Badge variant="outline" className="text-xs capitalize">
-                {job.workModel}
-              </Badge>
-            )}
-          </div>
+
+        {/* Expandable Details */}
+        <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" className="w-full justify-between p-0 h-auto">
+              <span className="font-medium">
+                {isExpanded ? 'Hide Details' : 'View Detailed Analysis'}
+              </span>
+              {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </Button>
+          </CollapsibleTrigger>
           
-          <p className="text-sm text-gray-600 line-clamp-2">
-            {job.description}
-          </p>
-          
-          <div className="flex flex-wrap gap-1">
-            {job.skills.slice(0, 4).map((skill, index) => (
-              <Badge key={index} variant="secondary" className="text-xs">
-                {skill}
-              </Badge>
-            ))}
-            {job.skills.length > 4 && (
-              <Badge variant="secondary" className="text-xs">
-                +{job.skills.length - 4} more
-              </Badge>
-            )}
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4 text-xs text-gray-500">
-              {job.applicationDetails?.applicantCount && (
-                <div className="flex items-center space-x-1">
-                  <Users className="w-4 h-4" />
-                  <span>{job.applicationDetails.applicantCount} applicants</span>
+          <CollapsibleContent className="space-y-4 mt-4">
+            {/* All Required Skills */}
+            <div>
+              <h4 className="font-medium mb-2">Required Skills Analysis</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm font-medium text-green-700 mb-2">
+                    ✓ Skills You Have ({matchingSkills.length})
+                  </p>
+                  <div className="space-y-1">
+                    {matchingSkills.map((skill, index) => (
+                      <div key={index} className="flex items-center gap-2 text-sm">
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                        <span>{skill}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              )}
-              
-              <div className="flex items-center space-x-1">
-                <Star className="w-4 h-4 text-yellow-400" />
-                <span>{job.source}</span>
+                
+                <div>
+                  <p className="text-sm font-medium text-orange-700 mb-2">
+                    ⚠ Skills to Develop ({missingSkills.length})
+                  </p>
+                  <div className="space-y-1">
+                    {missingSkills.map((skill, index) => (
+                      <div key={index} className="flex items-center gap-2 text-sm">
+                        <XCircle className="h-4 w-4 text-orange-600" />
+                        <span>{skill}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
-            
-            <div className="flex space-x-2">
-              {job.applyUrl && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    window.open(job.applyUrl, '_blank');
-                  }}
-                  className="text-xs"
-                >
-                  <ExternalLink className="w-3 h-3 mr-1" />
-                  View
-                </Button>
-              )}
-              
-              <Button
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onApply(job);
-                }}
-                disabled={isApplied || !job.applicationDetails?.isAvailable}
-                className="text-xs"
-              >
-                {isApplied ? 'Applied' : 'Apply'}
-              </Button>
+
+            {/* Learning Recommendations */}
+            {missingSkills.length > 0 && (
+              <div className="bg-blue-50 p-3 rounded-lg">
+                <h4 className="font-medium text-blue-800 mb-2">
+                  <TrendingUp className="h-4 w-4 inline mr-1" />
+                  Skill Development Recommendations
+                </h4>
+                <ul className="text-sm text-blue-700 space-y-1">
+                  {missingSkills.slice(0, 3).map((skill, index) => (
+                    <li key={index}>
+                      • Consider taking an online course in {skill}
+                    </li>
+                  ))}
+                  {missingSkills.length > 3 && (
+                    <li>• Focus on the most critical missing skills first</li>
+                  )}
+                </ul>
+              </div>
+            )}
+
+            {/* Job Description Preview */}
+            <div>
+              <h4 className="font-medium mb-2">Job Description</h4>
+              <p className="text-sm text-muted-foreground line-clamp-3">
+                {job.description}
+              </p>
             </div>
-          </div>
+
+            {/* Additional Info */}
+            {job.benefits && job.benefits.length > 0 && (
+              <div>
+                <h4 className="font-medium mb-2">Benefits</h4>
+                <div className="flex flex-wrap gap-2">
+                  {job.benefits.slice(0, 4).map((benefit, index) => (
+                    <Badge key={index} variant="secondary" className="text-xs">
+                      {benefit}
+                    </Badge>
+                  ))}
+                  {job.benefits.length > 4 && (
+                    <Badge variant="secondary" className="text-xs">
+                      +{job.benefits.length - 4} more
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            )}
+          </CollapsibleContent>
+        </Collapsible>
+
+        {/* Action Buttons */}
+        <div className="flex gap-2 pt-4">
+          <Button onClick={() => onApply(job)} className="flex-1">
+            Apply Now
+          </Button>
+          <Button onClick={() => onSave(job)} variant="outline">
+            <Heart className="h-4 w-4" />
+          </Button>
+          <Button onClick={() => onViewDetails(job)} variant="outline">
+            <Eye className="h-4 w-4" />
+          </Button>
+          {job.applyUrl && (
+            <Button asChild variant="outline">
+              <a href={job.applyUrl} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>
   );
 };
+
+export default EnhancedJobCard;
