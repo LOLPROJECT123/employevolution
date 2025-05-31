@@ -3,13 +3,16 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Video, FileText, Target, BarChart3, Brain } from 'lucide-react';
+import { Video, FileText, Target, BarChart3, Brain, TrendingUp } from 'lucide-react';
 import BehavioralInterview from './BehavioralInterview';
 import CodingInterview from './CodingInterview';
 import CompanyProblems from './CompanyProblems';
+import InterviewAnalytics from './InterviewAnalytics';
+import InterviewFeedback from './InterviewFeedback';
+import InterviewResources from './InterviewResources';
 
 const InterviewSection = () => {
-  const [activeTab, setActiveTab] = useState('behavioral');
+  const [activeTab, setActiveTab] = useState('practice');
 
   const interviewStats = {
     totalSessions: 15,
@@ -23,7 +26,7 @@ const InterviewSection = () => {
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Interview Practice</h1>
         <p className="text-muted-foreground">
-          Practice your interview skills with AI-powered feedback and analysis
+          Master your interview skills with AI-powered practice, analytics, and personalized feedback
         </p>
       </div>
 
@@ -60,7 +63,7 @@ const InterviewSection = () => {
                 <p className="text-sm font-medium text-muted-foreground">Improvement</p>
                 <p className="text-2xl font-bold">+{interviewStats.improvementRate}%</p>
               </div>
-              <BarChart3 className="h-8 w-8 text-orange-600" />
+              <TrendingUp className="h-8 w-8 text-orange-600" />
             </div>
           </CardContent>
         </Card>
@@ -79,22 +82,45 @@ const InterviewSection = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="behavioral">Behavioral</TabsTrigger>
-          <TabsTrigger value="coding">Coding</TabsTrigger>
-          <TabsTrigger value="company">Company Specific</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="practice">Practice</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="feedback">Feedback</TabsTrigger>
+          <TabsTrigger value="resources">Resources</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="behavioral" className="space-y-6">
-          <BehavioralInterview />
+        <TabsContent value="practice" className="space-y-6">
+          <Tabs defaultValue="behavioral" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="behavioral">Behavioral</TabsTrigger>
+              <TabsTrigger value="coding">Coding</TabsTrigger>
+              <TabsTrigger value="company">Company Specific</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="behavioral">
+              <BehavioralInterview />
+            </TabsContent>
+
+            <TabsContent value="coding">
+              <CodingInterview />
+            </TabsContent>
+
+            <TabsContent value="company">
+              <CompanyProblems />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
 
-        <TabsContent value="coding" className="space-y-6">
-          <CodingInterview />
+        <TabsContent value="analytics" className="space-y-6">
+          <InterviewAnalytics />
         </TabsContent>
 
-        <TabsContent value="company" className="space-y-6">
-          <CompanyProblems />
+        <TabsContent value="feedback" className="space-y-6">
+          <InterviewFeedback />
+        </TabsContent>
+
+        <TabsContent value="resources" className="space-y-6">
+          <InterviewResources />
         </TabsContent>
       </Tabs>
     </div>
