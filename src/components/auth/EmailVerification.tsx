@@ -21,25 +21,30 @@ export const EmailVerification = ({ onEmailVerified, onSocialSuccess }: EmailVer
     try {
       console.log('Checking if email exists:', email);
       
-      // Use password reset to check if email exists - this doesn't create users
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth`
+      // Try to sign in with a dummy password to check if email exists
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password: 'dummy-password-that-will-fail'
       });
 
       if (error) {
-        // If user not found, error will contain "User not found"
+        // If the error is about invalid credentials, the email exists
+        if (error.message.includes('Invalid login credentials')) {
+          console.log('Email exists - got invalid credentials error');
+          return true;
+        }
+        // If it's user not found or similar, email doesn't exist
         if (error.message.includes('User not found') || 
             error.message.includes('Invalid email')) {
-          console.log('User does not exist');
+          console.log('Email does not exist');
           return false;
         }
-        // For other errors, assume user exists to be safe
-        console.log('User likely exists, error:', error.message);
-        return true;
+        // For any other error, default to new user flow to be safe
+        console.log('Unknown error, defaulting to new user:', error.message);
+        return false;
       }
       
-      // If no error, user exists
-      console.log('User exists - password reset email would be sent');
+      // If no error somehow, assume user exists
       return true;
     } catch (error) {
       console.error('Email check error:', error);
