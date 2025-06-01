@@ -90,13 +90,17 @@ export class SecurityAuditService {
 
     try {
       for (const tableName of tablesToDelete) {
-        const { error } = await supabase
-          .from(tableName)
-          .delete()
-          .eq('user_id', userId);
+        try {
+          const { error } = await supabase
+            .from(tableName as any)
+            .delete()
+            .eq('user_id', userId);
 
-        if (error) {
-          errors.push(`Failed to delete from ${tableName}: ${error.message}`);
+          if (error) {
+            errors.push(`Failed to delete from ${tableName}: ${error.message}`);
+          }
+        } catch (tableError) {
+          errors.push(`Failed to delete from ${tableName}: ${tableError instanceof Error ? tableError.message : 'Unknown error'}`);
         }
       }
 

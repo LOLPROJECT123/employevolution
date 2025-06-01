@@ -140,8 +140,6 @@ export class DataImportExportService {
         if (error) throw error;
       }
 
-      // Import other data sections similarly...
-
       return {
         success: true,
         importedData: profileData
@@ -234,3 +232,6 @@ export class DataImportExportService {
     URL.revokeObjectURL(backupUrl);
   }
 }
+
+// Export both the class and a shorter alias for backward compatibility
+export const DataImportExport = DataImportExportService;

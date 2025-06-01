@@ -1,11 +1,10 @@
-
 import { profileService } from './profileService';
 import { AddressValidator, AddressComponents } from '@/utils/addressValidation';
 import { ProfileDataSync } from '@/utils/profileDataSync';
 import { ErrorHandler, ProfileErrorHandler } from '@/utils/errorHandling';
 import { OnboardingFlowManager } from '@/utils/onboardingFlow';
 import { ProfileCompletionTracker } from '@/utils/profileCompletionTracker';
-import { DataImportExport } from '@/utils/dataImportExport';
+import { DataImportExportService } from '@/utils/dataImportExport';
 import { ParsedResume } from '@/types/resume';
 
 export class EnhancedProfileService {
@@ -53,7 +52,7 @@ export class EnhancedProfileService {
         await ProfileCompletionTracker.updateCompletionTracking(userId, profileData);
         
         // Create backup
-        await DataImportExport.createBackup(syncResult.data!);
+        await DataImportExportService.createBackup(userId);
       }
 
       return saveSuccess;
@@ -183,14 +182,7 @@ export class EnhancedProfileService {
         throw new Error('No profile data found for export');
       }
 
-      return await DataImportExport.exportProfileData(profileData, {
-        format,
-        includePersonalInfo: true,
-        includeWorkExperience: true,
-        includeEducation: true,
-        includeSkills: true,
-        includeProjects: true
-      });
+      return await DataImportExportService.exportProfileData(userId);
     } catch (error) {
       ErrorHandler.handleError(
         error instanceof Error ? error : new Error(String(error)),
@@ -204,7 +196,7 @@ export class EnhancedProfileService {
   // Import and merge profile data
   static async importAndMergeProfile(userId: string, fileContent: string, format: 'json' | 'csv'): Promise<boolean> {
     try {
-      const importResult = await DataImportExport.importProfileData(fileContent, format);
+      const importResult = await DataImportExportService.importProfileData(fileContent, format);
       
       if (!importResult.success) {
         throw new Error(`Import failed: ${importResult.errors?.join(', ')}`);

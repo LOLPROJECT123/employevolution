@@ -1,4 +1,3 @@
-
 import { resumeFileService } from '@/services/resumeFileService';
 import { profileCompletionService } from '@/services/profileCompletionService';
 
@@ -219,6 +218,30 @@ export class OnboardingFlowManager {
       }
     } catch (error) {
       console.error('Error marking step completed:', error);
+      return false;
+    }
+  }
+
+  static async completeOnboarding(userId: string, profileData: any): Promise<boolean> {
+    try {
+      // Validate all steps are completed
+      const validation = this.validateStepCompletion('profile_review', profileData);
+      if (!validation.isValid) {
+        console.error('Onboarding completion validation failed:', validation.errors);
+        return false;
+      }
+
+      // Mark onboarding as completed
+      const success = await this.markStepCompleted(userId, 'profile_review');
+      
+      if (success) {
+        console.log('Onboarding completed successfully for user:', userId);
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Error completing onboarding:', error);
       return false;
     }
   }
