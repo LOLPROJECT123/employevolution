@@ -104,6 +104,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (onboardingError) {
           console.error('Error creating onboarding status:', onboardingError);
         }
+
+        // Create profile completion tracking
+        const { error: completionError } = await supabase
+          .from('profile_completion_tracking')
+          .upsert({
+            user_id: userId,
+            completion_percentage: 0,
+            missing_fields: ['basic_info', 'work_experience', 'education', 'skills']
+          });
+
+        if (completionError) {
+          console.error('Error creating completion tracking:', completionError);
+        }
+
+        // Create notification preferences
+        const { error: notificationError } = await supabase
+          .from('notification_preferences')
+          .upsert({
+            user_id: userId,
+            email_notifications: true,
+            push_notifications: true,
+            job_match_alerts: true,
+            application_updates: true,
+            interview_reminders: true,
+            profile_completion_reminders: true
+          });
+
+        if (notificationError) {
+          console.error('Error creating notification preferences:', notificationError);
+        }
       } else {
         console.log('✅ User profile already exists:', existingProfile);
       }
