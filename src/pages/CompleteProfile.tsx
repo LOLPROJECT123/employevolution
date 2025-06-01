@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -35,29 +34,51 @@ const CompleteProfile = () => {
 
   useEffect(() => {
     if (user) {
-      loadResumeData();
+      loadUserData();
     }
   }, [user]);
 
-  const loadResumeData = async () => {
+  const loadUserData = async () => {
     if (!user) return;
     
     try {
+      // Pre-populate with user data from authentication
+      const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || '';
+      const userEmail = user.email || '';
+      
+      console.log('Pre-populating user data:', { userName, userEmail });
+      
+      // Set initial profile data with user info
+      setProfileData(prev => ({
+        ...prev,
+        personalInfo: {
+          ...prev.personalInfo,
+          name: userName,
+          email: userEmail
+        }
+      }));
+
+      // Then try to load resume data if available
       const resumeFile = await resumeFileService.getCurrentResumeFile(user.id);
       if (resumeFile?.parsed_data) {
-        setProfileData({
-          personalInfo: resumeFile.parsed_data.personalInfo || { name: '', email: '', phone: '', location: '' },
-          socialLinks: resumeFile.parsed_data.socialLinks || { linkedin: '', github: '', portfolio: '', other: '' },
+        console.log('Loading resume data:', resumeFile.parsed_data);
+        setProfileData(prev => ({
+          personalInfo: {
+            ...prev.personalInfo, // Keep the pre-populated name and email
+            phone: resumeFile.parsed_data.personalInfo?.phone || prev.personalInfo.phone,
+            location: resumeFile.parsed_data.personalInfo?.location || prev.personalInfo.location
+          },
+          socialLinks: resumeFile.parsed_data.socialLinks || prev.socialLinks,
           education: resumeFile.parsed_data.education || [],
           workExperiences: resumeFile.parsed_data.workExperiences || [],
           projects: resumeFile.parsed_data.projects || [],
           activities: resumeFile.parsed_data.activities || [],
           skills: resumeFile.parsed_data.skills || [],
           languages: resumeFile.parsed_data.languages || []
-        });
+        }));
       }
     } catch (error) {
-      console.error('Error loading resume data:', error);
+      console.error('Error loading user data:', error);
     }
   };
 

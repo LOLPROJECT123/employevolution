@@ -48,9 +48,11 @@ const PersonalInfoSection = ({ data, onChange }: PersonalInfoSectionProps) => {
             id="email"
             type="email"
             value={data.email}
-            onChange={(e) => handleChange('email', e.target.value)}
-            placeholder="Enter your email"
+            readOnly
+            className="bg-gray-50 cursor-not-allowed"
+            placeholder="Your email from sign-up"
           />
+          <p className="text-xs text-gray-500">Email cannot be changed (from your account)</p>
         </div>
         
         <div className="space-y-2">

@@ -1,4 +1,3 @@
-
 import React, {
   createContext,
   useState,
@@ -47,6 +46,72 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [authListenerReady, setAuthListenerReady] = useState(false);
   const [initialSessionChecked, setInitialSessionChecked] = useState(false);
 
+  // Helper function to ensure user profile exists
+  const ensureUserProfile = async (userId: string, userEmail: string, fullName?: string) => {
+    try {
+      console.log('🔄 Ensuring user profile exists for:', userId);
+      
+      // Check if profile already exists
+      const { data: existingProfile } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (!existingProfile) {
+        console.log('📝 Creating new user profile...');
+        
+        // Create user profile
+        const { data: newProfile, error: profileError } = await supabase
+          .from('user_profiles')
+          .insert({
+            user_id: userId,
+            name: fullName || userEmail?.split('@')[0] || '',
+            job_status: 'Actively looking'
+          })
+          .select()
+          .single();
+
+        if (profileError) {
+          console.error('Error creating user profile:', profileError);
+        } else {
+          console.log('✅ User profile created successfully:', newProfile);
+        }
+
+        // Also ensure profiles table entry exists (for backwards compatibility)
+        const { error: legacyProfileError } = await supabase
+          .from('profiles')
+          .upsert({
+            id: userId,
+            email: userEmail,
+            full_name: fullName || userEmail?.split('@')[0] || ''
+          });
+
+        if (legacyProfileError) {
+          console.error('Error creating legacy profile:', legacyProfileError);
+        }
+
+        // Create onboarding status if it doesn't exist
+        const { error: onboardingError } = await supabase
+          .from('user_onboarding')
+          .upsert({
+            user_id: userId,
+            resume_uploaded: false,
+            profile_completed: false,
+            onboarding_completed: false
+          });
+
+        if (onboardingError) {
+          console.error('Error creating onboarding status:', onboardingError);
+        }
+      } else {
+        console.log('✅ User profile already exists:', existingProfile);
+      }
+    } catch (error) {
+      console.error('Error in ensureUserProfile:', error);
+    }
+  };
+
   useEffect(() => {
     console.log('🔐 AuthContext: Setting up auth listener...');
     
@@ -59,9 +124,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Defer profile loading to avoid blocking auth state
+          // Ensure user profile exists for both new and existing users
           setTimeout(async () => {
             try {
+              await ensureUserProfile(
+                session.user.id, 
+                session.user.email || '', 
+                session.user.user_metadata?.full_name
+              );
+              
+              // Load user profile
               const { data: profile } = await supabase
                 .from('user_profiles')
                 .select('*')
@@ -123,7 +195,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signUp = async (email: string, password: string, fullName?: string) => {
-    console.log('🔐 Attempting sign up for:', email);
+    console.log('🔐 Attempting sign up for:', email, 'with name:', fullName);
     const { data, error } = await supabase.auth.signUp({
       email,
       password,

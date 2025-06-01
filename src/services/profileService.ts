@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { ParsedResume } from "@/types/resume";
 
@@ -70,6 +69,8 @@ class ProfileService {
   }
 
   async saveUserProfile(userId: string, profile: DatabaseProfile): Promise<boolean> {
+    console.log('💾 Saving user profile for:', userId, profile);
+    
     const { error } = await supabase
       .from('user_profiles')
       .upsert({
@@ -82,12 +83,18 @@ class ProfileService {
       return false;
     }
     
+    console.log('✅ User profile saved successfully');
     return true;
   }
 
   async saveResumeData(userId: string, resumeData: ParsedResume): Promise<boolean> {
     try {
-      // Save profile data
+      console.log('💾 Saving complete resume data for user:', userId);
+      
+      // Calculate profile completion percentage
+      const completionScore = this.calculateProfileCompletion(resumeData);
+      
+      // Save profile data with completion score
       await this.saveUserProfile(userId, {
         name: resumeData.personalInfo.name,
         phone: resumeData.personalInfo.phone,
@@ -95,7 +102,8 @@ class ProfileService {
         linkedin_url: resumeData.socialLinks.linkedin,
         github_url: resumeData.socialLinks.github,
         portfolio_url: resumeData.socialLinks.portfolio,
-        other_url: resumeData.socialLinks.other
+        other_url: resumeData.socialLinks.other,
+        profile_completion: completionScore
       });
 
       // Clear existing data and save new data
@@ -113,7 +121,8 @@ class ProfileService {
           description: exp.description
         }));
 
-        await supabase.from('work_experiences').insert(workExperiences);
+        const { error } = await supabase.from('work_experiences').insert(workExperiences);
+        if (error) console.error('Error saving work experiences:', error);
       }
 
       // Save education
@@ -123,10 +132,12 @@ class ProfileService {
           school: edu.school,
           degree: edu.degree,
           start_date: edu.startDate,
-          end_date: edu.endDate
+          end_date: edu.endDate,
+          gpa: edu.gpa
         }));
 
-        await supabase.from('education').insert(education);
+        const { error } = await supabase.from('education').insert(education);
+        if (error) console.error('Error saving education:', error);
       }
 
       // Save projects
@@ -136,10 +147,28 @@ class ProfileService {
           name: proj.name,
           start_date: proj.startDate,
           end_date: proj.endDate,
-          description: proj.description
+          description: proj.description,
+          technologies: proj.technologies,
+          url: proj.url
         }));
 
-        await supabase.from('projects').insert(projects);
+        const { error } = await supabase.from('projects').insert(projects);
+        if (error) console.error('Error saving projects:', error);
+      }
+
+      // Save activities
+      if (resumeData.activities.length > 0) {
+        const activities = resumeData.activities.map(activity => ({
+          user_id: userId,
+          organization: activity.organization,
+          role: activity.role,
+          start_date: activity.startDate,
+          end_date: activity.endDate,
+          description: activity.description
+        }));
+
+        const { error } = await supabase.from('activities_leadership').insert(activities);
+        if (error) console.error('Error saving activities:', error);
       }
 
       // Save skills
@@ -150,7 +179,8 @@ class ProfileService {
           category: 'general'
         }));
 
-        await supabase.from('user_skills').insert(skills);
+        const { error } = await supabase.from('user_skills').insert(skills);
+        if (error) console.error('Error saving skills:', error);
       }
 
       // Save languages
@@ -161,14 +191,43 @@ class ProfileService {
           proficiency: 'conversational'
         }));
 
-        await supabase.from('user_languages').insert(languages);
+        const { error } = await supabase.from('user_languages').insert(languages);
+        if (error) console.error('Error saving languages:', error);
       }
 
+      console.log('✅ All resume data saved successfully');
       return true;
     } catch (error) {
       console.error('Error saving resume data:', error);
       return false;
     }
+  }
+
+  private calculateProfileCompletion(resumeData: ParsedResume): number {
+    let score = 0;
+    const maxScore = 10;
+
+    // Personal info (3 points)
+    if (resumeData.personalInfo.name) score += 1;
+    if (resumeData.personalInfo.email) score += 1;
+    if (resumeData.personalInfo.phone) score += 1;
+
+    // Experience (2 points)
+    if (resumeData.workExperiences.length > 0) score += 2;
+
+    // Education (1 point)
+    if (resumeData.education.length > 0) score += 1;
+
+    // Skills (1 point)
+    if (resumeData.skills.length > 0) score += 1;
+
+    // Projects (1 point)
+    if (resumeData.projects.length > 0) score += 1;
+
+    // Social links (1 point)
+    if (resumeData.socialLinks.linkedin || resumeData.socialLinks.github) score += 1;
+
+    return Math.round((score / maxScore) * 100);
   }
 
   private async clearUserData(userId: string): Promise<void> {
