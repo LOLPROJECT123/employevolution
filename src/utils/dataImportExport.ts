@@ -1,3 +1,4 @@
+
 import { ParsedResume } from '@/types/resume';
 import { ErrorHandler } from './errorHandling';
 
@@ -87,7 +88,7 @@ export class DataImportExport {
       
       const validationResult = this.validateImportedData(importedData);
       
-      if (validationResult.errors.length > 0) {
+      if (!validationResult.success) {
         return validationResult;
       }
       
@@ -268,14 +269,14 @@ export class DataImportExport {
     return result;
   }
 
-  private static validateImportedData(data: any): { errors: string[]; warnings: string[] } {
+  private static validateImportedData(data: any): ImportResult {
     const errors: string[] = [];
     const warnings: string[] = [];
     
     // Basic validation
     if (!data || typeof data !== 'object') {
       errors.push('Invalid data format');
-      return { errors, warnings };
+      return { success: false, errors };
     }
     
     // Check for required sections
@@ -283,7 +284,11 @@ export class DataImportExport {
       warnings.push('Personal info missing name field');
     }
     
-    return { errors, warnings };
+    return { 
+      success: errors.length === 0, 
+      errors: errors.length > 0 ? errors : undefined,
+      warnings: warnings.length > 0 ? warnings : undefined
+    };
   }
 
   private static normalizeImportedData(data: any): Partial<ParsedResume> {
