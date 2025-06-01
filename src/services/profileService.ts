@@ -313,39 +313,6 @@ class ProfileService {
       missingFields
     };
   }
-
-  private async clearUserData(userId: string): Promise<void> {
-    await Promise.all([
-      supabase.from('work_experiences').delete().eq('user_id', userId),
-      supabase.from('education').delete().eq('user_id', userId),
-      supabase.from('projects').delete().eq('user_id', userId),
-      supabase.from('user_skills').delete().eq('user_id', userId),
-      supabase.from('user_languages').delete().eq('user_id', userId),
-      supabase.from('activities_leadership').delete().eq('user_id', userId)
-    ]);
-  }
-
-  async loadUserData(userId: string): Promise<any> {
-    const [profile, workExperiences, education, projects, skills, languages, activities] = await Promise.all([
-      this.getUserProfile(userId),
-      supabase.from('work_experiences').select('*').eq('user_id', userId),
-      supabase.from('education').select('*').eq('user_id', userId),
-      supabase.from('projects').select('*').eq('user_id', userId),
-      supabase.from('user_skills').select('*').eq('user_id', userId),
-      supabase.from('user_languages').select('*').eq('user_id', userId),
-      supabase.from('activities_leadership').select('*').eq('user_id', userId)
-    ]);
-
-    return {
-      profile: profile,
-      workExperiences: workExperiences.data || [],
-      education: education.data || [],
-      projects: projects.data || [],
-      skills: (skills.data || []).map(s => s.skill),
-      languages: (languages.data || []).map(l => l.language),
-      activities: activities.data || []
-    };
-  }
 }
 
 export const profileService = new ProfileService();
