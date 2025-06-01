@@ -1,19 +1,20 @@
-
 import React, { useState, useEffect } from "react";
 import { parseResume } from "@/utils/resumeParser";
 import { ParsedResume } from "@/types/resume";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Upload, FileText, CheckCircle, X, AlertCircle } from "lucide-react";
+import { Upload, FileText, CheckCircle, X, AlertCircle, ArrowRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { resumeFileService, ResumeFile } from "@/services/resumeFileService";
 import { toast } from "sonner";
 
 interface ProfileDetailsProps {
   onResumeDataUpdate?: (resumeData: ParsedResume) => void;
+  showNextButton?: boolean;
+  onNext?: () => void;
 }
 
-const ProfileDetails = ({ onResumeDataUpdate }: ProfileDetailsProps) => {
+const ProfileDetails = ({ onResumeDataUpdate, showNextButton = false, onNext }: ProfileDetailsProps) => {
   const { user } = useAuth();
   const [resume, setResume] = useState<ParsedResume | null>(null);
   const [parsing, setParsing] = useState(false);
@@ -283,6 +284,20 @@ const ProfileDetails = ({ onResumeDataUpdate }: ProfileDetailsProps) => {
               </div>
             )}
           </div>
+
+          {/* Next Button */}
+          {showNextButton && uploadedFile && (
+            <div className="pt-4 border-t">
+              <Button 
+                onClick={onNext}
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3"
+                size="lg"
+              >
+                Complete Profile
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </div>

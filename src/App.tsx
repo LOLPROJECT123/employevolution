@@ -20,6 +20,7 @@ import Referrals from "./pages/Referrals";
 import SalaryNegotiations from "./pages/SalaryNegotiations";
 import JobAlerts from "./pages/JobAlerts";
 import Auth from "./pages/Auth";
+import CompleteProfile from "./pages/CompleteProfile";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,13 @@ const App = () => (
             {/* Public routes - accessible without authentication */}
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            
+            {/* Profile completion route - protected but bypasses onboarding guard */}
+            <Route path="/complete-profile" element={
+              <ProtectedRoute>
+                <CompleteProfile />
+              </ProtectedRoute>
+            } />
             
             {/* Protected routes - require authentication */}
             <Route path="/dashboard" element={

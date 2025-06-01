@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -68,7 +67,7 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
         console.log('Onboarding status updated successfully');
         setOnboardingStatus(prev => prev ? { ...prev, resume_uploaded: true } : null);
         setCurrentStep(1);
-        toast.success("Resume uploaded successfully! Please complete your profile.");
+        toast.success("Resume uploaded successfully!");
         setTimeout(() => {
           loadOnboardingStatus();
         }, 1000);
@@ -82,25 +81,8 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
     }
   };
 
-  const handleCompleteProfile = () => {
-    navigate('/profile');
-  };
-
-  const handleProfileCompleted = async () => {
-    if (!user) return;
-
-    await resumeFileService.updateOnboardingStatus(user.id, {
-      profile_completed: true,
-      onboarding_completed: true
-    });
-
-    setOnboardingStatus(prev => prev ? { 
-      ...prev, 
-      profile_completed: true, 
-      onboarding_completed: true 
-    } : null);
-    
-    toast.success("Profile completed! Welcome to Streamline!");
+  const handleNextToProfile = () => {
+    navigate('/complete-profile');
   };
 
   if (authLoading) {
@@ -183,7 +165,11 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
                 <p className="text-gray-600 mb-6">
                   Upload your resume to automatically populate your profile with your experience, education, and skills. Don't worry if automatic parsing doesn't work perfectly - you can fill in details manually in the next step.
                 </p>
-                <ProfileDetails onResumeDataUpdate={handleResumeUploaded} />
+                <ProfileDetails 
+                  onResumeDataUpdate={handleResumeUploaded} 
+                  showNextButton={true}
+                  onNext={handleNextToProfile}
+                />
               </div>
             )}
 
@@ -191,11 +177,11 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
               <div>
                 <h3 className="text-xl font-semibold mb-4">Step 2: Complete Your Profile</h3>
                 <p className="text-gray-600 mb-6">
-                  Great! Your resume has been uploaded. Now please review and complete your profile information including your address, date of birth, work experience, education, and projects.
+                  Great! Your resume has been uploaded. Click the button below to complete your profile with all your information.
                 </p>
                 <div className="text-center">
                   <button
-                    onClick={handleCompleteProfile}
+                    onClick={handleNextToProfile}
                     className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium"
                   >
                     Complete Profile
