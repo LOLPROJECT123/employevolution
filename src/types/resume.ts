@@ -19,12 +19,15 @@ export interface ParsedResume {
     degree: string;
     startDate: string;
     endDate: string;
+    gpa?: string;
   }>;
   projects: Array<{
     name: string;
     startDate: string;
     endDate: string;
     description: string[];
+    technologies?: string[];
+    url?: string;
   }>;
   skills: string[];
   languages: string[];
@@ -38,5 +41,7 @@ export interface ParsedResume {
     organization: string;
     role: string;
     description?: string;
+    startDate?: string;
+    endDate?: string;
   }>;
 }

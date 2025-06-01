@@ -149,6 +149,8 @@ class ResumeFileService {
 
   async updateOnboardingStatus(userId: string, updates: Partial<Omit<OnboardingStatus, 'id' | 'user_id' | 'created_at' | 'updated_at'>>): Promise<boolean> {
     try {
+      console.log('🔄 Updating onboarding status for user:', userId, updates);
+      
       const { error } = await supabase
         .from('user_onboarding')
         .upsert({
@@ -162,6 +164,7 @@ class ResumeFileService {
         return false;
       }
 
+      console.log('✅ Onboarding status updated successfully');
       return true;
     } catch (error) {
       console.error('Error in updateOnboardingStatus:', error);
@@ -170,24 +173,42 @@ class ResumeFileService {
   }
 
   async checkProfileCompletion(userId: string, profileData: any): Promise<boolean> {
-    const requiredFields = ['name', 'email', 'phone', 'location'];
+    try {
+      console.log('🔄 Checking profile completion for user:', userId);
+      
+      const requiredFields = [
+        profileData.personalInfo?.name?.trim(),
+        profileData.personalInfo?.email?.trim(),
+        profileData.personalInfo?.phone?.trim(),
+        profileData.workExperiences?.length > 0,
+        profileData.education?.length > 0,
+        profileData.skills?.length > 0
+      ];
 
-    const isComplete = requiredFields.every(field => {
-      const value = profileData[field];
-      return value && value.trim() !== '';
-    }) && 
-    profileData.workExperiences?.length > 0 && 
-    profileData.education?.length > 0 &&
-    profileData.skills?.length > 0;
+      const isComplete = requiredFields.every(field => Boolean(field));
 
-    if (isComplete) {
-      await this.updateOnboardingStatus(userId, { 
-        profile_completed: true,
-        onboarding_completed: true 
+      console.log('Profile completion check:', {
+        requiredFields: requiredFields.map(Boolean),
+        isComplete
       });
-    }
 
-    return isComplete;
+      if (isComplete) {
+        const success = await this.updateOnboardingStatus(userId, { 
+          profile_completed: true,
+          onboarding_completed: true 
+        });
+        
+        if (!success) {
+          console.error('Failed to update onboarding status after completion check');
+          return false;
+        }
+      }
+
+      return isComplete;
+    } catch (error) {
+      console.error('Error in checkProfileCompletion:', error);
+      return false;
+    }
   }
 }
 

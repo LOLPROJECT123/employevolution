@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -107,24 +108,55 @@ const CompleteProfile = () => {
     
     setLoading(true);
     try {
+      console.log('🔄 Starting profile completion process...');
+      
+      // Validate profile completion
+      const validation = await profileService.validateProfileCompletion(profileData);
+      
+      if (!validation.isComplete) {
+        toast.error(`Please complete the following fields: ${validation.missingFields.join(', ')}`);
+        setLoading(false);
+        return;
+      }
+
+      console.log('✅ Profile validation passed');
+      
       // Save profile data to database
       const success = await profileService.saveResumeData(user.id, profileData as ParsedResume);
       
-      if (success) {
-        // Update onboarding status
-        await resumeFileService.updateOnboardingStatus(user.id, {
-          profile_completed: true,
-          onboarding_completed: true
-        });
-        
-        toast.success('Profile completed successfully! Welcome to Streamline!');
-        navigate('/dashboard');
-      } else {
+      if (!success) {
         toast.error('Failed to save profile. Please try again.');
+        setLoading(false);
+        return;
       }
+
+      console.log('✅ Profile data saved successfully');
+      
+      // Update onboarding status to mark completion
+      const onboardingUpdated = await resumeFileService.updateOnboardingStatus(user.id, {
+        profile_completed: true,
+        onboarding_completed: true
+      });
+
+      if (!onboardingUpdated) {
+        console.error('Failed to update onboarding status');
+        toast.error('Failed to complete onboarding. Please try again.');
+        setLoading(false);
+        return;
+      }
+
+      console.log('✅ Onboarding status updated successfully');
+      
+      toast.success('Profile completed successfully! Welcome to Streamline!');
+      
+      // Small delay to ensure all database operations complete
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1000);
+      
     } catch (error) {
-      console.error('Error saving profile:', error);
-      toast.error('Error saving profile. Please try again.');
+      console.error('Error completing profile:', error);
+      toast.error('Error completing profile. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -198,7 +230,7 @@ const CompleteProfile = () => {
                 size="lg"
                 className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3"
               >
-                {loading ? 'Saving...' : 'Complete Profile'}
+                {loading ? 'Completing Profile...' : 'Complete Profile'}
               </Button>
             </div>
           </CardContent>
