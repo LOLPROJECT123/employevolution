@@ -44,12 +44,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authListenerReady, setAuthListenerReady] = useState(false);
+  const [initialSessionChecked, setInitialSessionChecked] = useState(false);
 
   useEffect(() => {
+    console.log('🔐 AuthContext: Setting up auth listener...');
+    
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state change:', event, session?.user?.id);
+        console.log('🔐 Auth state change:', event, session?.user?.id);
         
         setSession(session);
         setUser(session?.user ?? null);
@@ -59,11 +63,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setTimeout(async () => {
             try {
               const { data: profile } = await supabase
-                .from('profiles')
+                .from('user_profiles')
                 .select('*')
-                .eq('id', session.user.id)
+                .eq('user_id', session.user.id)
                 .maybeSingle();
               
+              console.log('👤 User profile loaded:', profile);
               setUserProfile(profile);
             } catch (error) {
               console.error('Error loading user profile:', error);
@@ -73,15 +78,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setUserProfile(null);
         }
         
-        setLoading(false);
+        // Mark auth listener as ready
+        if (!authListenerReady) {
+          setAuthListenerReady(true);
+        }
       }
     );
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('🔐 Initial session check:', session?.user?.id);
       setSession(session);
       setUser(session?.user ?? null);
-      setLoading(false);
+      setInitialSessionChecked(true);
     });
 
     return () => {
@@ -89,7 +98,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
+  // Only set loading to false when both auth listener is ready AND initial session is checked
+  useEffect(() => {
+    if (authListenerReady && initialSessionChecked) {
+      console.log('🔐 Auth initialization complete, setting loading to false');
+      setLoading(false);
+    }
+  }, [authListenerReady, initialSessionChecked]);
+
   const signIn = async (email: string, password: string) => {
+    console.log('🔐 Attempting sign in for:', email);
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -100,10 +118,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       throw error;
     }
     
+    console.log('🔐 Sign in successful');
     return data;
   };
 
   const signUp = async (email: string, password: string, fullName?: string) => {
+    console.log('🔐 Attempting sign up for:', email);
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -119,12 +139,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       throw error;
     }
     
+    console.log('🔐 Sign up successful');
     return data;
   };
 
   const signOut = async () => {
     try {
-      console.log('Signing out user...');
+      console.log('🔐 Signing out user...');
       
       // Clear local state first
       setUser(null);
@@ -139,7 +160,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         throw error;
       }
       
-      console.log('Sign out successful');
+      console.log('🔐 Sign out successful');
       
       // Force redirect to auth page
       window.location.href = '/auth';
@@ -172,6 +193,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     register,
     logout,
   };
+
+  console.log('🔐 AuthContext render - loading:', loading, 'user:', user?.id, 'session:', session?.user?.id);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
