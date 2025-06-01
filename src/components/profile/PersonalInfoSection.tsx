@@ -10,7 +10,10 @@ interface PersonalInfoSectionProps {
     name: string;
     email: string;
     phone: string;
-    location: string;
+    streetAddress: string;
+    city: string;
+    state: string;
+    zipCode: string;
   };
   onChange: (data: any) => void;
 }
@@ -55,7 +58,7 @@ const PersonalInfoSection = ({ data, onChange }: PersonalInfoSectionProps) => {
           <p className="text-xs text-gray-500">Email cannot be changed (from your account)</p>
         </div>
         
-        <div className="space-y-2">
+        <div className="space-y-2 md:col-span-2">
           <Label htmlFor="phone">Phone Number *</Label>
           <Input
             id="phone"
@@ -66,15 +69,45 @@ const PersonalInfoSection = ({ data, onChange }: PersonalInfoSectionProps) => {
           <p className="text-xs text-gray-500">Please enter your current phone number</p>
         </div>
         
-        <div className="space-y-2">
-          <Label htmlFor="location">Home Address *</Label>
+        <div className="space-y-2 md:col-span-2">
+          <Label htmlFor="streetAddress">Street Address *</Label>
           <Input
-            id="location"
-            value={data.location}
-            onChange={(e) => handleChange('location', e.target.value)}
-            placeholder="Enter your home address (street, city, state, zip)"
+            id="streetAddress"
+            value={data.streetAddress}
+            onChange={(e) => handleChange('streetAddress', e.target.value)}
+            placeholder="Enter your street address (house number, street name, apt/unit)"
           />
-          <p className="text-xs text-gray-500">Please enter your current residential address</p>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="city">City *</Label>
+          <Input
+            id="city"
+            value={data.city}
+            onChange={(e) => handleChange('city', e.target.value)}
+            placeholder="Enter your city"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="state">State *</Label>
+          <Input
+            id="state"
+            value={data.state}
+            onChange={(e) => handleChange('state', e.target.value)}
+            placeholder="Enter your state"
+          />
+        </div>
+        
+        <div className="space-y-2 md:col-span-2">
+          <Label htmlFor="zipCode">ZIP Code *</Label>
+          <Input
+            id="zipCode"
+            value={data.zipCode}
+            onChange={(e) => handleChange('zipCode', e.target.value)}
+            placeholder="Enter your ZIP code"
+          />
+          <p className="text-xs text-gray-500">Please enter your current residential address information</p>
         </div>
       </CardContent>
     </Card>

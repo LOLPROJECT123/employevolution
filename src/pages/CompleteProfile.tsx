@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -23,7 +22,15 @@ const CompleteProfile = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [profileData, setProfileData] = useState<any>({
-    personalInfo: { name: '', email: '', phone: '', location: '' },
+    personalInfo: { 
+      name: '', 
+      email: '', 
+      phone: '', 
+      streetAddress: '', 
+      city: '', 
+      state: '', 
+      zipCode: '' 
+    },
     socialLinks: { linkedin: '', github: '', portfolio: '', other: '' },
     education: [],
     workExperiences: [],
@@ -57,17 +64,20 @@ const CompleteProfile = () => {
           name: userName,
           email: userEmail,
           phone: '', // Start with empty phone - user must enter current number
-          location: '' // Start with empty address - user must enter current address
+          streetAddress: '', // Start with empty address fields
+          city: '',
+          state: '',
+          zipCode: ''
         }
       }));
 
-      // Load resume data if available (excluding phone and location)
+      // Load resume data if available (excluding address fields)
       const resumeFile = await resumeFileService.getCurrentResumeFile(user.id);
       if (resumeFile?.parsed_data) {
         console.log('Loading resume data:', resumeFile.parsed_data);
         setProfileData(prev => ({
           personalInfo: {
-            ...prev.personalInfo, // Keep the pre-populated name, email, and empty phone/location
+            ...prev.personalInfo, // Keep the pre-populated name, email, and empty address fields
           },
           socialLinks: resumeFile.parsed_data.socialLinks || prev.socialLinks,
           education: resumeFile.parsed_data.education || [],
@@ -92,7 +102,13 @@ const CompleteProfile = () => {
 
   const calculateCompletionPercentage = () => {
     const sections = [
-      profileData.personalInfo.name && profileData.personalInfo.email && profileData.personalInfo.phone,
+      profileData.personalInfo.name && 
+      profileData.personalInfo.email && 
+      profileData.personalInfo.phone &&
+      profileData.personalInfo.streetAddress &&
+      profileData.personalInfo.city &&
+      profileData.personalInfo.state &&
+      profileData.personalInfo.zipCode,
       profileData.education.length > 0,
       profileData.workExperiences.length > 0,
       profileData.projects.length > 0,
@@ -110,8 +126,24 @@ const CompleteProfile = () => {
     try {
       console.log('🔄 Starting profile completion process...');
       
+      // Combine address fields into location for database storage
+      const combinedLocation = [
+        profileData.personalInfo.streetAddress,
+        profileData.personalInfo.city,
+        profileData.personalInfo.state,
+        profileData.personalInfo.zipCode
+      ].filter(Boolean).join(', ');
+
+      const profileDataForValidation = {
+        ...profileData,
+        personalInfo: {
+          ...profileData.personalInfo,
+          location: combinedLocation
+        }
+      };
+      
       // Validate profile completion
-      const validation = await profileService.validateProfileCompletion(profileData);
+      const validation = await profileService.validateProfileCompletion(profileDataForValidation);
       
       if (!validation.isComplete) {
         toast.error(`Please complete the following fields: ${validation.missingFields.join(', ')}`);
@@ -122,7 +154,7 @@ const CompleteProfile = () => {
       console.log('✅ Profile validation passed');
       
       // Save profile data to database
-      const success = await profileService.saveResumeData(user.id, profileData as ParsedResume);
+      const success = await profileService.saveResumeData(user.id, profileDataForValidation as ParsedResume);
       
       if (!success) {
         toast.error('Failed to save profile. Please try again.');

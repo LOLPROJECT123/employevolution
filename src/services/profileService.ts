@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { ParsedResume } from "@/types/resume";
 
@@ -231,7 +230,7 @@ class ProfileService {
     let score = 0;
     const maxScore = 10;
 
-    // Personal info (4 points) - now includes phone and address
+    // Personal info (4 points) - now includes phone and complete address
     if (resumeData.personalInfo?.name?.trim()) score += 1;
     if (resumeData.personalInfo?.email?.trim()) score += 1;
     if (resumeData.personalInfo?.phone?.trim()) score += 1;
@@ -291,11 +290,11 @@ class ProfileService {
   async validateProfileCompletion(profileData: any): Promise<{ isComplete: boolean; missingFields: string[] }> {
     const missingFields: string[] = [];
     
-    // Required personal info - now includes phone and home address
+    // Required personal info - now includes separate address validation
     if (!profileData.personalInfo?.name?.trim()) missingFields.push('full name');
     if (!profileData.personalInfo?.email?.trim()) missingFields.push('email');
     if (!profileData.personalInfo?.phone?.trim()) missingFields.push('phone number');
-    if (!profileData.personalInfo?.location?.trim()) missingFields.push('home address');
+    if (!profileData.personalInfo?.location?.trim()) missingFields.push('complete address');
     
     // Required sections
     if (!profileData.workExperiences || profileData.workExperiences.length === 0) {

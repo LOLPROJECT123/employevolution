@@ -4,7 +4,11 @@ export interface ParsedResume {
     name: string;
     email: string;
     phone: string;
-    location: string;
+    location: string; // This will be the combined address for database storage
+    streetAddress?: string; // Optional separate fields for UI
+    city?: string;
+    state?: string;
+    zipCode?: string;
   };
   workExperiences: Array<{
     role: string;
