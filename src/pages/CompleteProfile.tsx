@@ -43,31 +43,31 @@ const CompleteProfile = () => {
     if (!user) return;
     
     try {
-      // Pre-populate with user data from authentication
+      // Pre-populate with user data from authentication (name and email only)
       const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || '';
       const userEmail = user.email || '';
       
       console.log('Pre-populating user data:', { userName, userEmail });
       
-      // Set initial profile data with user info
+      // Set initial profile data with user info (only name and email)
       setProfileData(prev => ({
         ...prev,
         personalInfo: {
           ...prev.personalInfo,
           name: userName,
-          email: userEmail
+          email: userEmail,
+          phone: '', // Start with empty phone - user must enter current number
+          location: '' // Start with empty address - user must enter current address
         }
       }));
 
-      // Then try to load resume data if available
+      // Load resume data if available (excluding phone and location)
       const resumeFile = await resumeFileService.getCurrentResumeFile(user.id);
       if (resumeFile?.parsed_data) {
         console.log('Loading resume data:', resumeFile.parsed_data);
         setProfileData(prev => ({
           personalInfo: {
-            ...prev.personalInfo, // Keep the pre-populated name and email
-            phone: resumeFile.parsed_data.personalInfo?.phone || prev.personalInfo.phone,
-            location: resumeFile.parsed_data.personalInfo?.location || prev.personalInfo.location
+            ...prev.personalInfo, // Keep the pre-populated name, email, and empty phone/location
           },
           socialLinks: resumeFile.parsed_data.socialLinks || prev.socialLinks,
           education: resumeFile.parsed_data.education || [],

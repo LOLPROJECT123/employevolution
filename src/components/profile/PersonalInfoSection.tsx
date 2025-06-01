@@ -56,23 +56,25 @@ const PersonalInfoSection = ({ data, onChange }: PersonalInfoSectionProps) => {
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="phone">Phone Number</Label>
+          <Label htmlFor="phone">Phone Number *</Label>
           <Input
             id="phone"
             value={data.phone}
             onChange={(e) => handleChange('phone', e.target.value)}
-            placeholder="Enter your phone number"
+            placeholder="Enter your current phone number"
           />
+          <p className="text-xs text-gray-500">Please enter your current phone number</p>
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="location">Address/Location</Label>
+          <Label htmlFor="location">Home Address *</Label>
           <Input
             id="location"
             value={data.location}
             onChange={(e) => handleChange('location', e.target.value)}
-            placeholder="City, State"
+            placeholder="Enter your home address (street, city, state, zip)"
           />
+          <p className="text-xs text-gray-500">Please enter your current residential address</p>
         </div>
       </CardContent>
     </Card>

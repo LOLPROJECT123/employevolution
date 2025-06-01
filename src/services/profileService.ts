@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { ParsedResume } from "@/types/resume";
 
@@ -96,13 +97,13 @@ class ProfileService {
       
       // Save profile data with completion score
       const profileSaved = await this.saveUserProfile(userId, {
-        name: resumeData.personalInfo.name || '',
-        phone: resumeData.personalInfo.phone || '',
-        location: resumeData.personalInfo.location || '',
-        linkedin_url: resumeData.socialLinks.linkedin || '',
-        github_url: resumeData.socialLinks.github || '',
-        portfolio_url: resumeData.socialLinks.portfolio || '',
-        other_url: resumeData.socialLinks.other || '',
+        name: resumeData.personalInfo?.name || '',
+        phone: resumeData.personalInfo?.phone || '',
+        location: resumeData.personalInfo?.location || '',
+        linkedin_url: resumeData.socialLinks?.linkedin || '',
+        github_url: resumeData.socialLinks?.github || '',
+        portfolio_url: resumeData.socialLinks?.portfolio || '',
+        other_url: resumeData.socialLinks?.other || '',
         profile_completion: completionScore
       });
 
@@ -230,10 +231,11 @@ class ProfileService {
     let score = 0;
     const maxScore = 10;
 
-    // Personal info (3 points)
-    if (resumeData.personalInfo.name) score += 1;
-    if (resumeData.personalInfo.email) score += 1;
-    if (resumeData.personalInfo.phone) score += 1;
+    // Personal info (4 points) - now includes phone and address
+    if (resumeData.personalInfo?.name?.trim()) score += 1;
+    if (resumeData.personalInfo?.email?.trim()) score += 1;
+    if (resumeData.personalInfo?.phone?.trim()) score += 1;
+    if (resumeData.personalInfo?.location?.trim()) score += 1;
 
     // Experience (2 points)
     if (resumeData.workExperiences && resumeData.workExperiences.length > 0) score += 2;
@@ -248,7 +250,7 @@ class ProfileService {
     if (resumeData.projects && resumeData.projects.length > 0) score += 1;
 
     // Social links (1 point)
-    if (resumeData.socialLinks.linkedin || resumeData.socialLinks.github) score += 1;
+    if (resumeData.socialLinks?.linkedin || resumeData.socialLinks?.github) score += 1;
 
     return Math.round((score / maxScore) * 100);
   }
@@ -289,10 +291,11 @@ class ProfileService {
   async validateProfileCompletion(profileData: any): Promise<{ isComplete: boolean; missingFields: string[] }> {
     const missingFields: string[] = [];
     
-    // Required personal info
-    if (!profileData.personalInfo?.name?.trim()) missingFields.push('name');
+    // Required personal info - now includes phone and home address
+    if (!profileData.personalInfo?.name?.trim()) missingFields.push('full name');
     if (!profileData.personalInfo?.email?.trim()) missingFields.push('email');
-    if (!profileData.personalInfo?.phone?.trim()) missingFields.push('phone');
+    if (!profileData.personalInfo?.phone?.trim()) missingFields.push('phone number');
+    if (!profileData.personalInfo?.location?.trim()) missingFields.push('home address');
     
     // Required sections
     if (!profileData.workExperiences || profileData.workExperiences.length === 0) {
@@ -308,6 +311,39 @@ class ProfileService {
     return {
       isComplete: missingFields.length === 0,
       missingFields
+    };
+  }
+
+  private async clearUserData(userId: string): Promise<void> {
+    await Promise.all([
+      supabase.from('work_experiences').delete().eq('user_id', userId),
+      supabase.from('education').delete().eq('user_id', userId),
+      supabase.from('projects').delete().eq('user_id', userId),
+      supabase.from('user_skills').delete().eq('user_id', userId),
+      supabase.from('user_languages').delete().eq('user_id', userId),
+      supabase.from('activities_leadership').delete().eq('user_id', userId)
+    ]);
+  }
+
+  async loadUserData(userId: string): Promise<any> {
+    const [profile, workExperiences, education, projects, skills, languages, activities] = await Promise.all([
+      this.getUserProfile(userId),
+      supabase.from('work_experiences').select('*').eq('user_id', userId),
+      supabase.from('education').select('*').eq('user_id', userId),
+      supabase.from('projects').select('*').eq('user_id', userId),
+      supabase.from('user_skills').select('*').eq('user_id', userId),
+      supabase.from('user_languages').select('*').eq('user_id', userId),
+      supabase.from('activities_leadership').select('*').eq('user_id', userId)
+    ]);
+
+    return {
+      profile: profile,
+      workExperiences: workExperiences.data || [],
+      education: education.data || [],
+      projects: projects.data || [],
+      skills: (skills.data || []).map(s => s.skill),
+      languages: (languages.data || []).map(l => l.language),
+      activities: activities.data || []
     };
   }
 }
