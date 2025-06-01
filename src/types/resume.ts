@@ -8,6 +8,7 @@ export interface ParsedResume {
     streetAddress?: string; // Optional separate fields for UI
     city?: string;
     state?: string;
+    county?: string;
     zipCode?: string;
   };
   workExperiences: Array<{

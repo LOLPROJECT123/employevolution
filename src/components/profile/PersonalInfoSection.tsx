@@ -13,6 +13,7 @@ interface PersonalInfoSectionProps {
     streetAddress: string;
     city: string;
     state: string;
+    county: string;
     zipCode: string;
   };
   onChange: (data: any) => void;
@@ -99,7 +100,17 @@ const PersonalInfoSection = ({ data, onChange }: PersonalInfoSectionProps) => {
           />
         </div>
         
-        <div className="space-y-2 md:col-span-2">
+        <div className="space-y-2">
+          <Label htmlFor="county">County *</Label>
+          <Input
+            id="county"
+            value={data.county}
+            onChange={(e) => handleChange('county', e.target.value)}
+            placeholder="Enter your county"
+          />
+        </div>
+        
+        <div className="space-y-2">
           <Label htmlFor="zipCode">ZIP Code *</Label>
           <Input
             id="zipCode"
@@ -107,6 +118,9 @@ const PersonalInfoSection = ({ data, onChange }: PersonalInfoSectionProps) => {
             onChange={(e) => handleChange('zipCode', e.target.value)}
             placeholder="Enter your ZIP code"
           />
+        </div>
+        
+        <div className="md:col-span-2">
           <p className="text-xs text-gray-500">Please enter your current residential address information</p>
         </div>
       </CardContent>

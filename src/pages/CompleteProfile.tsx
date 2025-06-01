@@ -29,6 +29,7 @@ const CompleteProfile = () => {
       streetAddress: '', 
       city: '', 
       state: '', 
+      county: '',
       zipCode: '' 
     },
     socialLinks: { linkedin: '', github: '', portfolio: '', other: '' },
@@ -67,6 +68,7 @@ const CompleteProfile = () => {
           streetAddress: '', // Start with empty address fields
           city: '',
           state: '',
+          county: '',
           zipCode: ''
         }
       }));
@@ -108,6 +110,7 @@ const CompleteProfile = () => {
       profileData.personalInfo.streetAddress &&
       profileData.personalInfo.city &&
       profileData.personalInfo.state &&
+      profileData.personalInfo.county &&
       profileData.personalInfo.zipCode,
       profileData.education.length > 0,
       profileData.workExperiences.length > 0,
@@ -131,6 +134,7 @@ const CompleteProfile = () => {
         profileData.personalInfo.streetAddress,
         profileData.personalInfo.city,
         profileData.personalInfo.state,
+        profileData.personalInfo.county,
         profileData.personalInfo.zipCode
       ].filter(Boolean).join(', ');
 

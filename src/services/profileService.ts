@@ -230,7 +230,7 @@ class ProfileService {
     let score = 0;
     const maxScore = 10;
 
-    // Personal info (4 points) - now includes phone and complete address
+    // Personal info (4 points) - now includes phone and complete address with county
     if (resumeData.personalInfo?.name?.trim()) score += 1;
     if (resumeData.personalInfo?.email?.trim()) score += 1;
     if (resumeData.personalInfo?.phone?.trim()) score += 1;
@@ -290,7 +290,7 @@ class ProfileService {
   async validateProfileCompletion(profileData: any): Promise<{ isComplete: boolean; missingFields: string[] }> {
     const missingFields: string[] = [];
     
-    // Required personal info - now includes separate address validation
+    // Required personal info - now includes separate address validation with county
     if (!profileData.personalInfo?.name?.trim()) missingFields.push('full name');
     if (!profileData.personalInfo?.email?.trim()) missingFields.push('email');
     if (!profileData.personalInfo?.phone?.trim()) missingFields.push('phone number');
