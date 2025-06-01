@@ -12,7 +12,6 @@ interface UserProfile {
   id: string;
   full_name?: string;
   avatar_url?: string;
-  // Add other profile fields as needed
 }
 
 interface AuthContextType {
@@ -46,12 +45,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [authListenerReady, setAuthListenerReady] = useState(false);
   const [initialSessionChecked, setInitialSessionChecked] = useState(false);
 
-  // Helper function to ensure user profile exists
   const ensureUserProfile = async (userId: string, userEmail: string, fullName?: string) => {
     try {
       console.log('🔄 Ensuring user profile exists for:', userId);
       
-      // Check if profile already exists
       const { data: existingProfile } = await supabase
         .from('user_profiles')
         .select('*')
@@ -61,7 +58,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (!existingProfile) {
         console.log('📝 Creating new user profile...');
         
-        // Create user profile
         const { data: newProfile, error: profileError } = await supabase
           .from('user_profiles')
           .insert({
@@ -78,7 +74,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           console.log('✅ User profile created successfully:', newProfile);
         }
 
-        // Also ensure profiles table entry exists (for backwards compatibility)
+        // Create profiles table entry for backwards compatibility
         const { error: legacyProfileError } = await supabase
           .from('profiles')
           .upsert({
@@ -91,7 +87,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           console.error('Error creating legacy profile:', legacyProfileError);
         }
 
-        // Create onboarding status if it doesn't exist
+        // Initialize onboarding status
         const { error: onboardingError } = await supabase
           .from('user_onboarding')
           .upsert({
@@ -105,7 +101,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           console.error('Error creating onboarding status:', onboardingError);
         }
 
-        // Create profile completion tracking
+        // Initialize profile completion tracking
         const { error: completionError } = await supabase
           .from('profile_completion_tracking')
           .upsert({
@@ -134,6 +130,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (notificationError) {
           console.error('Error creating notification preferences:', notificationError);
         }
+
+        // Create initial job preferences
+        const { error: jobPrefError } = await supabase
+          .from('job_preferences')
+          .upsert({
+            user_id: userId,
+            work_model: 'remote',
+            experience_level: 'entry'
+          });
+
+        if (jobPrefError) {
+          console.error('Error creating job preferences:', jobPrefError);
+        }
+
       } else {
         console.log('✅ User profile already exists:', existingProfile);
       }
@@ -145,7 +155,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     console.log('🔐 AuthContext: Setting up auth listener...');
     
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('🔐 Auth state change:', event, session?.user?.id);
@@ -154,7 +163,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Ensure user profile exists for both new and existing users
           setTimeout(async () => {
             try {
               await ensureUserProfile(
@@ -163,7 +171,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 session.user.user_metadata?.full_name
               );
               
-              // Load user profile
               const { data: profile } = await supabase
                 .from('user_profiles')
                 .select('*')
@@ -180,14 +187,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setUserProfile(null);
         }
         
-        // Mark auth listener as ready
         if (!authListenerReady) {
           setAuthListenerReady(true);
         }
       }
     );
 
-    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log('🔐 Initial session check:', session?.user?.id);
       setSession(session);
@@ -200,7 +205,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
-  // Only set loading to false when both auth listener is ready AND initial session is checked
   useEffect(() => {
     if (authListenerReady && initialSessionChecked) {
       console.log('🔐 Auth initialization complete, setting loading to false');
@@ -249,12 +253,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       console.log('🔐 Signing out user...');
       
-      // Clear local state first
       setUser(null);
       setSession(null);
       setUserProfile(null);
       
-      // Then sign out from Supabase
       const { error } = await supabase.auth.signOut();
       
       if (error) {
@@ -263,12 +265,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       
       console.log('🔐 Sign out successful');
-      
-      // Force redirect to auth page
       window.location.href = '/auth';
     } catch (error) {
       console.error('Error during sign out:', error);
-      // Even if there's an error, clear the state and redirect
       setUser(null);
       setSession(null);
       setUserProfile(null);
@@ -276,7 +275,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Add aliases for backward compatibility
   const login = signIn;
   const register = async (email: string, password: string, data?: { full_name?: string }) => {
     return signUp(email, password, data?.full_name);

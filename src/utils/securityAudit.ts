@@ -24,7 +24,6 @@ export interface SecurityEvent {
 }
 
 export class SecurityAuditService {
-  // Log profile changes for audit trail
   static async logProfileChange(auditEntry: AuditLogEntry): Promise<void> {
     try {
       const { error } = await supabase
@@ -49,7 +48,6 @@ export class SecurityAuditService {
     }
   }
 
-  // Log security events
   static async logSecurityEvent(event: SecurityEvent): Promise<void> {
     try {
       const { error } = await supabase
@@ -73,10 +71,9 @@ export class SecurityAuditService {
     }
   }
 
-  // GDPR compliance - delete user data
   static async deleteUserData(userId: string): Promise<{ success: boolean; errors: string[] }> {
     const errors: string[] = [];
-    const tables = [
+    const tablesToDelete = [
       'user_profiles',
       'work_experiences',
       'education',
@@ -92,25 +89,24 @@ export class SecurityAuditService {
     ];
 
     try {
-      for (const table of tables) {
+      for (const tableName of tablesToDelete) {
         const { error } = await supabase
-          .from(table)
+          .from(tableName)
           .delete()
           .eq('user_id', userId);
 
         if (error) {
-          errors.push(`Failed to delete from ${table}: ${error.message}`);
+          errors.push(`Failed to delete from ${tableName}: ${error.message}`);
         }
       }
 
-      // Log the deletion
       if (errors.length === 0) {
         await this.logSecurityEvent({
           userId,
           eventType: 'data_deletion',
           severity: 'medium',
           description: 'User requested complete data deletion (GDPR)',
-          metadata: { tables_affected: tables }
+          metadata: { tables_affected: tablesToDelete }
         });
       }
 
@@ -126,10 +122,7 @@ export class SecurityAuditService {
     }
   }
 
-  // Encrypt sensitive data (basic implementation)
   static encryptSensitiveData(data: string, key?: string): string {
-    // In production, use proper encryption library like crypto-js
-    // This is a basic example
     try {
       const encoded = btoa(data);
       return encoded;
@@ -139,9 +132,7 @@ export class SecurityAuditService {
     }
   }
 
-  // Decrypt sensitive data (basic implementation)
   static decryptSensitiveData(encryptedData: string, key?: string): string {
-    // In production, use proper decryption
     try {
       const decoded = atob(encryptedData);
       return decoded;
@@ -151,7 +142,6 @@ export class SecurityAuditService {
     }
   }
 
-  // Get audit trail for a user
   static async getUserAuditTrail(userId: string, limit: number = 50): Promise<any[]> {
     try {
       const { data, error } = await supabase
@@ -173,7 +163,6 @@ export class SecurityAuditService {
     }
   }
 
-  // Get security events for a user
   static async getUserSecurityEvents(userId: string, limit: number = 20): Promise<any[]> {
     try {
       const { data, error } = await supabase

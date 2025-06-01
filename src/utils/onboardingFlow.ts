@@ -1,245 +1,236 @@
 
 import { resumeFileService } from '@/services/resumeFileService';
-import { profileService } from '@/services/profileService';
-import { ErrorHandler } from './errorHandling';
+import { profileCompletionService } from '@/services/profileCompletionService';
 
 export interface OnboardingStep {
   id: string;
-  name: string;
+  title: string;
   description: string;
-  isRequired: boolean;
-  isCompleted: boolean;
-  validationFn?: (data: any) => Promise<{ isValid: boolean; errors: string[] }>;
+  required: boolean;
+  completed: boolean;
+  order: number;
 }
 
 export interface OnboardingProgress {
   currentStep: number;
   totalSteps: number;
   completedSteps: string[];
-  percentComplete: number;
+  nextStep?: OnboardingStep;
   canProceed: boolean;
 }
 
 export class OnboardingFlowManager {
-  private static readonly ONBOARDING_STEPS: Omit<OnboardingStep, 'isCompleted'>[] = [
+  private static readonly ONBOARDING_STEPS: OnboardingStep[] = [
     {
       id: 'resume_upload',
-      name: 'Upload Resume',
+      title: 'Upload Resume',
       description: 'Upload your resume to get started',
-      isRequired: true,
-      validationFn: async (data) => {
-        if (!data.resumeFile) {
-          return { isValid: false, errors: ['Resume file is required'] };
-        }
-        return { isValid: true, errors: [] };
-      }
+      required: true,
+      completed: false,
+      order: 1
     },
     {
       id: 'personal_info',
-      name: 'Personal Information',
+      title: 'Personal Information',
       description: 'Complete your personal details',
-      isRequired: true,
-      validationFn: async (data) => {
-        const errors: string[] = [];
-        if (!data.personalInfo?.name?.trim()) errors.push('Name is required');
-        if (!data.personalInfo?.email?.trim()) errors.push('Email is required');
-        if (!data.personalInfo?.phone?.trim()) errors.push('Phone is required');
-        if (!data.personalInfo?.streetAddress?.trim()) errors.push('Street address is required');
-        if (!data.personalInfo?.city?.trim()) errors.push('City is required');
-        if (!data.personalInfo?.state?.trim()) errors.push('State is required');
-        if (!data.personalInfo?.county?.trim()) errors.push('County is required');
-        if (!data.personalInfo?.zipCode?.trim()) errors.push('ZIP code is required');
-        
-        return { isValid: errors.length === 0, errors };
-      }
+      required: true,
+      completed: false,
+      order: 2
     },
     {
       id: 'work_experience',
-      name: 'Work Experience',
+      title: 'Work Experience',
       description: 'Add your work experience',
-      isRequired: true,
-      validationFn: async (data) => {
-        if (!data.workExperiences || data.workExperiences.length === 0) {
-          return { isValid: false, errors: ['At least one work experience is required'] };
-        }
-        return { isValid: true, errors: [] };
-      }
+      required: true,
+      completed: false,
+      order: 3
     },
     {
       id: 'education',
-      name: 'Education',
-      description: 'Add your education background',
-      isRequired: true,
-      validationFn: async (data) => {
-        if (!data.education || data.education.length === 0) {
-          return { isValid: false, errors: ['At least one education entry is required'] };
-        }
-        return { isValid: true, errors: [] };
-      }
+      title: 'Education',
+      description: 'Add your educational background',
+      required: true,
+      completed: false,
+      order: 4
     },
     {
       id: 'skills',
-      name: 'Skills',
-      description: 'List your relevant skills',
-      isRequired: true,
-      validationFn: async (data) => {
-        if (!data.skills || data.skills.length === 0) {
-          return { isValid: false, errors: ['At least one skill is required'] };
-        }
-        return { isValid: true, errors: [] };
-      }
+      title: 'Skills',
+      description: 'List your skills',
+      required: true,
+      completed: false,
+      order: 5
     },
     {
-      id: 'projects',
-      name: 'Projects',
-      description: 'Add your projects (optional)',
-      isRequired: false
-    },
-    {
-      id: 'social_links',
-      name: 'Social Links',
-      description: 'Add your professional social links (optional)',
-      isRequired: false
+      id: 'profile_review',
+      title: 'Profile Review',
+      description: 'Review and complete your profile',
+      required: true,
+      completed: false,
+      order: 6
     }
   ];
 
-  static async getOnboardingProgress(userId: string, profileData?: any): Promise<OnboardingProgress> {
+  static async getOnboardingProgress(userId: string): Promise<OnboardingProgress> {
     try {
       const onboardingStatus = await resumeFileService.getOnboardingStatus(userId);
-      const completedSteps: string[] = [];
+      const completionData = await profileCompletionService.getProfileCompletion(userId);
       
+      const steps = [...this.ONBOARDING_STEPS];
+      const completedSteps: string[] = [];
+
       // Check resume upload
       if (onboardingStatus?.resume_uploaded) {
+        steps[0].completed = true;
         completedSteps.push('resume_upload');
       }
-      
-      // Check other steps if profile data is provided
-      if (profileData) {
-        for (const step of this.ONBOARDING_STEPS.slice(1)) {
-          if (step.validationFn) {
-            const validation = await step.validationFn(profileData);
-            if (validation.isValid) {
-              completedSteps.push(step.id);
-            }
+
+      // Check profile completion
+      if (completionData && completionData.completion_percentage >= 100) {
+        steps.forEach(step => {
+          step.completed = true;
+          if (!completedSteps.includes(step.id)) {
+            completedSteps.push(step.id);
           }
-        }
+        });
       }
-      
-      const requiredSteps = this.ONBOARDING_STEPS.filter(step => step.isRequired);
-      const completedRequiredSteps = completedSteps.filter(stepId => 
-        requiredSteps.some(step => step.id === stepId)
-      );
-      
+
+      const currentStepIndex = steps.findIndex(step => !step.completed);
+      const nextStep = currentStepIndex >= 0 ? steps[currentStepIndex] : undefined;
+
       return {
-        currentStep: completedSteps.length,
-        totalSteps: this.ONBOARDING_STEPS.length,
+        currentStep: currentStepIndex >= 0 ? currentStepIndex + 1 : steps.length,
+        totalSteps: steps.length,
         completedSteps,
-        percentComplete: Math.round((completedSteps.length / this.ONBOARDING_STEPS.length) * 100),
-        canProceed: completedRequiredSteps.length === requiredSteps.length
+        nextStep,
+        canProceed: currentStepIndex < 0 || steps[currentStepIndex].completed
       };
     } catch (error) {
-      ErrorHandler.handleError(
-        error instanceof Error ? error : new Error(String(error)),
-        { operation: 'Get Onboarding Progress', userId }
-      );
-      
+      console.error('Error getting onboarding progress:', error);
       return {
-        currentStep: 0,
+        currentStep: 1,
         totalSteps: this.ONBOARDING_STEPS.length,
         completedSteps: [],
-        percentComplete: 0,
+        nextStep: this.ONBOARDING_STEPS[0],
         canProceed: false
       };
     }
   }
 
-  static async validateStep(stepId: string, data: any): Promise<{ isValid: boolean; errors: string[] }> {
-    const step = this.ONBOARDING_STEPS.find(s => s.id === stepId);
-    
-    if (!step) {
-      return { isValid: false, errors: [`Unknown step: ${stepId}`] };
+  static validateStepCompletion(stepId: string, data: any): { isValid: boolean; errors: string[] } {
+    const errors: string[] = [];
+
+    switch (stepId) {
+      case 'resume_upload':
+        if (!data.resumeUploaded) {
+          errors.push('Resume upload is required');
+        }
+        break;
+
+      case 'personal_info':
+        if (!data.personalInfo?.name?.trim()) {
+          errors.push('Name is required');
+        }
+        if (!data.personalInfo?.email?.trim()) {
+          errors.push('Email is required');
+        }
+        if (!data.personalInfo?.phone?.trim()) {
+          errors.push('Phone number is required');
+        }
+        if (!data.personalInfo?.streetAddress?.trim()) {
+          errors.push('Street address is required');
+        }
+        if (!data.personalInfo?.city?.trim()) {
+          errors.push('City is required');
+        }
+        if (!data.personalInfo?.state?.trim()) {
+          errors.push('State is required');
+        }
+        if (!data.personalInfo?.county?.trim()) {
+          errors.push('County is required');
+        }
+        if (!data.personalInfo?.zipCode?.trim()) {
+          errors.push('ZIP code is required');
+        }
+        break;
+
+      case 'work_experience':
+        if (!data.workExperiences || data.workExperiences.length === 0) {
+          errors.push('At least one work experience is required');
+        }
+        break;
+
+      case 'education':
+        if (!data.education || data.education.length === 0) {
+          errors.push('At least one education entry is required');
+        }
+        break;
+
+      case 'skills':
+        if (!data.skills || data.skills.length < 3) {
+          errors.push('At least 3 skills are required');
+        }
+        break;
+
+      case 'profile_review':
+        // Validate all previous steps
+        const allStepsValid = [
+          'resume_upload',
+          'personal_info',
+          'work_experience',
+          'education',
+          'skills'
+        ].every(id => {
+          const validation = this.validateStepCompletion(id, data);
+          return validation.isValid;
+        });
+        
+        if (!allStepsValid) {
+          errors.push('All previous steps must be completed');
+        }
+        break;
     }
-    
-    if (!step.validationFn) {
-      return { isValid: true, errors: [] };
-    }
-    
-    try {
-      return await step.validationFn(data);
-    } catch (error) {
-      ErrorHandler.handleError(
-        error instanceof Error ? error : new Error(String(error)),
-        { operation: 'Validate Onboarding Step', additionalInfo: { stepId } }
-      );
-      
-      return { isValid: false, errors: ['Validation failed'] };
-    }
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
   }
 
-  static async completeOnboarding(userId: string, profileData: any): Promise<boolean> {
+  static async markStepCompleted(userId: string, stepId: string): Promise<boolean> {
     try {
-      const progress = await this.getOnboardingProgress(userId, profileData);
-      
-      if (!progress.canProceed) {
-        return false;
+      // Update onboarding status based on step
+      switch (stepId) {
+        case 'resume_upload':
+          return await resumeFileService.updateOnboardingStatus(userId, {
+            resume_uploaded: true
+          });
+
+        case 'profile_review':
+          return await resumeFileService.updateOnboardingStatus(userId, {
+            profile_completed: true,
+            onboarding_completed: true
+          });
+
+        default:
+          // For other steps, just log progress
+          console.log(`Step ${stepId} marked as completed for user ${userId}`);
+          return true;
       }
-      
-      // Save final profile data
-      const saveSuccess = await ErrorHandler.withRetry(
-        () => profileService.saveResumeData(userId, profileData),
-        {
-          maxAttempts: 3,
-          delay: 1000,
-          backoffMultiplier: 2
-        },
-        { operation: 'Complete Onboarding', userId }
-      );
-      
-      if (saveSuccess) {
-        await resumeFileService.updateOnboardingStatus(userId, {
-          profile_completed: true,
-          onboarding_completed: true
-        });
-      }
-      
-      return saveSuccess;
     } catch (error) {
-      ErrorHandler.handleError(
-        error instanceof Error ? error : new Error(String(error)),
-        { operation: 'Complete Onboarding', userId }
-      );
+      console.error('Error marking step completed:', error);
       return false;
     }
   }
 
-  static getStepDetails(): OnboardingStep[] {
-    return this.ONBOARDING_STEPS.map(step => ({
-      ...step,
-      isCompleted: false // This will be updated by getOnboardingProgress
-    }));
+  static getStepById(stepId: string): OnboardingStep | undefined {
+    return this.ONBOARDING_STEPS.find(step => step.id === stepId);
   }
 
-  static async handleResumeReUpload(userId: string, newResumeFile: File, parsedData: any): Promise<boolean> {
-    try {
-      // Save new resume file
-      const success = await resumeFileService.saveResumeFile(userId, newResumeFile, parsedData);
-      
-      if (success) {
-        // Reset profile completion status to allow re-completion
-        await resumeFileService.updateOnboardingStatus(userId, {
-          resume_uploaded: true,
-          profile_completed: false,
-          onboarding_completed: false
-        });
-      }
-      
-      return success;
-    } catch (error) {
-      ErrorHandler.handleError(
-        error instanceof Error ? error : new Error(String(error)),
-        { operation: 'Resume Re-upload', userId }
-      );
-      return false;
-    }
+  static getNextStep(currentStepId: string): OnboardingStep | undefined {
+    const currentIndex = this.ONBOARDING_STEPS.findIndex(step => step.id === currentStepId);
+    return currentIndex >= 0 && currentIndex < this.ONBOARDING_STEPS.length - 1
+      ? this.ONBOARDING_STEPS[currentIndex + 1]
+      : undefined;
   }
 }
