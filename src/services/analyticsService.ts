@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface AnalyticsEvent {
@@ -187,7 +186,7 @@ export class AnalyticsService {
       groups[sessionId].push({
         userId: event.user_id,
         eventType: event.event_type,
-        eventData: event.event_data,
+        eventData: event.eventData,
         pageUrl: event.page_url,
         sessionId: event.session_id,
         timestamp: new Date(event.created_at)
@@ -293,5 +292,82 @@ export class AnalyticsService {
 
   static getCurrentSessionId(): string {
     return this.sessionId;
+  }
+
+  static generateApplicationAnalytics(userId: string) {
+    // Mock data for analytics dashboard
+    return {
+      overview: {
+        totalApplications: 45,
+        responseRate: 24.4,
+        interviewRate: 13.3,
+        offerRate: 6.7,
+        avgResponseTime: 5.2,
+        activeApplications: 8
+      },
+      trends: {
+        applicationsOverTime: [
+          { date: '2024-01-01', count: 5 },
+          { date: '2024-01-08', count: 8 },
+          { date: '2024-01-15', count: 6 },
+          { date: '2024-01-22', count: 12 },
+          { date: '2024-01-29', count: 14 }
+        ],
+        responseRateOverTime: [
+          { date: '2024-01-01', rate: 20 },
+          { date: '2024-01-08', rate: 25 },
+          { date: '2024-01-15', rate: 22 },
+          { date: '2024-01-22', rate: 28 },
+          { date: '2024-01-29', rate: 24 }
+        ],
+        statusDistribution: [
+          { status: 'applied', count: 20, percentage: 44.4 },
+          { status: 'reviewed', count: 11, percentage: 24.4 },
+          { status: 'interview', count: 6, percentage: 13.3 },
+          { status: 'offer', count: 3, percentage: 6.7 },
+          { status: 'rejected', count: 5, percentage: 11.1 }
+        ]
+      },
+      insights: {
+        topPerformingSkills: [
+          { skill: 'React', responseRate: 35, applications: 15 },
+          { skill: 'TypeScript', responseRate: 30, applications: 12 },
+          { skill: 'Node.js', responseRate: 25, applications: 10 }
+        ],
+        bestCompanyTypes: [
+          { type: 'Startup', successRate: 40, applications: 10 },
+          { type: 'Enterprise', successRate: 20, applications: 25 },
+          { type: 'Mid-size', successRate: 30, applications: 10 }
+        ],
+        optimalApplicationTiming: [
+          { dayOfWeek: 'Tuesday', successRate: 35 },
+          { dayOfWeek: 'Wednesday', successRate: 32 },
+          { dayOfWeek: 'Thursday', successRate: 28 }
+        ],
+        salaryAnalysis: {
+          avgOfferedSalary: 95000,
+          salaryRangeDistribution: [
+            { range: '80-90k', count: 5 },
+            { range: '90-100k', count: 8 },
+            { range: '100-120k', count: 4 }
+          ]
+        }
+      },
+      recommendations: [
+        'Focus on React-based positions for higher response rates',
+        'Apply on Tuesday-Wednesday for optimal results',
+        'Target startup companies for better success rates'
+      ],
+      benchmarks: {
+        industryAvgResponseRate: 20,
+        industryAvgInterviewRate: 10,
+        industryAvgOfferRate: 5,
+        yourPerformanceVsIndustry: {
+          responseRate: 'above' as const,
+          interviewRate: 'above' as const,
+          offerRate: 'above' as const
+        }
+      }
+    };
   }
 }

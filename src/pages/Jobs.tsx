@@ -42,13 +42,46 @@ const Jobs = () => {
     }
   };
 
-  const handleJobsFound = (newJobs: Job[]) => {
-    setJobs(newJobs);
+  const handleSearch = async (query: string) => {
+    setLoading(true);
+    try {
+      const results = await realJobApiService.searchJobs({
+        query: query || "software engineer",
+        location: "remote",
+        limit: 20
+      });
+      
+      const allJobs = results.flatMap(result => result.jobs);
+      setJobs(allJobs);
+    } catch (error) {
+      console.error('Failed to search jobs:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleJobsFound = (newJobs: any[]) => {
+    // Convert ScrapedJob[] to Job[] format
+    const convertedJobs: Job[] = newJobs.map(job => ({
+      id: job.id || Date.now().toString(),
+      title: job.title || '',
+      company: job.company || '',
+      location: job.location || '',
+      description: job.description || '',
+      type: job.type || 'full-time',
+      level: job.level || 'mid',
+      skills: job.skills || [],
+      salary: job.salary,
+      url: job.url,
+      posted_date: job.posted_date || new Date().toISOString(),
+      source: job.source || 'manual'
+    }));
+    setJobs(convertedJobs);
   };
 
   const handleApplySearch = (search: any) => {
     setSearchQuery(search.query || '');
-    // Apply other search filters
+    handleSearch(search.query || '');
   };
 
   const handleDeleteSearch = (searchId: string) => {
@@ -57,7 +90,7 @@ const Jobs = () => {
 
   const handleVoiceSearch = (query: string) => {
     setSearchQuery(query);
-    handleRefresh();
+    handleSearch(query);
   };
 
   const handleSwipeLeft = () => {
@@ -73,7 +106,6 @@ const Jobs = () => {
   };
 
   const handleLongPress = () => {
-    // Show job actions menu on long press
     console.log('Job long press - show actions menu');
   };
 
