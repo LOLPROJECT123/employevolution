@@ -9,6 +9,48 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          achievement_type: string
+          created_at: string
+          date_achieved: string | null
+          description: string | null
+          id: string
+          is_verified: boolean | null
+          issuing_organization: string | null
+          skills_gained: Json | null
+          title: string
+          user_id: string
+          verification_url: string | null
+        }
+        Insert: {
+          achievement_type: string
+          created_at?: string
+          date_achieved?: string | null
+          description?: string | null
+          id?: string
+          is_verified?: boolean | null
+          issuing_organization?: string | null
+          skills_gained?: Json | null
+          title: string
+          user_id: string
+          verification_url?: string | null
+        }
+        Update: {
+          achievement_type?: string
+          created_at?: string
+          date_achieved?: string | null
+          description?: string | null
+          id?: string
+          is_verified?: boolean | null
+          issuing_organization?: string | null
+          skills_gained?: Json | null
+          title?: string
+          user_id?: string
+          verification_url?: string | null
+        }
+        Relationships: []
+      }
       activities_leadership: {
         Row: {
           created_at: string | null
@@ -41,6 +83,51 @@ export type Database = {
           role?: string | null
           start_date?: string | null
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      api_usage_logs: {
+        Row: {
+          created_at: string
+          endpoint: string
+          error_message: string | null
+          id: string
+          ip_address: unknown | null
+          method: string
+          request_size_bytes: number | null
+          response_size_bytes: number | null
+          response_time_ms: number | null
+          status_code: number
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          error_message?: string | null
+          id?: string
+          ip_address?: unknown | null
+          method: string
+          request_size_bytes?: number | null
+          response_size_bytes?: number | null
+          response_time_ms?: number | null
+          status_code: number
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          error_message?: string | null
+          id?: string
+          ip_address?: unknown | null
+          method?: string
+          request_size_bytes?: number | null
+          response_size_bytes?: number | null
+          response_time_ms?: number | null
+          status_code?: number
+          user_agent?: string | null
           user_id?: string
         }
         Relationships: []
@@ -473,6 +560,57 @@ export type Database = {
         }
         Relationships: []
       }
+      email_logs: {
+        Row: {
+          bounced_at: string | null
+          clicked_at: string | null
+          created_at: string
+          email_provider: string | null
+          error_message: string | null
+          id: string
+          opened_at: string | null
+          recipient_email: string
+          sender_email: string
+          sent_at: string | null
+          status: string
+          subject: string
+          template_id: string | null
+          user_id: string
+        }
+        Insert: {
+          bounced_at?: string | null
+          clicked_at?: string | null
+          created_at?: string
+          email_provider?: string | null
+          error_message?: string | null
+          id?: string
+          opened_at?: string | null
+          recipient_email: string
+          sender_email: string
+          sent_at?: string | null
+          status?: string
+          subject: string
+          template_id?: string | null
+          user_id: string
+        }
+        Update: {
+          bounced_at?: string | null
+          clicked_at?: string | null
+          created_at?: string
+          email_provider?: string | null
+          error_message?: string | null
+          id?: string
+          opened_at?: string | null
+          recipient_email?: string
+          sender_email?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          template_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_templates: {
         Row: {
           body: string
@@ -851,6 +989,45 @@ export type Database = {
         }
         Relationships: []
       }
+      navigation_analytics: {
+        Row: {
+          browser_info: Json | null
+          created_at: string
+          device_type: string | null
+          duration_ms: number | null
+          from_route: string | null
+          id: string
+          interaction_type: string
+          session_id: string
+          to_route: string
+          user_id: string | null
+        }
+        Insert: {
+          browser_info?: Json | null
+          created_at?: string
+          device_type?: string | null
+          duration_ms?: number | null
+          from_route?: string | null
+          id?: string
+          interaction_type: string
+          session_id: string
+          to_route: string
+          user_id?: string | null
+        }
+        Update: {
+          browser_info?: Json | null
+          created_at?: string
+          device_type?: string | null
+          duration_ms?: number | null
+          from_route?: string | null
+          id?: string
+          interaction_type?: string
+          session_id?: string
+          to_route?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       notification_preferences: {
         Row: {
           application_updates: boolean | null
@@ -1016,6 +1193,51 @@ export type Database = {
           reviewer_id?: string
           status?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      professional_development: {
+        Row: {
+          category: string
+          completion_date: string | null
+          created_at: string
+          goal_description: string | null
+          goal_title: string
+          id: string
+          notes: string | null
+          progress_percentage: number | null
+          status: string | null
+          target_date: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          completion_date?: string | null
+          created_at?: string
+          goal_description?: string | null
+          goal_title: string
+          id?: string
+          notes?: string | null
+          progress_percentage?: number | null
+          status?: string | null
+          target_date?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          completion_date?: string | null
+          created_at?: string
+          goal_description?: string | null
+          goal_title?: string
+          id?: string
+          notes?: string | null
+          progress_percentage?: number | null
+          status?: string | null
+          target_date?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -1381,6 +1603,39 @@ export type Database = {
           severity?: string
           user_agent?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_2fa: {
+        Row: {
+          backup_codes: Json
+          created_at: string
+          id: string
+          is_enabled: boolean | null
+          last_used_at: string | null
+          secret_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          backup_codes: Json
+          created_at?: string
+          id?: string
+          is_enabled?: boolean | null
+          last_used_at?: string | null
+          secret_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          backup_codes?: Json
+          created_at?: string
+          id?: string
+          is_enabled?: boolean | null
+          last_used_at?: string | null
+          secret_key?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
