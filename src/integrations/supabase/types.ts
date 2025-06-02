@@ -78,6 +78,51 @@ export type Database = {
         }
         Relationships: []
       }
+      ats_integrations: {
+        Row: {
+          api_endpoint: string | null
+          ats_system: string
+          company_name: string
+          created_at: string | null
+          credentials_encrypted: string | null
+          id: string
+          integration_status: string | null
+          last_sync_at: string | null
+          sync_data_types: string[] | null
+          sync_frequency: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          api_endpoint?: string | null
+          ats_system: string
+          company_name: string
+          created_at?: string | null
+          credentials_encrypted?: string | null
+          id?: string
+          integration_status?: string | null
+          last_sync_at?: string | null
+          sync_data_types?: string[] | null
+          sync_frequency?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          api_endpoint?: string | null
+          ats_system?: string
+          company_name?: string
+          created_at?: string | null
+          credentials_encrypted?: string | null
+          id?: string
+          integration_status?: string | null
+          last_sync_at?: string | null
+          sync_data_types?: string[] | null
+          sync_frequency?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -284,6 +329,36 @@ export type Database = {
           source?: string | null
           tags?: string[] | null
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      conversion_events: {
+        Row: {
+          created_at: string | null
+          event_name: string
+          id: string
+          properties: Json | null
+          session_id: string
+          timestamp: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_name: string
+          id?: string
+          properties?: Json | null
+          session_id: string
+          timestamp?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          event_name?: string
+          id?: string
+          properties?: Json | null
+          session_id?: string
+          timestamp?: string | null
           user_id?: string
         }
         Relationships: []
@@ -848,6 +923,102 @@ export type Database = {
         }
         Relationships: []
       }
+      oauth_integrations: {
+        Row: {
+          access_token_encrypted: string
+          connected_at: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          last_sync_at: string | null
+          profile_data: Json | null
+          provider: string
+          provider_user_id: string
+          refresh_token_encrypted: string | null
+          scope: string | null
+          token_expires_at: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          access_token_encrypted: string
+          connected_at?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_sync_at?: string | null
+          profile_data?: Json | null
+          provider: string
+          provider_user_id: string
+          refresh_token_encrypted?: string | null
+          scope?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          access_token_encrypted?: string
+          connected_at?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_sync_at?: string | null
+          profile_data?: Json | null
+          provider?: string
+          provider_user_id?: string
+          refresh_token_encrypted?: string | null
+          scope?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      peer_reviews: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          document_id: string
+          document_type: string
+          feedback_provided: boolean | null
+          id: string
+          rating: number | null
+          review_content: string
+          reviewee_id: string
+          reviewer_id: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          document_id: string
+          document_type: string
+          feedback_provided?: boolean | null
+          id?: string
+          rating?: number | null
+          review_content: string
+          reviewee_id: string
+          reviewer_id: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          document_id?: string
+          document_type?: string
+          feedback_provided?: boolean | null
+          id?: string
+          rating?: number | null
+          review_content?: string
+          reviewee_id?: string
+          reviewer_id?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profile_completion_tracking: {
         Row: {
           completion_percentage: number | null
@@ -1088,6 +1259,41 @@ export type Database = {
         }
         Relationships: []
       }
+      review_feedback: {
+        Row: {
+          created_at: string | null
+          feedback_comment: string | null
+          feedback_type: string
+          id: string
+          provided_by: string
+          review_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          feedback_comment?: string | null
+          feedback_type: string
+          id?: string
+          provided_by: string
+          review_id: string
+        }
+        Update: {
+          created_at?: string | null
+          feedback_comment?: string | null
+          feedback_type?: string
+          id?: string
+          provided_by?: string
+          review_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_feedback_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "peer_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_jobs: {
         Row: {
           id: string
@@ -1276,6 +1482,54 @@ export type Database = {
           id?: string
           language?: string
           proficiency?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_metrics: {
+        Row: {
+          application_success_rate: number | null
+          created_at: string | null
+          engagement_score: number | null
+          id: string
+          interview_success_rate: number | null
+          last_activity_date: string | null
+          profile_completion_score: number | null
+          profile_quality_score: number | null
+          total_applications: number | null
+          total_interviews: number | null
+          total_offers: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          application_success_rate?: number | null
+          created_at?: string | null
+          engagement_score?: number | null
+          id?: string
+          interview_success_rate?: number | null
+          last_activity_date?: string | null
+          profile_completion_score?: number | null
+          profile_quality_score?: number | null
+          total_applications?: number | null
+          total_interviews?: number | null
+          total_offers?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          application_success_rate?: number | null
+          created_at?: string | null
+          engagement_score?: number | null
+          id?: string
+          interview_success_rate?: number | null
+          last_activity_date?: string | null
+          profile_completion_score?: number | null
+          profile_quality_score?: number | null
+          total_applications?: number | null
+          total_interviews?: number | null
+          total_offers?: number | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []

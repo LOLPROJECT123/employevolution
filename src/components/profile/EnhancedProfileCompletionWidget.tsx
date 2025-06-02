@@ -4,216 +4,256 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, AlertCircle, ArrowRight, Zap } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
-import { EnhancedProfileService } from '@/services/enhancedProfileService';
-import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
-import { EnhancedErrorDisplay } from '@/components/ui/enhanced-error-display';
-import { useSecurityMonitoring } from '@/hooks/useSecurityMonitoring';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { 
+  CheckCircle, 
+  AlertTriangle, 
+  Info, 
+  TrendingUp, 
+  Target,
+  ArrowRight,
+  RefreshCw
+} from 'lucide-react';
+import { useEnhancedProfileData } from '@/hooks/useEnhancedProfileData';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 const EnhancedProfileCompletionWidget: React.FC = () => {
-  const { user } = useAuth();
-  const { checkRateLimit } = useSecurityMonitoring();
-  const [completionData, setCompletionData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
+  const {
+    metrics,
+    validation,
+    loading,
+    completionPercentage,
+    qualityScore,
+    strengthScore,
+    missingFields,
+    recommendations,
+    nextSteps,
+    refreshData
+  } = useEnhancedProfileData();
 
-  useEffect(() => {
-    if (user) {
-      loadProfileCompletion();
-    }
-  }, [user, retryCount]);
+  const [showDetails, setShowDetails] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const loadProfileCompletion = async () => {
-    if (!user) return;
-    
-    const rateLimitOk = await checkRateLimit('profile_completion', 20);
-    if (!rateLimitOk) {
-      setError('Too many requests. Please wait a moment.');
-      setLoading(false);
-      return;
-    }
-    
-    setLoading(true);
-    setError(null);
-    
-    try {
-      // Get user profile data first
-      const profileData = await EnhancedProfileService.loadProfileForUI(user.id);
-      
-      if (profileData) {
-        const validation = await EnhancedProfileService.validateProfileCompletionDetailed(
-          user.id, 
-          profileData
-        );
-        setCompletionData(validation);
-      } else {
-        setCompletionData({
-          progress: { currentStep: 0, totalSteps: 6, completedSteps: [], percentComplete: 0, canProceed: false },
-          completionItems: [],
-          qualityMetrics: { completionScore: 0, qualityScore: 0, strengthAreas: [], improvementAreas: [], recommendations: [] },
-          nextMilestone: null,
-          isReadyForCompletion: false
-        });
-      }
-    } catch (error) {
-      console.error('Error loading profile completion:', error);
-      setError(error instanceof Error ? error.message : 'Failed to load profile completion');
-    } finally {
-      setLoading(false);
-    }
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refreshData();
+    setIsRefreshing(false);
   };
 
-  const handleRetry = () => {
-    setRetryCount(prev => prev + 1);
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return 'text-green-600';
+    if (score >= 60) return 'text-yellow-600';
+    return 'text-red-600';
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800 border-red-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'low': return 'bg-blue-100 text-blue-800 border-blue-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
+  const getScoreBadgeVariant = (score: number) => {
+    if (score >= 80) return 'default';
+    if (score >= 60) return 'secondary';
+    return 'destructive';
   };
 
   if (loading) {
     return (
-      <Card className="hover-scale">
+      <Card className="w-full">
         <CardHeader>
-          <CardTitle>Profile Completion</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Target className="h-5 w-5" />
+            Profile Completion
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <LoadingSkeleton lines={4} />
+          <div className="space-y-3">
+            <div className="h-4 bg-gray-200 rounded animate-pulse" />
+            <div className="h-3 bg-gray-200 rounded animate-pulse w-3/4" />
+            <div className="h-3 bg-gray-200 rounded animate-pulse w-1/2" />
+          </div>
         </CardContent>
       </Card>
     );
   }
-
-  if (error) {
-    return (
-      <Card className="hover-scale">
-        <CardHeader>
-          <CardTitle>Profile Completion</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <EnhancedErrorDisplay
-            error={new Error(error)}
-            suggestions={[
-              'Check your internet connection',
-              'Try refreshing the page',
-              'Contact support if the problem persists'
-            ]}
-            onRetry={handleRetry}
-            contextHelp="This widget shows your profile completion progress and suggests improvements."
-          />
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (!completionData) return null;
-
-  const { qualityMetrics, completionItems, progress } = completionData;
-  const incompleteItems = completionItems.filter((item: any) => !item.completed);
-  const highPriorityIncomplete = incompleteItems.filter((item: any) => item.priority === 'high');
 
   return (
-    <Card className="hover-scale animate-fade-in">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Zap className="h-5 w-5 text-blue-500" />
-          Profile Strength
-          {qualityMetrics.completionScore === 100 ? (
-            <CheckCircle className="h-5 w-5 text-green-500" />
-          ) : (
-            <AlertCircle className="h-5 w-5 text-orange-500" />
-          )}
-        </CardTitle>
+    <Card className="w-full">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Target className="h-5 w-5" />
+            Profile Health Dashboard
+          </CardTitle>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div>
-          <div className="flex justify-between text-sm mb-2">
-            <span>Completion Score</span>
-            <span className="font-semibold">{qualityMetrics.completionScore}%</span>
+
+      <CardContent className="space-y-6">
+        {/* Main Metrics */}
+        <div className="grid grid-cols-3 gap-4">
+          <div className="text-center">
+            <div className={`text-2xl font-bold ${getScoreColor(completionPercentage)}`}>
+              {completionPercentage}%
+            </div>
+            <div className="text-sm text-gray-500">Completion</div>
           </div>
-          <Progress value={qualityMetrics.completionScore} className="h-3" />
-          
-          <div className="flex justify-between text-sm mt-2 mb-1">
-            <span>Quality Score</span>
-            <span className="font-semibold">{qualityMetrics.qualityScore}%</span>
+          <div className="text-center">
+            <div className={`text-2xl font-bold ${getScoreColor(qualityScore)}`}>
+              {qualityScore}%
+            </div>
+            <div className="text-sm text-gray-500">Quality</div>
           </div>
-          <Progress value={qualityMetrics.qualityScore} className="h-2" />
+          <div className="text-center">
+            <div className={`text-2xl font-bold ${getScoreColor(strengthScore)}`}>
+              {strengthScore}%
+            </div>
+            <div className="text-sm text-gray-500">Strength</div>
+          </div>
         </div>
 
-        {qualityMetrics.strengthAreas.length > 0 && (
+        {/* Progress Bars */}
+        <div className="space-y-3">
+          <div>
+            <div className="flex justify-between text-sm mb-1">
+              <span>Profile Completion</span>
+              <Badge variant={getScoreBadgeVariant(completionPercentage)}>
+                {completionPercentage}%
+              </Badge>
+            </div>
+            <Progress value={completionPercentage} className="h-2" />
+          </div>
+
+          <div>
+            <div className="flex justify-between text-sm mb-1">
+              <span>Data Quality</span>
+              <Badge variant={getScoreBadgeVariant(qualityScore)}>
+                {qualityScore}%
+              </Badge>
+            </div>
+            <Progress value={qualityScore} className="h-2" />
+          </div>
+
+          <div>
+            <div className="flex justify-between text-sm mb-1">
+              <span>Profile Strength</span>
+              <Badge variant={getScoreBadgeVariant(strengthScore)}>
+                {strengthScore}%
+              </Badge>
+            </div>
+            <Progress value={strengthScore} className="h-2" />
+          </div>
+        </div>
+
+        {/* Critical Issues */}
+        {validation && validation.errors && validation.errors.length > 0 && (
+          <Alert className="border-red-200 bg-red-50">
+            <AlertTriangle className="h-4 w-4 text-red-600" />
+            <AlertDescription>
+              <div className="font-medium text-red-800 mb-1">Critical Issues Found</div>
+              <ul className="text-sm text-red-700 space-y-1">
+                {validation.errors.slice(0, 3).map((error, index) => (
+                  <li key={index} className="flex items-start gap-1">
+                    <span className="font-medium">•</span>
+                    {error.message}
+                  </li>
+                ))}
+              </ul>
+              {validation.errors.length > 3 && (
+                <div className="text-xs text-red-600 mt-1">
+                  +{validation.errors.length - 3} more issues
+                </div>
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Top Recommendations */}
+        {recommendations && recommendations.length > 0 && (
           <div className="space-y-2">
-            <p className="text-xs text-green-600 font-medium">✨ Strengths:</p>
-            <div className="flex flex-wrap gap-1">
-              {qualityMetrics.strengthAreas.slice(0, 3).map((strength, index) => (
-                <Badge key={index} className="bg-green-100 text-green-800 text-xs">
-                  {strength}
-                </Badge>
+            <h4 className="font-medium text-sm flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              Top Recommendations
+            </h4>
+            <div className="space-y-2">
+              {recommendations.slice(0, 2).map((rec, index) => (
+                <Alert key={index} className="border-blue-200 bg-blue-50">
+                  <Info className="h-4 w-4 text-blue-600" />
+                  <AlertDescription className="text-sm text-blue-800">
+                    {rec}
+                  </AlertDescription>
+                </Alert>
               ))}
             </div>
           </div>
         )}
 
-        {qualityMetrics.completionScore < 100 && (
-          <div className="space-y-3">
-            <h4 className="font-medium text-sm">🚀 Boost Your Profile</h4>
-            
-            {highPriorityIncomplete.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-xs text-red-600 font-medium">🔥 High Impact:</p>
-                {highPriorityIncomplete.slice(0, 2).map((item: any) => (
-                  <div key={item.field} className={`p-3 rounded-lg border animate-scale-in ${getPriorityColor(item.priority)}`}>
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{item.label}</p>
-                      <p className="text-xs opacity-75">{item.description}</p>
+        {/* Next Steps */}
+        {nextSteps && nextSteps.length > 0 && (
+          <div className="space-y-2">
+            <h4 className="font-medium text-sm flex items-center gap-2">
+              <ArrowRight className="h-4 w-4" />
+              Priority Actions
+            </h4>
+            <div className="space-y-2">
+              {nextSteps.slice(0, 3).map((step, index) => (
+                <div key={index} className="flex items-start gap-2 text-sm">
+                  <div className="bg-blue-100 text-blue-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium mt-0.5">
+                    {index + 1}
+                  </div>
+                  <span className="text-gray-700">{step}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Detailed Section Scores */}
+        {metrics && (
+          <Collapsible open={showDetails} onOpenChange={setShowDetails}>
+            <CollapsibleTrigger asChild>
+              <Button variant="outline" size="sm" className="w-full">
+                {showDetails ? 'Hide' : 'Show'} Section Details
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-3 mt-3">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                {Object.entries(metrics.sectionScores).map(([section, score]) => (
+                  <div key={section} className="flex justify-between items-center">
+                    <span className="capitalize">{section.replace(/([A-Z])/g, ' $1').trim()}</span>
+                    <div className="flex items-center gap-2">
+                      <Progress value={score} className="w-16 h-2" />
+                      <span className={`font-medium ${getScoreColor(score)}`}>
+                        {score}%
+                      </span>
                     </div>
                   </div>
                 ))}
               </div>
-            )}
-
-            {qualityMetrics.recommendations.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-xs text-blue-600 font-medium">💡 Quick Wins:</p>
-                {qualityMetrics.recommendations.slice(0, 2).map((rec, index) => (
-                  <div key={index} className="p-2 bg-blue-50 rounded-lg border border-blue-200">
-                    <p className="text-xs text-blue-800">{rec}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <Button 
-              onClick={() => window.location.href = '/profile'} 
-              className="w-full mt-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
-              size="sm"
-            >
-              <Zap className="h-4 w-4 mr-2" />
-              Power Up Profile
-              <ArrowRight className="h-4 w-4 ml-2" />
-            </Button>
-          </div>
+            </CollapsibleContent>
+          </Collapsible>
         )}
 
-        {qualityMetrics.completionScore === 100 && (
-          <div className="text-center p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200 animate-scale-in">
-            <CheckCircle className="h-8 w-8 text-green-500 mx-auto mb-2" />
-            <p className="text-sm font-medium text-green-800">🎉 Profile Perfected!</p>
-            <p className="text-xs text-green-600">You're ready to attract amazing opportunities</p>
-          </div>
-        )}
-
-        <div className="mt-4 pt-3 border-t border-gray-100">
-          <div className="flex justify-between text-xs text-gray-500">
-            <span>Progress: {progress.completedSteps.length}/{progress.totalSteps} steps</span>
-            <span>Last updated: {new Date().toLocaleDateString()}</span>
-          </div>
+        {/* Overall Status */}
+        <div className="pt-3 border-t">
+          {completionPercentage >= 90 ? (
+            <div className="flex items-center gap-2 text-green-700">
+              <CheckCircle className="h-4 w-4" />
+              <span className="text-sm font-medium">Excellent! Your profile is highly optimized</span>
+            </div>
+          ) : completionPercentage >= 70 ? (
+            <div className="flex items-center gap-2 text-yellow-700">
+              <AlertTriangle className="h-4 w-4" />
+              <span className="text-sm font-medium">Good progress! A few improvements will boost your profile</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-red-700">
+              <AlertTriangle className="h-4 w-4" />
+              <span className="text-sm font-medium">Your profile needs attention to attract opportunities</span>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
