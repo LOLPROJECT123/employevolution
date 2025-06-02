@@ -91,7 +91,7 @@ export const useOfflineMode = () => {
   const clearCache = () => {
     const keys = Object.keys(localStorage);
     keys.forEach(key => {
-      if (key.startsWith('emploevolution_offline_')) {
+      if (key.startsWith('employevolution_offline_')) {
         localStorage.removeItem(key);
       }
     });
