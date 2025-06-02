@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -64,8 +63,77 @@ const AnalyticsDashboard: React.FC = () => {
       setLoading(true);
       // Mock user ID - in real app, get from auth context
       const userId = 'mock-user-id';
-      const data = AnalyticsService.generateApplicationAnalytics(userId);
-      setAnalyticsData(data);
+      const appData = await AnalyticsService.generateApplicationAnalytics(userId);
+      
+      // Convert to full AnalyticsData structure with mock data
+      const fullData: AnalyticsData = {
+        overview: {
+          totalApplications: appData.totalApplications,
+          responseRate: appData.successRate,
+          interviewRate: 25,
+          offerRate: 10,
+          avgResponseTime: appData.averageResponseTime,
+          activeApplications: Math.floor(appData.totalApplications * 0.3)
+        },
+        trends: {
+          applicationsOverTime: appData.monthlyTrend.map(item => ({
+            date: item.month,
+            count: item.applications
+          })),
+          responseRateOverTime: appData.monthlyTrend.map(item => ({
+            date: item.month,
+            rate: (item.responses / item.applications) * 100
+          })),
+          statusDistribution: [
+            { status: 'Applied', count: 50, percentage: 50 },
+            { status: 'Under Review', count: 30, percentage: 30 },
+            { status: 'Interview', count: 15, percentage: 15 },
+            { status: 'Offer', count: 5, percentage: 5 }
+          ]
+        },
+        insights: {
+          topPerformingSkills: [
+            { skill: 'React', responseRate: 85, applications: 20 },
+            { skill: 'TypeScript', responseRate: 75, applications: 15 },
+            { skill: 'Node.js', responseRate: 70, applications: 12 }
+          ],
+          bestCompanyTypes: appData.topCompanies.map(company => ({
+            type: company.name,
+            successRate: 65,
+            applications: company.applications
+          })),
+          optimalApplicationTiming: [
+            { dayOfWeek: 'Tuesday', successRate: 75 },
+            { dayOfWeek: 'Wednesday', successRate: 70 },
+            { dayOfWeek: 'Thursday', successRate: 68 }
+          ],
+          salaryAnalysis: {
+            avgOfferedSalary: 95000,
+            salaryRangeDistribution: [
+              { range: '$80-90k', count: 3 },
+              { range: '$90-100k', count: 5 },
+              { range: '$100-110k', count: 4 }
+            ]
+          }
+        },
+        recommendations: [
+          'Focus on React-based positions for higher response rates',
+          'Apply on Tuesdays and Wednesdays for optimal results',
+          'Consider highlighting TypeScript skills in your applications'
+        ],
+        benchmarks: {
+          industryAvgResponseRate: 30,
+          industryAvgInterviewRate: 20,
+          industryAvgOfferRate: 8,
+          yourPerformanceVsIndustry: {
+            responseRate: appData.successRate > 30 ? 'above' : 'below',
+            interviewRate: 'average',
+            offerRate: 'above'
+          }
+        }
+      };
+      
+      setAnalyticsData(fullData);
     } catch (error) {
       console.error('Error loading analytics:', error);
     } finally {

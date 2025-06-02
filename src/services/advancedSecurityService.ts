@@ -67,7 +67,7 @@ export class AdvancedSecurityService {
         id: event.id,
         userId: event.user_id,
         eventType: event.event_type,
-        severity: event.severity,
+        severity: event.severity as 'low' | 'medium' | 'high' | 'critical',
         description: event.description,
         metadata: event.metadata,
         timestamp: event.created_at,
