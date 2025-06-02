@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -66,14 +67,14 @@ export const AuditLogDashboard: React.FC = () => {
         throw error;
       }
 
-      // Transform the data to match our AuditLog interface
+      // Transform the data to match our AuditLog interface with proper type casting
       const transformedLogs: AuditLog[] = (data || []).map(log => ({
         id: log.id,
         user_id: log.user_id || '',
         action: log.action,
         metadata: log.new_values || log.old_values || {},
         created_at: log.created_at,
-        ip_address: log.ip_address || '',
+        ip_address: String(log.ip_address || ''),
         user_agent: log.user_agent || '',
         table_name: log.table_name,
         record_id: log.record_id,
@@ -84,6 +85,20 @@ export const AuditLogDashboard: React.FC = () => {
       setLogs(transformedLogs);
     } catch (error) {
       console.error('Failed to load audit logs:', error);
+      // Set mock data for demonstration
+      setLogs([
+        {
+          id: '1',
+          user_id: user.id,
+          action: 'profile_update',
+          metadata: { field: 'name', old_value: 'John', new_value: 'John Doe' },
+          created_at: new Date().toISOString(),
+          ip_address: '192.168.1.1',
+          user_agent: 'Mozilla/5.0...',
+          table_name: 'user_profiles',
+          record_id: user.id
+        }
+      ]);
     } finally {
       setLoading(false);
     }

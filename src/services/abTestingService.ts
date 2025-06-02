@@ -28,6 +28,20 @@ export interface ABTestAssignment {
   assignedAt: Date;
 }
 
+export interface ABTestResult {
+  testId: string;
+  variants: Array<{
+    variantId: string;
+    name: string;
+    participants: number;
+    conversions: number;
+    conversionRate: number;
+    confidence: number;
+  }>;
+  winner?: string;
+  statistical_significance: boolean;
+}
+
 export class ABTestingService {
   private static assignments = new Map<string, ABTestAssignment>();
 
@@ -151,7 +165,7 @@ export class ABTestingService {
     }
   }
 
-  static async getTestResults(testId: string): Promise<any> {
+  static async getTestResults(testId: string): Promise<ABTestResult | null> {
     try {
       // Mock results since we don't have real data
       return {
