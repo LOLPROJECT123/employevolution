@@ -1,65 +1,87 @@
 
 import React from 'react';
-import { AlertCircle, RefreshCw, HelpCircle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AlertTriangle, RefreshCw, Home, Bug } from 'lucide-react';
 
 interface EnhancedErrorDisplayProps {
-  error: string;
-  suggestions?: string[];
-  onRetry?: () => void;
-  contextHelp?: string;
+  error: Error;
+  retry?: () => void;
+  resetErrorBoundary?: () => void;
+  showDetails?: boolean;
 }
 
 export const EnhancedErrorDisplay: React.FC<EnhancedErrorDisplayProps> = ({
   error,
-  suggestions = [],
-  onRetry,
-  contextHelp
+  retry,
+  resetErrorBoundary,
+  showDetails = false
 }) => {
+  const [showFullError, setShowFullError] = React.useState(false);
+
+  const handleReportBug = () => {
+    // In a real app, this would send error details to your error tracking service
+    console.error('Error reported:', error);
+  };
+
   return (
-    <Card className="border-red-200 bg-red-50">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-red-700">
-          <AlertCircle className="h-5 w-5" />
-          Something went wrong
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <p className="text-red-600">{error}</p>
-        
-        {contextHelp && (
-          <div className="flex items-start gap-2 p-3 bg-blue-50 rounded-md">
-            <HelpCircle className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
-            <p className="text-sm text-blue-700">{contextHelp}</p>
-          </div>
-        )}
-        
-        {suggestions.length > 0 && (
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-gray-700">Try these solutions:</p>
-            <ul className="text-sm text-gray-600 space-y-1">
-              {suggestions.map((suggestion, index) => (
-                <li key={index} className="flex items-start gap-2">
-                  <span className="text-gray-400">•</span>
-                  {suggestion}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-        
-        {onRetry && (
+    <div className="min-h-[400px] flex items-center justify-center p-4">
+      <div className="max-w-md w-full space-y-4">
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Something went wrong</AlertTitle>
+          <AlertDescription>
+            {error.message || 'An unexpected error occurred. Please try again.'}
+          </AlertDescription>
+        </Alert>
+
+        <div className="space-y-2">
+          {retry && (
+            <Button onClick={retry} className="w-full">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Try Again
+            </Button>
+          )}
+          
+          {resetErrorBoundary && (
+            <Button variant="outline" onClick={resetErrorBoundary} className="w-full">
+              <Home className="h-4 w-4 mr-2" />
+              Go to Dashboard
+            </Button>
+          )}
+
           <Button 
-            onClick={onRetry}
-            variant="outline"
-            className="flex items-center gap-2"
+            variant="ghost" 
+            onClick={handleReportBug}
+            className="w-full"
           >
-            <RefreshCw className="h-4 w-4" />
-            Try Again
+            <Bug className="h-4 w-4 mr-2" />
+            Report Bug
           </Button>
+        </div>
+
+        {showDetails && (
+          <div className="space-y-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowFullError(!showFullError)}
+              className="text-xs"
+            >
+              {showFullError ? 'Hide' : 'Show'} Error Details
+            </Button>
+            
+            {showFullError && (
+              <div className="bg-muted p-3 rounded text-xs font-mono overflow-auto max-h-40">
+                <div className="mb-2 font-semibold">Error Stack:</div>
+                <pre className="whitespace-pre-wrap">{error.stack}</pre>
+              </div>
+            )}
+          </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
+
+export default EnhancedErrorDisplay;

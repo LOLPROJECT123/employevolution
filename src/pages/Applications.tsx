@@ -4,14 +4,18 @@ import Navbar from "@/components/Navbar";
 import { useMobile } from "@/hooks/use-mobile";
 import { MobileRouteLayout } from "@/components/mobile/MobileRouteLayout";
 import { AdvancedGestureHandler } from "@/components/mobile/AdvancedGestureHandler";
+import { VoiceSearchButton } from "@/components/mobile/VoiceSearchButton";
+import { BreadcrumbNav } from "@/components/navigation/BreadcrumbNav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, MapPin, Building, ExternalLink } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Calendar, MapPin, Building, ExternalLink, Search } from "lucide-react";
 
 const Applications = () => {
   const isMobile = useMobile();
   const [currentAppIndex, setCurrentAppIndex] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Mock data - replace with real data
   const applications = [
@@ -42,6 +46,11 @@ const Applications = () => {
     // Implement refresh logic
   };
 
+  const handleVoiceSearch = (query: string) => {
+    setSearchQuery(query);
+    // Implement application search
+  };
+
   const handleSwipeLeft = () => {
     if (currentAppIndex < applications.length - 1) {
       setCurrentAppIndex(prev => prev + 1);
@@ -52,6 +61,10 @@ const Applications = () => {
     if (currentAppIndex > 0) {
       setCurrentAppIndex(prev => prev - 1);
     }
+  };
+
+  const handleLongPress = () => {
+    console.log('Application long press - show actions menu');
   };
 
   const getStatusColor = (status: string) => {
@@ -123,6 +136,12 @@ const Applications = () => {
       
       <div className={`${!isMobile ? 'container mx-auto px-4 py-8' : 'p-0'} max-w-6xl`}>
         {!isMobile && (
+          <div className="mb-6">
+            <BreadcrumbNav />
+          </div>
+        )}
+        
+        {!isMobile && (
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-2">Job Applications</h1>
             <p className="text-muted-foreground">
@@ -130,11 +149,28 @@ const Applications = () => {
             </p>
           </div>
         )}
+
+        {/* Search Bar */}
+        <div className={`${isMobile ? 'p-4' : 'mb-6'}`}>
+          <div className="flex items-center space-x-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Search applications..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <VoiceSearchButton onSearch={handleVoiceSearch} />
+          </div>
+        </div>
         
         {isMobile ? (
           <AdvancedGestureHandler
             onSwipeLeft={handleSwipeLeft}
             onSwipeRight={handleSwipeRight}
+            onLongPress={handleLongPress}
             className="h-full"
           >
             <div className="p-4">
@@ -143,6 +179,9 @@ const Applications = () => {
               )}
               <div className="mt-4 text-center text-sm text-muted-foreground">
                 {currentAppIndex + 1} of {applications.length} applications
+                <div className="text-xs mt-1">
+                  Swipe left/right to navigate • Long press for options
+                </div>
               </div>
             </div>
           </AdvancedGestureHandler>

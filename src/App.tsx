@@ -30,6 +30,7 @@ import ResumePost from "./pages/ResumePost";
 import LeetcodePatterns from "./pages/LeetcodePatterns";
 import Calendar from "./pages/Calendar";
 import Communications from "./pages/Communications";
+import NotFound from "./pages/NotFound";
 import AdvancedAnalyticsIntegration from "./components/analytics/AdvancedAnalyticsIntegration";
 import SecurityDashboardEnhanced from "./components/security/SecurityDashboardEnhanced";
 import OfflineFirstPages from "./pages/OfflineFirstPages";
@@ -221,6 +222,9 @@ const App = () => (
                         </OnboardingGuard>
                       </ProtectedRoute>
                     } />
+                    
+                    {/* Catch-all route for 404 */}
+                    <Route path="*" element={<NotFound />} />
                   </Routes>
                 </AppTransitions>
               </TouchGestureHandler>

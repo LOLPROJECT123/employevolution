@@ -1,8 +1,9 @@
-
 import React, { useState } from 'react';
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
 import { useMobile } from "@/hooks/use-mobile";
+import { MobileRouteLayout } from "@/components/mobile/MobileRouteLayout";
+import { BreadcrumbNav } from "@/components/navigation/BreadcrumbNav";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -71,6 +72,11 @@ const Calendar = () => {
   const [events, setEvents] = useState<Event[]>(sampleEvents);
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
+  const handleRefresh = async () => {
+    console.log('Refreshing calendar...');
+    // Implement calendar refresh logic
+  };
+
   const getEventTypeColor = (type: string) => {
     switch (type) {
       case 'interview': return 'bg-blue-100 text-blue-800';
@@ -96,13 +102,17 @@ const Calendar = () => {
     event.date === new Date().toISOString().split('T')[0]
   );
 
-  return (
+  const content = (
     <div className="min-h-screen bg-background">
       {!isMobile && <Navbar />}
-      {isMobile && <MobileHeader title="Calendar" />}
       
       <div className="bg-blue-600 dark:bg-blue-900 py-4 px-4 md:py-6 md:px-6">
         <div className="container mx-auto max-w-screen-xl">
+          {!isMobile && (
+            <div className="mb-4">
+              <BreadcrumbNav className="text-blue-100" />
+            </div>
+          )}
           <h1 className="text-xl md:text-3xl font-bold text-white">
             Calendar
           </h1>
@@ -261,6 +271,20 @@ const Calendar = () => {
       </div>
     </div>
   );
+
+  if (isMobile) {
+    return (
+      <MobileRouteLayout
+        title="Calendar"
+        onRefresh={handleRefresh}
+        className="bg-background"
+      >
+        {content}
+      </MobileRouteLayout>
+    );
+  }
+
+  return content;
 };
 
 export default Calendar;

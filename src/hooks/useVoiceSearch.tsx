@@ -1,102 +1,76 @@
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 
-interface VoiceSearchOptions {
-  onResult: (transcript: string) => void;
-  onError?: (error: string) => void;
-  continuous?: boolean;
-  language?: string;
+interface SpeechRecognitionEvent {
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
 }
 
-export const useVoiceSearch = ({
-  onResult,
-  onError,
-  continuous = false,
-  language = 'en-US'
-}: VoiceSearchOptions) => {
-  const [isListening, setIsListening] = useState(false);
+interface SpeechRecognitionErrorEvent {
+  error: string;
+  message: string;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
+
+export const useVoiceJobSearch = (onResult: (transcript: string) => void) => {
   const [isSupported, setIsSupported] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const [recognition, setRecognition] = useState<any>(null);
 
   useEffect(() => {
-    // Check if speech recognition is supported
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     
     if (SpeechRecognition) {
       setIsSupported(true);
-      recognitionRef.current = new SpeechRecognition();
+      const recognitionInstance = new SpeechRecognition();
       
-      const recognition = recognitionRef.current;
-      recognition.continuous = continuous;
-      recognition.interimResults = true;
-      recognition.lang = language;
+      recognitionInstance.continuous = false;
+      recognitionInstance.interimResults = true;
+      recognitionInstance.lang = 'en-US';
 
-      recognition.onstart = () => {
+      recognitionInstance.onresult = (event: SpeechRecognitionEvent) => {
+        const current = event.resultIndex;
+        const transcript = event.results[current][0].transcript;
+        setTranscript(transcript);
+        
+        if (event.results[current].isFinal) {
+          onResult(transcript);
+          setTranscript('');
+        }
+      };
+
+      recognitionInstance.onstart = () => {
         setIsListening(true);
       };
 
-      recognition.onresult = (event) => {
-        let finalTranscript = '';
-        let interimTranscript = '';
-
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            finalTranscript += transcript;
-          } else {
-            interimTranscript += transcript;
-          }
-        }
-
-        const fullTranscript = finalTranscript || interimTranscript;
-        setTranscript(fullTranscript);
-
-        if (finalTranscript) {
-          onResult(finalTranscript);
-        }
-      };
-
-      recognition.onerror = (event) => {
-        setIsListening(false);
-        const errorMessage = `Speech recognition error: ${event.error}`;
-        console.error(errorMessage);
-        onError?.(errorMessage);
-      };
-
-      recognition.onend = () => {
+      recognitionInstance.onend = () => {
         setIsListening(false);
       };
-    } else {
-      setIsSupported(false);
-      onError?.('Speech recognition is not supported in this browser');
-    }
 
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.abort();
-      }
-    };
-  }, [onResult, onError, continuous, language]);
+      recognitionInstance.onerror = (event: SpeechRecognitionErrorEvent) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+      };
 
-  const startListening = () => {
-    if (recognitionRef.current && !isListening) {
-      setTranscript('');
-      recognitionRef.current.start();
+      setRecognition(recognitionInstance);
     }
-  };
-
-  const stopListening = () => {
-    if (recognitionRef.current && isListening) {
-      recognitionRef.current.stop();
-    }
-  };
+  }, [onResult]);
 
   const toggleListening = () => {
+    if (!recognition) return;
+
     if (isListening) {
-      stopListening();
+      recognition.stop();
     } else {
-      startListening();
+      setTranscript('');
+      recognition.start();
     }
   };
 
@@ -104,30 +78,6 @@ export const useVoiceSearch = ({
     isSupported,
     isListening,
     transcript,
-    startListening,
-    stopListening,
-    toggleListening,
+    toggleListening
   };
-};
-
-// Voice commands for job search
-export const useVoiceJobSearch = (onSearch: (query: string) => void) => {
-  const processVoiceCommand = (transcript: string) => {
-    const lowercaseTranscript = transcript.toLowerCase();
-
-    // Remove command phrases and extract search terms
-    const searchTerms = lowercaseTranscript
-      .replace(/^(search for|find|look for|show me)\s+/i, '')
-      .replace(/\s+(jobs|positions|roles|opportunities)$/i, '')
-      .trim();
-
-    if (searchTerms) {
-      onSearch(searchTerms);
-    }
-  };
-
-  return useVoiceSearch({
-    onResult: processVoiceCommand,
-    onError: (error) => console.error('Voice search error:', error),
-  });
 };

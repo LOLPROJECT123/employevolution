@@ -1,33 +1,29 @@
 
-import { useState, useEffect } from 'react';
-import { databaseService } from '@/services/databaseService';
+import { useState, useEffect, useCallback } from 'react';
 
-export interface OfflineAction {
+interface PendingAction {
   id: string;
-  type: 'CREATE' | 'UPDATE' | 'DELETE';
-  table: string;
+  type: string;
   data: any;
   timestamp: number;
 }
 
 export const useOfflineMode = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [pendingActions, setPendingActions] = useState<OfflineAction[]>([]);
+  const [pendingActions, setPendingActions] = useState<PendingAction[]>([]);
 
   useEffect(() => {
-    const handleOnline = () => {
-      setIsOnline(true);
-      syncPendingActions();
-    };
-
-    const handleOffline = () => {
-      setIsOnline(false);
-    };
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    loadPendingActions();
+    // Load pending actions from localStorage
+    const saved = localStorage.getItem('pendingActions');
+    if (saved) {
+      setPendingActions(JSON.parse(saved));
+    }
 
     return () => {
       window.removeEventListener('online', handleOnline);
@@ -35,75 +31,61 @@ export const useOfflineMode = () => {
     };
   }, []);
 
-  const loadPendingActions = () => {
-    const stored = databaseService.get<OfflineAction[]>('pending_actions') || [];
-    setPendingActions(stored);
-  };
-
-  const savePendingActions = (actions: OfflineAction[]) => {
-    databaseService.set('pending_actions', actions);
-    setPendingActions(actions);
-  };
-
-  const addPendingAction = (action: Omit<OfflineAction, 'id' | 'timestamp'>) => {
-    const newAction: OfflineAction = {
-      ...action,
-      id: `${Date.now()}_${Math.random()}`,
+  const cacheData = useCallback((key: string, data: any, expireHours = 24) => {
+    const cacheItem = {
+      data,
       timestamp: Date.now(),
+      expireTime: Date.now() + (expireHours * 60 * 60 * 1000)
+    };
+    localStorage.setItem(`cache_${key}`, JSON.stringify(cacheItem));
+  }, []);
+
+  const getCachedData = useCallback(<T>(key: string): T | null => {
+    const cached = localStorage.getItem(`cache_${key}`);
+    if (!cached) return null;
+
+    try {
+      const cacheItem = JSON.parse(cached);
+      if (Date.now() > cacheItem.expireTime) {
+        localStorage.removeItem(`cache_${key}`);
+        return null;
+      }
+      return cacheItem.data;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const addPendingAction = useCallback((type: string, data: any) => {
+    const action: PendingAction = {
+      id: Date.now().toString(),
+      type,
+      data,
+      timestamp: Date.now()
     };
 
-    const updated = [...pendingActions, newAction];
-    savePendingActions(updated);
-  };
+    const updated = [...pendingActions, action];
+    setPendingActions(updated);
+    localStorage.setItem('pendingActions', JSON.stringify(updated));
+  }, [pendingActions]);
 
-  const syncPendingActions = async () => {
+  const syncPendingActions = useCallback(async () => {
     if (!isOnline || pendingActions.length === 0) return;
 
-    console.log(`Syncing ${pendingActions.length} pending actions...`);
-
-    const failedActions: OfflineAction[] = [];
-
-    for (const action of pendingActions) {
-      try {
-        await executeAction(action);
-        console.log(`Synced action: ${action.type} ${action.table}`);
-      } catch (error) {
-        console.error(`Failed to sync action:`, error);
-        failedActions.push(action);
-      }
-    }
-
-    savePendingActions(failedActions);
-  };
-
-  const executeAction = async (action: OfflineAction): Promise<void> => {
-    console.log('Executing offline action:', action);
-  };
-
-  const cacheData = (key: string, data: any, expiryHours = 24) => {
-    databaseService.set(`offline_${key}`, data, expiryHours);
-  };
-
-  const getCachedData = <T>(key: string): T | null => {
-    return databaseService.get<T>(`offline_${key}`);
-  };
-
-  const clearCache = () => {
-    const keys = Object.keys(localStorage);
-    keys.forEach(key => {
-      if (key.startsWith('employevolution_offline_')) {
-        localStorage.removeItem(key);
-      }
-    });
-  };
+    // Simulate syncing pending actions
+    console.log('Syncing pending actions:', pendingActions);
+    
+    // Clear pending actions after sync
+    setPendingActions([]);
+    localStorage.removeItem('pendingActions');
+  }, [isOnline, pendingActions]);
 
   return {
     isOnline,
-    pendingActions: pendingActions.length,
-    addPendingAction,
-    syncPendingActions,
     cacheData,
     getCachedData,
-    clearCache,
+    addPendingAction,
+    syncPendingActions,
+    pendingActions
   };
 };
