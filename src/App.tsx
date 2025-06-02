@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -6,10 +5,10 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { NavigationStateProvider } from "@/hooks/useContextAwareNavigation";
 import { ThemeProvider } from "next-themes";
-import { Navbar } from "@/components/Navbar";
-import { MobileHeader } from "@/components/MobileHeader";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { OnboardingGuard } from "@/components/auth/OnboardingGuard";
+import Navbar from "@/components/Navbar";
+import MobileHeader from "@/components/MobileHeader";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import OnboardingGuard from "@/components/auth/OnboardingGuard";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Jobs from "./pages/Jobs";

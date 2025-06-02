@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -83,8 +82,21 @@ export const ProfessionalDevelopmentTracker: React.FC = () => {
       if (goalsResult.error) throw goalsResult.error;
       if (achievementsResult.error) throw achievementsResult.error;
 
-      setGoals(goalsResult.data || []);
-      setAchievements(achievementsResult.data || []);
+      // Type cast the results to match our interfaces
+      const typedGoals = (goalsResult.data || []).map(goal => ({
+        ...goal,
+        category: goal.category as DevelopmentGoal['category'],
+        status: goal.status as DevelopmentGoal['status']
+      }));
+
+      const typedAchievements = (achievementsResult.data || []).map(achievement => ({
+        ...achievement,
+        achievement_type: achievement.achievement_type as Achievement['achievement_type'],
+        skills_gained: Array.isArray(achievement.skills_gained) ? achievement.skills_gained : []
+      }));
+
+      setGoals(typedGoals);
+      setAchievements(typedAchievements);
     } catch (error) {
       console.error('Failed to load development data:', error);
       toast.error('Failed to load development data');
@@ -93,88 +105,84 @@ export const ProfessionalDevelopmentTracker: React.FC = () => {
     }
   };
 
-  const handleAddGoal = async () => {
-    if (!user || !newGoal.goal_title) return;
-
-    try {
-      const { error } = await supabase.from('professional_development').insert({
-        ...newGoal,
-        user_id: user.id
-      });
-
-      if (error) throw error;
-
-      toast.success('Development goal added successfully');
-      setShowAddGoal(false);
-      setNewGoal({ category: 'skill', progress_percentage: 0, status: 'in_progress' });
-      loadDevelopmentData();
-    } catch (error) {
-      console.error('Failed to add goal:', error);
-      toast.error('Failed to add development goal');
+  const saveGoal = async () => {
+    if (!user || !newGoal.goal_title || !newGoal.category) {
+      toast.error('Please fill in required fields');
+      return;
     }
-  };
-
-  const handleAddAchievement = async () => {
-    if (!user || !newAchievement.title) return;
 
     try {
-      const { error } = await supabase.from('achievements').insert({
-        ...newAchievement,
-        user_id: user.id
-      });
+      const goalData = {
+        user_id: user.id,
+        goal_title: newGoal.goal_title,
+        goal_description: newGoal.goal_description || '',
+        category: newGoal.category,
+        target_date: newGoal.target_date,
+        progress_percentage: newGoal.progress_percentage || 0,
+        status: newGoal.status || 'in_progress',
+        notes: newGoal.notes
+      };
 
-      if (error) throw error;
-
-      toast.success('Achievement added successfully');
-      setShowAddAchievement(false);
-      setNewAchievement({ achievement_type: 'certification', skills_gained: [], is_verified: false });
-      loadDevelopmentData();
-    } catch (error) {
-      console.error('Failed to add achievement:', error);
-      toast.error('Failed to add achievement');
-    }
-  };
-
-  const updateGoalProgress = async (goalId: string, progress: number) => {
-    try {
       const { error } = await supabase
         .from('professional_development')
-        .update({ 
-          progress_percentage: progress,
-          status: progress >= 100 ? 'completed' : 'in_progress',
-          completion_date: progress >= 100 ? new Date().toISOString().split('T')[0] : null
-        })
-        .eq('id', goalId);
+        .insert(goalData);
 
       if (error) throw error;
 
-      toast.success('Goal progress updated');
+      toast.success('Goal saved successfully');
+      setShowAddGoal(false);
+      setNewGoal({
+        category: 'skill',
+        progress_percentage: 0,
+        status: 'in_progress'
+      });
       loadDevelopmentData();
     } catch (error) {
-      console.error('Failed to update progress:', error);
-      toast.error('Failed to update progress');
+      console.error('Failed to save goal:', error);
+      toast.error('Failed to save goal');
     }
   };
 
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'skill': return <BookOpen className="h-4 w-4" />;
-      case 'certification': return <Award className="h-4 w-4" />;
-      case 'project': return <Target className="h-4 w-4" />;
-      case 'networking': return <TrendingUp className="h-4 w-4" />;
-      default: return <Target className="h-4 w-4" />;
+  const saveAchievement = async () => {
+    if (!user || !newAchievement.title || !newAchievement.achievement_type) {
+      toast.error('Please fill in required fields');
+      return;
+    }
+
+    try {
+      const achievementData = {
+        user_id: user.id,
+        title: newAchievement.title,
+        description: newAchievement.description || '',
+        achievement_type: newAchievement.achievement_type,
+        issuing_organization: newAchievement.issuing_organization,
+        date_achieved: newAchievement.date_achieved,
+        verification_url: newAchievement.verification_url,
+        skills_gained: newAchievement.skills_gained || [],
+        is_verified: newAchievement.is_verified || false
+      };
+
+      const { error } = await supabase
+        .from('achievements')
+        .insert(achievementData);
+
+      if (error) throw error;
+
+      toast.success('Achievement saved successfully');
+      setShowAddAchievement(false);
+      setNewAchievement({
+        achievement_type: 'certification',
+        skills_gained: [],
+        is_verified: false
+      });
+      loadDevelopmentData();
+    } catch (error) {
+      console.error('Failed to save achievement:', error);
+      toast.error('Failed to save achievement');
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'in_progress': return 'bg-blue-100 text-blue-800';
-      case 'paused': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
+  
   if (loading) {
     return <div className="p-6">Loading development tracker...</div>;
   }
@@ -244,7 +252,7 @@ export const ProfessionalDevelopmentTracker: React.FC = () => {
                     />
                   </div>
                 </div>
-                <Button onClick={handleAddGoal} className="w-full">
+                <Button onClick={saveGoal} className="w-full">
                   Add Goal
                 </Button>
               </div>
@@ -316,7 +324,7 @@ export const ProfessionalDevelopmentTracker: React.FC = () => {
                     placeholder="e.g., Amazon Web Services"
                   />
                 </div>
-                <Button onClick={handleAddAchievement} className="w-full">
+                <Button onClick={saveAchievement} className="w-full">
                   Add Achievement
                 </Button>
               </div>

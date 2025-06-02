@@ -126,3 +126,6 @@ export const useContextAwareNavigation = () => {
     navigateToSuggestion
   };
 };
+
+// Export the provider from the navigation state hook
+export { NavigationStateProvider } from './useNavigationState';

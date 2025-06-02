@@ -37,6 +37,26 @@ const Applications = () => {
   const [loading, setLoading] = useState(true);
   const [showAddApplication, setShowAddApplication] = useState(false);
 
+  // Define voice handlers before using them
+  const handleVoiceSearch = (query: string) => {
+    setSearchQuery(query);
+    toast.success(`Voice search: "${query}"`);
+    
+    // Track voice search
+    NavigationAnalyticsService.trackNavigationPatterns(
+      '/applications',
+      `/applications?search=${query}`,
+      'voice'
+    );
+  };
+
+  const handleVoiceFilters = (filters: any) => {
+    if (filters.status) {
+      setStatusFilter(filters.status);
+      toast.success(`Filter applied: ${filters.status}`);
+    }
+  };
+
   // Voice command integration
   const { 
     isListening, 
@@ -139,25 +159,6 @@ const Applications = () => {
     setFilteredApplications(filtered);
   };
 
-  const handleVoiceSearch = (query: string) => {
-    setSearchQuery(query);
-    toast.success(`Voice search: "${query}"`);
-    
-    // Track voice search
-    NavigationAnalyticsService.trackNavigationPatterns(
-      '/applications',
-      `/applications?search=${query}`,
-      'voice'
-    );
-  };
-
-  const handleVoiceFilters = (filters: any) => {
-    if (filters.status) {
-      setStatusFilter(filters.status);
-      toast.success(`Filter applied: ${filters.status}`);
-    }
-  };
-
   const handleSwipeAction = async (applicationId: string, action: 'archive' | 'follow_up' | 'update') => {
     try {
       // Track gesture interaction
@@ -214,7 +215,7 @@ const Applications = () => {
   return (
     <div className="container mx-auto p-6">
       {/* Context-aware navigation suggestions */}
-      <ContextAwareNavigationSuggestions currentPage="/applications" />
+      <ContextAwareNavigationSuggestions />
       
       <div className="flex justify-between items-center mb-6">
         <div>

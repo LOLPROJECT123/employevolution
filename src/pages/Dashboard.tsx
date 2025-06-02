@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PersonalizedDashboard } from "@/components/dashboard/PersonalizedDashboard";
-import { JobRecommendations } from "@/components/dashboard/JobRecommendations";
-import { RecentActivity } from "@/components/dashboard/RecentActivity";
+import PersonalizedDashboard from "@/components/dashboard/PersonalizedDashboard";
+import JobRecommendations from "@/components/dashboard/JobRecommendations";
+import RecentActivity from "@/components/dashboard/RecentActivity";
 import { ContextAwareNavigationSuggestions } from "@/components/navigation/ContextAwareNavigationSuggestions";
 import { EnhancedProfileValidation } from "@/components/enhanced/EnhancedProfileValidation";
 import { ProfessionalDevelopmentTracker } from "@/components/enhanced/ProfessionalDevelopmentTracker";
@@ -69,7 +69,7 @@ const Dashboard = () => {
   return (
     <div className="container mx-auto p-6">
       {/* Context-aware navigation suggestions */}
-      <ContextAwareNavigationSuggestions currentPage="/dashboard" />
+      <ContextAwareNavigationSuggestions />
       
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">Welcome back!</h1>
