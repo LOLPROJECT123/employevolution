@@ -1,66 +1,31 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { useOfflineMode } from '@/hooks/useOfflineMode';
-import { WifiOff, Wifi, Cloud, CloudOff } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { WifiOff, Wifi, Sync } from 'lucide-react';
 
 export const OfflineModeIndicator: React.FC = () => {
-  const { isOnline, pendingActions, syncPendingActions } = useOfflineMode();
-
-  const handleSync = async () => {
-    try {
-      await syncPendingActions();
-      toast({
-        title: "Sync Complete",
-        description: "All pending changes have been synchronized.",
-      });
-    } catch (error) {
-      toast({
-        title: "Sync Failed",
-        description: "Unable to sync pending changes. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
+  const { isOnline, pendingActions } = useOfflineMode();
 
   return (
     <div className="flex items-center space-x-2">
-      <Badge 
-        variant={isOnline ? "default" : "destructive"}
-        className="flex items-center space-x-1"
-      >
+      <div className="flex items-center space-x-1">
         {isOnline ? (
-          <Wifi className="h-3 w-3" />
+          <Wifi className="h-4 w-4 text-green-500" />
         ) : (
-          <WifiOff className="h-3 w-3" />
+          <WifiOff className="h-4 w-4 text-red-500" />
         )}
-        <span>{isOnline ? "Online" : "Offline"}</span>
-      </Badge>
-
+        <Badge variant={isOnline ? "default" : "destructive"}>
+          {isOnline ? "Online" : "Offline"}
+        </Badge>
+      </div>
+      
       {pendingActions > 0 && (
-        <>
-          <Badge variant="secondary" className="flex items-center space-x-1">
-            <CloudOff className="h-3 w-3" />
-            <span>{pendingActions} pending</span>
-          </Badge>
-          
-          {isOnline && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleSync}
-              className="h-6 px-2 text-xs"
-            >
-              <Cloud className="h-3 w-3 mr-1" />
-              Sync
-            </Button>
-          )}
-        </>
+        <div className="flex items-center space-x-1">
+          <Sync className="h-4 w-4 text-orange-500" />
+          <Badge variant="secondary">{pendingActions} pending</Badge>
+        </div>
       )}
     </div>
   );
 };
-
-export default OfflineModeIndicator;

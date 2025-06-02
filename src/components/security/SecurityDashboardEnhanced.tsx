@@ -5,130 +5,95 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { EnhancedAuthService } from '@/services/enhancedAuthService';
-import { useAuth } from '@/contexts/AuthContext';
-import { Shield, AlertTriangle, Eye, Lock, Activity } from 'lucide-react';
+import { Shield, AlertTriangle, Key, Eye, Lock } from 'lucide-react';
 
 export const SecurityDashboardEnhanced: React.FC = () => {
-  const { user } = useAuth();
   const [securityAlerts, setSecurityAlerts] = useState<any[]>([]);
-  const [biometricConfig, setBiometricConfig] = useState<any>(null);
-  const [sessionValid, setSessionValid] = useState(true);
-  const [passwordStrength, setPasswordStrength] = useState<any>(null);
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
 
   useEffect(() => {
     loadSecurityData();
-    validateCurrentSession();
   }, []);
 
   const loadSecurityData = async () => {
-    // Load security alerts (would come from database in real app)
+    // Load security alerts and settings
     setSecurityAlerts([
       {
         id: '1',
         type: 'login_attempt',
         severity: 'medium',
-        message: 'New login from Chrome on Windows',
-        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-        ipAddress: '192.168.1.100'
-      },
-      {
-        id: '2',
-        type: 'profile_update',
-        severity: 'low',
-        message: 'Profile information updated',
-        timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000)
+        message: 'New login from unrecognized device',
+        timestamp: new Date()
       }
     ]);
   };
 
-  const validateCurrentSession = async () => {
-    const isValid = await EnhancedAuthService.validateSession();
-    setSessionValid(isValid);
+  const handleEnable2FA = async () => {
+    const result = await EnhancedAuthService.handleTwoFactorAuth('123456');
+    setTwoFactorEnabled(result);
   };
 
-  const handlePasswordCheck = (password: string) => {
-    const strength = EnhancedAuthService.validatePasswordStrength(password);
-    setPasswordStrength(strength);
-  };
-
-  const setupBiometric = async () => {
-    try {
-      const config = await EnhancedAuthService.setupBiometricAuth();
-      setBiometricConfig(config);
-    } catch (error) {
-      console.error('Biometric setup failed:', error);
-    }
-  };
-
-  const createSecurityAlert = async () => {
-    await EnhancedAuthService.handleSecurityAlert({
-      type: 'suspicious_activity',
-      severity: 'high',
-      message: 'Manual security test alert',
-      ipAddress: '127.0.0.1'
-    });
-    
-    // Refresh alerts
-    loadSecurityData();
+  const handleEnableBiometric = async () => {
+    const config = await EnhancedAuthService.setupBiometricAuth();
+    setBiometricEnabled(config.enabled);
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Shield className="h-5 w-5" />
-              <CardTitle>Enhanced Security Dashboard</CardTitle>
-            </div>
-            <Badge variant={sessionValid ? "default" : "destructive"}>
-              {sessionValid ? "Secure Session" : "Session Invalid"}
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 border rounded-lg">
-              <div className="flex items-center space-x-2">
-                <Lock className="h-4 w-4 text-green-500" />
-                <span className="text-sm font-medium">2FA Status</span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Two-factor authentication enabled
-              </p>
-            </div>
-            
-            <div className="p-4 border rounded-lg">
-              <div className="flex items-center space-x-2">
-                <Eye className="h-4 w-4 text-blue-500" />
-                <span className="text-sm font-medium">Biometric Auth</span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {biometricConfig?.enabled ? 'Available' : 'Not configured'}
-              </p>
-            </div>
-            
-            <div className="p-4 border rounded-lg">
-              <div className="flex items-center space-x-2">
-                <Activity className="h-4 w-4 text-purple-500" />
-                <span className="text-sm font-medium">Activity Monitor</span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Real-time threat detection active
-              </p>
-            </div>
-          </div>
+    <div className="space-y-6 p-6">
+      <div className="flex items-center space-x-2">
+        <Shield className="h-6 w-6" />
+        <h1 className="text-2xl font-bold">Security Dashboard</h1>
+      </div>
 
-          <div className="flex space-x-2">
-            <Button onClick={setupBiometric} variant="outline">
-              Setup Biometric Auth
-            </Button>
-            <Button onClick={createSecurityAlert} variant="outline">
-              Test Security Alert
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Security Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Two-Factor Auth</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <Badge variant={twoFactorEnabled ? "default" : "destructive"}>
+                {twoFactorEnabled ? "Enabled" : "Disabled"}
+              </Badge>
+              <Button size="sm" onClick={handleEnable2FA}>
+                {twoFactorEnabled ? "Manage" : "Enable"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Biometric Auth</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <Badge variant={biometricEnabled ? "default" : "secondary"}>
+                {biometricEnabled ? "Available" : "Not Available"}
+              </Badge>
+              <Button size="sm" onClick={handleEnableBiometric}>
+                Setup
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Active Sessions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <Badge variant="default">1 Active</Badge>
+              <Button size="sm" variant="outline">
+                <Eye className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Security Alerts */}
       <Card>
@@ -138,37 +103,19 @@ export const SecurityDashboardEnhanced: React.FC = () => {
             <span>Security Alerts</span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-4">
           {securityAlerts.map((alert) => (
-            <Alert key={alert.id} className={`border-l-4 ${
-              alert.severity === 'critical' ? 'border-l-red-500' :
-              alert.severity === 'high' ? 'border-l-orange-500' :
-              alert.severity === 'medium' ? 'border-l-yellow-500' :
-              'border-l-blue-500'
-            }`}>
+            <Alert key={alert.id}>
               <AlertTriangle className="h-4 w-4" />
-              <AlertDescription className="ml-2">
-                <div className="flex justify-between items-start">
+              <AlertDescription>
+                <div className="flex justify-between items-center">
                   <div>
                     <p className="font-medium">{alert.message}</p>
-                    <div className="text-xs text-muted-foreground mt-1 space-x-2">
-                      <span>Type: {alert.type}</span>
-                      <span>•</span>
-                      <span>{alert.timestamp.toLocaleString()}</span>
-                      {alert.ipAddress && (
-                        <>
-                          <span>•</span>
-                          <span>IP: {alert.ipAddress}</span>
-                        </>
-                      )}
-                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {alert.timestamp.toLocaleString()}
+                    </p>
                   </div>
-                  <Badge variant={
-                    alert.severity === 'critical' ? 'destructive' :
-                    alert.severity === 'high' ? 'destructive' :
-                    alert.severity === 'medium' ? 'default' :
-                    'secondary'
-                  }>
+                  <Badge variant={alert.severity === 'high' ? 'destructive' : 'secondary'}>
                     {alert.severity}
                   </Badge>
                 </div>
@@ -177,80 +124,6 @@ export const SecurityDashboardEnhanced: React.FC = () => {
           ))}
         </CardContent>
       </Card>
-
-      {/* Password Strength Tester */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Password Strength Validator</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <input
-              type="password"
-              placeholder="Test password strength..."
-              onChange={(e) => handlePasswordCheck(e.target.value)}
-              className="w-full p-2 border rounded"
-            />
-          </div>
-          
-          {passwordStrength && (
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <span className="text-sm">Strength Score:</span>
-                <Badge variant={passwordStrength.isStrong ? "default" : "destructive"}>
-                  {passwordStrength.score}/5
-                </Badge>
-              </div>
-              
-              {passwordStrength.feedback.length > 0 && (
-                <div className="space-y-1">
-                  <span className="text-sm font-medium">Recommendations:</span>
-                  {passwordStrength.feedback.map((feedback: string, index: number) => (
-                    <p key={index} className="text-xs text-muted-foreground">
-                      • {feedback}
-                    </p>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Biometric Configuration */}
-      {biometricConfig && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Biometric Authentication</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span>Status:</span>
-                <Badge variant={biometricConfig.enabled ? "default" : "secondary"}>
-                  {biometricConfig.enabled ? "Enabled" : "Disabled"}
-                </Badge>
-              </div>
-              
-              <div>
-                <span className="text-sm font-medium">Supported Methods:</span>
-                <div className="flex space-x-2 mt-1">
-                  {biometricConfig.supportedMethods.map((method: string) => (
-                    <Badge key={method} variant="outline">{method}</Badge>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span>Fallback Enabled:</span>
-                <Badge variant={biometricConfig.fallbackEnabled ? "default" : "secondary"}>
-                  {biometricConfig.fallbackEnabled ? "Yes" : "No"}
-                </Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };
