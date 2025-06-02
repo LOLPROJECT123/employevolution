@@ -1,249 +1,175 @@
-import React, { useState, useEffect } from 'react';
-import Navbar from "@/components/Navbar";
-import MobileHeader from "@/components/MobileHeader";
-import { useMobile } from "@/hooks/use-mobile";
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Calendar } from "@/components/ui/calendar"
-import { CalendarIcon } from "lucide-react"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
-import { format } from "date-fns"
 
-interface Application {
-  id: string;
-  company: string;
-  position: string;
-  dateApplied: string;
-  status: 'applied' | 'interviewing' | 'offer' | 'rejected';
-}
+import React, { useState } from "react";
+import Navbar from "@/components/Navbar";
+import { useMobile } from "@/hooks/use-mobile";
+import { MobileRouteLayout } from "@/components/mobile/MobileRouteLayout";
+import { AdvancedGestureHandler } from "@/components/mobile/AdvancedGestureHandler";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Calendar, MapPin, Building, ExternalLink } from "lucide-react";
 
 const Applications = () => {
   const isMobile = useMobile();
-  const [applications, setApplications] = useState<Application[]>([
-    { id: '1', company: 'Google', position: 'Software Engineer', dateApplied: '2024-01-01', status: 'interviewing' },
-    { id: '2', company: 'Microsoft', position: 'Data Scientist', dateApplied: '2024-01-05', status: 'applied' },
-    { id: '3', company: 'Amazon', position: 'Product Manager', dateApplied: '2024-01-10', status: 'offer' },
-  ]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState('');
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [currentAppIndex, setCurrentAppIndex] = useState(0);
 
-  const filteredApplications = applications.filter(app => {
-    const searchMatch = app.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        app.position.toLowerCase().includes(searchQuery.toLowerCase());
-    const statusMatch = filterStatus ? app.status === filterStatus : true;
-    return searchMatch && statusMatch;
-  });
+  // Mock data - replace with real data
+  const applications = [
+    {
+      id: "1",
+      jobTitle: "Senior Software Engineer",
+      company: "Tech Corp",
+      location: "San Francisco, CA",
+      appliedDate: "2024-01-15",
+      status: "interview_scheduled",
+      nextStep: "Technical Interview on Jan 25",
+      salary: "$120k - $150k"
+    },
+    {
+      id: "2",
+      jobTitle: "Frontend Developer",
+      company: "StartupXYZ",
+      location: "Remote",
+      appliedDate: "2024-01-10",
+      status: "under_review",
+      nextStep: "Waiting for response",
+      salary: "$90k - $110k"
+    }
+  ];
 
-  return (
+  const handleRefresh = async () => {
+    console.log('Refreshing applications...');
+    // Implement refresh logic
+  };
+
+  const handleSwipeLeft = () => {
+    if (currentAppIndex < applications.length - 1) {
+      setCurrentAppIndex(prev => prev + 1);
+    }
+  };
+
+  const handleSwipeRight = () => {
+    if (currentAppIndex > 0) {
+      setCurrentAppIndex(prev => prev - 1);
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'interview_scheduled':
+        return 'bg-blue-100 text-blue-800';
+      case 'under_review':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'accepted':
+        return 'bg-green-100 text-green-800';
+      case 'rejected':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const ApplicationCard = ({ application }: { application: any }) => (
+    <Card className="w-full">
+      <CardHeader>
+        <div className="flex items-start justify-between">
+          <div>
+            <CardTitle className="text-lg">{application.jobTitle}</CardTitle>
+            <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-1">
+              <Building className="h-4 w-4" />
+              <span>{application.company}</span>
+            </div>
+          </div>
+          <Badge className={getStatusColor(application.status)}>
+            {application.status.replace('_', ' ')}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+          <div className="flex items-center space-x-1">
+            <MapPin className="h-4 w-4" />
+            <span>{application.location}</span>
+          </div>
+          <div className="flex items-center space-x-1">
+            <Calendar className="h-4 w-4" />
+            <span>Applied {application.appliedDate}</span>
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <div className="text-sm">
+            <span className="font-medium">Salary:</span> {application.salary}
+          </div>
+          <div className="text-sm">
+            <span className="font-medium">Next Step:</span> {application.nextStep}
+          </div>
+        </div>
+
+        <div className="flex space-x-2">
+          <Button variant="outline" size="sm">
+            <ExternalLink className="h-4 w-4 mr-1" />
+            View Job
+          </Button>
+          <Button size="sm">Update Status</Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const content = (
     <div className="min-h-screen bg-background">
       {!isMobile && <Navbar />}
-      {isMobile && <MobileHeader title="Applications" />}
       
-      <div className="bg-blue-600 dark:bg-blue-900 py-4 px-4 md:py-6 md:px-6">
-        <div className="container mx-auto max-w-screen-xl">
-          <h1 className="text-xl md:text-3xl font-bold text-white">
-            Job Applications
-          </h1>
-          <p className="text-blue-100 mt-2">
-            Track and manage your job applications
-          </p>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4 max-w-screen-xl py-6">
+      <div className={`${!isMobile ? 'container mx-auto px-4 py-8' : 'p-0'} max-w-6xl`}>
+        {!isMobile && (
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-2">Job Applications</h1>
+            <p className="text-muted-foreground">
+              Track and manage your job applications
+            </p>
+          </div>
+        )}
+        
         {isMobile ? (
-          <>
-            <MobileHeader title="Applications" />
-            <div className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Search Applications</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Input
-                    type="text"
-                    placeholder="Search by company or position"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Filter by Status</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Select onValueChange={setFilterStatus}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="All statuses" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">All statuses</SelectItem>
-                      <SelectItem value="applied">Applied</SelectItem>
-                      <SelectItem value="interviewing">Interviewing</SelectItem>
-                      <SelectItem value="offer">Offer</SelectItem>
-                      <SelectItem value="rejected">Rejected</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Applications</CardTitle>
-                </CardHeader>
-                <CardContent className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Company</TableHead>
-                        <TableHead>Position</TableHead>
-                        <TableHead>Date Applied</TableHead>
-                        <TableHead>Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredApplications.map(app => (
-                        <TableRow key={app.id}>
-                          <TableCell>{app.company}</TableCell>
-                          <TableCell>{app.position}</TableCell>
-                          <TableCell>{app.dateApplied}</TableCell>
-                          <TableCell>{app.status}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
+          <AdvancedGestureHandler
+            onSwipeLeft={handleSwipeLeft}
+            onSwipeRight={handleSwipeRight}
+            className="h-full"
+          >
+            <div className="p-4">
+              {applications[currentAppIndex] && (
+                <ApplicationCard application={applications[currentAppIndex]} />
+              )}
+              <div className="mt-4 text-center text-sm text-muted-foreground">
+                {currentAppIndex + 1} of {applications.length} applications
+              </div>
             </div>
-          </>
+          </AdvancedGestureHandler>
         ) : (
-          <div className="grid grid-cols-4 gap-6">
-            <div className="col-span-1">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Search Applications</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Input
-                    type="text"
-                    placeholder="Search by company or position"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </CardContent>
-              </Card>
-
-              <Card className="mt-4">
-                <CardHeader>
-                  <CardTitle>Filter by Status</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Select onValueChange={setFilterStatus}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="All statuses" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">All statuses</SelectItem>
-                      <SelectItem value="applied">Applied</SelectItem>
-                      <SelectItem value="interviewing">Interviewing</SelectItem>
-                      <SelectItem value="offer">Offer</SelectItem>
-                      <SelectItem value="rejected">Rejected</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </CardContent>
-              </Card>
-
-              <Card className="mt-4">
-                <CardHeader>
-                  <CardTitle>Filter by Date</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "w-[240px] justify-start text-left font-normal",
-                          !date && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {date ? format(date, "PPP") : <span>Pick a date</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="center" side="bottom">
-                      <Calendar
-                        mode="single"
-                        selected={date}
-                        onSelect={setDate}
-                        disabled={(date) =>
-                          date > new Date() || date < new Date("1900-01-01")
-                        }
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="col-span-3">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Applications</CardTitle>
-                </CardHeader>
-                <CardContent className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Company</TableHead>
-                        <TableHead>Position</TableHead>
-                        <TableHead>Date Applied</TableHead>
-                        <TableHead>Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredApplications.map(app => (
-                        <TableRow key={app.id}>
-                          <TableCell>{app.company}</TableCell>
-                          <TableCell>{app.position}</TableCell>
-                          <TableCell>{app.dateApplied}</TableCell>
-                          <TableCell>{app.status}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </div>
+          <div className="grid gap-4">
+            {applications.map((application) => (
+              <ApplicationCard key={application.id} application={application} />
+            ))}
           </div>
         )}
       </div>
     </div>
   );
+
+  if (isMobile) {
+    return (
+      <MobileRouteLayout
+        title="Applications"
+        onRefresh={handleRefresh}
+        className="bg-background"
+      >
+        {content}
+      </MobileRouteLayout>
+    );
+  }
+
+  return content;
 };
 
 export default Applications;

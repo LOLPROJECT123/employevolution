@@ -34,6 +34,7 @@ import AdvancedAnalyticsIntegration from "./components/analytics/AdvancedAnalyti
 import SecurityDashboardEnhanced from "./components/security/SecurityDashboardEnhanced";
 import OfflineFirstPages from "./pages/OfflineFirstPages";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
+import React from "react";
 
 const queryClient = new QueryClient();
 
@@ -49,7 +50,7 @@ const App = () => (
               <TouchGestureHandler>
                 <AppTransitions>
                   <Routes>
-                    {/* Public routes - accessible without authentication */}
+                    {/* Public routes */}
                     <Route path="/" element={<Index />} />
                     <Route path="/auth" element={<Auth />} />
                     
@@ -58,7 +59,7 @@ const App = () => (
                     <Route path="/auth/google/callback" element={<Auth />} />
                     <Route path="/auth/outlook/callback" element={<Auth />} />
                     
-                    {/* Profile completion routes - protected but bypass onboarding guard */}
+                    {/* Profile completion routes */}
                     <Route path="/complete-profile" element={
                       <ProtectedRoute>
                         <CompleteProfile />
@@ -70,7 +71,7 @@ const App = () => (
                       </ProtectedRoute>
                     } />
                     
-                    {/* Protected routes - require authentication */}
+                    {/* Main application routes */}
                     <Route path="/dashboard" element={
                       <ProtectedRoute>
                         <OnboardingGuard>
@@ -182,7 +183,7 @@ const App = () => (
                       </ProtectedRoute>
                     } />
                     
-                    {/* Enhanced routes */}
+                    {/* Enhanced feature routes */}
                     <Route path="/analytics" element={
                       <ProtectedRoute>
                         <OnboardingGuard>
