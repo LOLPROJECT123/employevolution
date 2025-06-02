@@ -182,7 +182,7 @@ const App = () => (
                       </ProtectedRoute>
                     } />
                     
-                    {/* New enhanced routes */}
+                    {/* Enhanced routes */}
                     <Route path="/analytics" element={
                       <ProtectedRoute>
                         <OnboardingGuard>
@@ -201,6 +201,22 @@ const App = () => (
                       <ProtectedRoute>
                         <OnboardingGuard>
                           <OfflineFirstPages />
+                        </OnboardingGuard>
+                      </ProtectedRoute>
+                    } />
+                    
+                    {/* Privacy and compliance routes */}
+                    <Route path="/privacy" element={
+                      <ProtectedRoute>
+                        <OnboardingGuard>
+                          {React.createElement(React.lazy(() => import('./components/privacy/PrivacyDashboard')))}
+                        </OnboardingGuard>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/audit-logs" element={
+                      <ProtectedRoute>
+                        <OnboardingGuard>
+                          {React.createElement(React.lazy(() => import('./components/security/AuditLogDashboard')))}
                         </OnboardingGuard>
                       </ProtectedRoute>
                     } />
