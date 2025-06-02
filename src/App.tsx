@@ -186,6 +186,22 @@ const App = () => (
                         </ProtectedRoute>
                       } />
                       
+                      {/* Collaboration routes */}
+                      <Route path="/collaboration/documents" element={
+                        <ProtectedRoute>
+                          <OnboardingGuard>
+                            {React.createElement(React.lazy(() => import('./pages/collaboration/DocumentsHub')))}
+                          </OnboardingGuard>
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/collaboration/teams" element={
+                        <ProtectedRoute>
+                          <OnboardingGuard>
+                            {React.createElement(React.lazy(() => import('./pages/collaboration/TeamsManagement')))}
+                          </OnboardingGuard>
+                        </ProtectedRoute>
+                      } />
+                      
                       {/* Enhanced feature routes */}
                       <Route path="/analytics" element={
                         <ProtectedRoute>

@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { RealTimeService } from '@/services/realTimeService';
 import { useLiveJobAlerts } from '@/hooks/useLiveJobAlerts';
 import LiveChatSupport from '@/components/chat/LiveChatSupport';
+import LiveJobAlertsWidget from '@/components/jobs/LiveJobAlertsWidget';
 
 interface RealTimeContextType {
   isConnected: boolean;
@@ -65,6 +66,7 @@ export const RealTimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         isOpen={isChatOpen}
         onToggle={() => setIsChatOpen(!isChatOpen)}
       />
+      <LiveJobAlertsWidget />
     </RealTimeContext.Provider>
   );
 };
