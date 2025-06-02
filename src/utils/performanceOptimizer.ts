@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { performanceService } from '@/services/performanceService';
 import { monitoringService } from '@/services/monitoringService';
@@ -57,8 +56,8 @@ export class PerformanceOptimizer {
 
     MeasuredComponent.displayName = `Measured(${Component.displayName || Component.name || 'Component'})`;
     
-    // Use type assertion to satisfy TypeScript
-    return React.memo(MeasuredComponent) as T;
+    // Use type assertion through unknown to satisfy TypeScript
+    return React.memo(MeasuredComponent) as unknown as T;
   }
 
   static optimizeListRender<T>(
