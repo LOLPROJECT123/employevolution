@@ -12,6 +12,7 @@ export interface ResumeComment {
   upvotes: number;
   downvotes: number;
   createdAt: string;
+  isCurrentUser: boolean;
 }
 
 export interface ResumePost {
@@ -28,4 +29,26 @@ export interface ResumePost {
   company?: string;
   role?: string;
   matchPercentage?: number;
+}
+
+export interface LinkedInContact {
+  id: string;
+  name: string;
+  title: string;
+  company: string;
+  profileUrl: string;
+  avatar?: string;
+  connectionDegree: number;
+  mutualConnections: number;
+  isAlumni?: boolean;
+  graduationYear?: string;
+}
+
+export interface OutreachTemplate {
+  id: string;
+  name: string;
+  subject: string;
+  body: string;
+  type: 'recruiter' | 'alumni' | 'hiring-manager' | 'referral';
+  variables: string[];
 }

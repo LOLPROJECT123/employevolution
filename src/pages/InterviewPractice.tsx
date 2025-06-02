@@ -11,7 +11,7 @@ const InterviewPractice = () => {
   return (
     <div className="min-h-screen bg-background">
       {!isMobile && <Navbar />}
-      {isMobile && <MobileHeader />}
+      {isMobile && <MobileHeader title="Interview Practice" />}
       
       <InterviewSection />
     </div>

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -12,9 +11,9 @@ const Referrals = () => {
   const [activeTab, setActiveTab] = useState("request");
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background">
       {!isMobile && <Navbar />}
-      {isMobile && <MobileHeader showLogo={true} />}
+      {isMobile && <MobileHeader title="Referrals" />}
       
       <div className={`container mx-auto px-4 ${isMobile ? 'pt-16' : 'pt-24'} pb-12 flex-1`}>
         <div className="max-w-3xl mx-auto text-center">
