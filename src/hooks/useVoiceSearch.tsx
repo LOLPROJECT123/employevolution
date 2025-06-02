@@ -1,8 +1,6 @@
 
 import { useState, useEffect } from 'react';
 
-// Use the shared type definitions from types/speechRecognition.d.ts
-
 export const useVoiceJobSearch = (onResult: (transcript: string) => void) => {
   const [isSupported, setIsSupported] = useState(false);
   const [isListening, setIsListening] = useState(false);

@@ -5,8 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Mic, MicOff, Volume2 } from 'lucide-react';
 
-// Use the shared type definitions from types/speechRecognition.d.ts
-
 interface VoiceCommandInterfaceProps {
   onCommand: (command: string, confidence: number) => void;
   isEnabled?: boolean;
@@ -43,8 +41,8 @@ export const VoiceCommandInterface: React.FC<VoiceCommandInterfaceProps> = ({
     };
   }, []);
 
-  const initializeRecognition = (SpeechRecognition: new () => SpeechRecognition) => {
-    const recognition = new SpeechRecognition();
+  const initializeRecognition = (SpeechRecognitionConstructor: { new (): SpeechRecognition }) => {
+    const recognition = new SpeechRecognitionConstructor();
     recognition.continuous = false;
     recognition.interimResults = true;
     recognition.lang = language;
