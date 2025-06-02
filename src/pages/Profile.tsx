@@ -1,11 +1,10 @@
-
 import React from "react";
 import Navbar from "@/components/Navbar";
 import { useMobile } from "@/hooks/use-mobile";
 import { MobileRouteLayout } from "@/components/mobile/MobileRouteLayout";
 import { BreadcrumbNav } from "@/components/navigation/BreadcrumbNav";
-import { ProfileDetails } from "@/components/profile/ProfileDetails";
-import { EnhancedProfileCompletionWidget } from "@/components/profile/EnhancedProfileCompletionWidget";
+import ProfileDetails from "@/components/profile/ProfileDetails";
+import EnhancedProfileCompletionWidget from "@/components/profile/EnhancedProfileCompletionWidget";
 
 const Profile = () => {
   const isMobile = useMobile();

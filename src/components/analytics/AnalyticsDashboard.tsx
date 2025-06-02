@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, TrendingDown, Target, Award, Users, DollarSign, Clock, Lightbulb } from 'lucide-react';
-import { analyticsService } from '@/services/analyticsService';
+import { AnalyticsService } from '@/services/analyticsService';
 import ApplicationTrendsChart from './ApplicationTrendsChart';
 import SuccessPatternAnalysis from './SuccessPatternAnalysis';
 import SalaryBenchmarking from './SalaryBenchmarking';
@@ -64,7 +64,7 @@ const AnalyticsDashboard: React.FC = () => {
       setLoading(true);
       // Mock user ID - in real app, get from auth context
       const userId = 'mock-user-id';
-      const data = analyticsService.generateApplicationAnalytics(userId);
+      const data = AnalyticsService.generateApplicationAnalytics(userId);
       setAnalyticsData(data);
     } catch (error) {
       console.error('Error loading analytics:', error);

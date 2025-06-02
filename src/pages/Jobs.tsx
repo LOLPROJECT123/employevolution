@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -8,7 +7,6 @@ import { AdvancedGestureHandler } from "@/components/mobile/AdvancedGestureHandl
 import { VoiceSearchButton } from "@/components/mobile/VoiceSearchButton";
 import { BreadcrumbNav } from "@/components/navigation/BreadcrumbNav";
 import { JobCard } from "@/components/JobCard";
-import { JobFilters } from "@/components/JobFilters";
 import { SavedSearches } from "@/components/SavedSearches";
 import { EnhancedJobScraper } from "@/components/jobs/EnhancedJobScraper";
 import { Input } from "@/components/ui/input";
@@ -24,6 +22,7 @@ const Jobs = () => {
   const [currentJobIndex, setCurrentJobIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [savedSearches, setSavedSearches] = useState([]);
 
   const handleRefresh = async () => {
     setLoading(true);
@@ -43,9 +42,17 @@ const Jobs = () => {
     }
   };
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    handleRefresh();
+  const handleJobsFound = (newJobs: Job[]) => {
+    setJobs(newJobs);
+  };
+
+  const handleApplySearch = (search: any) => {
+    setSearchQuery(search.query || '');
+    // Apply other search filters
+  };
+
+  const handleDeleteSearch = (searchId: string) => {
+    setSavedSearches(prev => prev.filter((s: any) => s.id !== searchId));
   };
 
   const handleVoiceSearch = (query: string) => {
@@ -122,8 +129,16 @@ const Jobs = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className={`${isMobile ? (showFilters ? 'block' : 'hidden') : 'lg:col-span-1'}`}>
             <div className="space-y-6">
-              <JobFilters />
-              <SavedSearches />
+              {/* Simple filters placeholder */}
+              <div className="p-4 border rounded-lg">
+                <h3 className="font-medium mb-2">Filters</h3>
+                <p className="text-sm text-muted-foreground">Job filters coming soon</p>
+              </div>
+              <SavedSearches 
+                searches={savedSearches}
+                onApplySearch={handleApplySearch}
+                onDeleteSearch={handleDeleteSearch}
+              />
             </div>
           </div>
           
@@ -149,7 +164,7 @@ const Jobs = () => {
               </AdvancedGestureHandler>
             ) : (
               <div className="space-y-6">
-                <EnhancedJobScraper />
+                <EnhancedJobScraper onJobsFound={handleJobsFound} />
                 <div className="grid gap-4">
                   {jobs.map((job) => (
                     <JobCard key={job.id} job={job} />

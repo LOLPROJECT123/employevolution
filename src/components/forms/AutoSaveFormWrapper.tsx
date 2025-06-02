@@ -36,7 +36,7 @@ export const AutoSaveFormWrapper: React.FC<AutoSaveFormWrapperProps> = ({
         <AutoSaveIndicator 
           isAutoSaving={saveStatus === 'saving'}
           lastSaved={lastSaved || undefined}
-          hasUnsavedChanges={saveStatus === 'pending'}
+          hasUnsavedChanges={saveStatus === 'idle'}
         />
       </div>
     </div>

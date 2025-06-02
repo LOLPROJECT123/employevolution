@@ -1,9 +1,7 @@
-
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { resumeFileService, OnboardingStatus } from '@/services/resumeFileService';
-import { OnboardingWorkflow } from '@/components/onboarding/OnboardingWorkflow';
 import ProfileDetails from '@/components/profile/ProfileDetails';
 import { ParsedResume } from '@/types/resume';
 import { toast } from 'sonner';
@@ -108,10 +106,16 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
   // Show onboarding workflow if not completed
   if (showOnboardingWorkflow && !onboardingStatus?.onboarding_completed) {
     return (
-      <OnboardingWorkflow 
-        onStepComplete={handleStepComplete}
-        onWorkflowComplete={handleWorkflowComplete}
-      />
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="max-w-4xl w-full">
+          <h1 className="text-2xl font-bold text-center mb-8">Welcome! Let's set up your profile</h1>
+          <ProfileDetails 
+            onResumeDataUpdate={handleResumeUploaded}
+            showNextButton={true}
+            onNext={handleWorkflowComplete}
+          />
+        </div>
+      </div>
     );
   }
 

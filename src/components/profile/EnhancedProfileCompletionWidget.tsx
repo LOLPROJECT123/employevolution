@@ -99,7 +99,7 @@ const EnhancedProfileCompletionWidget: React.FC = () => {
         </CardHeader>
         <CardContent>
           <EnhancedErrorDisplay
-            error={error}
+            error={new Error(error)}
             suggestions={[
               'Check your internet connection',
               'Try refreshing the page',
