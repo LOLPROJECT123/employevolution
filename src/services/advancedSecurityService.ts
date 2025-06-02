@@ -4,162 +4,160 @@ import { supabase } from '@/integrations/supabase/client';
 export interface SecurityEvent {
   id: string;
   userId: string;
-  eventType: 'login_attempt' | 'password_change' | 'data_access' | 'suspicious_activity';
+  eventType: string;
   severity: 'low' | 'medium' | 'high' | 'critical';
-  details: any;
+  description: string;
+  metadata: any;
   timestamp: string;
   ipAddress: string;
   userAgent: string;
 }
 
-export interface ThreatDetectionRule {
+export interface SecurityThreat {
   id: string;
-  name: string;
+  type: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
   description: string;
-  conditions: any;
-  action: 'log' | 'block' | 'alert';
-  enabled: boolean;
+  mitigated: boolean;
+  detectedAt: string;
 }
 
 export class AdvancedSecurityService {
   static async logSecurityEvent(event: Omit<SecurityEvent, 'id' | 'timestamp'>): Promise<void> {
     try {
-      await supabase
+      const { data, error } = await supabase
         .from('security_events')
         .insert({
-          ...event,
-          timestamp: new Date().toISOString()
+          user_id: event.userId,
+          event_type: event.eventType,
+          severity: event.severity,
+          description: event.description,
+          metadata: event.metadata,
+          ip_address: event.ipAddress,
+          user_agent: event.userAgent,
+          created_at: new Date().toISOString()
         });
+
+      if (error) {
+        console.error('Failed to log security event:', error);
+        return;
+      }
+
+      console.log('Security event logged:', event);
     } catch (error) {
       console.error('Failed to log security event:', error);
     }
   }
 
-  static async detectSuspiciousActivity(userId: string): Promise<{
-    suspicious: boolean;
-    reasons: string[];
-    riskScore: number;
-  }> {
+  static async getSecurityEvents(userId: string, limit: number = 50): Promise<SecurityEvent[]> {
     try {
-      // Get recent security events for user
-      const { data: events } = await supabase
+      const { data, error } = await supabase
         .from('security_events')
         .select('*')
-        .eq('userId', userId)
-        .gte('timestamp', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-        .order('timestamp', { ascending: false });
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(limit);
 
-      let riskScore = 0;
-      const reasons: string[] = [];
-
-      if (events) {
-        // Multiple login attempts from different IPs
-        const uniqueIPs = new Set(events.map(e => e.ipAddress));
-        if (uniqueIPs.size > 3) {
-          riskScore += 30;
-          reasons.push('Multiple login attempts from different IP addresses');
-        }
-
-        // High frequency of events
-        if (events.length > 50) {
-          riskScore += 25;
-          reasons.push('Unusually high activity frequency');
-        }
-
-        // Failed login attempts
-        const failedLogins = events.filter(e => 
-          e.eventType === 'login_attempt' && e.details?.success === false
-        );
-        if (failedLogins.length > 5) {
-          riskScore += 40;
-          reasons.push('Multiple failed login attempts');
-        }
-
-        // Unusual access patterns
-        const accessEvents = events.filter(e => e.eventType === 'data_access');
-        if (accessEvents.length > 20) {
-          riskScore += 20;
-          reasons.push('Unusual data access patterns');
-        }
+      if (error) {
+        console.error('Failed to fetch security events:', error);
+        return [];
       }
 
-      return {
-        suspicious: riskScore > 50,
-        reasons,
-        riskScore
-      };
+      return (data || []).map(event => ({
+        id: event.id,
+        userId: event.user_id,
+        eventType: event.event_type,
+        severity: event.severity,
+        description: event.description,
+        metadata: event.metadata,
+        timestamp: event.created_at,
+        ipAddress: String(event.ip_address || ''),
+        userAgent: event.user_agent || ''
+      }));
     } catch (error) {
-      console.error('Threat detection failed:', error);
-      return { suspicious: false, reasons: [], riskScore: 0 };
+      console.error('Failed to fetch security events:', error);
+      return [];
     }
   }
 
-  static async enableTwoFactorAuth(userId: string): Promise<{
-    success: boolean;
-    secret?: string;
-    qrCode?: string;
-    error?: string;
-  }> {
+  static async detectAnomalies(userId: string): Promise<SecurityThreat[]> {
     try {
-      const { data, error } = await supabase.functions.invoke('enable-2fa', {
-        body: { userId }
-      });
+      const events = await this.getSecurityEvents(userId, 100);
+      const threats: SecurityThreat[] = [];
 
-      if (error) throw error;
+      // Simple anomaly detection based on event patterns
+      const recentEvents = events.filter(e => 
+        new Date(e.timestamp) > new Date(Date.now() - 24 * 60 * 60 * 1000)
+      );
 
-      return {
-        success: true,
-        secret: data.secret,
-        qrCode: data.qrCode
-      };
+      // Check for multiple failed login attempts
+      const failedLogins = recentEvents.filter(e => e.eventType === 'failed_login');
+      if (failedLogins.length > 5) {
+        threats.push({
+          id: `threat-${Date.now()}`,
+          type: 'brute_force',
+          severity: 'high',
+          description: `${failedLogins.length} failed login attempts detected`,
+          mitigated: false,
+          detectedAt: new Date().toISOString()
+        });
+      }
+
+      // Check for suspicious IP addresses
+      const ipAddresses = new Set(recentEvents.map(e => e.ipAddress));
+      if (ipAddresses.size > 10) {
+        threats.push({
+          id: `threat-${Date.now() + 1}`,
+          type: 'multiple_ips',
+          severity: 'medium',
+          description: `Access from ${ipAddresses.size} different IP addresses`,
+          mitigated: false,
+          detectedAt: new Date().toISOString()
+        });
+      }
+
+      return threats;
     } catch (error) {
-      console.error('2FA setup failed:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to setup 2FA'
-      };
+      console.error('Failed to detect anomalies:', error);
+      return [];
     }
   }
 
-  static async verifyTwoFactorAuth(userId: string, token: string): Promise<{
-    success: boolean;
-    error?: string;
+  static async generateSecurityReport(userId: string): Promise<{
+    totalEvents: number;
+    criticalEvents: number;
+    recentThreats: SecurityThreat[];
+    recommendations: string[];
   }> {
     try {
-      const { data, error } = await supabase.functions.invoke('verify-2fa', {
-        body: { userId, token }
-      });
+      const events = await this.getSecurityEvents(userId);
+      const threats = await this.detectAnomalies(userId);
 
-      if (error) throw error;
+      const criticalEvents = events.filter(e => e.severity === 'critical').length;
+      
+      const recommendations = [];
+      if (criticalEvents > 0) {
+        recommendations.push('Review critical security events immediately');
+      }
+      if (threats.length > 0) {
+        recommendations.push('Address detected security threats');
+      }
+      recommendations.push('Enable two-factor authentication if not already active');
+      recommendations.push('Review recent login activity');
 
-      return { success: data.verified };
-    } catch (error) {
-      console.error('2FA verification failed:', error);
       return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Verification failed'
+        totalEvents: events.length,
+        criticalEvents,
+        recentThreats: threats.slice(0, 5),
+        recommendations
       };
-    }
-  }
-
-  static async generateComplianceReport(type: 'gdpr' | 'ccpa' | 'sox'): Promise<{
-    success: boolean;
-    report?: any;
-    error?: string;
-  }> {
-    try {
-      const { data, error } = await supabase.functions.invoke('compliance-report', {
-        body: { type }
-      });
-
-      if (error) throw error;
-
-      return { success: true, report: data };
     } catch (error) {
-      console.error('Compliance report generation failed:', error);
+      console.error('Failed to generate security report:', error);
       return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Report generation failed'
+        totalEvents: 0,
+        criticalEvents: 0,
+        recentThreats: [],
+        recommendations: ['Unable to generate security report']
       };
     }
   }

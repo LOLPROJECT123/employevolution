@@ -19,6 +19,9 @@ export interface ABTestVariant {
   name: string;
   allocation_percentage: number;
   config: Record<string, any>;
+  participants?: number;
+  conversions?: number;
+  conversionRate?: number;
 }
 
 export interface ABTestAssignment {
@@ -30,15 +33,26 @@ export interface ABTestAssignment {
 
 export interface ABTestResult {
   testId: string;
+  testName: string;
   variants: Array<{
     variantId: string;
     name: string;
     participants: number;
     conversions: number;
     conversionRate: number;
-    confidence: number;
   }>;
+  variantA: {
+    conversionRate: number;
+    conversions: number;
+    users: number;
+  };
+  variantB: {
+    conversionRate: number;
+    conversions: number;
+    users: number;
+  };
   winner?: string;
+  confidence: number;
   statistical_significance: boolean;
 }
 
@@ -47,7 +61,7 @@ export class ABTestingService {
 
   static async getActiveTests(): Promise<ABTest[]> {
     try {
-      // Since the ab_tests table doesn't exist in Supabase, return mock data
+      // Mock data since ab_tests table doesn't exist
       console.log('AB Testing: Using mock data as ab_tests table does not exist');
       return [
         {
@@ -151,7 +165,6 @@ export class ABTestingService {
         return;
       }
 
-      // In a real implementation, you would store this conversion data
       console.log('AB Testing: Conversion tracked', {
         userId,
         testId,
@@ -168,27 +181,44 @@ export class ABTestingService {
   static async getTestResults(testId: string): Promise<ABTestResult | null> {
     try {
       // Mock results since we don't have real data
+      const tests = await this.getActiveTests();
+      const test = tests.find(t => t.id === testId);
+      
+      if (!test) {
+        return null;
+      }
+
       return {
         testId,
+        testName: test.name,
         variants: [
           {
             variantId: 'variant-a',
             name: 'Original',
             participants: 150,
             conversions: 15,
-            conversionRate: 10.0,
-            confidence: 95
+            conversionRate: 10.0
           },
           {
             variantId: 'variant-b', 
             name: 'Enhanced',
             participants: 145,
             conversions: 20,
-            conversionRate: 13.8,
-            confidence: 95
+            conversionRate: 13.8
           }
         ],
+        variantA: {
+          conversionRate: 10.0,
+          conversions: 15,
+          users: 150
+        },
+        variantB: {
+          conversionRate: 13.8,
+          conversions: 20,
+          users: 145
+        },
         winner: 'variant-b',
+        confidence: 95.2,
         statistical_significance: true
       };
     } catch (error) {
