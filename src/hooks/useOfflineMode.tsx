@@ -40,7 +40,7 @@ export const useOfflineMode = () => {
     localStorage.setItem(`cache_${key}`, JSON.stringify(cacheItem));
   }, []);
 
-  const getCachedData = useCallback(<T>(key: string): T | null => {
+  const getCachedData = useCallback(<T,>(key: string): T | null => {
     const cached = localStorage.getItem(`cache_${key}`);
     if (!cached) return null;
 
