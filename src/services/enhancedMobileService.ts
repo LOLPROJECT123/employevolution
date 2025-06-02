@@ -4,446 +4,450 @@ import { supabase } from '@/integrations/supabase/client';
 export interface BiometricAuthResult {
   success: boolean;
   error?: string;
-  method: 'fingerprint' | 'face' | 'voice' | 'none';
+  type?: 'fingerprint' | 'face' | 'voice';
 }
 
 export interface DocumentScanResult {
-  text: string;
-  confidence: number;
-  type: 'resume' | 'id' | 'certificate' | 'other';
-  extractedData: any;
+  success: boolean;
+  text?: string;
+  confidence?: number;
+  documentType?: string;
+  error?: string;
 }
 
-export interface PushNotificationPayload {
-  title: string;
-  body: string;
-  data?: any;
-  icon?: string;
-  badge?: number;
+export interface PushNotificationConfig {
+  enabled: boolean;
+  jobAlerts: boolean;
+  applicationUpdates: boolean;
+  interviewReminders: boolean;
+  networkingOpportunities: boolean;
+}
+
+export interface OfflineSyncData {
+  lastSync: string;
+  pendingActions: any[];
+  cachedData: any;
+  conflictResolution: 'server' | 'client' | 'merge';
 }
 
 export class EnhancedMobileService {
-  static async enableBiometricAuth(): Promise<BiometricAuthResult> {
+  // Biometric Authentication
+  static async initializeBiometricAuth(): Promise<boolean> {
     try {
       // Check if biometric authentication is available
       if ('credentials' in navigator) {
         const available = await (navigator.credentials as any).get({
           publicKey: {
             challenge: new Uint8Array(32),
-            rp: { name: 'CareerCatalyst' },
+            rp: { name: "EmployEvolution" },
             user: {
               id: new Uint8Array(16),
-              name: 'user@example.com',
-              displayName: 'User'
+              name: "user@example.com",
+              displayName: "User"
             },
-            pubKeyCredParams: [{ alg: -7, type: 'public-key' }],
+            pubKeyCredParams: [{ alg: -7, type: "public-key" }],
             authenticatorSelection: {
-              authenticatorAttachment: 'platform',
-              userVerification: 'required'
+              authenticatorAttachment: "platform",
+              userVerification: "required"
             }
           }
         });
-
-        if (available) {
-          return {
-            success: true,
-            method: 'fingerprint' // Could be fingerprint, face, etc.
-          };
-        }
+        return !!available;
       }
+      return false;
+    } catch (error) {
+      console.error('Biometric auth not available:', error);
+      return false;
+    }
+  }
 
-      // Fallback for mobile devices
-      if ('DeviceMotionEvent' in window) {
+  static async authenticateWithBiometrics(): Promise<BiometricAuthResult> {
+    try {
+      const credential = await (navigator.credentials as any).get({
+        publicKey: {
+          challenge: new Uint8Array(32),
+          allowCredentials: [],
+          userVerification: "required"
+        }
+      });
+
+      if (credential) {
         return {
           success: true,
-          method: 'voice' // Voice recognition as fallback
+          type: 'fingerprint' // Could be determined by credential type
         };
       }
 
       return {
         success: false,
-        error: 'Biometric authentication not supported',
-        method: 'none'
+        error: 'Authentication failed'
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Biometric auth failed',
-        method: 'none'
+        error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
   }
 
-  static async scanDocument(imageBlob: Blob): Promise<DocumentScanResult> {
+  // Document Scanning
+  static async scanDocument(imageFile: File): Promise<DocumentScanResult> {
     try {
-      // Create a canvas to process the image
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      
-      if (!ctx) throw new Error('Canvas not supported');
+      // Use OCR service or camera API
+      const formData = new FormData();
+      formData.append('image', imageFile);
 
-      // Create image from blob
-      const img = new Image();
-      const imageUrl = URL.createObjectURL(imageBlob);
-      
-      return new Promise((resolve) => {
-        img.onload = () => {
-          canvas.width = img.width;
-          canvas.height = img.height;
-          ctx.drawImage(img, 0, 0);
-          
-          // Mock OCR functionality - in real app, would use Tesseract.js or cloud OCR
-          const mockText = this.generateMockOCRText();
-          const documentType = this.detectDocumentType(mockText);
-          const extractedData = this.extractDataFromText(mockText, documentType);
-          
-          URL.revokeObjectURL(imageUrl);
-          
-          resolve({
-            text: mockText,
-            confidence: 85 + Math.random() * 10, // Mock confidence
-            type: documentType,
-            extractedData
-          });
-        };
-        
-        img.onerror = () => {
-          resolve({
-            text: '',
-            confidence: 0,
-            type: 'other',
-            extractedData: {}
-          });
-        };
-        
-        img.src = imageUrl;
-      });
+      // Mock OCR processing
+      const mockResult = {
+        success: true,
+        text: 'JOHN DOE\nSoftware Engineer\nExperience: 5 years\nSkills: React, Node.js, Python\nEmail: john.doe@example.com\nPhone: (555) 123-4567',
+        confidence: 0.95,
+        documentType: 'resume'
+      };
+
+      // In a real implementation, this would call an OCR service
+      return mockResult;
     } catch (error) {
-      console.error('Document scan error:', error);
       return {
-        text: '',
-        confidence: 0,
-        type: 'other',
-        extractedData: {}
+        success: false,
+        error: error instanceof Error ? error.message : 'Scan failed'
       };
     }
   }
 
-  static async registerForPushNotifications(): Promise<boolean> {
+  static async parseDocumentText(text: string): Promise<any> {
     try {
-      if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-        console.warn('Push messaging is not supported');
-        return false;
-      }
+      // Parse extracted text into structured data
+      const lines = text.split('\n').filter(line => line.trim());
+      const result: any = {};
 
-      const registration = await navigator.serviceWorker.register('/sw.js');
-      
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') {
-        console.warn('Notification permission denied');
-        return false;
-      }
-
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: this.urlBase64ToUint8Array(
-          'BGxJCjVwhPq6f8j9b8aqm3aV2VLhN9UigMqRt67sJ8M' // Mock VAPID key
-        )
-      });
-
-      // Store subscription in database
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase.from('user_profiles').upsert({
-          user_id: user.id,
-          push_subscription: subscription.toJSON()
-        });
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Push notification registration failed:', error);
-      return false;
-    }
-  }
-
-  static async sendPushNotification(userId: string, payload: PushNotificationPayload): Promise<boolean> {
-    try {
-      // In a real app, this would be handled by a backend service
-      // For now, we'll just log the notification and show it locally
-      console.log('Sending push notification:', payload);
-      
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification(payload.title, {
-          body: payload.body,
-          icon: payload.icon || '/favicon.ico',
-          badge: payload.badge,
-          data: payload.data
-        });
-        return true;
-      }
-      
-      return false;
-    } catch (error) {
-      console.error('Push notification error:', error);
-      return false;
-    }
-  }
-
-  static async syncDataInBackground(): Promise<void> {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Sync user data when online
-      if (navigator.onLine) {
-        const syncTasks = [
-          this.syncJobApplications(user.id),
-          this.syncUserProfile(user.id),
-          this.syncSavedJobs(user.id)
-        ];
-
-        await Promise.allSettled(syncTasks);
-        
-        // Update last sync timestamp
-        localStorage.setItem('lastBackgroundSync', new Date().toISOString());
-      }
-    } catch (error) {
-      console.error('Background sync error:', error);
-    }
-  }
-
-  static async handleOfflineActions(): Promise<void> {
-    try {
-      const offlineActions = JSON.parse(localStorage.getItem('offlineActions') || '[]');
-      
-      if (navigator.onLine && offlineActions.length > 0) {
-        for (const action of offlineActions) {
-          try {
-            await this.executeOfflineAction(action);
-          } catch (error) {
-            console.error('Failed to execute offline action:', error);
+      lines.forEach(line => {
+        if (line.includes('@')) {
+          result.email = line.trim();
+        } else if (line.match(/\(\d{3}\)\s?\d{3}-\d{4}/)) {
+          result.phone = line.trim();
+        } else if (line.toLowerCase().includes('experience')) {
+          const match = line.match(/(\d+)\s*years?/i);
+          if (match) {
+            result.experience = parseInt(match[1]);
+          }
+        } else if (line.toLowerCase().includes('skills')) {
+          const skillsText = line.split(':')[1];
+          if (skillsText) {
+            result.skills = skillsText.split(',').map(skill => skill.trim());
           }
         }
-        
-        // Clear processed actions
-        localStorage.setItem('offlineActions', '[]');
-      }
+      });
+
+      return result;
     } catch (error) {
-      console.error('Offline action handling error:', error);
+      console.error('Document parsing failed:', error);
+      return {};
     }
   }
 
-  // Helper methods
-  private static generateMockOCRText(): string {
-    const mockTexts = [
-      `John Doe
-Software Engineer
-john.doe@email.com
-(555) 123-4567
-
-EXPERIENCE
-Senior Software Engineer - Tech Corp (2020-2023)
-• Developed React applications with 99% uptime
-• Led team of 5 engineers
-• Improved system performance by 40%
-
-EDUCATION
-Bachelor of Computer Science
-University of Technology (2016-2020)
-
-SKILLS
-JavaScript, React, Node.js, Python, AWS`,
-
-      `CERTIFICATE OF COMPLETION
-This certifies that John Doe
-has successfully completed
-AWS Solutions Architect Associate
-Issued: December 2023
-Certificate ID: AWS-123456789`,
-
-      `Driver's License
-Name: John Doe
-License #: D123456789
-DOB: 01/15/1995
-Expires: 01/15/2027`
-    ];
-
-    return mockTexts[Math.floor(Math.random() * mockTexts.length)];
-  }
-
-  private static detectDocumentType(text: string): 'resume' | 'id' | 'certificate' | 'other' {
-    const lowerText = text.toLowerCase();
-    
-    if (lowerText.includes('experience') && lowerText.includes('education') && lowerText.includes('skills')) {
-      return 'resume';
-    }
-    
-    if (lowerText.includes('certificate') && lowerText.includes('completion')) {
-      return 'certificate';
-    }
-    
-    if (lowerText.includes('license') || lowerText.includes('identification')) {
-      return 'id';
-    }
-    
-    return 'other';
-  }
-
-  private static extractDataFromText(text: string, type: 'resume' | 'id' | 'certificate' | 'other'): any {
-    const emailMatch = text.match(/[\w.-]+@[\w.-]+\.\w+/);
-    const phoneMatch = text.match(/\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/);
-    
-    const baseData = {
-      email: emailMatch ? emailMatch[0] : null,
-      phone: phoneMatch ? phoneMatch[0] : null
-    };
-
-    switch (type) {
-      case 'resume':
-        return {
-          ...baseData,
-          skills: this.extractSkills(text),
-          experience: this.extractExperience(text),
-          education: this.extractEducation(text)
-        };
-      case 'certificate':
-        return {
-          ...baseData,
-          certificateName: this.extractCertificateName(text),
-          issueDate: this.extractDate(text),
-          certificateId: this.extractCertificateId(text)
-        };
-      case 'id':
-        return {
-          ...baseData,
-          idNumber: this.extractIdNumber(text),
-          expirationDate: this.extractDate(text)
-        };
-      default:
-        return baseData;
-    }
-  }
-
-  private static extractSkills(text: string): string[] {
-    const skillsSection = text.match(/SKILLS[\s\S]*?(?=\n[A-Z]|$)/i);
-    if (!skillsSection) return [];
-    
-    const commonSkills = ['JavaScript', 'React', 'Node.js', 'Python', 'AWS', 'SQL', 'Git'];
-    return commonSkills.filter(skill => 
-      skillsSection[0].toLowerCase().includes(skill.toLowerCase())
-    );
-  }
-
-  private static extractExperience(text: string): string[] {
-    const experienceSection = text.match(/EXPERIENCE[\s\S]*?(?=\n[A-Z]|$)/i);
-    if (!experienceSection) return [];
-    
-    const lines = experienceSection[0].split('\n').filter(line => line.trim());
-    return lines.slice(1, 4); // Return first few experience entries
-  }
-
-  private static extractEducation(text: string): string[] {
-    const educationSection = text.match(/EDUCATION[\s\S]*?(?=\n[A-Z]|$)/i);
-    if (!educationSection) return [];
-    
-    const lines = educationSection[0].split('\n').filter(line => line.trim());
-    return lines.slice(1, 3); // Return education entries
-  }
-
-  private static extractCertificateName(text: string): string | null {
-    const lines = text.split('\n');
-    for (const line of lines) {
-      if (line.toLowerCase().includes('aws') || line.toLowerCase().includes('microsoft') || 
-          line.toLowerCase().includes('google') || line.toLowerCase().includes('certified')) {
-        return line.trim();
+  // Push Notifications
+  static async requestNotificationPermission(): Promise<boolean> {
+    try {
+      if ('Notification' in window) {
+        const permission = await Notification.requestPermission();
+        return permission === 'granted';
       }
+      return false;
+    } catch (error) {
+      console.error('Notification permission failed:', error);
+      return false;
     }
-    return null;
   }
 
-  private static extractDate(text: string): string | null {
-    const dateMatch = text.match(/\d{1,2}\/\d{1,2}\/\d{4}|\d{4}-\d{2}-\d{2}|[A-Za-z]+ \d{4}/);
-    return dateMatch ? dateMatch[0] : null;
+  static async subscribeToPushNotifications(userId: string): Promise<boolean> {
+    try {
+      if ('serviceWorker' in navigator && 'PushManager' in window) {
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: this.urlBase64ToUint8Array(
+            'BJ-your-vapid-public-key-here' // Replace with actual VAPID key
+          )
+        });
+
+        // Save subscription to database
+        await supabase.from('user_profiles').update({
+          push_subscription: JSON.stringify(subscription)
+        }).eq('user_id', userId);
+
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Push subscription failed:', error);
+      return false;
+    }
   }
 
-  private static extractCertificateId(text: string): string | null {
-    const idMatch = text.match(/(?:ID|Certificate|Cert)[\s#:]*([A-Z0-9-]+)/i);
-    return idMatch ? idMatch[1] : null;
+  static async sendPushNotification(userId: string, title: string, body: string, data?: any): Promise<boolean> {
+    try {
+      const { data: response } = await supabase.functions.invoke('notification-dispatcher', {
+        body: {
+          userId,
+          notification: {
+            title,
+            body,
+            data,
+            timestamp: new Date().toISOString()
+          }
+        }
+      });
+
+      return response?.success || false;
+    } catch (error) {
+      console.error('Push notification failed:', error);
+      return false;
+    }
   }
 
-  private static extractIdNumber(text: string): string | null {
-    const idMatch = text.match(/(?:License|ID)[\s#:]*([A-Z0-9]+)/i);
-    return idMatch ? idMatch[1] : null;
+  // Offline Sync
+  static async initializeOfflineSync(userId: string): Promise<boolean> {
+    try {
+      // Set up service worker for background sync
+      if ('serviceWorker' in navigator) {
+        await navigator.serviceWorker.register('/sw.js');
+        
+        // Initialize IndexedDB for offline storage
+        const dbRequest = indexedDB.open('employevolution-offline', 1);
+        
+        dbRequest.onupgradeneeded = (event) => {
+          const db = (event.target as IDBOpenDBRequest).result;
+          
+          // Create object stores
+          if (!db.objectStoreNames.contains('jobs')) {
+            db.createObjectStore('jobs', { keyPath: 'id' });
+          }
+          if (!db.objectStoreNames.contains('applications')) {
+            db.createObjectStore('applications', { keyPath: 'id' });
+          }
+          if (!db.objectStoreNames.contains('syncQueue')) {
+            db.createObjectStore('syncQueue', { keyPath: 'id', autoIncrement: true });
+          }
+        };
+
+        return new Promise((resolve) => {
+          dbRequest.onsuccess = () => resolve(true);
+          dbRequest.onerror = () => resolve(false);
+        });
+      }
+      return false;
+    } catch (error) {
+      console.error('Offline sync initialization failed:', error);
+      return false;
+    }
   }
 
+  static async syncOfflineData(userId: string): Promise<OfflineSyncData> {
+    try {
+      const db = await this.openOfflineDB();
+      const syncQueue = await this.getFromIndexedDB(db, 'syncQueue');
+      
+      // Process pending actions
+      for (const action of syncQueue) {
+        try {
+          await this.processSyncAction(action);
+          await this.removeFromIndexedDB(db, 'syncQueue', action.id);
+        } catch (error) {
+          console.error('Sync action failed:', action, error);
+        }
+      }
+
+      // Get latest data from server
+      const { data: latestJobs } = await supabase
+        .from('saved_jobs')
+        .select('*')
+        .eq('user_id', userId);
+
+      const { data: latestApplications } = await supabase
+        .from('job_applications')
+        .select('*')
+        .eq('user_id', userId);
+
+      // Update local cache
+      if (latestJobs) {
+        await this.saveToIndexedDB(db, 'jobs', latestJobs);
+      }
+      if (latestApplications) {
+        await this.saveToIndexedDB(db, 'applications', latestApplications);
+      }
+
+      return {
+        lastSync: new Date().toISOString(),
+        pendingActions: [],
+        cachedData: {
+          jobs: latestJobs?.length || 0,
+          applications: latestApplications?.length || 0
+        },
+        conflictResolution: 'server'
+      };
+    } catch (error) {
+      console.error('Offline sync failed:', error);
+      return {
+        lastSync: new Date().toISOString(),
+        pendingActions: [],
+        cachedData: {},
+        conflictResolution: 'server'
+      };
+    }
+  }
+
+  static async queueOfflineAction(action: any): Promise<void> {
+    try {
+      const db = await this.openOfflineDB();
+      await this.saveToIndexedDB(db, 'syncQueue', {
+        ...action,
+        timestamp: new Date().toISOString(),
+        retryCount: 0
+      });
+    } catch (error) {
+      console.error('Failed to queue offline action:', error);
+    }
+  }
+
+  // Camera Integration
+  static async initializeCamera(): Promise<boolean> {
+    try {
+      if ('mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices) {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' },
+          audio: false
+        });
+        
+        // Stop the stream immediately after checking
+        stream.getTracks().forEach(track => track.stop());
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Camera initialization failed:', error);
+      return false;
+    }
+  }
+
+  static async captureDocument(): Promise<File | null> {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' },
+        audio: false
+      });
+
+      // Create video element to capture frame
+      const video = document.createElement('video');
+      video.srcObject = stream;
+      video.play();
+
+      return new Promise((resolve) => {
+        video.onloadedmetadata = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(video, 0, 0);
+            
+            canvas.toBlob((blob) => {
+              stream.getTracks().forEach(track => track.stop());
+              if (blob) {
+                const file = new File([blob], 'document.jpg', { type: 'image/jpeg' });
+                resolve(file);
+              } else {
+                resolve(null);
+              }
+            }, 'image/jpeg', 0.9);
+          } else {
+            resolve(null);
+          }
+        };
+      });
+    } catch (error) {
+      console.error('Document capture failed:', error);
+      return null;
+    }
+  }
+
+  // Utility methods
   private static urlBase64ToUint8Array(base64String: string): Uint8Array {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const base64 = (base64String + padding)
+      .replace(/-/g, '+')
+      .replace(/_/g, '/');
+
     const rawData = window.atob(base64);
     const outputArray = new Uint8Array(rawData.length);
-    
+
     for (let i = 0; i < rawData.length; ++i) {
       outputArray[i] = rawData.charCodeAt(i);
     }
     return outputArray;
   }
 
-  private static async syncJobApplications(userId: string): Promise<void> {
-    // Sync local job applications with server
-    const localApplications = JSON.parse(localStorage.getItem('offlineApplications') || '[]');
-    
-    for (const app of localApplications) {
-      try {
-        await supabase.from('job_applications').upsert({ ...app, user_id: userId });
-      } catch (error) {
-        console.error('Failed to sync application:', error);
-      }
-    }
-    
-    localStorage.removeItem('offlineApplications');
+  private static async openOfflineDB(): Promise<IDBDatabase> {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open('employevolution-offline', 1);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
   }
 
-  private static async syncUserProfile(userId: string): Promise<void> {
-    const localProfile = JSON.parse(localStorage.getItem('offlineProfile') || '{}');
-    
-    if (Object.keys(localProfile).length > 0) {
-      try {
-        await supabase.from('user_profiles').upsert({ ...localProfile, user_id: userId });
-        localStorage.removeItem('offlineProfile');
-      } catch (error) {
-        console.error('Failed to sync profile:', error);
+  private static async saveToIndexedDB(db: IDBDatabase, storeName: string, data: any): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([storeName], 'readwrite');
+      const store = transaction.objectStore(storeName);
+      
+      if (Array.isArray(data)) {
+        data.forEach(item => store.put(item));
+      } else {
+        store.put(data);
       }
-    }
+      
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+    });
   }
 
-  private static async syncSavedJobs(userId: string): Promise<void> {
-    const localSavedJobs = JSON.parse(localStorage.getItem('offlineSavedJobs') || '[]');
-    
-    for (const job of localSavedJobs) {
-      try {
-        await supabase.from('saved_jobs').upsert({ ...job, user_id: userId });
-      } catch (error) {
-        console.error('Failed to sync saved job:', error);
-      }
-    }
-    
-    localStorage.removeItem('offlineSavedJobs');
+  private static async getFromIndexedDB(db: IDBDatabase, storeName: string): Promise<any[]> {
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([storeName], 'readonly');
+      const store = transaction.objectStore(storeName);
+      const request = store.getAll();
+      
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
   }
 
-  private static async executeOfflineAction(action: any): Promise<void> {
+  private static async removeFromIndexedDB(db: IDBDatabase, storeName: string, key: any): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([storeName], 'readwrite');
+      const store = transaction.objectStore(storeName);
+      const request = store.delete(key);
+      
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  private static async processSyncAction(action: any): Promise<void> {
+    // Process different types of sync actions
     switch (action.type) {
-      case 'saveJob':
+      case 'save_job':
         await supabase.from('saved_jobs').insert(action.data);
         break;
-      case 'updateProfile':
-        await supabase.from('user_profiles').upsert(action.data);
-        break;
-      case 'submitApplication':
+      case 'apply_job':
         await supabase.from('job_applications').insert(action.data);
         break;
+      case 'update_application':
+        await supabase.from('job_applications').update(action.data).eq('id', action.id);
+        break;
       default:
-        console.warn('Unknown offline action type:', action.type);
+        console.warn('Unknown sync action type:', action.type);
     }
   }
 }

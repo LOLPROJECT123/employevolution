@@ -1,182 +1,199 @@
 
-import { useState } from 'react';
-import { Job, JobStatus } from "@/types/job";
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from "@/components/ui/tabs";
-import { JobCard } from "@/components/JobCard";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { 
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card";
-import {
-  Button
-} from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
-import { useJobApplications } from "@/contexts/JobApplicationContext";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { Bookmark, Clock, ExternalLink, Trash2 } from 'lucide-react';
 
 interface SavedAndAppliedJobsProps {
-  onSelect: (job: Job) => void;
-  selectedJobId: string | null;
-  // Add these props to match how it's used in Jobs.tsx
-  savedJobs?: Job[];
-  appliedJobs?: Job[];
-  onApply?: (job: Job) => void;
-  onSave?: (job: Job) => void;
-  hideTitle?: boolean; // New prop to hide the title
+  onJobSelect?: (job: any) => void;
 }
 
-export function SavedAndAppliedJobs({
-  onSelect,
-  selectedJobId,
-  savedJobs: propSavedJobs,
-  appliedJobs: propAppliedJobs,
-  onApply: propOnApply,
-  onSave: propOnSave,
-  hideTitle = false // Default to false
-}: SavedAndAppliedJobsProps) {
-  const [activeTab, setActiveTab] = useState<string>("saved");
-  
-  const { 
-    savedJobs: contextSavedJobs, 
-    appliedJobs: contextAppliedJobs, 
-    applyToJob: contextApplyToJob, 
-    saveJob: contextSaveJob, 
-    applications,
-    updateApplicationStatus,
-    getApplicationByJobId
-  } = useJobApplications();
-  
-  // Use props if provided, otherwise fall back to context values
-  const savedJobs = propSavedJobs || contextSavedJobs;
-  const appliedJobs = propAppliedJobs || contextAppliedJobs;
-  const applyToJob = propOnApply || contextApplyToJob;
-  const saveJob = propOnSave || contextSaveJob;
-  
-  const handleStatusChange = (jobId: string, status: JobStatus) => {
-    const application = getApplicationByJobId(jobId);
-    if (application) {
-      updateApplicationStatus(application.id, status);
+export const SavedAndAppliedJobs: React.FC<SavedAndAppliedJobsProps> = ({ onJobSelect }) => {
+  const { user } = useAuth();
+  const [savedJobs, setSavedJobs] = useState<any[]>([]);
+  const [appliedJobs, setAppliedJobs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'saved' | 'applied'>('saved');
+
+  useEffect(() => {
+    if (user) {
+      loadJobs();
+    }
+  }, [user]);
+
+  const loadJobs = async () => {
+    if (!user) return;
+
+    setLoading(true);
+    try {
+      const [savedResponse, appliedResponse] = await Promise.all([
+        supabase.from('saved_jobs').select('*').eq('user_id', user.id),
+        supabase.from('job_applications').select('*').eq('user_id', user.id)
+      ]);
+
+      if (savedResponse.data) {
+        setSavedJobs(savedResponse.data);
+      }
+
+      if (appliedResponse.data) {
+        setAppliedJobs(appliedResponse.data);
+      }
+    } catch (error) {
+      console.error('Failed to load jobs:', error);
+      toast.error('Failed to load jobs');
+    } finally {
+      setLoading(false);
     }
   };
-  
+
+  const handleRemoveSavedJob = async (jobId: string) => {
+    try {
+      const { error } = await supabase
+        .from('saved_jobs')
+        .delete()
+        .eq('id', jobId);
+
+      if (error) throw error;
+
+      setSavedJobs(prev => prev.filter(job => job.id !== jobId));
+      toast.success('Job removed from saved list');
+    } catch (error) {
+      console.error('Failed to remove saved job:', error);
+      toast.error('Failed to remove job');
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'applied': return 'bg-blue-100 text-blue-800';
+      case 'under_review': return 'bg-yellow-100 text-yellow-800';
+      case 'interview_scheduled': return 'bg-green-100 text-green-800';
+      case 'rejected': return 'bg-red-100 text-red-800';
+      case 'offer_received': return 'bg-purple-100 text-purple-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  if (loading) {
+    return <div>Loading jobs...</div>;
+  }
+
   return (
-    <Card className="h-full shadow-none border-0 sm:border sm:shadow-sm overflow-hidden">
-      {!hideTitle && (
-        <CardHeader className="border-b pb-3 pt-4">
-          <CardTitle className="text-lg">My Jobs</CardTitle>
-        </CardHeader>
-      )}
-      <CardContent className="p-0">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 rounded-none border-b bg-transparent h-auto sticky top-0 z-10">
-            <TabsTrigger value="saved" className="text-sm rounded-none py-3 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">
-              Saved Jobs ({savedJobs.length})
-            </TabsTrigger>
-            <TabsTrigger value="applied" className="text-sm rounded-none py-3 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">
-              Applied Jobs ({appliedJobs.length})
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="saved" className="p-0 pt-2 overflow-hidden">
-            <ScrollArea className="max-h-[180px]">
-              {savedJobs.length === 0 ? (
-                <div className="p-6 text-center">
-                  <p className="text-muted-foreground mb-2">
-                    You Haven't Saved Any Jobs Yet.
-                  </p>
-                  <p className="text-muted-foreground text-sm mb-4">
-                    Save jobs to keep track of positions you're interested in.
-                  </p>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center space-x-2">
+          <Bookmark className="h-5 w-5" />
+          <span>My Jobs</span>
+        </CardTitle>
+        <div className="flex space-x-2">
+          <Button
+            variant={activeTab === 'saved' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setActiveTab('saved')}
+          >
+            Saved ({savedJobs.length})
+          </Button>
+          <Button
+            variant={activeTab === 'applied' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setActiveTab('applied')}
+          >
+            Applied ({appliedJobs.length})
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {activeTab === 'saved' && (
+          <div className="space-y-3">
+            {savedJobs.map((savedJob) => {
+              const jobData = savedJob.job_data;
+              return (
+                <div key={savedJob.id} className="border rounded-lg p-3">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <h3 className="font-medium">{jobData.title}</h3>
+                      <p className="text-sm text-muted-foreground">{jobData.company}</p>
+                      <p className="text-sm text-muted-foreground">{jobData.location}</p>
+                      {savedJob.notes && (
+                        <p className="text-sm text-blue-600 mt-1">{savedJob.notes}</p>
+                      )}
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => onJobSelect?.(jobData)}
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleRemoveSavedJob(savedJob.id)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    Saved {new Date(savedJob.saved_at).toLocaleDateString()}
+                  </div>
                 </div>
-              ) : (
-                <div className="divide-y">
-                  {savedJobs.map(job => (
-                    <JobCard 
-                      key={job.id}
-                      job={job}
-                      onApply={() => applyToJob(job)}
-                      isSelected={selectedJobId === job.id}
-                      isSaved={true}
-                      isApplied={appliedJobs.some(j => j.id === job.id)}
-                      onClick={() => onSelect(job)}
-                      onSave={() => saveJob(job)}
-                      variant="list"
-                    />
-                  ))}
+              );
+            })}
+            
+            {savedJobs.length === 0 && (
+              <div className="text-center py-6 text-muted-foreground">
+                No saved jobs yet. Start saving jobs you're interested in!
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'applied' && (
+          <div className="space-y-3">
+            {appliedJobs.map((application) => (
+              <div key={application.id} className="border rounded-lg p-3">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <h3 className="font-medium">{application.job_id}</h3>
+                    <div className="flex items-center space-x-2 mt-1">
+                      <Badge className={getStatusColor(application.status)}>
+                        {application.status.replace('_', ' ')}
+                      </Badge>
+                      <Clock className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">
+                        Applied {new Date(application.applied_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                    {application.notes && (
+                      <p className="text-sm text-muted-foreground mt-1">{application.notes}</p>
+                    )}
+                  </div>
                 </div>
-              )}
-            </ScrollArea>
-          </TabsContent>
-          
-          <TabsContent value="applied" className="p-0 pt-2 overflow-hidden">
-            <ScrollArea className="max-h-[180px]">
-              {appliedJobs.length === 0 ? (
-                <div className="p-6 text-center">
-                  <p className="text-muted-foreground mb-2">
-                    You Haven't Applied To Any Jobs Yet.
-                  </p>
-                  <p className="text-muted-foreground text-sm mb-4">
-                    Apply to jobs to track your application progress.
-                  </p>
-                </div>
-              ) : (
-                <div className="divide-y">
-                  {appliedJobs.map(job => {
-                    const application = getApplicationByJobId(job.id);
-                    return (
-                      <div key={job.id} className="relative">
-                        <JobCard 
-                          job={job}
-                          onApply={() => applyToJob(job)}
-                          isSelected={selectedJobId === job.id}
-                          isSaved={savedJobs.some(j => j.id === job.id)}
-                          isApplied={true}
-                          onClick={() => onSelect(job)}
-                          onSave={() => saveJob(job)}
-                          variant="list"
-                        />
-                        <div className="px-4 py-2 border-t flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">
-                            Status: <span className="font-medium">{application?.status.charAt(0).toUpperCase() + application?.status.slice(1)}</span>
-                          </span>
-                          <Select
-                            value={application?.status || "applied"}
-                            onValueChange={(value) => handleStatusChange(job.id, value as JobStatus)}
-                          >
-                            <SelectTrigger className="w-[160px] h-8">
-                              <SelectValue placeholder="Update status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="applied">Applied</SelectItem>
-                              <SelectItem value="interviewing">Interviewing</SelectItem>
-                              <SelectItem value="offered">Offered</SelectItem>
-                              <SelectItem value="rejected">Rejected</SelectItem>
-                              <SelectItem value="accepted">Accepted</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </ScrollArea>
-          </TabsContent>
-        </Tabs>
+                
+                {application.interview_date && (
+                  <div className="mt-2 text-sm text-green-600">
+                    Interview: {new Date(application.interview_date).toLocaleDateString()}
+                  </div>
+                )}
+              </div>
+            ))}
+            
+            {appliedJobs.length === 0 && (
+              <div className="text-center py-6 text-muted-foreground">
+                No applications yet. Start applying to jobs!
+              </div>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
-}
+};
+
+export default SavedAndAppliedJobs;

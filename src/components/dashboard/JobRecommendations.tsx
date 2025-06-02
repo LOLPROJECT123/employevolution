@@ -3,159 +3,221 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Briefcase, ArrowRight, Star, MapPin } from 'lucide-react';
-import { Job } from '@/types/job';
+import { useAuth } from '@/contexts/AuthContext';
+import { MLJobMatchingService } from '@/services/mlJobMatchingService';
+import { supabase } from '@/integrations/supabase/client';
+import { 
+  Sparkles, 
+  MapPin, 
+  Building, 
+  DollarSign,
+  ExternalLink,
+  Bookmark
+} from 'lucide-react';
 
-const JobRecommendations = () => {
-  const [recommendations, setRecommendations] = useState<Job[]>([]);
+const JobRecommendations: React.FC = () => {
+  const { user } = useAuth();
+  const [recommendations, setRecommendations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Mock job recommendations based on user profile
-    const mockRecommendations: Job[] = [
+    if (user) {
+      loadRecommendations();
+    }
+  }, [user]);
+
+  const loadRecommendations = async () => {
+    if (!user) return;
+
+    try {
+      // Get existing recommendations or generate new ones
+      const { data: existingRecommendations } = await supabase
+        .from('job_recommendations')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (existingRecommendations && existingRecommendations.length > 0) {
+        setRecommendations(existingRecommendations);
+      } else {
+        // Generate mock recommendations
+        const mockRecommendations = await generateMockRecommendations();
+        setRecommendations(mockRecommendations);
+      }
+    } catch (error) {
+      console.error('Failed to load job recommendations:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generateMockRecommendations = async () => {
+    const mockJobs = [
       {
-        id: '1',
-        title: 'Senior Frontend Developer',
-        company: 'TechFlow Inc.',
-        location: 'Austin, TX',
-        salary: { min: 90000, max: 120000, currency: 'USD' },
-        type: 'full-time',
-        level: 'senior',
-        description: 'Join our team to build cutting-edge web applications',
-        requirements: ['React', 'TypeScript', 'Node.js'],
-        postedAt: '2024-01-10T10:00:00Z',
-        skills: ['React', 'TypeScript', 'JavaScript', 'CSS'],
-        matchPercentage: 92,
-        remote: true
+        id: "rec_1",
+        title: "Senior React Developer",
+        company: "TechFlow Inc.",
+        location: "San Francisco, CA",
+        salary: "$130,000 - $160,000",
+        remote: true,
+        match_percentage: 92,
+        reason: "Perfect skills match with React and TypeScript"
       },
       {
-        id: '2',
-        title: 'Full Stack Engineer',
-        company: 'StartupXYZ',
-        location: 'San Francisco, CA',
-        salary: { min: 100000, max: 140000, currency: 'USD' },
-        type: 'full-time',
-        level: 'mid',
-        description: 'Build scalable applications in a fast-paced startup environment',
-        requirements: ['React', 'Python', 'PostgreSQL'],
-        postedAt: '2024-01-12T14:30:00Z',
-        skills: ['React', 'Python', 'PostgreSQL', 'AWS'],
-        matchPercentage: 85,
-        remote: false
+        id: "rec_2", 
+        title: "Full Stack Engineer",
+        company: "InnovateLab",
+        location: "Austin, TX",
+        salary: "$110,000 - $140,000",
+        remote: false,
+        match_percentage: 87,
+        reason: "Great fit for your full-stack experience"
       },
       {
-        id: '3',
-        title: 'React Developer',
-        company: 'Digital Solutions Ltd.',
-        location: 'Remote',
-        salary: { min: 75000, max: 95000, currency: 'USD' },
-        type: 'full-time',
-        level: 'mid',
-        description: 'Create responsive and user-friendly web interfaces',
-        requirements: ['React', 'JavaScript', 'CSS'],
-        postedAt: '2024-01-15T09:15:00Z',
-        skills: ['React', 'JavaScript', 'CSS', 'HTML'],
-        matchPercentage: 78,
-        remote: true
+        id: "rec_3",
+        title: "Frontend Developer",
+        company: "DesignStudio",
+        location: "Remote",
+        salary: "$95,000 - $125,000",
+        remote: true,
+        match_percentage: 83,
+        reason: "Matches your UI/UX interests"
       }
     ];
 
-    setRecommendations(mockRecommendations);
-    setLoading(false);
-  }, []);
+    // Calculate match details for each job
+    const recommendationsWithDetails = await Promise.all(
+      mockJobs.map(async (job) => {
+        const matchDetails = await MLJobMatchingService.calculateJobMatchScore(user!.id, job);
+        return {
+          job_data: job,
+          match_percentage: job.match_percentage,
+          recommendation_reason: job.reason,
+          matching_skills: matchDetails.reasoning,
+          missing_skills: matchDetails.recommendations
+        };
+      })
+    );
 
-  const formatSalary = (salary: Job['salary']) => {
-    if (!salary || salary.min === 0) return 'Not specified';
-    
-    const formatter = new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    });
-    
-    return `${formatter.format(salary.min)} - ${formatter.format(salary.max)}`;
+    return recommendationsWithDetails;
   };
 
-  const getMatchColor = (percentage: number) => {
-    if (percentage >= 85) return 'text-green-600';
-    if (percentage >= 70) return 'text-blue-600';
-    return 'text-yellow-600';
+  const handleSaveJob = async (job: any) => {
+    if (!user) return;
+
+    try {
+      await supabase.from('saved_jobs').insert({
+        user_id: user.id,
+        job_id: job.id,
+        job_data: job,
+        notes: 'Saved from recommendations'
+      });
+      
+      // Show success message
+      console.log('Job saved successfully');
+    } catch (error) {
+      console.error('Failed to save job:', error);
+    }
   };
 
   if (loading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Job Recommendations</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="animate-pulse space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="space-y-2">
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return <div>Loading recommendations...</div>;
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Briefcase className="h-5 w-5" />
-          Recommended Jobs
+        <CardTitle className="flex items-center space-x-2">
+          <Sparkles className="h-5 w-5" />
+          <span>AI Job Recommendations</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {recommendations.map((job) => (
-          <div key={job.id} className="border rounded-lg p-3 space-y-2 hover:bg-gray-50 transition-colors">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <h4 className="font-medium text-sm hover:text-blue-600 cursor-pointer">
-                  {job.title}
-                </h4>
-                <p className="text-xs text-muted-foreground">{job.company}</p>
+        {recommendations.length > 0 ? (
+          recommendations.map((recommendation, index) => {
+            const job = recommendation.job_data;
+            return (
+              <div key={index} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <h3 className="font-semibold text-lg">{job.title}</h3>
+                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                      <div className="flex items-center space-x-1">
+                        <Building className="h-4 w-4" />
+                        <span>{job.company}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <MapPin className="h-4 w-4" />
+                        <span>{job.location}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <Badge 
+                    variant={recommendation.match_percentage >= 90 ? "default" : "secondary"}
+                    className="text-sm"
+                  >
+                    {recommendation.match_percentage}% Match
+                  </Badge>
+                </div>
+
+                <div className="flex items-center space-x-2 mb-3">
+                  <DollarSign className="h-4 w-4 text-green-600" />
+                  <span className="font-medium text-green-600">{job.salary}</span>
+                  {job.remote && (
+                    <Badge variant="outline" className="text-xs">Remote</Badge>
+                  )}
+                </div>
+
+                <p className="text-sm text-blue-600 mb-3">
+                  💡 {recommendation.recommendation_reason}
+                </p>
+
+                {recommendation.matching_skills && recommendation.matching_skills.length > 0 && (
+                  <div className="mb-3">
+                    <div className="text-xs font-medium text-muted-foreground mb-1">Why it's a good match:</div>
+                    <div className="text-xs text-muted-foreground">
+                      {recommendation.matching_skills[0]}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex space-x-2">
+                  <Button size="sm" className="flex-1">
+                    <ExternalLink className="h-3 w-3 mr-1" />
+                    View Job
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => handleSaveJob(job)}
+                  >
+                    <Bookmark className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
-              <div className={`text-xs font-medium ${getMatchColor(job.matchPercentage || 0)}`}>
-                <Star className="h-3 w-3 inline mr-1" />
-                {job.matchPercentage}%
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <MapPin className="h-3 w-3" />
-              {job.location}
-              {job.remote && <Badge variant="secondary" className="text-xs px-1 py-0">Remote</Badge>}
-            </div>
-            
-            <div className="text-xs text-muted-foreground">
-              {formatSalary(job.salary)}
-            </div>
-            
-            <div className="flex flex-wrap gap-1">
-              {job.skills?.slice(0, 3).map((skill, index) => (
-                <Badge key={index} variant="outline" className="text-xs px-1 py-0">
-                  {skill}
-                </Badge>
-              ))}
-              {(job.skills?.length || 0) > 3 && (
-                <span className="text-xs text-muted-foreground">
-                  +{(job.skills?.length || 0) - 3} more
-                </span>
-              )}
-            </div>
+            );
+          })
+        ) : (
+          <div className="text-center py-6">
+            <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium mb-2">No Recommendations Yet</h3>
+            <p className="text-muted-foreground mb-4">
+              Complete your profile and set job preferences to get personalized recommendations
+            </p>
+            <Button variant="outline">
+              Complete Profile
+            </Button>
           </div>
-        ))}
-        
-        <Button variant="outline" className="w-full" size="sm">
-          View All Recommendations
-          <ArrowRight className="h-3 w-3 ml-1" />
-        </Button>
+        )}
+
+        {recommendations.length > 0 && (
+          <div className="pt-4 border-t">
+            <Button variant="outline" className="w-full">
+              View All Recommendations
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

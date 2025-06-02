@@ -1,15 +1,16 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { JobFilters } from "@/components/JobFilters";
-import { SavedAndAppliedJobs } from "@/components/SavedAndAppliedJobs";
-import { JobMatchDetails } from "@/components/JobMatchDetails";
-import { JobDetailView } from "@/components/JobDetailView";
+import JobFilters from "@/components/JobFilters";
+import SavedAndAppliedJobs from "@/components/SavedAndAppliedJobs";
+import JobMatchDetails from "@/components/JobMatchDetails";
+import JobDetailView from "@/components/JobDetailView";
 import { ContextAwareNavigationSuggestions } from "@/components/navigation/ContextAwareNavigationSuggestions";
-import { VoiceSearchButton } from "@/components/mobile/VoiceSearchButton";
+import VoiceSearchButton from "@/components/mobile/VoiceSearchButton";
 import { useVoiceCommands } from "@/hooks/useVoiceCommands";
 import { NavigationAnalyticsService } from "@/services/navigationAnalyticsService";
 import { MLJobMatchingService } from "@/services/mlJobMatchingService";
@@ -24,7 +25,6 @@ import {
   Building, 
   Bookmark, 
   ExternalLink,
-  Mic,
   Filter
 } from "lucide-react";
 
@@ -37,6 +37,25 @@ const Jobs = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [currentFilters, setCurrentFilters] = useState<any>({});
+
+  // Define voice handlers before using them
+  const handleVoiceSearch = (query: string) => {
+    setSearchQuery(query);
+    toast.success(`Voice search: "${query}"`);
+    
+    // Track voice search
+    NavigationAnalyticsService.trackNavigationPatterns(
+      '/jobs',
+      `/jobs?search=${query}`,
+      'voice'
+    );
+  };
+
+  const handleVoiceFilters = (filters: any) => {
+    setCurrentFilters(filters);
+    applyFilters(filters);
+    toast.success('Voice filters applied');
+  };
 
   // Voice command integration
   const { 
@@ -156,24 +175,6 @@ const Jobs = () => {
     );
   };
 
-  const handleVoiceSearch = (query: string) => {
-    setSearchQuery(query);
-    toast.success(`Voice search: "${query}"`);
-    
-    // Track voice search
-    NavigationAnalyticsService.trackNavigationPatterns(
-      '/jobs',
-      `/jobs?search=${query}`,
-      'voice'
-    );
-  };
-
-  const handleVoiceFilters = (filters: any) => {
-    setCurrentFilters(filters);
-    applyFilters(filters);
-    toast.success('Voice filters applied');
-  };
-
   const applyFilters = (filters: any) => {
     let filtered = [...jobs];
 
@@ -217,7 +218,7 @@ const Jobs = () => {
     );
   };
 
-  const handleSaveJob = async (jobId: string) => {
+  const handleSaveJob = async (job: any) => {
     if (!user) {
       toast.error('Please sign in to save jobs');
       return;
@@ -229,7 +230,7 @@ const Jobs = () => {
       
       // Track save action
       NavigationAnalyticsService.trackNavigationPatterns(
-        `/jobs/${jobId}`,
+        `/jobs/${job.id}`,
         '/jobs/saved',
         'click'
       );
@@ -245,7 +246,7 @@ const Jobs = () => {
   return (
     <div className="container mx-auto p-6">
       {/* Context-aware navigation suggestions */}
-      <ContextAwareNavigationSuggestions currentPage="/jobs" />
+      <ContextAwareNavigationSuggestions />
       
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">Job Opportunities</h1>
@@ -256,7 +257,7 @@ const Jobs = () => {
 
       {/* Search and Voice Input */}
       <div className="mb-6">
-        <div className="flex space-x-4">
+        <div className="flex space-x-4 mb-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
@@ -264,189 +265,189 @@ const Jobs = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
             />
           </div>
           
           {voiceSupported && (
-            <VoiceSearchButton
-              isListening={isListening}
-              onStartListening={startListening}
-              transcript={transcript}
-            />
+            <VoiceSearchButton onSearch={handleVoiceSearch} />
           )}
           
-          <Button onClick={handleSearch}>
-            <Search className="h-4 w-4 mr-2" />
-            Search
+          <Button variant="outline">
+            <Filter className="h-4 w-4" />
           </Button>
         </div>
         
         {transcript && (
-          <div className="mt-2 text-sm text-muted-foreground">
+          <div className="text-sm text-muted-foreground mb-4">
             Voice input: "{transcript}"
           </div>
         )}
       </div>
 
-      <Tabs defaultValue="browse" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="browse">Browse Jobs</TabsTrigger>
-          <TabsTrigger value="saved">Saved Jobs</TabsTrigger>
-          <TabsTrigger value="applied">Applied Jobs</TabsTrigger>
-          <TabsTrigger value="matches">AI Matches</TabsTrigger>
-        </TabsList>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Filters Sidebar */}
+        <div className="lg:col-span-1">
+          <JobFilters 
+            onFiltersChange={applyFilters}
+            currentFilters={currentFilters}
+          />
+        </div>
 
-        <TabsContent value="browse" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Filters Sidebar */}
-            <div className="lg:col-span-1">
-              <JobFilters onFiltersChange={applyFilters} currentFilters={currentFilters} />
-            </div>
+        {/* Main Content */}
+        <div className="lg:col-span-2">
+          <Tabs defaultValue="all" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="all">All Jobs ({filteredJobs.length})</TabsTrigger>
+              <TabsTrigger value="saved">Saved</TabsTrigger>
+              <TabsTrigger value="applied">Applied</TabsTrigger>
+            </TabsList>
 
-            {/* Job Listings */}
-            <div className="lg:col-span-2 space-y-4">
-              {filteredJobs.map((job) => (
-                <Card 
-                  key={job.id} 
-                  className={`cursor-pointer transition-all hover:shadow-md ${
-                    selectedJob?.id === job.id ? 'ring-2 ring-primary' : ''
-                  }`}
-                  onClick={() => handleJobSelect(job)}
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-lg">{job.title}</CardTitle>
-                        <CardDescription className="flex items-center space-x-1">
-                          <Building className="h-4 w-4" />
-                          <span>{job.company}</span>
-                        </CardDescription>
+            <TabsContent value="all">
+              <div className="space-y-4">
+                {filteredJobs.map((job) => (
+                  <Card 
+                    key={job.id} 
+                    className={`cursor-pointer transition-all hover:shadow-md ${selectedJob?.id === job.id ? 'ring-2 ring-blue-500' : ''}`}
+                    onClick={() => handleJobSelect(job)}
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle className="text-lg">{job.title}</CardTitle>
+                          <CardDescription className="flex items-center space-x-4 mt-1">
+                            <div className="flex items-center space-x-1">
+                              <Building className="h-4 w-4" />
+                              <span>{job.company}</span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <MapPin className="h-4 w-4" />
+                              <span>{job.location}</span>
+                            </div>
+                          </CardDescription>
+                        </div>
+                        
+                        <div className="flex flex-col items-end space-y-2">
+                          {job.matchScore && (
+                            <Badge variant={job.matchScore >= 80 ? "default" : job.matchScore >= 60 ? "secondary" : "outline"}>
+                              {job.matchScore}% Match
+                            </Badge>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSaveJob(job);
+                            }}
+                          >
+                            <Bookmark className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    
+                    <CardContent className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center space-x-1 text-green-600">
+                          <DollarSign className="h-4 w-4" />
+                          <span className="font-medium">{job.salary}</span>
+                        </div>
+                        <div className="flex items-center space-x-1 text-muted-foreground">
+                          <Clock className="h-4 w-4" />
+                          <span className="text-sm">{job.posted}</span>
+                        </div>
                       </div>
                       
-                      {job.matchScore && (
-                        <Badge variant="secondary" className="bg-green-100 text-green-800">
-                          {job.matchScore}% Match
-                        </Badge>
-                      )}
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent className="space-y-3">
-                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                      <div className="flex items-center space-x-1">
-                        <MapPin className="h-4 w-4" />
-                        <span>{job.location}</span>
+                      <p className="text-sm text-muted-foreground">
+                        {job.description.substring(0, 120)}...
+                      </p>
+                      
+                      <div className="flex flex-wrap gap-2">
+                        {job.requirements.slice(0, 4).map((req: string, index: number) => (
+                          <Badge key={index} variant="secondary" className="text-xs">
+                            {req}
+                          </Badge>
+                        ))}
+                        {job.requirements.length > 4 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{job.requirements.length - 4} more
+                          </Badge>
+                        )}
                       </div>
-                      <div className="flex items-center space-x-1">
-                        <DollarSign className="h-4 w-4" />
-                        <span>{job.salary}</span>
+                    </CardContent>
+                  </Card>
+                ))}
+                
+                {filteredJobs.length === 0 && (
+                  <Card>
+                    <CardContent className="text-center py-12">
+                      <div className="space-y-4">
+                        <div className="text-muted-foreground">
+                          {searchQuery || Object.keys(currentFilters).length > 0
+                            ? 'No jobs match your search criteria. Try adjusting your filters.'
+                            : 'No jobs available at the moment. Check back later!'
+                          }
+                        </div>
+                        {(searchQuery || Object.keys(currentFilters).length > 0) && (
+                          <Button 
+                            variant="outline" 
+                            onClick={() => {
+                              setSearchQuery('');
+                              setCurrentFilters({});
+                            }}
+                          >
+                            Clear Filters
+                          </Button>
+                        )}
                       </div>
-                      <div className="flex items-center space-x-1">
-                        <Clock className="h-4 w-4" />
-                        <span>{job.posted}</span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-2">
-                      {job.requirements.slice(0, 3).map((req: string, index: number) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          {req}
-                        </Badge>
-                      ))}
-                      {job.requirements.length > 3 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{job.requirements.length - 3} more
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    <div className="flex justify-between items-center">
-                      <Badge variant="secondary">{job.type}</Badge>
-                      <div className="flex space-x-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSaveJob(job.id);
-                          }}
-                        >
-                          <Bookmark className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            window.open('#', '_blank');
-                          }}
-                        >
-                          <ExternalLink className="h-4 w-4 mr-1" />
-                          Apply
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="saved">
+              <SavedAndAppliedJobs onJobSelect={handleJobSelect} />
+            </TabsContent>
+
+            <TabsContent value="applied">
+              <SavedAndAppliedJobs onJobSelect={handleJobSelect} />
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        {/* Job Details Sidebar */}
+        <div className="lg:col-span-1">
+          {selectedJob ? (
+            <div className="space-y-4">
+              <JobDetailView 
+                job={selectedJob}
+                onSave={handleSaveJob}
+                onApply={(job) => {
+                  toast.success(`Applied to ${job.title} at ${job.company}`);
+                }}
+              />
               
-              {filteredJobs.length === 0 && (
-                <Card>
-                  <CardContent className="text-center py-8">
-                    <p className="text-muted-foreground">
-                      No jobs found matching your criteria. Try adjusting your search or filters.
-                    </p>
-                  </CardContent>
-                </Card>
+              {selectedJob.matchDetails && (
+                <JobMatchDetails 
+                  job={selectedJob}
+                  matchDetails={selectedJob.matchDetails}
+                />
               )}
             </div>
-
-            {/* Job Details Panel */}
-            <div className="lg:col-span-1">
-              {selectedJob ? (
-                <JobDetailView job={selectedJob} onSave={handleSaveJob} />
-              ) : (
-                <Card>
-                  <CardContent className="text-center py-8">
-                    <p className="text-muted-foreground">
-                      Select a job to view details
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="saved">
-          <SavedAndAppliedJobs type="saved" />
-        </TabsContent>
-
-        <TabsContent value="applied">
-          <SavedAndAppliedJobs type="applied" />
-        </TabsContent>
-
-        <TabsContent value="matches">
-          <div className="space-y-4">
-            {filteredJobs
-              .filter(job => job.matchScore && job.matchScore >= 70)
-              .map((job) => (
-                <JobMatchDetails key={job.id} job={job} matchDetails={job.matchDetails} />
-              ))
-            }
-            
-            {filteredJobs.filter(job => job.matchScore && job.matchScore >= 70).length === 0 && (
-              <Card>
-                <CardContent className="text-center py-8">
-                  <p className="text-muted-foreground">
-                    No high-match jobs found. Complete your profile for better AI matching.
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </TabsContent>
-      </Tabs>
+          ) : (
+            <Card>
+              <CardContent className="text-center py-12">
+                <div className="space-y-4">
+                  <div className="text-muted-foreground">
+                    Select a job to view details and match analysis
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

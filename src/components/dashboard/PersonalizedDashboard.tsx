@@ -1,350 +1,235 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   TrendingUp, 
   Target, 
-  BookOpen, 
-  Users, 
-  Award, 
-  ArrowRight,
-  Briefcase,
-  Star,
-  ChevronRight
+  Calendar, 
+  Award,
+  AlertCircle,
+  CheckCircle
 } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
-import { Job } from '@/types/job';
 
-interface CareerRecommendation {
-  id: string;
-  title: string;
-  type: 'job_match' | 'skill_development' | 'career_path' | 'industry_trend';
-  priority: 'high' | 'medium' | 'low';
-  description: string;
-  actionItems: string[];
-  matchPercentage?: number;
-  relatedJobs?: Job[];
-  timeToAchieve?: string;
-}
-
-interface SkillGap {
-  skill: string;
-  importance: 'critical' | 'important' | 'nice-to-have';
-  demandGrowth: number;
-  learningResources: string[];
-  jobsRequiring: number;
-}
-
-const PersonalizedDashboard = () => {
-  const { user, userProfile } = useAuth();
-  const [recommendations, setRecommendations] = useState<CareerRecommendation[]>([]);
-  const [skillGaps, setSkillGaps] = useState<SkillGap[]>([]);
+const PersonalizedDashboard: React.FC = () => {
+  const { user } = useAuth();
+  const [dashboardData, setDashboardData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user && userProfile) {
-      generateRecommendations();
-      analyzeSkillGaps();
+    if (user) {
+      loadDashboardData();
     }
-  }, [user, userProfile]);
+  }, [user]);
 
-  const generateRecommendations = async () => {
-    // Mock AI-powered recommendations based on user profile
-    const mockRecommendations: CareerRecommendation[] = [
-      {
-        id: '1',
-        title: 'High-Match Frontend Developer Roles',
-        type: 'job_match',
-        priority: 'high',
-        description: 'Found 15 jobs with 85%+ skill match in your preferred location',
-        actionItems: [
-          'Update your portfolio with recent projects',
-          'Practice system design interviews',
-          'Apply within the next 2 weeks for best results'
-        ],
-        matchPercentage: 87,
-        timeToAchieve: '2-4 weeks'
-      },
-      {
-        id: '2',
-        title: 'Learn TypeScript for Better Opportunities',
-        type: 'skill_development',
-        priority: 'high',
-        description: 'TypeScript appears in 78% of jobs you\'re interested in but missing from your profile',
-        actionItems: [
-          'Complete TypeScript fundamentals course',
-          'Build a project using TypeScript',
-          'Add TypeScript to your resume and LinkedIn'
-        ],
-        timeToAchieve: '4-6 weeks'
-      },
-      {
-        id: '3',
-        title: 'Senior Developer Career Path',
-        type: 'career_path',
-        priority: 'medium',
-        description: 'Based on your experience, you\'re ready to target senior-level positions',
-        actionItems: [
-          'Highlight leadership experience in applications',
-          'Prepare for system architecture questions',
-          'Consider mentoring junior developers'
-        ],
-        timeToAchieve: '6-12 months'
-      },
-      {
-        id: '4',
-        title: 'Remote Work Trends in Tech',
-        type: 'industry_trend',
-        priority: 'low',
-        description: 'Remote positions in your field increased by 34% this quarter',
-        actionItems: [
-          'Optimize your home office setup',
-          'Highlight remote work experience',
-          'Consider companies with remote-first culture'
-        ],
-        timeToAchieve: 'Immediate'
-      }
-    ];
+  const loadDashboardData = async () => {
+    if (!user) return;
 
-    setRecommendations(mockRecommendations);
-  };
+    try {
+      const [applicationsResponse, goalsResponse, profileResponse] = await Promise.all([
+        supabase.from('job_applications').select('*').eq('user_id', user.id),
+        supabase.from('professional_development').select('*').eq('user_id', user.id),
+        supabase.from('user_profiles').select('*').eq('user_id', user.id).single()
+      ]);
 
-  const analyzeSkillGaps = async () => {
-    // Mock skill gap analysis
-    const mockSkillGaps: SkillGap[] = [
-      {
-        skill: 'TypeScript',
-        importance: 'critical',
-        demandGrowth: 45,
-        learningResources: ['TypeScript Handbook', 'Udemy Course', 'freeCodeCamp'],
-        jobsRequiring: 156
-      },
-      {
-        skill: 'Docker',
-        importance: 'important',
-        demandGrowth: 32,
-        learningResources: ['Docker Official Tutorial', 'Kubernetes Course'],
-        jobsRequiring: 89
-      },
-      {
-        skill: 'GraphQL',
-        importance: 'nice-to-have',
-        demandGrowth: 28,
-        learningResources: ['Apollo GraphQL Tutorial', 'The Road to GraphQL'],
-        jobsRequiring: 43
-      }
-    ];
+      const applications = applicationsResponse.data || [];
+      const goals = goalsResponse.data || [];
+      const profile = profileResponse.data;
 
-    setSkillGaps(mockSkillGaps);
-    setLoading(false);
-  };
+      // Calculate metrics
+      const totalApplications = applications.length;
+      const interviewsScheduled = applications.filter(app => app.status === 'interview_scheduled').length;
+      const responseRate = totalApplications > 0 ? Math.round((interviewsScheduled / totalApplications) * 100) : 0;
+      
+      const completedGoals = goals.filter(goal => goal.status === 'completed').length;
+      const activeGoals = goals.filter(goal => goal.status === 'in_progress').length;
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'low': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
+      setDashboardData({
+        applications: {
+          total: totalApplications,
+          interviews: interviewsScheduled,
+          responseRate
+        },
+        goals: {
+          completed: completedGoals,
+          active: activeGoals,
+          total: goals.length
+        },
+        profile: {
+          completion: profile?.profile_completion || 0,
+          lastUpdated: profile?.updated_at
+        }
+      });
+    } catch (error) {
+      console.error('Failed to load dashboard data:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getImportanceColor = (importance: string) => {
-    switch (importance) {
-      case 'critical': return 'bg-red-100 text-red-800';
-      case 'important': return 'bg-orange-100 text-orange-800';
-      case 'nice-to-have': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getRecommendationIcon = (type: string) => {
-    switch (type) {
-      case 'job_match': return <Briefcase className="h-5 w-5" />;
-      case 'skill_development': return <BookOpen className="h-5 w-5" />;
-      case 'career_path': return <TrendingUp className="h-5 w-5" />;
-      case 'industry_trend': return <Users className="h-5 w-5" />;
-      default: return <Target className="h-5 w-5" />;
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        {[1, 2, 3].map((i) => (
-          <Card key={i}>
-            <CardContent className="pt-6">
-              <div className="animate-pulse space-y-4">
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                <div className="h-2 bg-gray-200 rounded"></div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
+  if (loading || !dashboardData) {
+    return <div>Loading dashboard...</div>;
   }
 
   return (
     <div className="space-y-6">
-      {/* Career Overview */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Star className="h-5 w-5 text-yellow-500" />
-            Your Career Overview
+          <CardTitle className="flex items-center space-x-2">
+            <TrendingUp className="h-5 w-5" />
+            <span>Your Career Progress</span>
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">87%</div>
-              <div className="text-sm text-muted-foreground">Average Job Match</div>
+        <CardContent className="space-y-4">
+          {/* Profile Completion */}
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium">Profile Completion</span>
+              <span className="text-sm text-muted-foreground">{dashboardData.profile.completion}%</span>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">23</div>
-              <div className="text-sm text-muted-foreground">Matching Jobs</div>
+            <Progress value={dashboardData.profile.completion} className="h-2" />
+            {dashboardData.profile.completion < 100 && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Complete your profile to increase job match accuracy
+              </p>
+            )}
+          </div>
+
+          {/* Application Stats */}
+          <div className="grid grid-cols-3 gap-4">
+            <div className="text-center p-3 border rounded-lg">
+              <div className="text-2xl font-bold text-blue-600">{dashboardData.applications.total}</div>
+              <div className="text-xs text-muted-foreground">Applications</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-orange-600">3</div>
-              <div className="text-sm text-muted-foreground">Skills to Develop</div>
+            <div className="text-center p-3 border rounded-lg">
+              <div className="text-2xl font-bold text-green-600">{dashboardData.applications.interviews}</div>
+              <div className="text-xs text-muted-foreground">Interviews</div>
+            </div>
+            <div className="text-center p-3 border rounded-lg">
+              <div className="text-2xl font-bold text-purple-600">{dashboardData.applications.responseRate}%</div>
+              <div className="text-xs text-muted-foreground">Response Rate</div>
             </div>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* AI Recommendations */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Award className="h-5 w-5 text-purple-500" />
-            Personalized Career Recommendations
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {recommendations.map((rec) => (
-            <div key={rec.id} className="border rounded-lg p-4 space-y-3">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  {getRecommendationIcon(rec.type)}
-                  <div>
-                    <h4 className="font-semibold">{rec.title}</h4>
-                    <p className="text-sm text-muted-foreground">{rec.description}</p>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Badge className={getPriorityColor(rec.priority)}>
-                    {rec.priority}
-                  </Badge>
-                  {rec.matchPercentage && (
-                    <Badge variant="outline">
-                      {rec.matchPercentage}% match
-                    </Badge>
-                  )}
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Action Items:</p>
-                <ul className="text-sm space-y-1">
-                  {rec.actionItems.map((item, index) => (
-                    <li key={index} className="flex items-center gap-2">
-                      <ChevronRight className="h-3 w-3 text-muted-foreground" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              
-              {rec.timeToAchieve && (
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">
-                    Timeline: {rec.timeToAchieve}
-                  </span>
-                  <Button size="sm" variant="outline">
-                    Start Now
-                    <ArrowRight className="h-3 w-3 ml-1" />
-                  </Button>
-                </div>
-              )}
+          {/* Goals Progress */}
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium">Development Goals</span>
+              <Badge variant="outline">
+                {dashboardData.goals.completed}/{dashboardData.goals.total} Complete
+              </Badge>
             </div>
-          ))}
-        </CardContent>
-      </Card>
-
-      {/* Skill Gap Analysis */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Target className="h-5 w-5 text-green-500" />
-            Skills Gap Analysis
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {skillGaps.map((gap, index) => (
-            <div key={index} className="space-y-3 pb-4 border-b last:border-b-0">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <h4 className="font-semibold">{gap.skill}</h4>
-                  <Badge className={getImportanceColor(gap.importance)}>
-                    {gap.importance}
-                  </Badge>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm font-medium text-green-600">
-                    +{gap.demandGrowth}% demand growth
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {gap.jobsRequiring} jobs require this skill
-                  </div>
-                </div>
+            {dashboardData.goals.total > 0 ? (
+              <Progress 
+                value={(dashboardData.goals.completed / dashboardData.goals.total) * 100} 
+                className="h-2" 
+              />
+            ) : (
+              <div className="text-xs text-muted-foreground">
+                Set development goals to track your professional growth
               </div>
-              
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span>Market Demand</span>
-                  <span>{gap.demandGrowth}%</span>
-                </div>
-                <Progress value={gap.demandGrowth} className="h-2" />
-              </div>
-              
-              <div>
-                <p className="text-sm font-medium mb-2">Learning Resources:</p>
-                <div className="flex flex-wrap gap-2">
-                  {gap.learningResources.map((resource, idx) => (
-                    <Badge key={idx} variant="secondary" className="text-xs">
-                      {resource}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ))}
+            )}
+          </div>
         </CardContent>
       </Card>
 
       {/* Quick Actions */}
       <Card>
         <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
+          <CardTitle className="flex items-center space-x-2">
+            <Target className="h-5 w-5" />
+            <span>Recommended Actions</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {dashboardData.profile.completion < 100 && (
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div className="flex items-center space-x-2">
+                <AlertCircle className="h-4 w-4 text-orange-500" />
+                <span className="text-sm">Complete your profile</span>
+              </div>
+              <Button size="sm" variant="outline">
+                Complete
+              </Button>
+            </div>
+          )}
+
+          {dashboardData.applications.total === 0 && (
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div className="flex items-center space-x-2">
+                <AlertCircle className="h-4 w-4 text-blue-500" />
+                <span className="text-sm">Start applying to jobs</span>
+              </div>
+              <Button size="sm" variant="outline">
+                Browse Jobs
+              </Button>
+            </div>
+          )}
+
+          {dashboardData.goals.active === 0 && (
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div className="flex items-center space-x-2">
+                <AlertCircle className="h-4 w-4 text-purple-500" />
+                <span className="text-sm">Set development goals</span>
+              </div>
+              <Button size="sm" variant="outline">
+                Add Goal
+              </Button>
+            </div>
+          )}
+
+          {dashboardData.applications.total > 0 && dashboardData.applications.interviews === 0 && (
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div className="flex items-center space-x-2">
+                <AlertCircle className="h-4 w-4 text-green-500" />
+                <span className="text-sm">Follow up on applications</span>
+              </div>
+              <Button size="sm" variant="outline">
+                View Applications
+              </Button>
+            </div>
+          )}
+
+          {dashboardData.profile.completion === 100 && dashboardData.applications.total > 0 && (
+            <div className="flex items-center justify-between p-3 border rounded-lg bg-green-50">
+              <div className="flex items-center space-x-2">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                <span className="text-sm">You're on track! Keep it up!</span>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Upcoming Events */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Calendar className="h-5 w-5" />
+            <span>This Week</span>
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button className="h-auto p-4 flex-col">
-              <Briefcase className="h-8 w-8 mb-2" />
-              <span>Browse Matching Jobs</span>
-            </Button>
-            <Button variant="outline" className="h-auto p-4 flex-col">
-              <BookOpen className="h-8 w-8 mb-2" />
-              <span>Start Learning Path</span>
-            </Button>
-            <Button variant="outline" className="h-auto p-4 flex-col">
-              <Users className="h-8 w-8 mb-2" />
-              <span>Network & Connect</span>
-            </Button>
+          <div className="space-y-2">
+            {dashboardData.applications.interviews > 0 ? (
+              <div className="text-sm">
+                You have {dashboardData.applications.interviews} interview{dashboardData.applications.interviews > 1 ? 's' : ''} scheduled
+              </div>
+            ) : (
+              <div className="text-sm text-muted-foreground">
+                No interviews scheduled this week
+              </div>
+            )}
+            
+            {dashboardData.goals.active > 0 && (
+              <div className="text-sm">
+                {dashboardData.goals.active} development goal{dashboardData.goals.active > 1 ? 's' : ''} in progress
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

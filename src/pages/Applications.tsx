@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ContextAwareNavigationSuggestions } from "@/components/navigation/ContextAwareNavigationSuggestions";
-import { GestureEnabledJobCard } from "@/components/jobs/GestureEnabledJobCard";
+import GestureEnabledJobCard from "@/components/jobs/GestureEnabledJobCard";
 import { useVoiceCommands } from "@/hooks/useVoiceCommands";
 import { NavigationAnalyticsService } from "@/services/navigationAnalyticsService";
 import { useAuth } from "@/hooks/useAuth";

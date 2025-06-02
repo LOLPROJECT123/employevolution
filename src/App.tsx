@@ -1,9 +1,10 @@
+
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { NavigationStateProvider } from "@/hooks/useContextAwareNavigation";
+import { NavigationStateProvider } from "@/hooks/useNavigationState";
 import { ThemeProvider } from "next-themes";
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -51,7 +52,7 @@ function App() {
               <BrowserRouter>
                 <div className="min-h-screen bg-background">
                   <Navbar />
-                  <MobileHeader />
+                  <MobileHeader title="EmployEvolution" />
                   
                   <Routes>
                     <Route path="/" element={<Index />} />
