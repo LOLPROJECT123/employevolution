@@ -44,15 +44,20 @@ export class PerformanceOptimizer {
     Component: T,
     componentName: string
   ): React.ComponentType<React.ComponentProps<T>> {
-    return React.memo(React.forwardRef<any, React.ComponentProps<T>>((props, ref) => {
+    const MeasuredComponent = React.forwardRef<any, React.ComponentProps<T>>((props, ref) => {
       const timer = performanceService.startTimer(`render_${componentName}`);
       
       React.useEffect(() => {
+        // Call timer to stop the measurement
         timer();
       });
 
       return React.createElement(Component, { ...props, ref });
-    }));
+    });
+
+    MeasuredComponent.displayName = `Measured(${Component.displayName || Component.name || 'Component'})`;
+    
+    return React.memo(MeasuredComponent);
   }
 
   static optimizeListRender<T>(
