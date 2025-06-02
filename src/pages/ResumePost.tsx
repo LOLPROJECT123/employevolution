@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from "@/components/Navbar";
@@ -42,7 +41,8 @@ const samplePosts: ResumePostType[] = [
         content: 'Great experience section! I would suggest adding more quantifiable achievements.',
         upvotes: 8,
         downvotes: 0,
-        createdAt: '2024-01-15T10:30:00Z'
+        createdAt: '2024-01-15T10:30:00Z',
+        isCurrentUser: false
       }
     ],
     createdAt: '2024-01-15T09:00:00Z',

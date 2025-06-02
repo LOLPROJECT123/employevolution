@@ -54,7 +54,8 @@ const ResumeForum = () => {
           content: "Your technical skills section is impressive, but I'd recommend quantifying your achievements more. For example, instead of 'Improved application performance', say 'Reduced page load time by 40% by implementing code splitting and lazy loading'.",
           upvotes: 18,
           downvotes: 0,
-          createdAt: "2 days ago"
+          createdAt: "2 days ago",
+          isCurrentUser: false
         },
         {
           id: "c2",
@@ -66,7 +67,8 @@ const ResumeForum = () => {
           content: "I'd move your education section below your professional experience since you have 3 years of relevant work. Also, consider adding a brief (2-3 line) professional summary at the top that highlights your expertise in full stack development.",
           upvotes: 12,
           downvotes: 1,
-          createdAt: "1 day ago"
+          createdAt: "1 day ago",
+          isCurrentUser: false
         }
       ],
       createdAt: "3 days ago",
@@ -95,7 +97,8 @@ const ResumeForum = () => {
           content: "Congratulations! Could you share more about how you structured your projects section? Did you use the STAR method?",
           upvotes: 8,
           downvotes: 0,
-          createdAt: "12 hours ago"
+          createdAt: "12 hours ago",
+          isCurrentUser: false
         }
       ],
       createdAt: "2 days ago",
