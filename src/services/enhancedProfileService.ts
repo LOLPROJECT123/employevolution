@@ -115,8 +115,8 @@ export class EnhancedProfileService {
   // Validate profile completion with detailed feedback
   static async validateProfileCompletionDetailed(userId: string, profileData: any) {
     try {
-      // Get onboarding progress
-      const progress = await OnboardingFlowManager.getOnboardingProgress(userId, profileData);
+      // Get onboarding progress with single parameter
+      const progress = await OnboardingFlowManager.getOnboardingProgress(userId);
       
       // Get detailed completion analysis
       const completionItems = ProfileCompletionTracker.calculateDetailedCompletion(profileData);
@@ -196,7 +196,9 @@ export class EnhancedProfileService {
   // Import and merge profile data
   static async importAndMergeProfile(userId: string, fileContent: string, format: 'json' | 'csv'): Promise<boolean> {
     try {
-      const importResult = await DataImportExportService.importProfileData(fileContent, format);
+      // Parse the file content to BackupData format
+      const backupData = JSON.parse(fileContent);
+      const importResult = await DataImportExportService.importProfileData(userId, backupData);
       
       if (!importResult.success) {
         throw new Error(`Import failed: ${importResult.errors?.join(', ')}`);

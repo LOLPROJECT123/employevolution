@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ProfileDataSync } from './profileDataSync';
 import { ErrorHandler } from './errorHandling';
@@ -7,7 +6,7 @@ export interface ImportResult {
   success: boolean;
   errors?: string[];
   warnings?: string[];
-  importedData?: any;
+  data?: any;
 }
 
 export interface ExportResult {
@@ -142,7 +141,7 @@ export class DataImportExportService {
 
       return {
         success: true,
-        importedData: profileData
+        data: profileData
       };
     } catch (error) {
       return {
