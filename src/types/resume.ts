@@ -1,52 +1,72 @@
 
+export interface PersonalInfo {
+  name?: string;
+  email?: string;
+  phone?: string;
+  location?: string;
+  streetAddress?: string;
+  city?: string;
+  state?: string;
+  county?: string;
+  zipCode?: string;
+}
+
+export interface SocialLinks {
+  linkedin?: string;
+  github?: string;
+  portfolio?: string;
+  other?: string;
+}
+
+export interface Education {
+  school: string;
+  degree?: string;
+  fieldOfStudy?: string;
+  startDate?: string;
+  endDate?: string;
+  gpa?: string;
+}
+
+export interface WorkExperience {
+  role: string;
+  company: string;
+  location?: string;
+  startDate?: string;
+  endDate?: string;
+  description?: string[];
+}
+
+export interface Project {
+  name: string;
+  startDate?: string;
+  endDate?: string;
+  description?: string[];
+  technologies?: string[];
+  url?: string;
+}
+
+export interface Activity {
+  organization: string;
+  role?: string;
+  description?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
 export interface ParsedResume {
-  personalInfo: {
-    name: string;
-    email: string;
-    phone: string;
-    location: string; // This will be the combined address for database storage
-    streetAddress?: string; // Optional separate fields for UI
-    city?: string;
-    state?: string;
-    county?: string;
-    zipCode?: string;
-  };
-  workExperiences: Array<{
-    role: string;
-    company: string;
-    location: string;
-    startDate: string;
-    endDate: string;
-    description: string[];
-  }>;
-  education: Array<{
-    school: string;
-    degree: string;
-    startDate: string;
-    endDate: string;
-    gpa?: string;
-  }>;
-  projects: Array<{
-    name: string;
-    startDate: string;
-    endDate: string;
-    description: string[];
-    technologies?: string[];
-    url?: string;
-  }>;
-  skills: string[];
-  languages: string[];
-  socialLinks: {
-    linkedin: string;
-    github: string;
-    portfolio: string;
-    other: string;
-  };
-  activities?: Array<{
-    organization: string;
-    role: string;
-    description?: string;
-    startDate?: string;
-    endDate?: string;
-  }>;
+  personalInfo?: PersonalInfo;
+  socialLinks?: SocialLinks;
+  education?: Education[];
+  workExperiences?: WorkExperience[];
+  projects?: Project[];
+  activities?: Activity[];
+  skills?: string[];
+  languages?: string[];
+}
+
+export interface ResumeParsingResult {
+  success: boolean;
+  data?: ParsedResume;
+  error?: string;
+  confidence?: number;
 }

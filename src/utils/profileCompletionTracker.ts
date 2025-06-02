@@ -1,23 +1,13 @@
 
-import { profileCompletionService } from '@/services/profileCompletionService';
-import { ErrorHandler } from './errorHandling';
-
-export interface CompletionMilestone {
-  percentage: number;
-  title: string;
+interface CompletionItem {
+  field: string;
   description: string;
-  unlocks: string[];
-}
-
-export interface FieldCompletionStatus {
-  fieldName: string;
   isCompleted: boolean;
   priority: 'high' | 'medium' | 'low';
   points: number;
-  description: string;
 }
 
-export interface ProfileQualityMetrics {
+interface QualityMetrics {
   completionScore: number;
   qualityScore: number;
   strengthAreas: string[];
@@ -25,226 +15,142 @@ export interface ProfileQualityMetrics {
   recommendations: string[];
 }
 
+interface Milestone {
+  title: string;
+  description: string;
+  requiredScore: number;
+  benefits: string[];
+}
+
 export class ProfileCompletionTracker {
-  private static readonly COMPLETION_MILESTONES: CompletionMilestone[] = [
-    {
-      percentage: 25,
-      title: 'Getting Started',
-      description: 'You\'ve added basic information',
-      unlocks: ['Profile visibility', 'Basic job matching']
-    },
-    {
-      percentage: 50,
-      title: 'Half Way There',
-      description: 'Your profile is taking shape',
-      unlocks: ['Improved job recommendations', 'Resume optimization tips']
-    },
-    {
-      percentage: 75,
-      title: 'Almost Complete',
-      description: 'You\'re doing great! Just a few more details',
-      unlocks: ['Advanced matching', 'Priority job alerts']
-    },
-    {
-      percentage: 90,
-      title: 'Excellent Progress',
-      description: 'Your profile is nearly perfect',
-      unlocks: ['Premium features', 'Recruiter visibility boost']
-    },
-    {
-      percentage: 100,
-      title: 'Profile Complete',
-      description: 'Congratulations! Your profile is fully optimized',
-      unlocks: ['All features unlocked', 'Maximum visibility', 'Advanced analytics']
-    }
-  ];
+  static calculateDetailedCompletion(profileData: any): CompletionItem[] {
+    const items: CompletionItem[] = [
+      {
+        field: 'personalInfo.name',
+        description: 'Full name',
+        isCompleted: Boolean(profileData.personalInfo?.name?.trim()),
+        priority: 'high',
+        points: 10
+      },
+      {
+        field: 'personalInfo.email',
+        description: 'Email address',
+        isCompleted: Boolean(profileData.personalInfo?.email?.trim()),
+        priority: 'high',
+        points: 10
+      },
+      {
+        field: 'personalInfo.phone',
+        description: 'Phone number',
+        isCompleted: Boolean(profileData.personalInfo?.phone?.trim()),
+        priority: 'high',
+        points: 10
+      },
+      {
+        field: 'personalInfo.address',
+        description: 'Complete address',
+        isCompleted: Boolean(
+          profileData.personalInfo?.streetAddress?.trim() &&
+          profileData.personalInfo?.city?.trim() &&
+          profileData.personalInfo?.state?.trim() &&
+          profileData.personalInfo?.zipCode?.trim()
+        ),
+        priority: 'high',
+        points: 15
+      },
+      {
+        field: 'workExperiences',
+        description: 'Work experience',
+        isCompleted: Boolean(profileData.workExperiences?.length > 0),
+        priority: 'high',
+        points: 20
+      },
+      {
+        field: 'education',
+        description: 'Education background',
+        isCompleted: Boolean(profileData.education?.length > 0),
+        priority: 'high',
+        points: 15
+      },
+      {
+        field: 'skills',
+        description: 'Skills and competencies',
+        isCompleted: Boolean(profileData.skills?.length >= 3),
+        priority: 'high',
+        points: 10
+      },
+      {
+        field: 'projects',
+        description: 'Projects or portfolio',
+        isCompleted: Boolean(profileData.projects?.length > 0),
+        priority: 'medium',
+        points: 10
+      },
+      {
+        field: 'socialLinks',
+        description: 'Professional social links',
+        isCompleted: Boolean(
+          profileData.socialLinks?.linkedin?.trim() ||
+          profileData.socialLinks?.github?.trim()
+        ),
+        priority: 'medium',
+        points: 5
+      },
+      {
+        field: 'languages',
+        description: 'Language proficiencies',
+        isCompleted: Boolean(profileData.languages?.length > 0),
+        priority: 'low',
+        points: 5
+      }
+    ];
 
-  private static readonly FIELD_WEIGHTS = {
-    // Personal Info (40 points total)
-    name: { points: 10, priority: 'high' as const, description: 'Your full name' },
-    email: { points: 10, priority: 'high' as const, description: 'Contact email address' },
-    phone: { points: 10, priority: 'high' as const, description: 'Phone number for contact' },
-    completeAddress: { points: 10, priority: 'high' as const, description: 'Complete address with county' },
-    
-    // Professional Info (30 points total)
-    workExperience: { points: 20, priority: 'high' as const, description: 'Work experience entries' },
-    skills: { points: 10, priority: 'high' as const, description: 'Professional skills' },
-    
-    // Education & Projects (20 points total)
-    education: { points: 15, priority: 'medium' as const, description: 'Educational background' },
-    projects: { points: 5, priority: 'medium' as const, description: 'Personal or professional projects' },
-    
-    // Additional Info (10 points total)
-    socialLinks: { points: 5, priority: 'low' as const, description: 'LinkedIn, GitHub, or portfolio links' },
-    languages: { points: 3, priority: 'low' as const, description: 'Languages you speak' },
-    activities: { points: 2, priority: 'low' as const, description: 'Activities and leadership experience' }
-  };
-
-  static async updateCompletionTracking(userId: string, profileData: any): Promise<void> {
-    try {
-      const completionItems = await this.calculateDetailedCompletion(profileData);
-      const completionPercentage = this.calculateOverallCompletion(completionItems);
-      const missingFields = completionItems
-        .filter(item => !item.isCompleted && item.priority === 'high')
-        .map(item => item.fieldName);
-
-      await profileCompletionService.updateProfileCompletion(userId, {
-        completion_percentage: completionPercentage,
-        missing_fields: missingFields
-      });
-
-      // Check for milestone achievements
-      await this.checkMilestoneAchievements(userId, completionPercentage);
-    } catch (error) {
-      ErrorHandler.handleError(
-        error instanceof Error ? error : new Error(String(error)),
-        { operation: 'Update Completion Tracking', userId }
-      );
-    }
+    return items;
   }
 
-  static calculateDetailedCompletion(profileData: any): FieldCompletionStatus[] {
-    const completionItems: FieldCompletionStatus[] = [];
-
-    // Check personal info
-    completionItems.push({
-      fieldName: 'name',
-      isCompleted: !!(profileData.personalInfo?.name?.trim()),
-      ...this.FIELD_WEIGHTS.name
-    });
-
-    completionItems.push({
-      fieldName: 'email',
-      isCompleted: !!(profileData.personalInfo?.email?.trim()),
-      ...this.FIELD_WEIGHTS.email
-    });
-
-    completionItems.push({
-      fieldName: 'phone',
-      isCompleted: !!(profileData.personalInfo?.phone?.trim()),
-      ...this.FIELD_WEIGHTS.phone
-    });
-
-    // Check complete address
-    const hasCompleteAddress = !!(
-      profileData.personalInfo?.streetAddress?.trim() &&
-      profileData.personalInfo?.city?.trim() &&
-      profileData.personalInfo?.state?.trim() &&
-      profileData.personalInfo?.county?.trim() &&
-      profileData.personalInfo?.zipCode?.trim()
-    );
-    
-    completionItems.push({
-      fieldName: 'completeAddress',
-      isCompleted: hasCompleteAddress,
-      ...this.FIELD_WEIGHTS.completeAddress
-    });
-
-    // Check work experience
-    completionItems.push({
-      fieldName: 'workExperience',
-      isCompleted: !!(profileData.workExperiences?.length > 0),
-      ...this.FIELD_WEIGHTS.workExperience
-    });
-
-    // Check skills
-    completionItems.push({
-      fieldName: 'skills',
-      isCompleted: !!(profileData.skills?.length >= 3),
-      ...this.FIELD_WEIGHTS.skills
-    });
-
-    // Check education
-    completionItems.push({
-      fieldName: 'education',
-      isCompleted: !!(profileData.education?.length > 0),
-      ...this.FIELD_WEIGHTS.education
-    });
-
-    // Check projects
-    completionItems.push({
-      fieldName: 'projects',
-      isCompleted: !!(profileData.projects?.length > 0),
-      ...this.FIELD_WEIGHTS.projects
-    });
-
-    // Check social links
-    const hasSocialLinks = !!(
-      profileData.socialLinks?.linkedin ||
-      profileData.socialLinks?.github ||
-      profileData.socialLinks?.portfolio
-    );
-    
-    completionItems.push({
-      fieldName: 'socialLinks',
-      isCompleted: hasSocialLinks,
-      ...this.FIELD_WEIGHTS.socialLinks
-    });
-
-    // Check languages
-    completionItems.push({
-      fieldName: 'languages',
-      isCompleted: !!(profileData.languages?.length > 0),
-      ...this.FIELD_WEIGHTS.languages
-    });
-
-    // Check activities
-    completionItems.push({
-      fieldName: 'activities',
-      isCompleted: !!(profileData.activities?.length > 0),
-      ...this.FIELD_WEIGHTS.activities
-    });
-
-    return completionItems;
-  }
-
-  static calculateOverallCompletion(completionItems: FieldCompletionStatus[]): number {
-    const totalPoints = Object.values(this.FIELD_WEIGHTS).reduce((sum, field) => sum + field.points, 0);
-    const earnedPoints = completionItems
-      .filter(item => item.isCompleted)
-      .reduce((sum, item) => sum + item.points, 0);
-
-    return Math.round((earnedPoints / totalPoints) * 100);
-  }
-
-  static calculateQualityMetrics(profileData: any): ProfileQualityMetrics {
+  static calculateQualityMetrics(profileData: any): QualityMetrics {
     const completionItems = this.calculateDetailedCompletion(profileData);
-    const completionScore = this.calculateOverallCompletion(completionItems);
+    const completedItems = completionItems.filter(item => item.isCompleted);
+    const totalPoints = completionItems.reduce((sum, item) => sum + item.points, 0);
+    const earnedPoints = completedItems.reduce((sum, item) => sum + item.points, 0);
+
+    const completionScore = Math.round((earnedPoints / totalPoints) * 100);
     
-    // Calculate quality score based on depth and completeness
-    let qualityScore = completionScore;
+    // Quality score considers depth of information
+    const qualityFactors = [
+      profileData.workExperiences?.some((exp: any) => exp.description?.length > 0) ? 10 : 0,
+      profileData.skills?.length >= 5 ? 10 : 0,
+      profileData.projects?.some((proj: any) => proj.description?.length > 0) ? 10 : 0,
+      profileData.socialLinks?.linkedin?.trim() ? 5 : 0,
+      profileData.socialLinks?.github?.trim() ? 5 : 0
+    ];
     
-    // Bonus points for quality indicators
-    if (profileData.workExperiences?.length >= 3) qualityScore += 5;
-    if (profileData.skills?.length >= 10) qualityScore += 5;
-    if (profileData.projects?.length >= 2) qualityScore += 3;
-    if (profileData.education?.some((edu: any) => edu.gpa)) qualityScore += 2;
-    
-    qualityScore = Math.min(qualityScore, 100);
+    const qualityScore = Math.min(100, completionScore + qualityFactors.reduce((a, b) => a + b, 0));
 
     const strengthAreas: string[] = [];
     const improvementAreas: string[] = [];
     const recommendations: string[] = [];
 
-    // Analyze strengths and areas for improvement
-    if (profileData.workExperiences?.length >= 2) {
-      strengthAreas.push('Strong work experience');
+    // Analyze strengths and improvements
+    if (profileData.workExperiences?.length > 0) {
+      strengthAreas.push('Work Experience');
     } else {
-      improvementAreas.push('Work experience');
-      recommendations.push('Add more work experience details');
+      improvementAreas.push('Work Experience');
+      recommendations.push('Add your work experience to showcase your professional background');
     }
 
-    if (profileData.skills?.length >= 5) {
-      strengthAreas.push('Good skill diversity');
+    if (profileData.skills?.length >= 3) {
+      strengthAreas.push('Skills');
     } else {
-      improvementAreas.push('Skills section');
-      recommendations.push('Add more relevant skills');
+      improvementAreas.push('Skills');
+      recommendations.push('Add more skills to improve your profile visibility');
     }
 
-    if (profileData.projects?.length > 0) {
-      strengthAreas.push('Project portfolio');
+    if (profileData.education?.length > 0) {
+      strengthAreas.push('Education');
     } else {
-      recommendations.push('Consider adding personal or professional projects');
+      improvementAreas.push('Education');
+      recommendations.push('Add your educational background');
     }
 
     return {
@@ -256,27 +162,49 @@ export class ProfileCompletionTracker {
     };
   }
 
-  private static async checkMilestoneAchievements(userId: string, completionPercentage: number): Promise<void> {
-    const achievedMilestones = this.COMPLETION_MILESTONES.filter(
-      milestone => completionPercentage >= milestone.percentage
-    );
+  static getNextMilestone(currentScore: number): Milestone | null {
+    const milestones: Milestone[] = [
+      {
+        title: 'Profile Foundation',
+        description: 'Basic profile information completed',
+        requiredScore: 50,
+        benefits: ['Profile appears in basic searches', 'Can apply to jobs']
+      },
+      {
+        title: 'Professional Profile',
+        description: 'Complete professional information',
+        requiredScore: 75,
+        benefits: ['Higher search ranking', 'Recruiter visibility', 'Job recommendations']
+      },
+      {
+        title: 'Expert Profile',
+        description: 'Comprehensive profile with all details',
+        requiredScore: 90,
+        benefits: ['Top search results', 'Premium features', 'Advanced matching']
+      }
+    ];
 
-    if (achievedMilestones.length > 0) {
-      const latestMilestone = achievedMilestones[achievedMilestones.length - 1];
-      console.log(`🎉 Milestone achieved: ${latestMilestone.title} (${latestMilestone.percentage}%)`);
-      
-      // You could trigger notifications here
-      // notificationService.createMilestoneNotification(userId, latestMilestone);
-    }
+    return milestones.find(milestone => currentScore < milestone.requiredScore) || null;
   }
 
-  static getNextMilestone(currentPercentage: number): CompletionMilestone | null {
-    return this.COMPLETION_MILESTONES.find(
-      milestone => milestone.percentage > currentPercentage
-    ) || null;
-  }
+  static async updateCompletionTracking(userId: string, profileData: any): Promise<void> {
+    const metrics = this.calculateQualityMetrics(profileData);
+    const completionItems = this.calculateDetailedCompletion(profileData);
+    const missingFields = completionItems
+      .filter(item => !item.isCompleted && item.priority === 'high')
+      .map(item => item.field);
 
-  static getAllMilestones(): CompletionMilestone[] {
-    return this.COMPLETION_MILESTONES;
+    console.log('Profile completion updated:', {
+      userId,
+      completionScore: metrics.completionScore,
+      missingFields
+    });
+
+    // In a real implementation, this would update the database
+    // await supabase.from('profile_completion_tracking').upsert({
+    //   user_id: userId,
+    //   completion_percentage: metrics.completionScore,
+    //   missing_fields: missingFields
+    // });
   }
 }

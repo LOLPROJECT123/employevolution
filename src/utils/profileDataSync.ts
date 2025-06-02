@@ -1,122 +1,94 @@
 
-import { AddressComponents, AddressValidator } from './addressValidation';
-import { ParsedResume } from '@/types/resume';
-
-export interface ProfileSyncResult {
+interface SyncResult<T> {
   success: boolean;
-  data?: any;
+  data?: T;
   errors?: string[];
 }
 
 export class ProfileDataSync {
-  // Convert UI address components to database location string
-  static syncAddressToLocation(addressComponents: AddressComponents): string {
-    const validation = AddressValidator.validateCompleteAddress(addressComponents);
+  static prepareProfileForDatabase(profileData: any): SyncResult<any> {
+    try {
+      const dbProfile = {
+        personalInfo: {
+          name: profileData.personalInfo?.name || '',
+          email: profileData.personalInfo?.email || '',
+          phone: profileData.personalInfo?.phone || '',
+          location: this.combineAddressFields(profileData.personalInfo),
+          linkedin_url: profileData.socialLinks?.linkedin || '',
+          github_url: profileData.socialLinks?.github || '',
+          portfolio_url: profileData.socialLinks?.portfolio || '',
+          other_url: profileData.socialLinks?.other || ''
+        },
+        workExperiences: profileData.workExperiences || [],
+        education: profileData.education || [],
+        projects: profileData.projects || [],
+        activities: profileData.activities || [],
+        skills: profileData.skills || [],
+        languages: profileData.languages || []
+      };
+
+      return { success: true, data: dbProfile };
+    } catch (error) {
+      return {
+        success: false,
+        errors: [`Data sync error: ${error instanceof Error ? error.message : 'Unknown error'}`]
+      };
+    }
+  }
+
+  static prepareProfileForUI(dbData: any): SyncResult<any> {
+    try {
+      const uiProfile = {
+        personalInfo: {
+          name: dbData.personalInfo?.name || '',
+          email: dbData.personalInfo?.email || '',
+          phone: dbData.personalInfo?.phone || '',
+          ...this.parseLocationToAddress(dbData.personalInfo?.location || '')
+        },
+        socialLinks: {
+          linkedin: dbData.personalInfo?.linkedin_url || '',
+          github: dbData.personalInfo?.github_url || '',
+          portfolio: dbData.personalInfo?.portfolio_url || '',
+          other: dbData.personalInfo?.other_url || ''
+        },
+        workExperiences: dbData.workExperiences || [],
+        education: dbData.education || [],
+        projects: dbData.projects || [],
+        activities: dbData.activities || [],
+        skills: dbData.skills || [],
+        languages: dbData.languages || []
+      };
+
+      return { success: true, data: uiProfile };
+    } catch (error) {
+      return {
+        success: false,
+        errors: [`UI sync error: ${error instanceof Error ? error.message : 'Unknown error'}`]
+      };
+    }
+  }
+
+  private static combineAddressFields(personalInfo: any): string {
+    const addressParts = [
+      personalInfo?.streetAddress,
+      personalInfo?.city,
+      personalInfo?.state,
+      personalInfo?.county,
+      personalInfo?.zipCode
+    ].filter(Boolean);
+
+    return addressParts.join(', ');
+  }
+
+  private static parseLocationToAddress(location: string): any {
+    const parts = location.split(', ').map(part => part.trim());
     
-    if (validation.isValid && validation.standardizedAddress) {
-      return AddressValidator.combineAddressComponents(validation.standardizedAddress);
-    }
-    
-    // Fallback to combining even if not fully valid
-    return AddressValidator.combineAddressComponents(addressComponents);
-  }
-
-  // Convert database location string to UI address components
-  static syncLocationToAddress(location: string): Partial<AddressComponents> {
-    return AddressValidator.parseLocationString(location);
-  }
-
-  // Sync profile data between UI format and database format
-  static prepareProfileForDatabase(profileData: any): ProfileSyncResult {
-    try {
-      const syncedData = { ...profileData };
-      
-      // Sync address components to location string
-      if (profileData.personalInfo) {
-        const addressComponents = {
-          streetAddress: profileData.personalInfo.streetAddress || '',
-          city: profileData.personalInfo.city || '',
-          state: profileData.personalInfo.state || '',
-          county: profileData.personalInfo.county || '',
-          zipCode: profileData.personalInfo.zipCode || ''
-        };
-        
-        syncedData.personalInfo = {
-          ...profileData.personalInfo,
-          location: this.syncAddressToLocation(addressComponents)
-        };
-      }
-      
-      return { success: true, data: syncedData };
-    } catch (error) {
-      return { 
-        success: false, 
-        errors: [`Profile sync error: ${error instanceof Error ? error.message : 'Unknown error'}`] 
-      };
-    }
-  }
-
-  // Prepare database data for UI display
-  static prepareProfileForUI(databaseData: any): ProfileSyncResult {
-    try {
-      const syncedData = { ...databaseData };
-      
-      // Sync location string to address components
-      if (databaseData.personalInfo?.location) {
-        const addressComponents = this.syncLocationToAddress(databaseData.personalInfo.location);
-        
-        syncedData.personalInfo = {
-          ...databaseData.personalInfo,
-          streetAddress: addressComponents.streetAddress || '',
-          city: addressComponents.city || '',
-          state: addressComponents.state || '',
-          county: addressComponents.county || '',
-          zipCode: addressComponents.zipCode || ''
-        };
-      }
-      
-      return { success: true, data: syncedData };
-    } catch (error) {
-      return { 
-        success: false, 
-        errors: [`UI sync error: ${error instanceof Error ? error.message : 'Unknown error'}`] 
-      };
-    }
-  }
-
-  // Migrate existing user data to new format
-  static migrateUserProfile(oldProfile: any): ProfileSyncResult {
-    try {
-      const migratedProfile = { ...oldProfile };
-      
-      // If we have old location format but no separate address fields
-      if (oldProfile.personalInfo?.location && !oldProfile.personalInfo?.streetAddress) {
-        const addressComponents = this.syncLocationToAddress(oldProfile.personalInfo.location);
-        migratedProfile.personalInfo = {
-          ...oldProfile.personalInfo,
-          ...addressComponents
-        };
-      }
-      
-      // If we have separate address fields but no combined location
-      if (oldProfile.personalInfo?.streetAddress && !oldProfile.personalInfo?.location) {
-        const addressComponents = {
-          streetAddress: oldProfile.personalInfo.streetAddress || '',
-          city: oldProfile.personalInfo.city || '',
-          state: oldProfile.personalInfo.state || '',
-          county: oldProfile.personalInfo.county || '',
-          zipCode: oldProfile.personalInfo.zipCode || ''
-        };
-        
-        migratedProfile.personalInfo.location = this.syncAddressToLocation(addressComponents);
-      }
-      
-      return { success: true, data: migratedProfile };
-    } catch (error) {
-      return { 
-        success: false, 
-        errors: [`Migration error: ${error instanceof Error ? error.message : 'Unknown error'}`] 
-      };
-    }
+    return {
+      streetAddress: parts[0] || '',
+      city: parts[1] || '',
+      state: parts[2] || '',
+      county: parts[3] || '',
+      zipCode: parts[4] || ''
+    };
   }
 }
