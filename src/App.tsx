@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthContextProvider } from "@/contexts/AuthContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "next-themes";
 import Index from "./pages/Index";
 import Jobs from "./pages/Jobs";
@@ -58,7 +58,7 @@ const App = () => {
           <Sonner />
           <EnhancedErrorBoundary>
             <BrowserRouter>
-              <AuthContextProvider>
+              <AuthProvider>
                 <EnhancedDeepLinkHandler>
                   <OnboardingGuard>
                     <Routes>
@@ -194,7 +194,7 @@ const App = () => {
                     </Routes>
                   </OnboardingGuard>
                 </EnhancedDeepLinkHandler>
-              </AuthContextProvider>
+              </AuthProvider>
             </BrowserRouter>
           </EnhancedErrorBoundary>
         </TooltipProvider>
