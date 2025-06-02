@@ -249,6 +249,48 @@ export type Database = {
         }
         Relationships: []
       }
+      career_paths: {
+        Row: {
+          average_timeline_months: number | null
+          created_at: string | null
+          from_role: string
+          id: string
+          industry: string | null
+          recommended_skills: Json | null
+          required_skills: Json | null
+          salary_change_percentage: number | null
+          to_role: string
+          transition_probability: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          average_timeline_months?: number | null
+          created_at?: string | null
+          from_role: string
+          id?: string
+          industry?: string | null
+          recommended_skills?: Json | null
+          required_skills?: Json | null
+          salary_change_percentage?: number | null
+          to_role: string
+          transition_probability?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          average_timeline_months?: number | null
+          created_at?: string | null
+          from_role?: string
+          id?: string
+          industry?: string | null
+          recommended_skills?: Json | null
+          required_skills?: Json | null
+          salary_change_percentage?: number | null
+          to_role?: string
+          transition_probability?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       communications: {
         Row: {
           application_id: string | null
@@ -749,6 +791,105 @@ export type Database = {
           trigger_event?: string
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      github_repositories: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          forks_count: number | null
+          full_name: string
+          github_repo_id: number
+          html_url: string
+          id: string
+          is_featured: boolean | null
+          language: string | null
+          languages: Json | null
+          last_synced_at: string | null
+          name: string
+          stars_count: number | null
+          topics: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          forks_count?: number | null
+          full_name: string
+          github_repo_id: number
+          html_url: string
+          id?: string
+          is_featured?: boolean | null
+          language?: string | null
+          languages?: Json | null
+          last_synced_at?: string | null
+          name: string
+          stars_count?: number | null
+          topics?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          forks_count?: number | null
+          full_name?: string
+          github_repo_id?: number
+          html_url?: string
+          id?: string
+          is_featured?: boolean | null
+          language?: string | null
+          languages?: Json | null
+          last_synced_at?: string | null
+          name?: string
+          stars_count?: number | null
+          topics?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      interview_questions: {
+        Row: {
+          company_type: string | null
+          created_at: string | null
+          difficulty_level: string | null
+          id: string
+          job_title: string
+          question: string
+          question_category: string
+          sample_answer: string | null
+          tags: Json | null
+          updated_at: string | null
+          usage_count: number | null
+        }
+        Insert: {
+          company_type?: string | null
+          created_at?: string | null
+          difficulty_level?: string | null
+          id?: string
+          job_title: string
+          question: string
+          question_category: string
+          sample_answer?: string | null
+          tags?: Json | null
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Update: {
+          company_type?: string | null
+          created_at?: string | null
+          difficulty_level?: string | null
+          id?: string
+          job_title?: string
+          question?: string
+          question_category?: string
+          sample_answer?: string | null
+          tags?: Json | null
+          updated_at?: string | null
+          usage_count?: number | null
         }
         Relationships: []
       }
@@ -1331,6 +1472,42 @@ export type Database = {
         }
         Relationships: []
       }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string | null
+          endpoint: string
+          id: string
+          is_active: boolean | null
+          p256dh: string
+          updated_at: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string | null
+          endpoint: string
+          id?: string
+          is_active?: boolean | null
+          p256dh: string
+          updated_at?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string | null
+          endpoint?: string
+          id?: string
+          is_active?: boolean | null
+          p256dh?: string
+          updated_at?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       rate_limits: {
         Row: {
           created_at: string | null
@@ -1834,6 +2011,7 @@ export type Database = {
           portfolio_url: string | null
           primary_language: string | null
           profile_completion: number | null
+          push_subscription: Json | null
           updated_at: string | null
           user_id: string
         }
@@ -1851,6 +2029,7 @@ export type Database = {
           portfolio_url?: string | null
           primary_language?: string | null
           profile_completion?: number | null
+          push_subscription?: Json | null
           updated_at?: string | null
           user_id: string
         }
@@ -1868,6 +2047,7 @@ export type Database = {
           portfolio_url?: string | null
           primary_language?: string | null
           profile_completion?: number | null
+          push_subscription?: Json | null
           updated_at?: string | null
           user_id?: string
         }

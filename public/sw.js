@@ -1,5 +1,5 @@
 
-const CACHE_NAME = 'employevolution-v1';
+const CACHE_NAME = 'joblift-v1';
 const urlsToCache = [
   '/',
   '/static/js/bundle.js',
@@ -7,50 +7,147 @@ const urlsToCache = [
   '/manifest.json'
 ];
 
-// Install service worker
+// Install Service Worker
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('Opened cache');
         return cache.addAll(urlsToCache);
       })
   );
 });
 
-// Fetch events
+// Fetch event
 self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
         // Return cached version or fetch from network
-        if (response) {
-          return response;
-        }
-        return fetch(event.request);
+        return response || fetch(event.request);
       }
     )
   );
 });
 
-// Push notification handling
+// Push event
 self.addEventListener('push', (event) => {
   const options = {
-    body: event.data ? event.data.text() : 'New notification',
-    icon: '/icon-192x192.png',
-    badge: '/badge-72x72.png'
+    body: event.data ? event.data.text() : 'New job opportunity available!',
+    icon: '/favicon.ico',
+    badge: '/favicon.ico',
+    vibrate: [100, 50, 100],
+    data: {
+      dateOfArrival: Date.now(),
+      primaryKey: '2'
+    },
+    actions: [
+      {
+        action: 'explore',
+        title: 'View Jobs',
+        icon: '/favicon.ico'
+      },
+      {
+        action: 'close',
+        title: 'Close',
+        icon: '/favicon.ico'
+      }
+    ]
   };
 
   event.waitUntil(
-    self.registration.showNotification('EmployEvolution', options)
+    self.registration.showNotification('JobLift', options)
   );
 });
 
-// Notification click handling
+// Notification click event
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  
-  event.waitUntil(
-    clients.openWindow('/')
-  );
+
+  if (event.action === 'explore') {
+    event.waitUntil(
+      clients.openWindow('/jobs')
+    );
+  } else if (event.action === 'close') {
+    // Just close the notification
+  } else {
+    // Default action - open the app
+    event.waitUntil(
+      clients.openWindow('/')
+    );
+  }
 });
+
+// Background sync
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'background-sync') {
+    event.waitUntil(doBackgroundSync());
+  }
+});
+
+async function doBackgroundSync() {
+  try {
+    // Process any pending offline actions
+    const pendingActions = await getFromIndexedDB('pendingActions');
+    
+    for (const action of pendingActions || []) {
+      try {
+        await processOfflineAction(action);
+        await removeFromIndexedDB('pendingActions', action.id);
+      } catch (error) {
+        console.error('Failed to process offline action:', error);
+      }
+    }
+  } catch (error) {
+    console.error('Background sync failed:', error);
+  }
+}
+
+// IndexedDB helpers
+function getFromIndexedDB(storeName) {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('JobLiftDB', 1);
+    
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const db = request.result;
+      const transaction = db.transaction([storeName], 'readonly');
+      const store = transaction.objectStore(storeName);
+      const getRequest = store.getAll();
+      
+      getRequest.onsuccess = () => resolve(getRequest.result);
+      getRequest.onerror = () => reject(getRequest.error);
+    };
+  });
+}
+
+function removeFromIndexedDB(storeName, id) {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('JobLiftDB', 1);
+    
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const db = request.result;
+      const transaction = db.transaction([storeName], 'readwrite');
+      const store = transaction.objectStore(storeName);
+      const deleteRequest = store.delete(id);
+      
+      deleteRequest.onsuccess = () => resolve();
+      deleteRequest.onerror = () => reject(deleteRequest.error);
+    };
+  });
+}
+
+async function processOfflineAction(action) {
+  // Process offline actions when back online
+  const response = await fetch(action.url, {
+    method: action.method,
+    headers: action.headers,
+    body: action.body
+  });
+  
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  
+  return response.json();
+}

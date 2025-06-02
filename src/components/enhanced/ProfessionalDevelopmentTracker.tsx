@@ -2,553 +2,375 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { 
   Target, 
-  Award, 
-  Plus, 
-  BookOpen, 
-  Code, 
-  Users, 
-  Trophy,
-  Calendar,
-  CheckCircle,
-  Clock,
-  Pause
+  TrendingUp, 
+  CheckCircle, 
+  Clock, 
+  Plus,
+  BookOpen,
+  Award,
+  Code,
+  Users,
+  Briefcase,
+  Star
 } from 'lucide-react';
 
 interface DevelopmentGoal {
   id: string;
-  user_id: string;
   goal_title: string;
-  goal_description: string;
-  category: 'skill' | 'certification' | 'project' | 'networking';
-  target_date: string;
-  completion_date?: string;
-  progress_percentage: number;
+  category: string;
+  goal_description?: string;
   status: 'in_progress' | 'completed' | 'paused';
+  progress_percentage: number;
+  target_date?: string;
+  completion_date?: string;
   notes?: string;
   created_at: string;
   updated_at: string;
 }
 
-interface Achievement {
-  id: string;
-  user_id: string;
-  title: string;
-  description?: string;
-  achievement_type: 'certification' | 'project' | 'award' | 'milestone';
-  issuing_organization?: string;
-  date_achieved?: string;
-  verification_url?: string;
-  skills_gained: string[];
-  is_verified: boolean;
-  created_at: string;
-}
-
-const getCategoryIcon = (category: string) => {
-  switch (category) {
-    case 'skill': return <Code className="h-4 w-4" />;
-    case 'certification': return <Award className="h-4 w-4" />;
-    case 'project': return <Target className="h-4 w-4" />;
-    case 'networking': return <Users className="h-4 w-4" />;
-    default: return <BookOpen className="h-4 w-4" />;
-  }
-};
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'completed': return 'bg-green-100 text-green-800';
-    case 'in_progress': return 'bg-blue-100 text-blue-800';
-    case 'paused': return 'bg-yellow-100 text-yellow-800';
-    default: return 'bg-gray-100 text-gray-800';
-  }
-};
-
 export const ProfessionalDevelopmentTracker: React.FC = () => {
   const { user } = useAuth();
   const [goals, setGoals] = useState<DevelopmentGoal[]>([]);
-  const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showAddGoal, setShowAddGoal] = useState(false);
-  const [showAddAchievement, setShowAddAchievement] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newGoal, setNewGoal] = useState({
+    goal_title: '',
+    category: '',
+    goal_description: '',
+    target_date: ''
+  });
 
   useEffect(() => {
     if (user) {
-      loadDevelopmentData();
+      loadGoals();
     }
   }, [user]);
 
-  const loadDevelopmentData = async () => {
+  const loadGoals = async () => {
     if (!user) return;
 
     setLoading(true);
     try {
-      const [goalsResponse, achievementsResponse] = await Promise.all([
-        supabase.from('professional_development').select('*').eq('user_id', user.id),
-        supabase.from('achievements').select('*').eq('user_id', user.id)
-      ]);
+      const { data, error } = await supabase
+        .from('professional_development')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
-      if (goalsResponse.data) {
-        const mappedGoals: DevelopmentGoal[] = goalsResponse.data.map(goal => ({
-          ...goal,
-          category: goal.category as DevelopmentGoal['category'],
-          status: goal.status as DevelopmentGoal['status']
-        }));
-        setGoals(mappedGoals);
-      }
-      
-      if (achievementsResponse.data) {
-        const mappedAchievements: Achievement[] = achievementsResponse.data.map(achievement => ({
-          ...achievement,
-          achievement_type: achievement.achievement_type as Achievement['achievement_type'],
-          skills_gained: Array.isArray(achievement.skills_gained) 
-            ? achievement.skills_gained.map(skill => String(skill))
-            : []
-        }));
-        setAchievements(mappedAchievements);
-      }
+      if (error) throw error;
+      setGoals(data || []);
     } catch (error) {
-      console.error('Failed to load development data:', error);
-      toast.error('Failed to load development data');
+      console.error('Error loading goals:', error);
+      toast.error('Failed to load development goals');
     } finally {
       setLoading(false);
     }
   };
 
-  const updateGoalProgress = async (goalId: string, progress: number) => {
+  const addGoal = async () => {
+    if (!user || !newGoal.goal_title || !newGoal.category) {
+      toast.error('Please fill in required fields');
+      return;
+    }
+
     try {
+      const { data, error } = await supabase
+        .from('professional_development')
+        .insert({
+          user_id: user.id,
+          goal_title: newGoal.goal_title,
+          category: newGoal.category,
+          goal_description: newGoal.goal_description,
+          target_date: newGoal.target_date || null,
+          status: 'in_progress',
+          progress_percentage: 0
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setGoals(prev => [data, ...prev]);
+      setNewGoal({ goal_title: '', category: '', goal_description: '', target_date: '' });
+      setShowAddForm(false);
+      toast.success('Goal added successfully');
+    } catch (error) {
+      console.error('Error adding goal:', error);
+      toast.error('Failed to add goal');
+    }
+  };
+
+  const updateGoalProgress = async (goalId: string, progress: number, status?: string) => {
+    try {
+      const updateData: any = { progress_percentage: progress };
+      
+      if (status) {
+        updateData.status = status;
+        if (status === 'completed') {
+          updateData.completion_date = new Date().toISOString();
+          updateData.progress_percentage = 100;
+        }
+      }
+
       const { error } = await supabase
         .from('professional_development')
-        .update({ 
-          progress_percentage: progress,
-          status: progress >= 100 ? 'completed' : 'in_progress',
-          completion_date: progress >= 100 ? new Date().toISOString() : null
-        })
+        .update(updateData)
         .eq('id', goalId);
 
       if (error) throw error;
 
       setGoals(prev => prev.map(goal => 
         goal.id === goalId 
-          ? { 
-              ...goal, 
-              progress_percentage: progress,
-              status: progress >= 100 ? 'completed' : 'in_progress',
-              completion_date: progress >= 100 ? new Date().toISOString() : goal.completion_date
-            }
+          ? { ...goal, ...updateData }
           : goal
       ));
 
-      toast.success('Progress updated successfully');
+      toast.success('Progress updated');
     } catch (error) {
-      console.error('Failed to update progress:', error);
+      console.error('Error updating progress:', error);
       toast.error('Failed to update progress');
     }
   };
 
-  const addGoal = async (goalData: Partial<DevelopmentGoal>) => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('professional_development')
-        .insert({
-          user_id: user.id,
-          goal_title: goalData.goal_title || '',
-          goal_description: goalData.goal_description || '',
-          category: goalData.category || 'skill',
-          target_date: goalData.target_date || '',
-          progress_percentage: 0,
-          status: 'in_progress'
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      const newGoal: DevelopmentGoal = {
-        ...data,
-        category: data.category as DevelopmentGoal['category'],
-        status: data.status as DevelopmentGoal['status']
-      };
-
-      setGoals(prev => [...prev, newGoal]);
-      setShowAddGoal(false);
-      toast.success('Goal added successfully');
-    } catch (error) {
-      console.error('Failed to add goal:', error);
-      toast.error('Failed to add goal');
+  const getCategoryIcon = (category: string) => {
+    switch (category.toLowerCase()) {
+      case 'technical':
+      case 'programming':
+        return <Code className="h-4 w-4" />;
+      case 'leadership':
+      case 'management':
+        return <Users className="h-4 w-4" />;
+      case 'certification':
+      case 'education':
+        return <Award className="h-4 w-4" />;
+      case 'career':
+      case 'professional':
+        return <Briefcase className="h-4 w-4" />;
+      case 'learning':
+      case 'skill':
+        return <BookOpen className="h-4 w-4" />;
+      default:
+        return <Target className="h-4 w-4" />;
     }
   };
 
-  const addAchievement = async (achievementData: Partial<Achievement>) => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('achievements')
-        .insert({
-          user_id: user.id,
-          title: achievementData.title || '',
-          description: achievementData.description || '',
-          achievement_type: achievementData.achievement_type || 'milestone',
-          issuing_organization: achievementData.issuing_organization || '',
-          date_achieved: achievementData.date_achieved || new Date().toISOString(),
-          verification_url: achievementData.verification_url || '',
-          skills_gained: achievementData.skills_gained || [],
-          is_verified: false
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      const newAchievement: Achievement = {
-        ...data,
-        achievement_type: data.achievement_type as Achievement['achievement_type'],
-        skills_gained: Array.isArray(data.skills_gained) 
-          ? data.skills_gained.map(skill => String(skill))
-          : []
-      };
-
-      setAchievements(prev => [...prev, newAchievement]);
-      setShowAddAchievement(false);
-      toast.success('Achievement added successfully');
-    } catch (error) {
-      console.error('Failed to add achievement:', error);
-      toast.error('Failed to add achievement');
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'in_progress':
+        return 'bg-blue-100 text-blue-800';
+      case 'paused':
+        return 'bg-yellow-100 text-yellow-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'No target date';
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  const getProgressColor = (progress: number) => {
+    if (progress >= 80) return 'bg-green-500';
+    if (progress >= 50) return 'bg-blue-500';
+    if (progress >= 25) return 'bg-yellow-500';
+    return 'bg-red-500';
   };
 
   if (loading) {
-    return <div>Loading development tracker...</div>;
+    return <div>Loading development goals...</div>;
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Professional Development</h2>
-          <p className="text-muted-foreground">Track your learning goals and achievements</p>
-        </div>
-        <div className="space-x-2">
-          <Dialog open={showAddGoal} onOpenChange={setShowAddGoal}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Goal
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add Development Goal</DialogTitle>
-              </DialogHeader>
-              <AddGoalForm onSubmit={addGoal} onCancel={() => setShowAddGoal(false)} />
-            </DialogContent>
-          </Dialog>
-
-          <Dialog open={showAddAchievement} onOpenChange={setShowAddAchievement}>
-            <DialogTrigger asChild>
-              <Button variant="outline">
-                <Trophy className="h-4 w-4 mr-2" />
-                Add Achievement
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add Achievement</DialogTitle>
-              </DialogHeader>
-              <AddAchievementForm onSubmit={addAchievement} onCancel={() => setShowAddAchievement(false)} />
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
-
-      {/* Development Goals */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Target className="h-5 w-5" />
-            <span>Development Goals</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {goals.map((goal) => (
-              <div key={goal.id} className="border rounded-lg p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <div className="flex items-center space-x-2">
-                    {getCategoryIcon(goal.category)}
-                    <h3 className="font-medium">{goal.goal_title}</h3>
-                  </div>
-                  <Badge className={getStatusColor(goal.status)}>
-                    {goal.status === 'completed' && <CheckCircle className="h-3 w-3 mr-1" />}
-                    {goal.status === 'in_progress' && <Clock className="h-3 w-3 mr-1" />}
-                    {goal.status === 'paused' && <Pause className="h-3 w-3 mr-1" />}
-                    {goal.status.replace('_', ' ')}
-                  </Badge>
-                </div>
-                
-                <p className="text-sm text-muted-foreground mb-3">{goal.goal_description}</p>
-                
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Progress</span>
-                    <span>{goal.progress_percentage}%</span>
-                  </div>
-                  <Progress value={goal.progress_percentage} />
-                </div>
-                
-                <div className="flex justify-between items-center mt-3">
-                  <div className="text-sm text-muted-foreground">
-                    Target: {new Date(goal.target_date).toLocaleDateString()}
-                  </div>
-                  <div className="space-x-2">
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => updateGoalProgress(goal.id, Math.min(100, goal.progress_percentage + 25))}
-                    >
-                      +25%
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => updateGoalProgress(goal.id, Math.min(100, goal.progress_percentage + 10))}
-                    >
-                      +10%
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ))}
-            
-            {goals.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                No development goals yet. Add your first goal to start tracking progress!
-              </div>
-            )}
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center space-x-2">
+              <TrendingUp className="h-5 w-5" />
+              <span>Professional Development</span>
+            </CardTitle>
+            <Button onClick={() => setShowAddForm(!showAddForm)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Goal
+            </Button>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Achievements */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Award className="h-5 w-5" />
-            <span>Achievements</span>
-          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {achievements.map((achievement) => (
-              <div key={achievement.id} className="border rounded-lg p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <Trophy className="h-5 w-5 text-yellow-500" />
-                  {achievement.is_verified && (
-                    <Badge variant="default">Verified</Badge>
-                  )}
+          {showAddForm && (
+            <div className="mb-6 p-4 border rounded-lg space-y-4">
+              <h3 className="font-medium">Add New Development Goal</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Goal Title *</label>
+                  <Input
+                    value={newGoal.goal_title}
+                    onChange={(e) => setNewGoal(prev => ({ ...prev, goal_title: e.target.value }))}
+                    placeholder="e.g., Learn React Native"
+                  />
                 </div>
-                
-                <h3 className="font-medium mb-1">{achievement.title}</h3>
-                <p className="text-sm text-muted-foreground mb-2">{achievement.description}</p>
-                
-                {achievement.issuing_organization && (
-                  <p className="text-sm font-medium text-blue-600 mb-2">
-                    {achievement.issuing_organization}
-                  </p>
-                )}
-                
-                {achievement.skills_gained.length > 0 && (
-                  <div className="mb-2">
-                    <div className="flex flex-wrap gap-1">
-                      {achievement.skills_gained.slice(0, 3).map((skill, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          {skill}
-                        </Badge>
-                      ))}
-                      {achievement.skills_gained.length > 3 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{achievement.skills_gained.length - 3} more
-                        </Badge>
-                      )}
+                <div>
+                  <label className="block text-sm font-medium mb-1">Category *</label>
+                  <Select
+                    value={newGoal.category}
+                    onValueChange={(value) => setNewGoal(prev => ({ ...prev, category: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="technical">Technical Skills</SelectItem>
+                      <SelectItem value="leadership">Leadership</SelectItem>
+                      <SelectItem value="certification">Certification</SelectItem>
+                      <SelectItem value="career">Career Development</SelectItem>
+                      <SelectItem value="learning">Learning & Education</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Description</label>
+                <Textarea
+                  value={newGoal.goal_description}
+                  onChange={(e) => setNewGoal(prev => ({ ...prev, goal_description: e.target.value }))}
+                  placeholder="Describe your goal and how you plan to achieve it"
+                  rows={3}
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Target Date</label>
+                  <Input
+                    type="date"
+                    value={newGoal.target_date}
+                    onChange={(e) => setNewGoal(prev => ({ ...prev, target_date: e.target.value }))}
+                  />
+                </div>
+              </div>
+              <div className="flex space-x-2">
+                <Button onClick={addGoal}>Add Goal</Button>
+                <Button variant="outline" onClick={() => setShowAddForm(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {goals.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Target className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <h3 className="text-lg font-medium mb-2">No development goals yet</h3>
+              <p>Start tracking your professional growth by adding your first goal!</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {goals.map((goal) => (
+                <div key={goal.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center space-x-3">
+                      <div className="flex-shrink-0">
+                        {getCategoryIcon(goal.category)}
+                      </div>
+                      <div>
+                        <h3 className="font-medium">{goal.goal_title}</h3>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <Badge className={getStatusColor(goal.status)}>
+                            {goal.status.replace('_', ' ')}
+                          </Badge>
+                          <span className="text-sm text-muted-foreground">
+                            Target: {formatDate(goal.target_date)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-lg font-bold">{goal.progress_percentage}%</div>
+                      <div className="text-xs text-muted-foreground">Complete</div>
                     </div>
                   </div>
-                )}
-                
-                {achievement.date_achieved && (
-                  <div className="text-xs text-muted-foreground">
-                    <Calendar className="h-3 w-3 inline mr-1" />
-                    {new Date(achievement.date_achieved).toLocaleDateString()}
+
+                  <div className="mb-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm text-muted-foreground">Progress</span>
+                    </div>
+                    <Progress value={goal.progress_percentage} className="h-2" />
                   </div>
-                )}
+
+                  {goal.goal_description && (
+                    <p className="text-sm text-muted-foreground mb-3">{goal.goal_description}</p>
+                  )}
+
+                  <div className="flex items-center space-x-2">
+                    {goal.status !== 'completed' && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => updateGoalProgress(goal.id, Math.min(100, goal.progress_percentage + 25))}
+                        >
+                          +25%
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => updateGoalProgress(goal.id, 100, 'completed')}
+                        >
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Complete
+                        </Button>
+                      </>
+                    )}
+                    {goal.status === 'completed' && (
+                      <div className="flex items-center text-green-600">
+                        <CheckCircle className="h-4 w-4 mr-1" />
+                        <span className="text-sm">Completed on {formatDate(goal.completion_date)}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {goals.length > 0 && (
+            <div className="mt-6 pt-6 border-t">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                <div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {goals.filter(g => g.status === 'in_progress').length}
+                  </div>
+                  <div className="text-sm text-muted-foreground">In Progress</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {goals.filter(g => g.status === 'completed').length}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Completed</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-purple-600">
+                    {Math.round(goals.reduce((sum, g) => sum + g.progress_percentage, 0) / goals.length)}%
+                  </div>
+                  <div className="text-sm text-muted-foreground">Average Progress</div>
+                </div>
               </div>
-            ))}
-            
-            {achievements.length === 0 && (
-              <div className="col-span-full text-center py-8 text-muted-foreground">
-                No achievements recorded yet. Add your first achievement!
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
-  );
-};
-
-// Helper components for forms
-const AddGoalForm: React.FC<{
-  onSubmit: (data: Partial<DevelopmentGoal>) => void;
-  onCancel: () => void;
-}> = ({ onSubmit, onCancel }) => {
-  const [formData, setFormData] = useState<Partial<DevelopmentGoal>>({});
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (formData.goal_title && formData.category) {
-      onSubmit(formData);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <Label htmlFor="goal_title">Goal Title</Label>
-        <Input
-          id="goal_title"
-          value={formData.goal_title || ''}
-          onChange={(e) => setFormData(prev => ({ ...prev, goal_title: e.target.value }))}
-          required
-        />
-      </div>
-      
-      <div>
-        <Label htmlFor="goal_description">Description</Label>
-        <Textarea
-          id="goal_description"
-          value={formData.goal_description || ''}
-          onChange={(e) => setFormData(prev => ({ ...prev, goal_description: e.target.value }))}
-        />
-      </div>
-      
-      <div>
-        <Label htmlFor="category">Category</Label>
-        <Select onValueChange={(value) => setFormData(prev => ({ ...prev, category: value as DevelopmentGoal['category'] }))}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="skill">Skill Development</SelectItem>
-            <SelectItem value="certification">Certification</SelectItem>
-            <SelectItem value="project">Project</SelectItem>
-            <SelectItem value="networking">Networking</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      
-      <div>
-        <Label htmlFor="target_date">Target Date</Label>
-        <Input
-          id="target_date"
-          type="date"
-          value={formData.target_date || ''}
-          onChange={(e) => setFormData(prev => ({ ...prev, target_date: e.target.value }))}
-        />
-      </div>
-      
-      <div className="flex space-x-2">
-        <Button type="submit">Add Goal</Button>
-        <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-      </div>
-    </form>
-  );
-};
-
-const AddAchievementForm: React.FC<{
-  onSubmit: (data: Partial<Achievement>) => void;
-  onCancel: () => void;
-}> = ({ onSubmit, onCancel }) => {
-  const [formData, setFormData] = useState<Partial<Achievement>>({});
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (formData.title && formData.achievement_type) {
-      onSubmit(formData);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <Label htmlFor="title">Achievement Title</Label>
-        <Input
-          id="title"
-          value={formData.title || ''}
-          onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-          required
-        />
-      </div>
-      
-      <div>
-        <Label htmlFor="description">Description</Label>
-        <Textarea
-          id="description"
-          value={formData.description || ''}
-          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-        />
-      </div>
-      
-      <div>
-        <Label htmlFor="achievement_type">Type</Label>
-        <Select onValueChange={(value) => setFormData(prev => ({ ...prev, achievement_type: value as Achievement['achievement_type'] }))}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="certification">Certification</SelectItem>
-            <SelectItem value="project">Project</SelectItem>
-            <SelectItem value="award">Award</SelectItem>
-            <SelectItem value="milestone">Milestone</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      
-      <div>
-        <Label htmlFor="issuing_organization">Issuing Organization</Label>
-        <Input
-          id="issuing_organization"
-          value={formData.issuing_organization || ''}
-          onChange={(e) => setFormData(prev => ({ ...prev, issuing_organization: e.target.value }))}
-        />
-      </div>
-      
-      <div>
-        <Label htmlFor="date_achieved">Date Achieved</Label>
-        <Input
-          id="date_achieved"
-          type="date"
-          value={formData.date_achieved || ''}
-          onChange={(e) => setFormData(prev => ({ ...prev, date_achieved: e.target.value }))}
-        />
-      </div>
-      
-      <div className="flex space-x-2">
-        <Button type="submit">Add Achievement</Button>
-        <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-      </div>
-    </form>
   );
 };
 
