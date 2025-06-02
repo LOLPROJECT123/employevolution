@@ -87,8 +87,13 @@ export const useVoiceCommands = (options: UseVoiceCommandsOptions = {}) => {
     }
 
     return () => {
+      // Cleanup function - stop recognition if it's running
       if (recognition) {
-        recognition.abort();
+        try {
+          recognition.abort();
+        } catch (error) {
+          console.warn('Error aborting speech recognition:', error);
+        }
       }
     };
   }, [continuous, language]);
