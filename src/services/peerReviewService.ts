@@ -1,5 +1,6 @@
 
-import { supabase } from '@/integrations/supabase/client';
+// Mock implementation of peer review service
+// TODO: Replace with actual Supabase implementation once database tables are created
 
 export interface PeerReview {
   id: string;
@@ -32,24 +33,49 @@ export interface ReviewRequest {
 }
 
 export class PeerReviewService {
+  // Mock data for demonstration
+  private static mockReviews: PeerReview[] = [
+    {
+      id: '1',
+      reviewer_id: 'reviewer1',
+      reviewee_id: 'reviewee1',
+      document_id: 'doc1',
+      document_type: 'resume',
+      status: 'pending',
+      feedback: [],
+      overall_rating: 0,
+      created_at: new Date().toISOString()
+    }
+  ];
+
+  private static mockFeedback: ReviewFeedback[] = [
+    {
+      id: '1',
+      section: 'Experience',
+      type: 'suggestion',
+      comment: 'Consider adding more quantifiable achievements',
+      priority: 'high'
+    }
+  ];
+
   static async requestReview(revieweeId: string, request: ReviewRequest): Promise<string> {
     try {
-      const { data, error } = await supabase
-        .from('peer_reviews')
-        .insert({
-          reviewee_id: revieweeId,
-          document_id: request.document_id,
-          document_type: request.document_type,
-          status: 'pending',
-          request_message: request.message,
-          deadline: request.deadline,
-          specific_areas: request.specific_areas
-        })
-        .select('id')
-        .single();
+      // Mock implementation - would be real database operation in production
+      const newReview: PeerReview = {
+        id: Date.now().toString(),
+        reviewer_id: '',
+        reviewee_id: revieweeId,
+        document_id: request.document_id,
+        document_type: request.document_type,
+        status: 'pending',
+        feedback: [],
+        overall_rating: 0,
+        created_at: new Date().toISOString()
+      };
 
-      if (error) throw error;
-      return data.id;
+      this.mockReviews.push(newReview);
+      console.log('Mock: Created review request', newReview);
+      return newReview.id;
     } catch (error) {
       console.error('Failed to request review:', error);
       throw error;
@@ -58,16 +84,13 @@ export class PeerReviewService {
 
   static async acceptReview(reviewId: string, reviewerId: string): Promise<void> {
     try {
-      const { error } = await supabase
-        .from('peer_reviews')
-        .update({
-          reviewer_id: reviewerId,
-          status: 'in_progress',
-          started_at: new Date().toISOString()
-        })
-        .eq('id', reviewId);
-
-      if (error) throw error;
+      // Mock implementation
+      const review = this.mockReviews.find(r => r.id === reviewId);
+      if (review) {
+        review.reviewer_id = reviewerId;
+        review.status = 'in_progress';
+        console.log('Mock: Accepted review', review);
+      }
     } catch (error) {
       console.error('Failed to accept review:', error);
       throw error;
@@ -76,16 +99,14 @@ export class PeerReviewService {
 
   static async submitFeedback(reviewId: string, feedback: Omit<ReviewFeedback, 'id'>[]): Promise<void> {
     try {
-      const { error } = await supabase
-        .from('review_feedback')
-        .insert(
-          feedback.map(f => ({
-            review_id: reviewId,
-            ...f
-          }))
-        );
+      // Mock implementation
+      const newFeedback = feedback.map(f => ({
+        id: Date.now().toString() + Math.random(),
+        ...f
+      }));
 
-      if (error) throw error;
+      this.mockFeedback.push(...newFeedback);
+      console.log('Mock: Submitted feedback', newFeedback);
     } catch (error) {
       console.error('Failed to submit feedback:', error);
       throw error;
@@ -94,16 +115,14 @@ export class PeerReviewService {
 
   static async completeReview(reviewId: string, overallRating: number): Promise<void> {
     try {
-      const { error } = await supabase
-        .from('peer_reviews')
-        .update({
-          status: 'completed',
-          overall_rating: overallRating,
-          completed_at: new Date().toISOString()
-        })
-        .eq('id', reviewId);
-
-      if (error) throw error;
+      // Mock implementation
+      const review = this.mockReviews.find(r => r.id === reviewId);
+      if (review) {
+        review.status = 'completed';
+        review.overall_rating = overallRating;
+        review.completed_at = new Date().toISOString();
+        console.log('Mock: Completed review', review);
+      }
     } catch (error) {
       console.error('Failed to complete review:', error);
       throw error;
@@ -112,18 +131,12 @@ export class PeerReviewService {
 
   static async getMyReviews(userId: string): Promise<PeerReview[]> {
     try {
-      const { data, error } = await supabase
-        .from('peer_reviews')
-        .select(`
-          *,
-          reviewer:profiles!reviewer_id(full_name),
-          reviewee:profiles!reviewee_id(full_name)
-        `)
-        .or(`reviewer_id.eq.${userId},reviewee_id.eq.${userId}`)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
+      // Mock implementation
+      const userReviews = this.mockReviews.filter(
+        r => r.reviewer_id === userId || r.reviewee_id === userId
+      );
+      console.log('Mock: Retrieved user reviews', userReviews);
+      return userReviews;
     } catch (error) {
       console.error('Failed to get reviews:', error);
       return [];
@@ -132,18 +145,12 @@ export class PeerReviewService {
 
   static async getAvailableReviews(userId: string): Promise<PeerReview[]> {
     try {
-      const { data, error } = await supabase
-        .from('peer_reviews')
-        .select(`
-          *,
-          reviewee:profiles!reviewee_id(full_name)
-        `)
-        .eq('status', 'pending')
-        .neq('reviewee_id', userId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
+      // Mock implementation
+      const availableReviews = this.mockReviews.filter(
+        r => r.status === 'pending' && r.reviewee_id !== userId
+      );
+      console.log('Mock: Retrieved available reviews', availableReviews);
+      return availableReviews;
     } catch (error) {
       console.error('Failed to get available reviews:', error);
       return [];
@@ -152,14 +159,9 @@ export class PeerReviewService {
 
   static async getReviewFeedback(reviewId: string): Promise<ReviewFeedback[]> {
     try {
-      const { data, error } = await supabase
-        .from('review_feedback')
-        .select('*')
-        .eq('review_id', reviewId)
-        .order('created_at', { ascending: true });
-
-      if (error) throw error;
-      return data || [];
+      // Mock implementation - in real implementation, feedback would be linked to review
+      console.log('Mock: Retrieved review feedback for review', reviewId);
+      return this.mockFeedback;
     } catch (error) {
       console.error('Failed to get review feedback:', error);
       return [];

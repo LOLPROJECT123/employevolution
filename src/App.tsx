@@ -39,8 +39,8 @@ import DocumentsHub from "./pages/collaboration/DocumentsHub";
 import TeamsManagement from "./pages/collaboration/TeamsManagement";
 import PeerReviews from "./pages/collaboration/PeerReviews";
 
-import { ProtectedRoute } from "./components/auth/ProtectedRoute";
-import { OnboardingGuard } from "./components/auth/OnboardingGuard";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
+import OnboardingGuard from "./components/auth/OnboardingGuard";
 import { EnhancedErrorBoundary } from "./components/error/EnhancedErrorBoundary";
 import { EnhancedDeepLinkHandler } from "./components/navigation/EnhancedDeepLinkHandler";
 import { useMobile } from "./hooks/use-mobile";
