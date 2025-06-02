@@ -33,10 +33,12 @@ declare global {
     SpeechRecognition?: SpeechRecognitionStatic;
     webkitSpeechRecognition?: SpeechRecognitionStatic;
   }
-
-  // Make types globally available
-  var SpeechRecognition: SpeechRecognitionStatic | undefined;
-  var webkitSpeechRecognition: SpeechRecognitionStatic | undefined;
 }
 
-export {};
+// Export types for use in other files
+export type {
+  SpeechRecognition,
+  SpeechRecognitionStatic,
+  SpeechRecognitionEvent,
+  SpeechRecognitionErrorEvent
+};

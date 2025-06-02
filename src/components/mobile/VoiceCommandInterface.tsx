@@ -1,9 +1,14 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Mic, MicOff, Volume2 } from 'lucide-react';
+import type { 
+  SpeechRecognition, 
+  SpeechRecognitionStatic, 
+  SpeechRecognitionEvent, 
+  SpeechRecognitionErrorEvent 
+} from '@/types/speechRecognition';
 
 interface VoiceCommandInterfaceProps {
   onCommand: (command: string, confidence: number) => void;

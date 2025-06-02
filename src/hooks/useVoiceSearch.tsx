@@ -1,5 +1,10 @@
 
 import { useState, useEffect } from 'react';
+import type { 
+  SpeechRecognition, 
+  SpeechRecognitionEvent, 
+  SpeechRecognitionErrorEvent 
+} from '@/types/speechRecognition';
 
 export const useVoiceJobSearch = (onResult: (transcript: string) => void) => {
   const [isSupported, setIsSupported] = useState(false);
