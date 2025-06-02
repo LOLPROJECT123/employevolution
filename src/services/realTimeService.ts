@@ -68,10 +68,10 @@ export class RealTimeService {
     return channel;
   }
 
-  static async subscribeToUserPresence(
+  static subscribeToUserPresence(
     roomId: string,
     callback: (presences: UserPresence[]) => void
-  ): Promise<RealtimeChannel> {
+  ): () => void {
     const channel = supabase.channel(`presence_${roomId}`);
 
     channel
@@ -108,14 +108,18 @@ export class RealTimeService {
       });
 
     this.channels.set(`presence_${roomId}`, channel);
-    return channel;
+    
+    return () => {
+      supabase.removeChannel(channel);
+      this.channels.delete(`presence_${roomId}`);
+    };
   }
 
   // Alias methods for backward compatibility
-  static async subscribeToPresence(
+  static subscribeToPresence(
     roomId: string,
     callback: (presences: UserPresence[]) => void
-  ): Promise<RealtimeChannel> {
+  ): () => void {
     return this.subscribeToUserPresence(roomId, callback);
   }
 
@@ -141,10 +145,10 @@ export class RealTimeService {
   }
 
   // Chat functionality
-  static async subscribeToChat(
+  static subscribeToChat(
     roomId: string,
     callback: (message: ChatMessage) => void
-  ): Promise<() => void> {
+  ): () => void {
     const channel = supabase
       .channel(`chat_${roomId}`)
       .on('broadcast', { event: 'message' }, (payload) => {
@@ -214,10 +218,10 @@ export class RealTimeService {
   }
 
   // Resume functionality
-  static async subscribeToResumeChanges(
+  static subscribeToResumeChanges(
     resumeId: string,
     callback: (change: any) => void
-  ): Promise<() => void> {
+  ): () => void {
     console.log('Mock: Subscribing to resume changes for:', resumeId);
     
     // Mock implementation

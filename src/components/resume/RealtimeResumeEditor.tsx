@@ -54,7 +54,7 @@ export const RealtimeResumeEditor: React.FC<RealtimeResumeEditorProps> = ({
         name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Anonymous',
         status: 'online',
         last_seen: new Date().toISOString(),
-        current_page: 'resume_editor'
+        current_section: 'resume_editor'
       });
     };
 
