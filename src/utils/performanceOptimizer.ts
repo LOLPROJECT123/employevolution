@@ -43,7 +43,7 @@ export class PerformanceOptimizer {
   static measureComponentRender<T extends React.ComponentType<any>>(
     Component: T,
     componentName: string
-  ): React.ComponentType<React.ComponentProps<T>> {
+  ): T {
     const MeasuredComponent = React.forwardRef<any, React.ComponentProps<T>>((props, ref) => {
       const timer = performanceService.startTimer(`render_${componentName}`);
       
@@ -57,7 +57,8 @@ export class PerformanceOptimizer {
 
     MeasuredComponent.displayName = `Measured(${Component.displayName || Component.name || 'Component'})`;
     
-    return React.memo(MeasuredComponent);
+    // Use type assertion to satisfy TypeScript
+    return React.memo(MeasuredComponent) as T;
   }
 
   static optimizeListRender<T>(
