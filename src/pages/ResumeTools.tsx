@@ -2,8 +2,9 @@
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navbar from "@/components/Navbar";
-import MobileHeader from "@/components/MobileHeader";
 import { useMobile } from "@/hooks/use-mobile";
+import { MobileRouteLayout } from "@/components/mobile/MobileRouteLayout";
+import { BreadcrumbNav } from "@/components/navigation/BreadcrumbNav";
 import ResumeTemplates from "@/components/resume/ResumeTemplates";
 import AIResumeCreator from "@/components/resume/AIResumeCreator";
 import AICVCreator from "@/components/resume/AICVCreator";
@@ -16,11 +17,9 @@ const ResumeTools = () => {
   const { tab } = useParams();
   const navigate = useNavigate();
   
-  // Default to 'templates' tab unless specified otherwise
   const [activeTab, setActiveTab] = useState(tab || 'templates');
 
   useEffect(() => {
-    // Update active tab when the tab parameter changes
     if (tab) {
       setActiveTab(tab);
     }
@@ -31,19 +30,31 @@ const ResumeTools = () => {
     navigate(`/resume-tools/${value}`, { replace: true });
   };
 
-  return (
+  const handleRefresh = async () => {
+    console.log('Refreshing resume tools...');
+    // Implement refresh logic
+  };
+
+  const content = (
     <div className="min-h-screen bg-background">
       {!isMobile && <Navbar />}
-      {isMobile && <MobileHeader title="Resume Tools" />}
       
-      <main className="container px-4 py-8 pt-20">
-        <div className="flex flex-col gap-8">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Resume Tools</h1>
-            <p className="text-muted-foreground">
-              Create, optimize, and manage your resume to stand out to employers.
-            </p>
+      <main className={`container px-4 py-8 ${!isMobile ? 'pt-24' : 'pt-4'}`}>
+        {!isMobile && (
+          <div className="mb-6">
+            <BreadcrumbNav />
           </div>
+        )}
+        
+        <div className="flex flex-col gap-8">
+          {!isMobile && (
+            <div>
+              <h1 className="text-3xl font-bold mb-2">Resume Tools</h1>
+              <p className="text-muted-foreground">
+                Create, optimize, and manage your resume to stand out to employers.
+              </p>
+            </div>
+          )}
           
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
             <TabsList className="grid grid-cols-5 mb-6 w-full">
@@ -78,6 +89,20 @@ const ResumeTools = () => {
       </main>
     </div>
   );
+
+  if (isMobile) {
+    return (
+      <MobileRouteLayout
+        title="Resume Tools"
+        onRefresh={handleRefresh}
+        className="bg-background"
+      >
+        {content}
+      </MobileRouteLayout>
+    );
+  }
+
+  return content;
 };
 
 export default ResumeTools;

@@ -1,74 +1,131 @@
 
-import React, { useState } from "react";
+import React from "react";
 import Navbar from "@/components/Navbar";
-import MobileHeader from "@/components/MobileHeader";
 import { useMobile } from "@/hooks/use-mobile";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import RecruiterFinder from "@/components/RecruiterFinder";
-import ResearchOpportunityFinder from "@/components/ResearchOpportunityFinder";
-import { Card, CardContent } from "@/components/ui/card";
-import { Settings, RefreshCw } from "lucide-react";
+import { MobileRouteLayout } from "@/components/mobile/MobileRouteLayout";
+import { BreadcrumbNav } from "@/components/navigation/BreadcrumbNav";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Users, MessageSquare, Calendar, Briefcase, Search, UserPlus } from "lucide-react";
 
 const Networking = () => {
   const isMobile = useMobile();
-  const [activeTab, setActiveTab] = useState("recruiters");
 
-  return (
+  const handleRefresh = async () => {
+    console.log('Refreshing networking...');
+    // Implement refresh logic
+  };
+
+  const content = (
     <div className="min-h-screen bg-background">
       {!isMobile && <Navbar />}
-      {isMobile && <MobileHeader title="Networking" />}
-
-      <div className="container mx-auto px-4 max-w-screen-xl space-y-6 pt-6">
-        <Card className="shadow-sm">
-          <div className="p-0">
-            <div className="p-4 border-b">
-              <h2 className="text-lg font-medium">Networking & Outreach Tools</h2>
-              <div className="flex flex-col sm:flex-row gap-2 mt-3">
-                <Button variant="outline" size="sm">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Settings
-                </Button>
-                <Button variant="default" size="sm">
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Refresh Now
-                </Button>
-              </div>
-            </div>
-
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <div className="px-4 border-b">
-                <TabsList className="h-12">
-                  <TabsTrigger 
-                    value="recruiters" 
-                    className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
-                  >
-                    Recruiter Finder
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="research" 
-                    className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
-                  >
-                    Research Opportunities
-                  </TabsTrigger>
-                </TabsList>
-              </div>
-              
-              <div className="p-4">
-                <TabsContent value="recruiters" className="mt-0">
-                  <RecruiterFinder />
-                </TabsContent>
-                
-                <TabsContent value="research" className="mt-0">
-                  <ResearchOpportunityFinder />
-                </TabsContent>
-              </div>
-            </Tabs>
+      
+      <div className={`container mx-auto px-4 py-8 ${!isMobile ? 'pt-24' : 'pt-4'} max-w-6xl`}>
+        {!isMobile && (
+          <div className="mb-6">
+            <BreadcrumbNav />
           </div>
-        </Card>
+        )}
+        
+        {!isMobile && (
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-2">Professional Networking</h1>
+            <p className="text-muted-foreground">
+              Build meaningful professional relationships and expand your network
+            </p>
+          </div>
+        )}
+        
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Users className="h-5 w-5" />
+                <span>Find Professionals</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground mb-4">
+                Discover and connect with professionals in your industry
+              </p>
+              <Button className="w-full">
+                <Search className="h-4 w-4 mr-2" />
+                Search Network
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <MessageSquare className="h-5 w-5" />
+                <span>Messaging</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground mb-4">
+                Send personalized messages and follow up with contacts
+              </p>
+              <Button className="w-full">
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Compose Message
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Calendar className="h-5 w-5" />
+                <span>Networking Events</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground mb-4">
+                Find and attend networking events in your area
+              </p>
+              <Button className="w-full">
+                <Calendar className="h-4 w-4 mr-2" />
+                Browse Events
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Briefcase className="h-5 w-5" />
+                <span>Industry Groups</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground mb-4">
+                Join professional groups and communities
+              </p>
+              <Button className="w-full">
+                <UserPlus className="h-4 w-4 mr-2" />
+                Join Groups
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
+
+  if (isMobile) {
+    return (
+      <MobileRouteLayout
+        title="Networking"
+        onRefresh={handleRefresh}
+        className="bg-background"
+      >
+        {content}
+      </MobileRouteLayout>
+    );
+  }
+
+  return content;
 };
 
 export default Networking;
