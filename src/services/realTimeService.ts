@@ -7,95 +7,65 @@ export interface UserPresence {
   name: string;
   status: 'online' | 'away' | 'offline';
   last_seen: string;
-  current_page?: string;
+  current_section?: string;
 }
 
-export interface LiveJobAlert {
-  id: string;
-  job_data: any;
-  user_id: string;
-  created_at: string;
-  is_viewed: boolean;
-}
-
-export interface ChatMessage {
+export interface NotificationPayload {
   id: string;
   user_id: string;
-  content: string;
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
   created_at: string;
-  chat_room: string;
-  message_type: 'text' | 'system' | 'notification';
 }
 
 export class RealTimeService {
   private static channels: Map<string, RealtimeChannel> = new Map();
-  private static presence: Map<string, UserPresence> = new Map();
-  private static callbacks: Map<string, Function[]> = new Map();
 
-  // Live Job Alerts
-  static subscribeToJobAlerts(userId: string, callback: (alert: LiveJobAlert) => void): () => void {
-    const channelName = `job_alerts_${userId}`;
-    
-    if (!this.channels.has(channelName)) {
-      const channel = supabase
-        .channel(channelName)
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'notifications',
-            filter: `user_id=eq.${userId}`
-          },
-          (payload) => {
-            // Transform notification to job alert format
-            const alert: LiveJobAlert = {
-              id: payload.new.id,
-              job_data: payload.new.message,
-              user_id: payload.new.user_id,
-              created_at: payload.new.created_at,
-              is_viewed: payload.new.is_read
-            };
-            callback(alert);
-          }
-        )
-        .subscribe();
-
-      this.channels.set(channelName, channel);
-    }
-
-    const callbacks = this.callbacks.get(channelName) || [];
-    callbacks.push(callback);
-    this.callbacks.set(channelName, callbacks);
-
-    return () => {
-      const currentCallbacks = this.callbacks.get(channelName) || [];
-      const index = currentCallbacks.indexOf(callback);
-      if (index > -1) {
-        currentCallbacks.splice(index, 1);
-        this.callbacks.set(channelName, currentCallbacks);
-      }
-
-      if (currentCallbacks.length === 0) {
-        const channel = this.channels.get(channelName);
-        if (channel) {
-          supabase.removeChannel(channel);
-          this.channels.delete(channelName);
-          this.callbacks.delete(channelName);
+  static async subscribeToNotifications(
+    userId: string,
+    callback: (notification: NotificationPayload) => void
+  ): Promise<RealtimeChannel> {
+    const channel = supabase
+      .channel(`notifications_${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${userId}`
+        },
+        (payload) => {
+          callback(payload.new as NotificationPayload);
         }
-      }
-    };
+      )
+      .subscribe();
+
+    this.channels.set(`notifications_${userId}`, channel);
+    return channel;
   }
 
-  // User Presence
-  static subscribeToPresence(roomId: string, callback: (presence: UserPresence[]) => void): () => void {
-    const channelName = `presence_${roomId}`;
-    
-    const channel = supabase.channel(channelName)
+  static async subscribeToUserPresence(
+    roomId: string,
+    callback: (presences: UserPresence[]) => void
+  ): Promise<RealtimeChannel> {
+    const channel = supabase.channel(`presence_${roomId}`);
+
+    channel
       .on('presence', { event: 'sync' }, () => {
-        const state = channel.presenceState();
-        const users = Object.values(state).flat() as UserPresence[];
-        callback(users);
+        const presenceState = channel.presenceState();
+        const presences: UserPresence[] = Object.keys(presenceState).map(key => {
+          const presence = presenceState[key][0];
+          return {
+            user_id: key,
+            name: presence.name || 'Unknown',
+            status: presence.status || 'online',
+            last_seen: presence.last_seen || new Date().toISOString(),
+            current_section: presence.current_section
+          };
+        });
+        callback(presences);
       })
       .on('presence', { event: 'join' }, ({ key, newPresences }) => {
         console.log('User joined:', key, newPresences);
@@ -103,158 +73,62 @@ export class RealTimeService {
       .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
         console.log('User left:', key, leftPresences);
       })
-      .subscribe();
-
-    this.channels.set(channelName, channel);
-
-    return () => {
-      const channel = this.channels.get(channelName);
-      if (channel) {
-        supabase.removeChannel(channel);
-        this.channels.delete(channelName);
-      }
-    };
-  }
-
-  static async updatePresence(roomId: string, userPresence: UserPresence): Promise<void> {
-    const channelName = `presence_${roomId}`;
-    const channel = this.channels.get(channelName);
-    
-    if (channel) {
-      await channel.track(userPresence);
-    }
-  }
-
-  // Live Chat Support
-  static subscribeToChat(roomId: string, callback: (message: ChatMessage) => void): () => void {
-    const channelName = `chat_${roomId}`;
-    
-    if (!this.channels.has(channelName)) {
-      const channel = supabase
-        .channel(channelName)
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'notifications',
-            filter: `type=eq.chat`
-          },
-          (payload) => {
-            // Transform notification to chat message format
-            const message: ChatMessage = {
-              id: payload.new.id,
-              user_id: payload.new.user_id,
-              content: payload.new.message,
-              created_at: payload.new.created_at,
-              chat_room: roomId,
-              message_type: 'text'
-            };
-            callback(message);
-          }
-        )
-        .subscribe();
-
-      this.channels.set(channelName, channel);
-    }
-
-    const callbacks = this.callbacks.get(channelName) || [];
-    callbacks.push(callback);
-    this.callbacks.set(channelName, callbacks);
-
-    return () => this.unsubscribeCallback(channelName, callback);
-  }
-
-  // Send Chat Message
-  static async sendChatMessage(roomId: string, userId: string, content: string): Promise<void> {
-    const { error } = await supabase
-      .from('notifications')
-      .insert({
-        user_id: userId,
-        title: 'Chat Message',
-        message: content,
-        type: 'chat'
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          // Track initial presence
+          await channel.track({
+            user_id: 'current_user',
+            name: 'Current User',
+            status: 'online',
+            last_seen: new Date().toISOString()
+          });
+        }
       });
 
-    if (error) {
-      throw new Error(`Failed to send message: ${error.message}`);
+    this.channels.set(`presence_${roomId}`, channel);
+    return channel;
+  }
+
+  static async updateUserPresence(
+    roomId: string,
+    userData: Partial<UserPresence>
+  ): Promise<void> {
+    const channel = this.channels.get(`presence_${roomId}`);
+    if (channel) {
+      await channel.track({
+        ...userData,
+        last_seen: new Date().toISOString()
+      });
     }
   }
 
-  // Resume Collaboration - using existing tables
-  static subscribeToResumeChanges(resumeId: string, callback: (change: any) => void): () => void {
-    const channelName = `resume_${resumeId}`;
-    
-    if (!this.channels.has(channelName)) {
-      const channel = supabase
-        .channel(channelName)
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'resumes'
-          },
-          (payload) => {
-            callback(payload);
-          }
-        )
-        .subscribe();
-
-      this.channels.set(channelName, channel);
-    }
-
-    const callbacks = this.callbacks.get(channelName) || [];
-    callbacks.push(callback);
-    this.callbacks.set(channelName, callbacks);
-
-    return () => this.unsubscribeCallback(channelName, callback);
-  }
-
-  static async updateResumeSection(resumeId: string, userId: string, section: string, changes: any): Promise<void> {
-    const { error } = await supabase
-      .from('resumes')
-      .update({
-        content: changes,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', resumeId);
-
-    if (error) {
-      throw new Error(`Failed to update resume: ${error.message}`);
+  static async unsubscribe(channelKey: string): Promise<void> {
+    const channel = this.channels.get(channelKey);
+    if (channel) {
+      await supabase.removeChannel(channel);
+      this.channels.delete(channelKey);
     }
   }
 
-  static async resolveConflict(resumeId: string, conflictId: string, resolution: any): Promise<void> {
-    // For now, just update the resume directly
-    console.log('Resolving conflict:', conflictId, resolution);
-  }
-
-  private static unsubscribeCallback(channelName: string, callback: Function): void {
-    const currentCallbacks = this.callbacks.get(channelName) || [];
-    const index = currentCallbacks.indexOf(callback);
-    if (index > -1) {
-      currentCallbacks.splice(index, 1);
-      this.callbacks.set(channelName, currentCallbacks);
-    }
-
-    if (currentCallbacks.length === 0) {
-      const channel = this.channels.get(channelName);
-      if (channel) {
-        supabase.removeChannel(channel);
-        this.channels.delete(channelName);
-        this.callbacks.delete(channelName);
-      }
+  static async unsubscribeAll(): Promise<void> {
+    for (const [key, channel] of this.channels.entries()) {
+      await supabase.removeChannel(channel);
+      this.channels.delete(key);
     }
   }
 
-  // Cleanup all channels
-  static cleanup(): void {
-    this.channels.forEach((channel) => {
-      supabase.removeChannel(channel);
-    });
-    this.channels.clear();
-    this.callbacks.clear();
-    this.presence.clear();
+  static async broadcastMessage(
+    channelName: string,
+    event: string,
+    payload: any
+  ): Promise<void> {
+    const channel = this.channels.get(channelName);
+    if (channel) {
+      await channel.send({
+        type: 'broadcast',
+        event,
+        payload
+      });
+    }
   }
 }

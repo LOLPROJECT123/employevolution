@@ -1,390 +1,281 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
-export interface SecurityEvent {
-  eventType: 'login_attempt' | 'failed_login' | 'suspicious_activity' | 'data_access' | 'account_lockout';
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  description: string;
-  metadata: Record<string, any>;
-  ipAddress?: string;
-  userAgent?: string;
+export interface SecurityMetrics {
+  failedLogins: number;
+  suspiciousActivity: number;
+  blockedIPs: string[];
+  activeThreats: number;
 }
 
-export interface ThreatDetection {
+export interface SecurityAlert {
   id: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  type: string;
+  message: string;
   userId?: string;
-  threatType: 'brute_force' | 'suspicious_location' | 'unusual_activity' | 'data_exfiltration';
-  riskScore: number;
-  description: string;
-  detectedAt: Date;
-  resolved: boolean;
-}
-
-export interface ComplianceReport {
-  reportType: 'gdpr' | 'ccpa' | 'security_audit';
-  generatedAt: Date;
-  data: Record<string, any>;
-  status: 'pending' | 'completed' | 'failed';
+  ipAddress?: string;
+  timestamp: string;
 }
 
 export class SecurityEnhancementService {
-  private static readonly MAX_LOGIN_ATTEMPTS = 5;
-  private static readonly LOCKOUT_DURATION = 30 * 60 * 1000; // 30 minutes
+  private static alertThresholds = {
+    failedLoginAttempts: 5,
+    suspiciousActivityScore: 80,
+    rateLimitExceeded: 100
+  };
 
-  static async logSecurityEvent(userId: string | null, event: SecurityEvent): Promise<void> {
+  static async analyzeSecurityEvents(timeRange: {
+    startDate: string;
+    endDate: string;
+  }): Promise<SecurityMetrics> {
     try {
-      const { error } = await supabase
+      // Get security events from existing security_events table
+      const { data: securityEvents } = await supabase
         .from('security_events')
-        .insert({
-          user_id: userId,
-          event_type: event.eventType,
-          severity: event.severity,
-          description: event.description,
-          metadata: event.metadata,
-          ip_address: event.ipAddress,
-          user_agent: event.userAgent
-        });
+        .select('*')
+        .gte('created_at', timeRange.startDate)
+        .lte('created_at', timeRange.endDate);
 
-      if (error) {
-        console.error('Failed to log security event:', error);
-      }
+      const events = securityEvents || [];
 
-      // Trigger threat detection for high severity events
-      if (event.severity === 'high' || event.severity === 'critical') {
-        await this.analyzeThreat(userId, event);
-      }
+      // Analyze failed logins
+      const failedLogins = events.filter(e => 
+        e.event_type === 'failed_login'
+      ).length;
+
+      // Count suspicious activities
+      const suspiciousActivity = events.filter(e => 
+        e.severity === 'high' || e.severity === 'critical'
+      ).length;
+
+      // Extract blocked IPs from metadata
+      const blockedIPs: string[] = [];
+      events.forEach(event => {
+        if (event.metadata && typeof event.metadata === 'object') {
+          const metadata = event.metadata as any;
+          if (metadata.ipAddress && metadata.blocked) {
+            blockedIPs.push(metadata.ipAddress);
+          }
+        }
+      });
+
+      // Count active threats
+      const activeThreats = events.filter(e => 
+        e.severity === 'critical' && 
+        new Date(e.created_at || '').getTime() > Date.now() - (24 * 60 * 60 * 1000)
+      ).length;
+
+      return {
+        failedLogins,
+        suspiciousActivity,
+        blockedIPs: [...new Set(blockedIPs)],
+        activeThreats
+      };
     } catch (error) {
-      console.error('Error logging security event:', error);
+      console.error('Failed to analyze security events:', error);
+      return {
+        failedLogins: 0,
+        suspiciousActivity: 0,
+        blockedIPs: [],
+        activeThreats: 0
+      };
     }
   }
 
-  static async detectBruteForce(ipAddress: string, userAgent: string): Promise<boolean> {
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-
-    const { data: recentAttempts } = await supabase
-      .from('security_events')
-      .select('*')
-      .eq('event_type', 'failed_login')
-      .eq('ip_address', ipAddress)
-      .gte('created_at', oneHourAgo.toISOString());
-
-    const attemptCount = recentAttempts?.length || 0;
-
-    if (attemptCount >= this.MAX_LOGIN_ATTEMPTS) {
-      await this.logSecurityEvent(null, {
-        eventType: 'suspicious_activity',
-        severity: 'high',
-        description: `Brute force attack detected from IP: ${ipAddress}`,
-        metadata: {
-          attemptCount,
-          timeWindow: '1 hour',
-          ipAddress,
-          userAgent
-        },
-        ipAddress,
-        userAgent
-      });
-
-      return true;
-    }
-
-    return false;
-  }
-
-  static async checkSuspiciousLocation(userId: string, ipAddress: string): Promise<boolean> {
-    // Get user's previous login locations
-    const { data: previousLogins } = await supabase
-      .from('security_events')
-      .select('metadata')
-      .eq('user_id', userId)
-      .eq('event_type', 'login_attempt')
-      .order('created_at', { ascending: false })
-      .limit(10);
-
-    // In a real implementation, you'd use IP geolocation services
-    // For demo purposes, just checking if IP has been used before
-    const knownIPs = previousLogins?.map(login => login.metadata?.ipAddress).filter(Boolean) || [];
-    
-    const isNewLocation = !knownIPs.includes(ipAddress);
-
-    if (isNewLocation && knownIPs.length > 0) {
-      await this.logSecurityEvent(userId, {
-        eventType: 'suspicious_activity',
-        severity: 'medium',
-        description: 'Login from new location detected',
-        metadata: {
-          newIP: ipAddress,
-          knownIPs: knownIPs.slice(0, 3) // Only log first 3 for privacy
-        },
-        ipAddress
-      });
-
-      return true;
-    }
-
-    return false;
-  }
-
-  private static async analyzeThreat(userId: string | null, event: SecurityEvent): Promise<void> {
-    let threatType: ThreatDetection['threatType'];
-    let riskScore = 1;
-
-    switch (event.eventType) {
-      case 'failed_login':
-        threatType = 'brute_force';
-        riskScore = event.metadata.attemptCount > 10 ? 10 : event.metadata.attemptCount;
-        break;
-      case 'suspicious_activity':
-        threatType = 'unusual_activity';
-        riskScore = event.severity === 'critical' ? 10 : event.severity === 'high' ? 7 : 4;
-        break;
-      default:
-        return; // No threat detection needed
-    }
-
-    const threat: Omit<ThreatDetection, 'id'> = {
-      userId,
-      threatType,
-      riskScore,
-      description: event.description,
-      detectedAt: new Date(),
-      resolved: false
-    };
-
-    // In a real implementation, you'd save this to a threats table
-    console.log('Threat detected:', threat);
-
-    // Auto-resolve low-risk threats
-    if (riskScore < 5) {
-      threat.resolved = true;
-    }
-  }
-
-  static async enable2FA(userId: string, method: 'sms' | 'email' | 'authenticator'): Promise<{ secret?: string; qrCode?: string }> {
-    // Generate TOTP secret for authenticator apps
-    if (method === 'authenticator') {
-      const secret = this.generateTOTPSecret();
-      const qrCode = await this.generateQRCode(userId, secret);
-
-      // In a real implementation, you'd save the secret securely
-      console.log('2FA secret generated for user:', userId);
-
-      return { secret, qrCode };
-    }
-
-    // For SMS/Email, you'd integrate with services like Twilio/SendGrid
-    return {};
-  }
-
-  private static generateTOTPSecret(): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-    let secret = '';
-    for (let i = 0; i < 32; i++) {
-      secret += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return secret;
-  }
-
-  private static async generateQRCode(userId: string, secret: string): Promise<string> {
-    const issuer = 'EmployEvolution';
-    const otpAuthUrl = `otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(userId)}?secret=${secret}&issuer=${encodeURIComponent(issuer)}`;
-    
-    // In a real implementation, you'd use a QR code library
-    return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(otpAuthUrl)}`;
-  }
-
-  static async verify2FA(userId: string, token: string, method: 'sms' | 'email' | 'authenticator'): Promise<boolean> {
-    // In a real implementation, you'd verify the token based on the method
-    // For TOTP, you'd use a library like speakeasy
-    // For SMS/Email, you'd check against sent codes
-
-    console.log(`Verifying 2FA token for user ${userId} using ${method}:`, token);
-    
-    // Mock verification - in real app, implement proper verification
-    return token.length === 6 && /^\d+$/.test(token);
-  }
-
-  static async generateComplianceReport(reportType: ComplianceReport['reportType'], userId?: string): Promise<ComplianceReport> {
-    const report: ComplianceReport = {
-      reportType,
-      generatedAt: new Date(),
-      data: {},
-      status: 'pending'
-    };
-
+  static async detectAnomalousActivity(userId: string): Promise<{
+    score: number;
+    anomalies: string[];
+    recommendations: string[];
+  }> {
     try {
-      switch (reportType) {
-        case 'gdpr':
-          report.data = await this.generateGDPRReport(userId);
-          break;
-        case 'ccpa':
-          report.data = await this.generateCCPAReport(userId);
-          break;
-        case 'security_audit':
-          report.data = await this.generateSecurityAuditReport();
-          break;
-      }
-      
-      report.status = 'completed';
-    } catch (error) {
-      console.error('Failed to generate compliance report:', error);
-      report.status = 'failed';
-      report.data = { error: error.message };
-    }
-
-    return report;
-  }
-
-  private static async generateGDPRReport(userId?: string): Promise<Record<string, any>> {
-    const report: Record<string, any> = {
-      userRights: {
-        rightToAccess: 'Provided through profile export',
-        rightToRectification: 'Provided through profile editing',
-        rightToErasure: 'Provided through account deletion',
-        rightToPortability: 'Provided through data export',
-        rightToObject: 'Provided through privacy settings'
-      },
-      dataProcessing: {
-        purposes: ['Job matching', 'Application tracking', 'Communication'],
-        legalBasis: 'Legitimate interest and consent',
-        retentionPeriod: '7 years after account deletion'
-      }
-    };
-
-    if (userId) {
-      // Get user's data processing activities
-      const { data: activities } = await supabase
-        .from('user_analytics')
-        .select('event_type, created_at')
+      // Get user's security events
+      const { data: userEvents } = await supabase
+        .from('security_events')
+        .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(100);
 
-      report.userActivities = {
-        totalEvents: activities?.length || 0,
-        recentEvents: activities?.slice(0, 10) || [],
-        dataTypes: ['Profile information', 'Application history', 'Search history', 'Analytics data']
-      };
-    }
+      const events = userEvents || [];
+      let anomalyScore = 0;
+      const anomalies: string[] = [];
+      const recommendations: string[] = [];
 
-    return report;
-  }
+      // Check for rapid login attempts
+      const recentLogins = events.filter(e => 
+        e.event_type === 'failed_login' &&
+        new Date(e.created_at || '').getTime() > Date.now() - (60 * 60 * 1000)
+      );
 
-  private static async generateCCPAReport(userId?: string): Promise<Record<string, any>> {
-    const report: Record<string, any> = {
-      consumerRights: {
-        rightToKnow: 'Provided through data transparency page',
-        rightToDelete: 'Provided through account deletion',
-        rightToOptOut: 'Provided through privacy settings',
-        rightToNonDiscrimination: 'No discriminatory practices'
-      },
-      personalInformation: {
-        categories: ['Identifiers', 'Professional information', 'Internet activity'],
-        sources: ['User provided', 'Automatically collected'],
-        businessPurposes: ['Service provision', 'Analytics', 'Communication']
+      if (recentLogins.length > this.alertThresholds.failedLoginAttempts) {
+        anomalyScore += 30;
+        anomalies.push('Multiple failed login attempts detected');
+        recommendations.push('Enable two-factor authentication');
       }
-    };
 
-    if (userId) {
-      report.userSpecificData = {
-        accountCreated: new Date(), // Would get from user profile
-        lastActivity: new Date(),
-        dataSharing: 'No personal information sold to third parties'
+      // Check for unusual IP addresses
+      const ipAddresses = new Set(
+        events
+          .map(e => e.ip_address)
+          .filter(Boolean)
+      );
+
+      if (ipAddresses.size > 5) {
+        anomalyScore += 20;
+        anomalies.push('Access from multiple IP addresses');
+        recommendations.push('Review recent login locations');
+      }
+
+      // Check for high-severity events
+      const criticalEvents = events.filter(e => e.severity === 'critical');
+      if (criticalEvents.length > 0) {
+        anomalyScore += 50;
+        anomalies.push('Critical security events detected');
+        recommendations.push('Immediate security review required');
+      }
+
+      return {
+        score: Math.min(anomalyScore, 100),
+        anomalies,
+        recommendations
+      };
+    } catch (error) {
+      console.error('Failed to detect anomalous activity:', error);
+      return {
+        score: 0,
+        anomalies: [],
+        recommendations: []
       };
     }
-
-    return report;
   }
 
-  private static async generateSecurityAuditReport(): Promise<Record<string, any>> {
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  static async generateSecurityReport(organizationId?: string): Promise<{
+    overview: SecurityMetrics;
+    alerts: SecurityAlert[];
+    recommendations: string[];
+    complianceStatus: Record<string, boolean>;
+  }> {
+    try {
+      const timeRange = {
+        startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+        endDate: new Date().toISOString()
+      };
 
-    const { data: securityEvents } = await supabase
-      .from('security_events')
-      .select('event_type, severity, created_at')
-      .gte('created_at', thirtyDaysAgo.toISOString());
+      const overview = await this.analyzeSecurityEvents(timeRange);
 
-    const eventsByType = securityEvents?.reduce((acc, event) => {
-      acc[event.event_type] = (acc[event.event_type] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>) || {};
+      // Mock alerts since user_analytics table doesn't exist
+      const alerts: SecurityAlert[] = [];
+      console.log('Mock security: Generating alerts for organization:', organizationId);
 
-    const eventsBySeverity = securityEvents?.reduce((acc, event) => {
-      acc[event.severity] = (acc[event.severity] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>) || {};
+      const recommendations = [
+        'Enable multi-factor authentication for all users',
+        'Implement regular security training sessions',
+        'Review and update access controls quarterly',
+        'Monitor for unusual login patterns',
+        'Keep security policies up to date'
+      ];
 
-    return {
-      reportPeriod: '30 days',
-      totalEvents: securityEvents?.length || 0,
-      eventsByType,
-      eventsBySeverity,
-      securityMeasures: {
-        encryption: 'AES-256 for data at rest, TLS 1.3 for data in transit',
-        authentication: '2FA available, password complexity requirements',
-        accessControl: 'Role-based access control (RBAC)',
-        monitoring: '24/7 security event monitoring',
-        backups: 'Daily encrypted backups with 30-day retention'
-      },
-      recommendations: [
-        'Regular security awareness training',
-        'Implement security headers',
-        'Regular penetration testing',
-        'Update dependencies regularly'
-      ]
-    };
+      const complianceStatus = {
+        gdprCompliant: true,
+        iso27001Compliant: false,
+        socCompliant: false,
+        hipaaCompliant: false
+      };
+
+      return {
+        overview,
+        alerts,
+        recommendations,
+        complianceStatus
+      };
+    } catch (error) {
+      console.error('Failed to generate security report:', error);
+      throw error;
+    }
   }
 
-  static async anonymizeUserData(userId: string): Promise<void> {
-    // In a real implementation, you'd:
-    // 1. Replace PII with anonymized values
-    // 2. Keep aggregated data for analytics
-    // 3. Maintain referential integrity
-
-    const anonymizedData = {
-      name: `User_${Date.now()}`,
-      email: `anonymous_${Date.now()}@example.com`,
-      phone: null,
-      location: 'Anonymized'
-    };
-
-    console.log('Anonymizing user data:', userId, anonymizedData);
-
-    // Update user profile with anonymized data
-    // await supabase.from('user_profiles').update(anonymizedData).eq('user_id', userId);
-  }
-
-  static async detectDataExfiltration(userId: string, actionType: string, dataSize: number): Promise<boolean> {
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-
-    // Check for unusual data access patterns
-    const { data: recentActions } = await supabase
-      .from('user_analytics')
-      .select('event_data')
-      .eq('user_id', userId)
-      .eq('event_type', 'data_access')
-      .gte('created_at', oneHourAgo.toISOString());
-
-    const totalDataAccessed = recentActions?.reduce((total, action) => {
-      return total + (action.event_data?.dataSize || 0);
-    }, 0) || 0;
-
-    const suspiciousThreshold = 100 * 1024 * 1024; // 100MB in 1 hour
-
-    if (totalDataAccessed + dataSize > suspiciousThreshold) {
-      await this.logSecurityEvent(userId, {
-        eventType: 'suspicious_activity',
-        severity: 'high',
-        description: 'Potential data exfiltration detected',
-        metadata: {
-          totalDataAccessed: totalDataAccessed + dataSize,
-          threshold: suspiciousThreshold,
-          actionType
-        }
+  static async trackUserBehavior(userId: string, action: string, metadata: any): Promise<void> {
+    try {
+      // Mock tracking since user_analytics table doesn't exist
+      console.log('Mock security: Tracking user behavior', {
+        user_id: userId,
+        action,
+        metadata,
+        timestamp: new Date().toISOString()
       });
 
-      return true;
+      // Also log to audit trail
+      await supabase
+        .from('audit_logs')
+        .insert({
+          user_id: userId,
+          action: `behavior_${action}`,
+          metadata: metadata,
+          ip_address: 'unknown',
+          user_agent: navigator.userAgent,
+          table_name: 'user_behavior'
+        });
+    } catch (error) {
+      console.error('Failed to track user behavior:', error);
     }
+  }
 
-    return false;
+  static async analyzeUserPatterns(userId: string): Promise<{
+    riskScore: number;
+    patterns: string[];
+    alerts: SecurityAlert[];
+  }> {
+    try {
+      // Mock analysis since user_analytics table doesn't exist
+      console.log('Mock security: Analyzing patterns for user:', userId);
+
+      // Get audit logs as a proxy for user behavior
+      const { data: auditLogs } = await supabase
+        .from('audit_logs')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      const logs = auditLogs || [];
+      
+      const patterns: string[] = [];
+      const alerts: SecurityAlert[] = [];
+      let riskScore = 0;
+
+      // Analyze login patterns from audit logs
+      const loginActions = logs.filter(log => 
+        log.action.includes('login') || log.action.includes('auth')
+      );
+
+      if (loginActions.length > 20) {
+        patterns.push('High frequency login activity');
+        riskScore += 10;
+      }
+
+      // Check for data access patterns
+      const dataActions = logs.filter(log =>
+        log.action.includes('select') || log.action.includes('export')
+      );
+
+      if (dataActions.length > 10) {
+        patterns.push('Frequent data access');
+        riskScore += 5;
+      }
+
+      return {
+        riskScore: Math.min(riskScore, 100),
+        patterns,
+        alerts
+      };
+    } catch (error) {
+      console.error('Failed to analyze user patterns:', error);
+      return {
+        riskScore: 0,
+        patterns: [],
+        alerts: []
+      };
+    }
   }
 }

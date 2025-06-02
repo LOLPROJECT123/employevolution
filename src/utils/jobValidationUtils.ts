@@ -46,6 +46,26 @@ export const extractJobIdFromUrl = (url: string): string | null => {
   }
 };
 
+export const detectPlatform = (url: string): string | null => {
+  try {
+    const urlObj = new URL(url);
+    const hostname = urlObj.hostname.toLowerCase();
+    
+    if (hostname.includes('linkedin.com')) return 'linkedin';
+    if (hostname.includes('indeed.com')) return 'indeed';
+    if (hostname.includes('glassdoor.com')) return 'glassdoor';
+    if (hostname.includes('monster.com')) return 'monster';
+    if (hostname.includes('ziprecruiter.com')) return 'ziprecruiter';
+    if (hostname.includes('careerbuilder.com')) return 'careerbuilder';
+    if (hostname.includes('dice.com')) return 'dice';
+    if (hostname.includes('stackoverflow.com')) return 'stackoverflow';
+    
+    return 'other';
+  } catch {
+    return null;
+  }
+};
+
 export const generateJobSlug = (title: string, company: string): string => {
   const combined = `${title}-${company}`;
   return combined
