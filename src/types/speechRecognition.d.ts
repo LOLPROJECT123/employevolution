@@ -1,4 +1,6 @@
 
+/// <reference types="vite/client" />
+
 // Shared SpeechRecognition type definitions
 interface SpeechRecognitionEvent extends Event {
   results: SpeechRecognitionResultList;
@@ -24,7 +26,13 @@ interface SpeechRecognition extends EventTarget {
 
 declare global {
   interface Window {
-    SpeechRecognition?: new () => SpeechRecognition;
-    webkitSpeechRecognition?: new () => SpeechRecognition;
+    SpeechRecognition?: {
+      new (): SpeechRecognition;
+    };
+    webkitSpeechRecognition?: {
+      new (): SpeechRecognition;
+    };
   }
 }
+
+export {};
