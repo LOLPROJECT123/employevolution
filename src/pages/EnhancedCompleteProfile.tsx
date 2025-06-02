@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -168,7 +167,7 @@ const EnhancedCompleteProfile = () => {
     if (!user) return;
     
     // Validate before final save
-    const validationResult = await validate(profileData);
+    const validationResult = validate(profileData);
     
     if (!validationResult.isValid) {
       toast.error(`Please fix the following issues: ${validationResult.errors.join(', ')}`);

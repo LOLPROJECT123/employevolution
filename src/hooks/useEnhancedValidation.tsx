@@ -22,59 +22,64 @@ export function useEnhancedValidation<T>(
   const [validationCache, setValidationCache] = useState<Map<string, ValidationResult>>(new Map());
   const [isValidating, setIsValidating] = useState(false);
 
+  const validateSync = useCallback((value: T): ValidationResult => {
+    const cacheKey = JSON.stringify(value);
+    const cached = validationCache.get(cacheKey);
+    
+    if (cached) {
+      return cached;
+    }
+
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    const suggestions: string[] = [];
+
+    for (const rule of rules) {
+      const isValid = rule.validate(value);
+      if (!isValid) {
+        const severity = rule.severity || 'error';
+        
+        switch (severity) {
+          case 'error':
+            errors.push(rule.message);
+            break;
+          case 'warning':
+            warnings.push(rule.message);
+            break;
+          case 'info':
+            suggestions.push(rule.message);
+            break;
+        }
+      }
+    }
+
+    const result: ValidationResult = {
+      isValid: errors.length === 0,
+      errors,
+      warnings,
+      suggestions
+    };
+
+    // Cache the result
+    setValidationCache(prev => new Map(prev.set(cacheKey, result)));
+    
+    return result;
+  }, [rules, validationCache]);
+
   const debouncedValidate = useMemo(
     () => performanceService.debounce(async (value: T): Promise<ValidationResult> => {
       setIsValidating(true);
       const timer = performanceService.startTimer('validation');
       
       try {
-        const cacheKey = JSON.stringify(value);
-        const cached = validationCache.get(cacheKey);
-        
-        if (cached) {
-          return cached;
-        }
-
-        const errors: string[] = [];
-        const warnings: string[] = [];
-        const suggestions: string[] = [];
-
-        for (const rule of rules) {
-          const isValid = rule.validate(value);
-          if (!isValid) {
-            const severity = rule.severity || 'error';
-            
-            switch (severity) {
-              case 'error':
-                errors.push(rule.message);
-                break;
-              case 'warning':
-                warnings.push(rule.message);
-                break;
-              case 'info':
-                suggestions.push(rule.message);
-                break;
-            }
-          }
-        }
-
-        const result: ValidationResult = {
-          isValid: errors.length === 0,
-          errors,
-          warnings,
-          suggestions
-        };
-
-        // Cache the result
-        setValidationCache(prev => new Map(prev.set(cacheKey, result)));
-        
+        const result = validateSync(value);
         return result;
       } finally {
         timer();
         setIsValidating(false);
       }
     }, debounceMs),
-    [rules, debounceMs, validationCache]
+    [validateSync, debounceMs]
   );
 
   const clearCache = useCallback(() => {
@@ -82,7 +87,8 @@ export function useEnhancedValidation<T>(
   }, []);
 
   return {
-    validate: debouncedValidate,
+    validate: validateSync,
+    validateAsync: debouncedValidate,
     isValidating,
     clearCache
   };

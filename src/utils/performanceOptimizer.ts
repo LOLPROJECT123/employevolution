@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { performanceService } from '@/services/performanceService';
 import { monitoringService } from '@/services/monitoringService';
 
@@ -42,16 +43,16 @@ export class PerformanceOptimizer {
   static measureComponentRender<T extends React.ComponentType<any>>(
     Component: T,
     componentName: string
-  ): T {
+  ): React.ComponentType<React.ComponentProps<T>> {
     return React.memo(React.forwardRef<any, React.ComponentProps<T>>((props, ref) => {
       const timer = performanceService.startTimer(`render_${componentName}`);
       
       React.useEffect(() => {
-        return () => timer();
+        timer();
       });
 
       return React.createElement(Component, { ...props, ref });
-    })) as T;
+    }));
   }
 
   static optimizeListRender<T>(
