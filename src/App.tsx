@@ -37,10 +37,15 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             
-            {/* Profile completion route - protected but bypasses onboarding guard */}
+            {/* Profile completion routes - protected but bypass onboarding guard */}
             <Route path="/complete-profile" element={
               <ProtectedRoute>
                 <CompleteProfile />
+              </ProtectedRoute>
+            } />
+            <Route path="/enhanced-complete-profile" element={
+              <ProtectedRoute>
+                <EnhancedCompleteProfile />
               </ProtectedRoute>
             } />
             
@@ -92,6 +97,20 @@ const App = () => (
                 </OnboardingGuard>
               </ProtectedRoute>
             } />
+            <Route path="/resume-forum" element={
+              <ProtectedRoute>
+                <OnboardingGuard>
+                  <ResumePost />
+                </OnboardingGuard>
+              </ProtectedRoute>
+            } />
+            <Route path="/leetcode-patterns" element={
+              <ProtectedRoute>
+                <OnboardingGuard>
+                  <LeetcodePatterns />
+                </OnboardingGuard>
+              </ProtectedRoute>
+            } />
             <Route path="/networking" element={
               <ProtectedRoute>
                 <OnboardingGuard>
@@ -124,6 +143,20 @@ const App = () => (
               <ProtectedRoute>
                 <OnboardingGuard>
                   <JobAlerts />
+                </OnboardingGuard>
+              </ProtectedRoute>
+            } />
+            <Route path="/calendar" element={
+              <ProtectedRoute>
+                <OnboardingGuard>
+                  <Calendar />
+                </OnboardingGuard>
+              </ProtectedRoute>
+            } />
+            <Route path="/communications" element={
+              <ProtectedRoute>
+                <OnboardingGuard>
+                  <Communications />
                 </OnboardingGuard>
               </ProtectedRoute>
             } />
