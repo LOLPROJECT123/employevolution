@@ -8,11 +8,11 @@ export const useVoiceJobSearch = (onResult: (transcript: string) => void) => {
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
 
   useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
     
-    if (SpeechRecognition) {
+    if (SpeechRecognitionClass) {
       setIsSupported(true);
-      const recognitionInstance = new SpeechRecognition();
+      const recognitionInstance = new SpeechRecognitionClass();
       
       recognitionInstance.continuous = false;
       recognitionInstance.interimResults = true;

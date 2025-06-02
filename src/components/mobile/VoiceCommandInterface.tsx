@@ -25,10 +25,10 @@ export const VoiceCommandInterface: React.FC<VoiceCommandInterfaceProps> = ({
 
   useEffect(() => {
     // Check for browser support
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
+    const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognitionClass) {
       setIsSupported(true);
-      initializeRecognition(SpeechRecognition);
+      initializeRecognition(SpeechRecognitionClass);
     } else {
       console.warn('Speech recognition not supported in this browser');
       setIsSupported(false);
@@ -41,7 +41,7 @@ export const VoiceCommandInterface: React.FC<VoiceCommandInterfaceProps> = ({
     };
   }, []);
 
-  const initializeRecognition = (SpeechRecognitionConstructor: { new (): SpeechRecognition }) => {
+  const initializeRecognition = (SpeechRecognitionConstructor: SpeechRecognitionStatic) => {
     const recognition = new SpeechRecognitionConstructor();
     recognition.continuous = false;
     recognition.interimResults = true;

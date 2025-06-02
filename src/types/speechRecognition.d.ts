@@ -1,7 +1,7 @@
 
 /// <reference types="vite/client" />
 
-// Shared SpeechRecognition type definitions
+// Speech Recognition API type definitions
 interface SpeechRecognitionEvent extends Event {
   results: SpeechRecognitionResultList;
   resultIndex: number;
@@ -24,15 +24,19 @@ interface SpeechRecognition extends EventTarget {
   onend: ((this: SpeechRecognition, ev: Event) => any) | null;
 }
 
+interface SpeechRecognitionStatic {
+  new (): SpeechRecognition;
+}
+
 declare global {
   interface Window {
-    SpeechRecognition?: {
-      new (): SpeechRecognition;
-    };
-    webkitSpeechRecognition?: {
-      new (): SpeechRecognition;
-    };
+    SpeechRecognition?: SpeechRecognitionStatic;
+    webkitSpeechRecognition?: SpeechRecognitionStatic;
   }
+
+  // Make types globally available
+  var SpeechRecognition: SpeechRecognitionStatic | undefined;
+  var webkitSpeechRecognition: SpeechRecognitionStatic | undefined;
 }
 
 export {};
