@@ -1,6 +1,5 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { securityService } from './securityService';
 
 export interface TwoFactorSetup {
   secret: string;
@@ -163,7 +162,18 @@ export class EnhancedAuthService {
 
   private static async logSecurityEvent(event: string, data: any): Promise<void> {
     try {
-      await securityService.logSecurityEvent(event, data);
+      // Use audit_logs table for security events since security_events table doesn't exist
+      const { data: { user } } = await supabase.auth.getUser();
+      await supabase
+        .from('audit_logs')
+        .insert({
+          user_id: user?.id || null,
+          action: event,
+          metadata: data,
+          ip_address: 'unknown',
+          user_agent: navigator.userAgent,
+          table_name: 'security_events'
+        });
     } catch (error) {
       console.error('Failed to log security event:', error);
     }

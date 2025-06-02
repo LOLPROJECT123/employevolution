@@ -251,7 +251,7 @@ export class DataAnonymizationService {
         confirmed
       });
 
-      // Delete from all related tables
+      // Delete from all related tables using existing table names
       const tables = [
         'job_applications',
         'communications',
@@ -260,7 +260,8 @@ export class DataAnonymizationService {
       ];
 
       for (const table of tables) {
-        await supabase
+        // Use type assertion to handle the dynamic table names
+        await (supabase as any)
           .from(table)
           .delete()
           .eq('user_id', userId);
