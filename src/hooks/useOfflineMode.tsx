@@ -27,7 +27,6 @@ export const useOfflineMode = () => {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Load pending actions from storage
     loadPendingActions();
 
     return () => {
@@ -78,22 +77,7 @@ export const useOfflineMode = () => {
   };
 
   const executeAction = async (action: OfflineAction): Promise<void> => {
-    // This would integrate with your API/Supabase
-    // For demo purposes, just logging
     console.log('Executing offline action:', action);
-
-    // In a real implementation:
-    // switch (action.type) {
-    //   case 'CREATE':
-    //     await supabase.from(action.table).insert(action.data);
-    //     break;
-    //   case 'UPDATE':
-    //     await supabase.from(action.table).update(action.data).eq('id', action.data.id);
-    //     break;
-    //   case 'DELETE':
-    //     await supabase.from(action.table).delete().eq('id', action.data.id);
-    //     break;
-    // }
   };
 
   const cacheData = (key: string, data: any, expiryHours = 24) => {
@@ -105,7 +89,6 @@ export const useOfflineMode = () => {
   };
 
   const clearCache = () => {
-    // Clear all offline cache
     const keys = Object.keys(localStorage);
     keys.forEach(key => {
       if (key.startsWith('emploevolution_offline_')) {
