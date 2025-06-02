@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -61,19 +62,21 @@ const Jobs = () => {
   };
 
   const handleJobsFound = (newJobs: any[]) => {
-    // Convert ScrapedJob[] to Job[] format
+    // Convert ScrapedJob[] to Job[] format with all required properties
     const convertedJobs: Job[] = newJobs.map(job => ({
       id: job.id || Date.now().toString(),
       title: job.title || '',
       company: job.company || '',
       location: job.location || '',
       description: job.description || '',
+      requirements: job.requirements || [],
       type: job.type || 'full-time',
       level: job.level || 'mid',
       skills: job.skills || [],
       salary: job.salary,
       url: job.url,
       posted_date: job.posted_date || new Date().toISOString(),
+      postedAt: job.posted_date || new Date().toISOString(),
       source: job.source || 'manual'
     }));
     setJobs(convertedJobs);

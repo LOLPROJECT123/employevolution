@@ -46,9 +46,13 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
       return (
         <EnhancedErrorDisplay
           error={this.state.error}
-          retry={this.handleRetry}
-          resetErrorBoundary={this.handleResetError}
-          showDetails={true}
+          onRetry={this.handleRetry}
+          contextHelp="An unexpected error occurred. You can try again or return to the dashboard."
+          suggestions={[
+            "Try refreshing the page",
+            "Check your internet connection",
+            "Clear your browser cache"
+          ]}
         />
       );
     }

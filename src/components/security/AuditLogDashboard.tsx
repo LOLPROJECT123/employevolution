@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,9 +12,13 @@ interface AuditLog {
   user_id: string;
   action: string;
   metadata: any;
-  timestamp: string;
+  created_at: string;
   ip_address: string;
   user_agent: string;
+  table_name?: string;
+  record_id?: string;
+  old_values?: any;
+  new_values?: any;
 }
 
 export const AuditLogDashboard: React.FC = () => {
@@ -38,10 +41,10 @@ export const AuditLogDashboard: React.FC = () => {
     setLoading(true);
     try {
       let query = supabase
-        .from('data_audit_logs')
+        .from('audit_logs')
         .select('*')
         .eq('user_id', user.id)
-        .order('timestamp', { ascending: false });
+        .order('created_at', { ascending: false });
 
       // Apply date filter
       if (dateRange !== 'all') {
@@ -49,7 +52,7 @@ export const AuditLogDashboard: React.FC = () => {
         const dateThreshold = new Date();
         dateThreshold.setDate(dateThreshold.getDate() - daysBack);
         
-        query = query.gte('timestamp', dateThreshold.toISOString());
+        query = query.gte('created_at', dateThreshold.toISOString());
       }
 
       // Apply action filter
@@ -63,7 +66,22 @@ export const AuditLogDashboard: React.FC = () => {
         throw error;
       }
 
-      setLogs(data || []);
+      // Transform the data to match our AuditLog interface
+      const transformedLogs: AuditLog[] = (data || []).map(log => ({
+        id: log.id,
+        user_id: log.user_id || '',
+        action: log.action,
+        metadata: log.new_values || log.old_values || {},
+        created_at: log.created_at,
+        ip_address: log.ip_address || '',
+        user_agent: log.user_agent || '',
+        table_name: log.table_name,
+        record_id: log.record_id,
+        old_values: log.old_values,
+        new_values: log.new_values
+      }));
+
+      setLogs(transformedLogs);
     } catch (error) {
       console.error('Failed to load audit logs:', error);
     } finally {
@@ -80,7 +98,7 @@ export const AuditLogDashboard: React.FC = () => {
     const csvContent = [
       ['Timestamp', 'Action', 'IP Address', 'User Agent', 'Metadata'].join(','),
       ...filteredLogs.map(log => [
-        log.timestamp,
+        log.created_at,
         log.action,
         log.ip_address,
         log.user_agent,
@@ -168,10 +186,10 @@ export const AuditLogDashboard: React.FC = () => {
                 className="w-full p-2 border rounded-md"
               >
                 <option value="all">All Actions</option>
-                <option value="anonymization">Anonymization</option>
-                <option value="export">Data Export</option>
-                <option value="deletion">Data Deletion</option>
-                <option value="access">Data Access</option>
+                <option value="create">Create</option>
+                <option value="update">Update</option>
+                <option value="delete">Delete</option>
+                <option value="access">Access</option>
               </select>
             </div>
 
@@ -220,7 +238,7 @@ export const AuditLogDashboard: React.FC = () => {
                             {log.action}
                           </Badge>
                           <span className="text-sm text-gray-500">
-                            {new Date(log.timestamp).toLocaleString()}
+                            {new Date(log.created_at).toLocaleString()}
                           </span>
                         </div>
                         
