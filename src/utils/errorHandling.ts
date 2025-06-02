@@ -4,6 +4,7 @@ interface ErrorContext {
   userId?: string;
   component?: string;
   timestamp?: string;
+  attempts?: number;
 }
 
 export class ErrorHandler {

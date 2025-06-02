@@ -1,244 +1,251 @@
 
-export interface FunctionDocumentation {
-  name: string;
-  description: string;
-  parameters: Array<{
-    name: string;
-    type: string;
-    description: string;
-    required: boolean;
-  }>;
-  returnType: string;
-  examples: Array<{
-    title: string;
-    code: string;
-    description: string;
-  }>;
-  relatedFunctions: string[];
-  complexity: 'simple' | 'moderate' | 'complex';
-}
-
 export class DocumentationGenerator {
-  private static documentation = new Map<string, FunctionDocumentation>();
-
-  static generateProfileServiceDocs(): FunctionDocumentation[] {
-    const docs: FunctionDocumentation[] = [
-      {
-        name: 'EnhancedProfileService.saveProfileWithValidation',
-        description: 'Saves profile data with comprehensive validation, address standardization, and automatic backup creation.',
-        parameters: [
-          { name: 'userId', type: 'string', description: 'Unique user identifier', required: true },
-          { name: 'profileData', type: 'any', description: 'Complete profile data object', required: true }
-        ],
-        returnType: 'Promise<boolean>',
-        examples: [
-          {
-            title: 'Basic Profile Save',
-            code: `
-const success = await EnhancedProfileService.saveProfileWithValidation(userId, {
-  personalInfo: {
-    name: 'John Doe',
-    email: 'john@example.com',
-    streetAddress: '123 Main St',
-    city: 'Anytown',
-    state: 'CA',
-    zipCode: '12345'
-  },
-  skills: ['JavaScript', 'React'],
-  workExperiences: [...]
-});
-`,
-            description: 'Save a complete profile with validation'
-          }
-        ],
-        relatedFunctions: ['loadProfileForUI', 'validateProfileCompletionDetailed'],
-        complexity: 'complex'
-      },
-
-      {
-        name: 'useEnhancedValidation',
-        description: 'React hook for debounced validation with caching and performance monitoring.',
-        parameters: [
-          { name: 'rules', type: 'ValidationRule<T>[]', description: 'Array of validation rules', required: true },
-          { name: 'debounceMs', type: 'number', description: 'Debounce delay in milliseconds', required: false }
-        ],
-        returnType: '{ validate: Function, isValidating: boolean, clearCache: Function }',
-        examples: [
-          {
-            title: 'Email Validation',
-            code: `
-const emailRules = [
-  {
-    validate: (email) => email.includes('@'),
-    message: 'Email must contain @ symbol',
-    severity: 'error'
-  }
-];
-
-const { validate, isValidating } = useEnhancedValidation(emailRules, 300);
-`,
-            description: 'Setup email validation with 300ms debounce'
-          }
-        ],
-        relatedFunctions: ['useAutoSave', 'EnhancedErrorDisplay'],
-        complexity: 'moderate'
-      },
-
-      {
-        name: 'useAutoSave',
-        description: 'React hook for automatic saving with debouncing and status tracking.',
-        parameters: [
-          { name: 'data', type: 'T', description: 'Data to auto-save', required: true },
-          { name: 'options', type: 'AutoSaveOptions<T>', description: 'Save configuration options', required: true }
-        ],
-        returnType: '{ saveStatus: string, lastSaved: Date, error: string, forceSave: Function }',
-        examples: [
-          {
-            title: 'Auto-save Profile Data',
-            code: `
-const { saveStatus, lastSaved } = useAutoSave(profileData, {
-  saveFunction: (data) => profileService.saveProfile(userId, data),
-  interval: 2000,
-  onSaveSuccess: () => toast.success('Profile saved!'),
-  onSaveError: (error) => toast.error('Save failed: ' + error.message)
-});
-`,
-            description: 'Auto-save profile data every 2 seconds'
-          }
-        ],
-        relatedFunctions: ['AutoSaveIndicator', 'useEnhancedValidation'],
-        complexity: 'moderate'
-      }
-    ];
-
-    docs.forEach(doc => this.documentation.set(doc.name, doc));
-    return docs;
-  }
-
-  static generateUtilityDocs(): FunctionDocumentation[] {
-    const docs: FunctionDocumentation[] = [
-      {
-        name: 'EnhancedCacheService.getWithRefresh',
-        description: 'Gets cached data with optional background refresh for stale entries.',
-        parameters: [
-          { name: 'key', type: 'string', description: 'Cache key', required: true },
-          { name: 'fetcher', type: '() => Promise<T>', description: 'Function to fetch fresh data', required: true },
-          { name: 'options', type: 'CacheOptions', description: 'Caching options', required: false }
-        ],
-        returnType: 'Promise<T>',
-        examples: [
-          {
-            title: 'Cache User Profile',
-            code: `
-const profile = await EnhancedCacheService.getWithRefresh(
-  \`profile:\${userId}\`,
-  () => profileService.loadUserData(userId),
-  {
-    ttl: 300000, // 5 minutes
-    refreshInBackground: true,
-    onStale: (key) => console.log('Refreshed', key)
-  }
-);
-`,
-            description: 'Get profile with background refresh'
-          }
-        ],
-        relatedFunctions: ['warmCache', 'invalidatePattern'],
-        complexity: 'moderate'
-      },
-
-      {
-        name: 'PerformanceOptimizer.measureComponentRender',
-        description: 'Higher-order component that measures and reports render performance.',
-        parameters: [
-          { name: 'Component', type: 'React.ComponentType', description: 'Component to measure', required: true },
-          { name: 'componentName', type: 'string', description: 'Name for performance tracking', required: true }
-        ],
-        returnType: 'React.ComponentType',
-        examples: [
-          {
-            title: 'Measure Profile Form Performance',
-            code: `
-const MeasuredProfileForm = PerformanceOptimizer.measureComponentRender(
-  ProfileForm, 
-  'ProfileForm'
-);
-
-// Use the measured component
-<MeasuredProfileForm {...props} />
-`,
-            description: 'Automatically track ProfileForm render performance'
-          }
-        ],
-        relatedFunctions: ['initializeMonitoring', 'getCoreWebVitals'],
-        complexity: 'simple'
-      }
-    ];
-
-    docs.forEach(doc => this.documentation.set(doc.name, doc));
-    return docs;
-  }
-
-  static getAllDocumentation(): FunctionDocumentation[] {
-    return Array.from(this.documentation.values());
-  }
-
-  static generateMarkdown(): string {
-    const allDocs = this.getAllDocumentation();
-    
-    let markdown = '# Enhanced Profile Service Documentation\n\n';
-    markdown += 'This documentation covers the enhanced profile management system with validation, caching, and performance optimizations.\n\n';
-
-    // Table of Contents
-    markdown += '## Table of Contents\n\n';
-    allDocs.forEach(doc => {
-      markdown += `- [${doc.name}](#${doc.name.toLowerCase().replace(/\./g, '').replace(/\s+/g, '-')})\n`;
-    });
-    markdown += '\n';
-
-    // Function Documentation
-    allDocs.forEach(doc => {
-      markdown += `## ${doc.name}\n\n`;
-      markdown += `**Complexity:** ${doc.complexity}\n\n`;
-      markdown += `${doc.description}\n\n`;
-      
-      markdown += '### Parameters\n\n';
-      doc.parameters.forEach(param => {
-        const required = param.required ? '(required)' : '(optional)';
-        markdown += `- **${param.name}** \`${param.type}\` ${required}: ${param.description}\n`;
-      });
-      markdown += '\n';
-      
-      markdown += `### Returns\n\n\`${doc.returnType}\`\n\n`;
-      
-      if (doc.examples.length > 0) {
-        markdown += '### Examples\n\n';
-        doc.examples.forEach(example => {
-          markdown += `#### ${example.title}\n\n`;
-          markdown += `${example.description}\n\n`;
-          markdown += '```typescript\n';
-          markdown += example.code.trim();
-          markdown += '\n```\n\n';
-        });
-      }
-      
-      if (doc.relatedFunctions.length > 0) {
-        markdown += '### Related Functions\n\n';
-        doc.relatedFunctions.forEach(func => {
-          markdown += `- ${func}\n`;
-        });
-        markdown += '\n';
-      }
-      
-      markdown += '---\n\n';
-    });
-
-    return markdown;
-  }
-
   static exportDocumentation(): string {
-    this.generateProfileServiceDocs();
-    this.generateUtilityDocs();
-    return this.generateMarkdown();
+    const sections = [
+      this.generateHeader(),
+      this.generateOverview(),
+      this.generateServices(),
+      this.generateUtilities(),
+      this.generateComponents(),
+      this.generateTypes(),
+      this.generateUsageGuide(),
+      this.generateTroubleshooting()
+    ];
+
+    return sections.join('\n\n');
+  }
+
+  private static generateHeader(): string {
+    return `# Enhanced Profile System Documentation
+
+Generated on: ${new Date().toISOString()}
+
+## Table of Contents
+- [Overview](#overview)
+- [Services](#services)
+- [Utilities](#utilities)
+- [Components](#components)
+- [Types](#types)
+- [Usage Guide](#usage-guide)
+- [Troubleshooting](#troubleshooting)`;
+  }
+
+  private static generateOverview(): string {
+    return `## Overview
+
+The Enhanced Profile System is a comprehensive solution for managing user profiles with advanced features including:
+
+- **Auto-save functionality** - Automatic saving of profile changes
+- **Enhanced validation** - Real-time validation with detailed error messages
+- **Address validation** - Comprehensive address validation and standardization
+- **Performance monitoring** - Built-in performance tracking and health checks
+- **Caching system** - Intelligent caching for improved performance
+- **Error handling** - Robust error handling with retry mechanisms
+- **Integration testing** - Automated testing suite for all components`;
+  }
+
+  private static generateServices(): string {
+    return `## Services
+
+### MonitoringService
+Provides performance monitoring and health check capabilities.
+
+**Key Methods:**
+- \`recordMetric(name, value, tags)\` - Record performance metrics
+- \`startTimer(name)\` - Start a performance timer
+- \`runHealthChecks()\` - Perform system health checks
+- \`getPerformanceInsights()\` - Get performance analytics
+
+### CacheService
+Handles caching of frequently accessed data.
+
+**Key Methods:**
+- \`set(key, data, ttl)\` - Store data in cache
+- \`get(key)\` - Retrieve data from cache
+- \`cacheJobs(jobs, searchKey)\` - Cache job search results
+- \`getCachedUserProfile(userId)\` - Get cached user profile
+
+### EnhancedProfileService
+Core profile management functionality.
+
+**Key Methods:**
+- \`saveProfileWithValidation(userId, data)\` - Save profile with validation
+- \`loadProfileForUI(userId)\` - Load profile data for UI
+- \`completeOnboardingWithValidation(userId, data)\` - Complete user onboarding`;
+  }
+
+  private static generateUtilities(): string {
+    return `## Utilities
+
+### AddressValidator
+Validates and standardizes address information.
+
+**Key Methods:**
+- \`validateCompleteAddress(address)\` - Validate complete address
+- \`validateZipCode(zipCode)\` - Validate ZIP code format
+- \`validateState(state)\` - Validate and standardize state
+- \`parseLocationString(location)\` - Parse location string into components
+
+### ErrorHandler
+Provides comprehensive error handling and logging.
+
+**Key Methods:**
+- \`handleError(error, context, shouldThrow)\` - Handle application errors
+- \`handleAsyncError(operation, context)\` - Handle async operation errors
+
+### ProfileDataSync
+Synchronizes profile data between UI and database formats.
+
+**Key Methods:**
+- \`prepareProfileForDatabase(profileData)\` - Convert UI data to DB format
+- \`prepareProfileForUI(dbData)\` - Convert DB data to UI format`;
+  }
+
+  private static generateComponents(): string {
+    return `## Components
+
+### EnhancedCompleteProfile
+Main profile completion component with auto-save and validation.
+
+**Features:**
+- Real-time validation
+- Auto-save functionality
+- Progress tracking
+- Enhanced error display
+
+### PerformanceDashboard
+Real-time performance monitoring dashboard.
+
+**Features:**
+- System health status
+- Performance metrics
+- Error tracking
+- Cache statistics
+
+### SystemHealthDashboard
+Comprehensive system health and testing interface.
+
+**Features:**
+- Health checks
+- Integration testing
+- Documentation export
+- Performance optimization tips`;
+  }
+
+  private static generateTypes(): string {
+    return `## Types
+
+### PersonalInfo
+\`\`\`typescript
+interface PersonalInfo {
+  name?: string;
+  email?: string;
+  phone?: string;
+  streetAddress?: string;
+  city?: string;
+  state?: string;
+  county?: string;
+  zipCode?: string;
+}
+\`\`\`
+
+### AddressComponents
+\`\`\`typescript
+interface AddressComponents {
+  streetAddress: string;
+  city: string;
+  state: string;
+  county: string;
+  zipCode: string;
+}
+\`\`\`
+
+### ParsedResume
+\`\`\`typescript
+interface ParsedResume {
+  personalInfo?: PersonalInfo;
+  socialLinks?: SocialLinks;
+  education?: Education[];
+  workExperiences?: WorkExperience[];
+  projects?: Project[];
+  activities?: Activity[];
+  skills?: string[];
+  languages?: string[];
+}
+\`\`\``;
+  }
+
+  private static generateUsageGuide(): string {
+    return `## Usage Guide
+
+### Setting up Enhanced Profile
+1. Import the EnhancedCompleteProfile component
+2. Ensure authentication context is available
+3. Configure validation rules as needed
+
+### Implementing Auto-save
+\`\`\`typescript
+const { saveStatus, lastSaved, error } = useAutoSave(profileData, {
+  saveFunction: async (data) => {
+    return await EnhancedProfileService.saveProfileWithValidation(userId, data);
+  },
+  interval: 3000
+});
+\`\`\`
+
+### Using Address Validation
+\`\`\`typescript
+const result = AddressValidator.validateCompleteAddress(addressData);
+if (result.isValid) {
+  // Use result.standardizedAddress
+} else {
+  // Handle result.errors
+}
+\`\`\`
+
+### Monitoring Performance
+\`\`\`typescript
+const timer = monitoringService.startTimer('profile_save');
+// ... perform operation
+timer(); // Stop timer and record metric
+\`\`\``;
+  }
+
+  private static generateTroubleshooting(): string {
+    return `## Troubleshooting
+
+### Common Issues
+
+**Auto-save not working**
+- Check if user is authenticated
+- Verify saveFunction is properly configured
+- Check network connectivity
+
+**Validation errors**
+- Ensure all required fields are filled
+- Check address format (ZIP code, state)
+- Verify email format
+
+**Performance issues**
+- Check cache hit rates in PerformanceDashboard
+- Monitor memory usage
+- Review error logs
+
+**Build errors**
+- Ensure all dependencies are installed
+- Check TypeScript types are properly defined
+- Verify import paths are correct
+
+### Debug Commands
+\`\`\`typescript
+// Check system health
+const health = await monitoringService.runHealthChecks();
+
+// Get performance insights
+const insights = monitoringService.getPerformanceInsights();
+
+// Run integration tests
+const testResults = await IntegrationTestHelper.runTestSuite();
+\`\`\``;
   }
 }

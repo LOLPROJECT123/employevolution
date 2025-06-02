@@ -14,7 +14,31 @@ export interface AddressValidationResult {
   standardizedAddress?: AddressComponents;
 }
 
+export interface ZipCodeValidationResult {
+  isValid: boolean;
+  error?: string;
+}
+
+export interface StateValidationResult {
+  isValid: boolean;
+  error?: string;
+  standardized?: string;
+}
+
 export class AddressValidator {
+  private static readonly US_STATES = {
+    'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
+    'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'FL': 'Florida', 'GA': 'Georgia',
+    'HI': 'Hawaii', 'ID': 'Idaho', 'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa',
+    'KS': 'Kansas', 'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+    'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi', 'MO': 'Missouri',
+    'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada', 'NH': 'New Hampshire', 'NJ': 'New Jersey',
+    'NM': 'New Mexico', 'NY': 'New York', 'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio',
+    'OK': 'Oklahoma', 'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+    'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont',
+    'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming'
+  };
+
   static validateCompleteAddress(address: AddressComponents): AddressValidationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
@@ -57,6 +81,69 @@ export class AddressValidator {
       warnings,
       standardizedAddress: errors.length === 0 ? standardizedAddress : undefined
     };
+  }
+
+  static validateZipCode(zipCode: string): ZipCodeValidationResult {
+    if (!zipCode || !zipCode.trim()) {
+      return { isValid: false, error: 'ZIP code is required' };
+    }
+
+    const cleanZip = zipCode.trim();
+    
+    // Check for basic US ZIP code format (12345 or 12345-6789)
+    if (!/^\d{5}(-\d{4})?$/.test(cleanZip)) {
+      return { isValid: false, error: 'ZIP code must be in format 12345 or 12345-6789' };
+    }
+
+    return { isValid: true };
+  }
+
+  static validateState(state: string): StateValidationResult {
+    if (!state || !state.trim()) {
+      return { isValid: false, error: 'State is required' };
+    }
+
+    const cleanState = state.trim().toUpperCase();
+    
+    // Check if it's a valid state abbreviation
+    if (this.US_STATES[cleanState as keyof typeof this.US_STATES]) {
+      return { isValid: true, standardized: cleanState };
+    }
+
+    // Check if it's a full state name and convert to abbreviation
+    const stateAbbr = Object.keys(this.US_STATES).find(abbr => 
+      this.US_STATES[abbr as keyof typeof this.US_STATES].toUpperCase() === cleanState
+    );
+
+    if (stateAbbr) {
+      return { isValid: true, standardized: stateAbbr };
+    }
+
+    return { isValid: false, error: 'Invalid US state' };
+  }
+
+  static parseLocationString(location: string): AddressComponents {
+    const parts = location.split(',').map(part => part.trim());
+    
+    return {
+      streetAddress: parts[0] || '',
+      city: parts[1] || '',
+      state: parts[2] || '',
+      county: parts[3] || '',
+      zipCode: parts[4] || ''
+    };
+  }
+
+  static combineAddressComponents(address: AddressComponents): string {
+    const parts = [
+      address.streetAddress,
+      address.city,
+      address.state,
+      address.county,
+      address.zipCode
+    ].filter(Boolean);
+
+    return parts.join(', ');
   }
 
   private static capitalizeWords(str: string): string {
