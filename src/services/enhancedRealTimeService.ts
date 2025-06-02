@@ -97,23 +97,18 @@ export class EnhancedRealTimeService {
       });
     }
 
-    // Persist to database
+    // Mock persistence to database since collaboration_states table doesn't exist
     await this.persistCollaborationState(documentId, updatedState);
   }
 
   private static async persistCollaborationState(documentId: string, state: CollaborationState) {
     try {
-      const { error } = await supabase
-        .from('collaboration_states')
-        .upsert({
-          document_id: documentId,
-          state: state,
-          updated_at: new Date().toISOString()
-        });
-
-      if (error) {
-        console.error('Failed to persist collaboration state:', error);
-      }
+      // Mock implementation since collaboration_states table doesn't exist
+      console.log('Mock collaboration: Persisting state for document:', documentId, {
+        document_id: documentId,
+        state: state,
+        updated_at: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error persisting collaboration state:', error);
     }
