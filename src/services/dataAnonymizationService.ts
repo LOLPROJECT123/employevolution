@@ -284,7 +284,7 @@ export class DataAnonymizationService {
 
   private static async logDataAction(userId: string, action: string, metadata: any): Promise<void> {
     try {
-      // Use existing audit_logs table instead of non-existent data_audit_logs
+      // Use existing audit_logs table
       await supabase
         .from('audit_logs')
         .insert({
