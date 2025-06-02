@@ -3,6 +3,11 @@ import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { VoiceCommandService, VoiceResponse } from '@/services/voiceCommandService';
 import { toast } from 'sonner';
+import type { 
+  SpeechRecognition, 
+  SpeechRecognitionEvent, 
+  SpeechRecognitionErrorEvent 
+} from '@/types/speechRecognition';
 
 interface UseVoiceCommandsOptions {
   onFiltersChange?: (filters: any) => void;
@@ -29,16 +34,15 @@ export const useVoiceCommands = (options: UseVoiceCommandsOptions = {}) => {
 
   useEffect(() => {
     // Check if speech recognition is supported
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
     
-    if (SpeechRecognition) {
+    if (SpeechRecognitionClass) {
       setIsSupported(true);
       
-      const recognitionInstance = new SpeechRecognition();
+      const recognitionInstance = new SpeechRecognitionClass();
       recognitionInstance.continuous = continuous;
       recognitionInstance.interimResults = true;
       recognitionInstance.lang = language;
-      recognitionInstance.maxAlternatives = 1;
 
       recognitionInstance.onstart = () => {
         setIsListening(true);
@@ -50,7 +54,7 @@ export const useVoiceCommands = (options: UseVoiceCommandsOptions = {}) => {
         console.log('Voice recognition ended');
       };
 
-      recognitionInstance.onerror = (event) => {
+      recognitionInstance.onerror = (event: SpeechRecognitionErrorEvent) => {
         console.error('Speech recognition error:', event.error);
         setIsListening(false);
         
@@ -63,7 +67,7 @@ export const useVoiceCommands = (options: UseVoiceCommandsOptions = {}) => {
         }
       };
 
-      recognitionInstance.onresult = async (event) => {
+      recognitionInstance.onresult = async (event: SpeechRecognitionEvent) => {
         const current = event.resultIndex;
         const transcriptResult = event.results[current][0].transcript;
         

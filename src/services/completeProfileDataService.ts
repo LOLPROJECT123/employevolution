@@ -150,22 +150,22 @@ export class CompleteProfileDataService {
         }),
 
         // Save work experiences (delete existing and insert new)
-        this.replaceTableData('work_experiences', userId, profileData.workExperiences),
+        this.replaceWorkExperiences(userId, profileData.workExperiences),
         
         // Save education
-        this.replaceTableData('education', userId, profileData.education),
+        this.replaceEducation(userId, profileData.education),
         
         // Save skills
-        this.replaceTableData('user_skills', userId, profileData.skills),
+        this.replaceSkills(userId, profileData.skills),
         
         // Save projects
-        this.replaceTableData('projects', userId, profileData.projects),
+        this.replaceProjects(userId, profileData.projects),
         
         // Save activities
-        this.replaceTableData('activities_leadership', userId, profileData.activities),
+        this.replaceActivities(userId, profileData.activities),
         
         // Save languages
-        this.replaceTableData('user_languages', userId, profileData.languages)
+        this.replaceLanguages(userId, profileData.languages)
       ]);
 
       // Check if any operations failed
@@ -187,22 +187,82 @@ export class CompleteProfileDataService {
     }
   }
 
-  // Helper method to replace table data
-  private static async replaceTableData(tableName: string, userId: string, data: any[]) {
-    // Delete existing data
-    await supabase.from(tableName).delete().eq('user_id', userId);
-
-    // Insert new data if any
+  // Helper methods to replace table data
+  private static async replaceWorkExperiences(userId: string, data: any[]) {
+    await supabase.from('work_experiences').delete().eq('user_id', userId);
     if (data && data.length > 0) {
       const dataWithUserId = data.map(item => ({
         ...item,
         user_id: userId,
         updated_at: new Date().toISOString()
       }));
-
-      return supabase.from(tableName).insert(dataWithUserId);
+      return supabase.from('work_experiences').insert(dataWithUserId);
     }
+    return { data: null, error: null };
+  }
 
+  private static async replaceEducation(userId: string, data: any[]) {
+    await supabase.from('education').delete().eq('user_id', userId);
+    if (data && data.length > 0) {
+      const dataWithUserId = data.map(item => ({
+        ...item,
+        user_id: userId,
+        updated_at: new Date().toISOString()
+      }));
+      return supabase.from('education').insert(dataWithUserId);
+    }
+    return { data: null, error: null };
+  }
+
+  private static async replaceSkills(userId: string, data: any[]) {
+    await supabase.from('user_skills').delete().eq('user_id', userId);
+    if (data && data.length > 0) {
+      const dataWithUserId = data.map(item => ({
+        ...item,
+        user_id: userId,
+        created_at: new Date().toISOString()
+      }));
+      return supabase.from('user_skills').insert(dataWithUserId);
+    }
+    return { data: null, error: null };
+  }
+
+  private static async replaceProjects(userId: string, data: any[]) {
+    await supabase.from('projects').delete().eq('user_id', userId);
+    if (data && data.length > 0) {
+      const dataWithUserId = data.map(item => ({
+        ...item,
+        user_id: userId,
+        updated_at: new Date().toISOString()
+      }));
+      return supabase.from('projects').insert(dataWithUserId);
+    }
+    return { data: null, error: null };
+  }
+
+  private static async replaceActivities(userId: string, data: any[]) {
+    await supabase.from('activities_leadership').delete().eq('user_id', userId);
+    if (data && data.length > 0) {
+      const dataWithUserId = data.map(item => ({
+        ...item,
+        user_id: userId,
+        updated_at: new Date().toISOString()
+      }));
+      return supabase.from('activities_leadership').insert(dataWithUserId);
+    }
+    return { data: null, error: null };
+  }
+
+  private static async replaceLanguages(userId: string, data: any[]) {
+    await supabase.from('user_languages').delete().eq('user_id', userId);
+    if (data && data.length > 0) {
+      const dataWithUserId = data.map(item => ({
+        ...item,
+        user_id: userId,
+        created_at: new Date().toISOString()
+      }));
+      return supabase.from('user_languages').insert(dataWithUserId);
+    }
     return { data: null, error: null };
   }
 
@@ -386,7 +446,7 @@ export class CompleteProfileDataService {
     // Check work experience quality
     profileData.workExperiences.forEach(exp => {
       totalPossible += 4;
-      if (exp.description && exp.description.length >= 3) qualityPoints += 1;
+      if (exp.description && Array.isArray(exp.description) && exp.description.length >= 3) qualityPoints += 1;
       if (exp.start_date && exp.end_date) qualityPoints += 1;
       if (exp.location) qualityPoints += 1;
       if (exp.company && exp.role) qualityPoints += 1;
@@ -403,8 +463,8 @@ export class CompleteProfileDataService {
     // Check projects quality
     profileData.projects.forEach(project => {
       totalPossible += 3;
-      if (project.description && project.description.length > 0) qualityPoints += 1;
-      if (project.technologies && project.technologies.length > 0) qualityPoints += 1;
+      if (project.description && Array.isArray(project.description) && project.description.length > 0) qualityPoints += 1;
+      if (project.technologies && Array.isArray(project.technologies) && project.technologies.length > 0) qualityPoints += 1;
       if (project.url) qualityPoints += 1;
     });
 
@@ -492,11 +552,11 @@ export class CompleteProfileDataService {
 
     // Prioritize based on scores
     const sortedSections = Object.entries(sectionScores)
-      .sort(([,a], [,b]) => a - b)
+      .sort(([,a], [,b]) => (a as number) - (b as number))
       .slice(0, 3);
 
     sortedSections.forEach(([section, score]) => {
-      if (score < 70) {
+      if ((score as number) < 70) {
         switch (section) {
           case 'personalInfo':
             nextSteps.push('Update your contact information and professional links');
