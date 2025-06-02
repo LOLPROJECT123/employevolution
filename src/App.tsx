@@ -21,6 +21,11 @@ import SalaryNegotiations from "./pages/SalaryNegotiations";
 import JobAlerts from "./pages/JobAlerts";
 import Auth from "./pages/Auth";
 import CompleteProfile from "./pages/CompleteProfile";
+import EnhancedCompleteProfile from "./pages/EnhancedCompleteProfile";
+import ResumePost from "./pages/ResumePost";
+import LeetcodePatterns from "./pages/LeetcodePatterns";
+import Calendar from "./pages/Calendar";
+import Communications from "./pages/Communications";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
 
 const queryClient = new QueryClient();

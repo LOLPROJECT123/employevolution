@@ -198,6 +198,9 @@ const Navbar = () => {
                           <ListItem href="/profile" title="Profile">
                             Manage your profile
                           </ListItem>
+                          <ListItem href="/enhanced-complete-profile" title="Enhanced Profile">
+                            Complete your enhanced profile
+                          </ListItem>
                           <li>
                             <button
                               onClick={handleSignOut}
