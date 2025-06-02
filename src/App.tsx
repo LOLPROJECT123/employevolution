@@ -1,67 +1,119 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./contexts/AuthContext";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
-import OnboardingGuard from "./components/auth/OnboardingGuard";
-import { EnhancedErrorBoundary } from "./components/error/EnhancedErrorBoundary";
-import { NavigationStateProvider } from "./components/navigation/NavigationStateManager";
-import { DeepLinkHandler } from "./components/navigation/DeepLinkHandler";
-import { TouchGestureHandler } from "./components/mobile/TouchGestureHandler";
-import { AppTransitions } from "./components/mobile/AppTransitions";
+import { AuthContextProvider } from "@/contexts/AuthContext";
+import { ThemeProvider } from "next-themes";
 import Index from "./pages/Index";
-import Dashboard from "./pages/Dashboard";
 import Jobs from "./pages/Jobs";
+import Dashboard from "./pages/Dashboard";
 import Applications from "./pages/Applications";
 import Profile from "./pages/Profile";
-import InterviewPractice from "./pages/InterviewPractice";
+import Calendar from "./pages/Calendar";
 import ResumeTools from "./pages/ResumeTools";
-import Networking from "./pages/Networking";
-import NetworkingTools from "./pages/NetworkingTools";
+import Auth from "./pages/Auth";
+import JobAlerts from "./pages/JobAlerts";
 import Referrals from "./pages/Referrals";
 import SalaryNegotiations from "./pages/SalaryNegotiations";
-import JobAlerts from "./pages/JobAlerts";
-import Auth from "./pages/Auth";
 import CompleteProfile from "./pages/CompleteProfile";
-import EnhancedCompleteProfile from "./pages/EnhancedCompleteProfile";
-import ResumePost from "./pages/ResumePost";
+import InterviewPractice from "./pages/InterviewPractice";
 import LeetcodePatterns from "./pages/LeetcodePatterns";
-import Calendar from "./pages/Calendar";
+import ResumePost from "./pages/ResumePost";
+import Networking from "./pages/Networking";
+import NetworkingTools from "./pages/NetworkingTools";
 import Communications from "./pages/Communications";
 import NotFound from "./pages/NotFound";
-import AdvancedAnalyticsIntegration from "./components/analytics/AdvancedAnalyticsIntegration";
-import SecurityDashboardEnhanced from "./components/security/SecurityDashboardEnhanced";
+import EnhancedCompleteProfile from "./pages/EnhancedCompleteProfile";
+import MobileJobs from "./pages/MobileJobs";
 import OfflineFirstPages from "./pages/OfflineFirstPages";
-import PWAInstallPrompt from "./components/PWAInstallPrompt";
-import React from "react";
+
+// Analytics pages
+import PredictiveAnalytics from "./pages/analytics/PredictiveAnalytics";
+import MarketTrends from "./pages/analytics/MarketTrends";
+import SalaryInsights from "./pages/analytics/SalaryInsights";
+
+// Collaboration pages
+import DocumentsHub from "./pages/collaboration/DocumentsHub";
+import TeamsManagement from "./pages/collaboration/TeamsManagement";
+import PeerReviews from "./pages/collaboration/PeerReviews";
+
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { OnboardingGuard } from "./components/auth/OnboardingGuard";
+import { EnhancedErrorBoundary } from "./components/error/EnhancedErrorBoundary";
+import { EnhancedDeepLinkHandler } from "./components/navigation/EnhancedDeepLinkHandler";
+import { useMobile } from "./hooks/use-mobile";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <NavigationStateProvider>
+const App = () => {
+  const isMobile = useMobile();
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
           <EnhancedErrorBoundary>
-            <Toaster />
-            <Sonner />
             <BrowserRouter>
-              <DeepLinkHandler>
-                <TouchGestureHandler>
-                  <AppTransitions>
+              <AuthContextProvider>
+                <EnhancedDeepLinkHandler>
+                  <OnboardingGuard>
                     <Routes>
                       {/* Public routes */}
                       <Route path="/" element={<Index />} />
                       <Route path="/auth" element={<Auth />} />
-                      
-                      {/* OAuth callback routes */}
-                      <Route path="/auth/linkedin/callback" element={<Auth />} />
-                      <Route path="/auth/google/callback" element={<Auth />} />
-                      <Route path="/auth/outlook/callback" element={<Auth />} />
-                      
-                      {/* Profile completion routes */}
+                      <Route path="/mobile-jobs" element={<MobileJobs />} />
+                      <Route path="/offline" element={<OfflineFirstPages />} />
+
+                      {/* Protected routes */}
+                      <Route path="/jobs" element={
+                        <ProtectedRoute>
+                          <Jobs />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/dashboard" element={
+                        <ProtectedRoute>
+                          <Dashboard />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/applications" element={
+                        <ProtectedRoute>
+                          <Applications />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/profile" element={
+                        <ProtectedRoute>
+                          <Profile />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/calendar" element={
+                        <ProtectedRoute>
+                          <Calendar />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/resume-tools" element={
+                        <ProtectedRoute>
+                          <ResumeTools />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/job-alerts" element={
+                        <ProtectedRoute>
+                          <JobAlerts />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/referrals" element={
+                        <ProtectedRoute>
+                          <Referrals />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/salary-negotiations" element={
+                        <ProtectedRoute>
+                          <SalaryNegotiations />
+                        </ProtectedRoute>
+                      } />
                       <Route path="/complete-profile" element={
                         <ProtectedRoute>
                           <CompleteProfile />
@@ -72,181 +124,83 @@ const App = () => (
                           <EnhancedCompleteProfile />
                         </ProtectedRoute>
                       } />
-                      
-                      {/* Main application routes */}
-                      <Route path="/dashboard" element={
-                        <ProtectedRoute>
-                          <OnboardingGuard>
-                            <Dashboard />
-                          </OnboardingGuard>
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/jobs" element={
-                        <ProtectedRoute>
-                          <OnboardingGuard>
-                            <Jobs />
-                          </OnboardingGuard>
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/applications" element={
-                        <ProtectedRoute>
-                          <OnboardingGuard>
-                            <Applications />
-                          </OnboardingGuard>
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/profile" element={
-                        <ProtectedRoute>
-                          <Profile />
-                        </ProtectedRoute>
-                      } />
                       <Route path="/interview-practice" element={
                         <ProtectedRoute>
-                          <OnboardingGuard>
-                            <InterviewPractice />
-                          </OnboardingGuard>
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/resume-tools" element={
-                        <ProtectedRoute>
-                          <OnboardingGuard>
-                            <ResumeTools />
-                          </OnboardingGuard>
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/resume-tools/:tab" element={
-                        <ProtectedRoute>
-                          <OnboardingGuard>
-                            <ResumeTools />
-                          </OnboardingGuard>
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/resume-forum" element={
-                        <ProtectedRoute>
-                          <OnboardingGuard>
-                            <ResumePost />
-                          </OnboardingGuard>
+                          <InterviewPractice />
                         </ProtectedRoute>
                       } />
                       <Route path="/leetcode-patterns" element={
                         <ProtectedRoute>
-                          <OnboardingGuard>
-                            <LeetcodePatterns />
-                          </OnboardingGuard>
+                          <LeetcodePatterns />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/resume-forum" element={
+                        <ProtectedRoute>
+                          <ResumePost />
                         </ProtectedRoute>
                       } />
                       <Route path="/networking" element={
                         <ProtectedRoute>
-                          <OnboardingGuard>
-                            <Networking />
-                          </OnboardingGuard>
+                          <Networking />
                         </ProtectedRoute>
                       } />
                       <Route path="/networking-tools" element={
                         <ProtectedRoute>
-                          <OnboardingGuard>
-                            <NetworkingTools />
-                          </OnboardingGuard>
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/referrals" element={
-                        <ProtectedRoute>
-                          <OnboardingGuard>
-                            <Referrals />
-                          </OnboardingGuard>
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/salary-negotiations" element={
-                        <ProtectedRoute>
-                          <OnboardingGuard>
-                            <SalaryNegotiations />
-                          </OnboardingGuard>
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/job-alerts" element={
-                        <ProtectedRoute>
-                          <OnboardingGuard>
-                            <JobAlerts />
-                          </OnboardingGuard>
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/calendar" element={
-                        <ProtectedRoute>
-                          <OnboardingGuard>
-                            <Calendar />
-                          </OnboardingGuard>
+                          <NetworkingTools />
                         </ProtectedRoute>
                       } />
                       <Route path="/communications" element={
                         <ProtectedRoute>
-                          <OnboardingGuard>
-                            <Communications />
-                          </OnboardingGuard>
+                          <Communications />
                         </ProtectedRoute>
                       } />
-                      
+
+                      {/* Analytics routes */}
+                      <Route path="/analytics/predictive" element={
+                        <ProtectedRoute>
+                          <PredictiveAnalytics />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/analytics/market-trends" element={
+                        <ProtectedRoute>
+                          <MarketTrends />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/analytics/salary-insights" element={
+                        <ProtectedRoute>
+                          <SalaryInsights />
+                        </ProtectedRoute>
+                      } />
+
                       {/* Collaboration routes */}
-                      <Route path="/collaboration/documents" element={<DocumentsHub />} />
-                      <Route path="/collaboration/teams" element={<TeamsManagement />} />
-                      <Route path="/collaboration/reviews" element={<PeerReviews />} />
-                      
-                      {/* Analytics Routes */}
-                      <Route path="/analytics/predictive" element={<PredictiveAnalytics />} />
-                      <Route path="/analytics/market-trends" element={<MarketTrends />} />
-                      <Route path="/analytics/salary-insights" element={<SalaryInsights />} />
-                      
-                      {/* Enhanced feature routes */}
-                      <Route path="/analytics" element={
+                      <Route path="/collaboration/documents" element={
                         <ProtectedRoute>
-                          <OnboardingGuard>
-                            <AdvancedAnalyticsIntegration />
-                          </OnboardingGuard>
+                          <DocumentsHub />
                         </ProtectedRoute>
                       } />
-                      <Route path="/security" element={
+                      <Route path="/collaboration/teams" element={
                         <ProtectedRoute>
-                          <OnboardingGuard>
-                            <SecurityDashboardEnhanced />
-                          </OnboardingGuard>
+                          <TeamsManagement />
                         </ProtectedRoute>
                       } />
-                      <Route path="/offline" element={
+                      <Route path="/collaboration/reviews" element={
                         <ProtectedRoute>
-                          <OnboardingGuard>
-                            <OfflineFirstPages />
-                          </OnboardingGuard>
+                          <PeerReviews />
                         </ProtectedRoute>
                       } />
-                      
-                      {/* Privacy and compliance routes */}
-                      <Route path="/privacy" element={
-                        <ProtectedRoute>
-                          <OnboardingGuard>
-                            {React.createElement(React.lazy(() => import('./components/privacy/PrivacyDashboard')))}
-                          </OnboardingGuard>
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/audit-logs" element={
-                        <ProtectedRoute>
-                          <OnboardingGuard>
-                            {React.createElement(React.lazy(() => import('./components/security/AuditLogDashboard')))}
-                          </OnboardingGuard>
-                        </ProtectedRoute>
-                      } />
-                      
-                      {/* Catch-all route for 404 */}
+
+                      {/* 404 route */}
                       <Route path="*" element={<NotFound />} />
                     </Routes>
-                  </AppTransitions>
-                </TouchGestureHandler>
-              </DeepLinkHandler>
-              <PWAInstallPrompt />
+                  </OnboardingGuard>
+                </EnhancedDeepLinkHandler>
+              </AuthContextProvider>
             </BrowserRouter>
           </EnhancedErrorBoundary>
-        </NavigationStateProvider>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+        </TooltipProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
