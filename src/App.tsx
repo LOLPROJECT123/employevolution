@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -187,20 +186,14 @@ const App = () => (
                       } />
                       
                       {/* Collaboration routes */}
-                      <Route path="/collaboration/documents" element={
-                        <ProtectedRoute>
-                          <OnboardingGuard>
-                            {React.createElement(React.lazy(() => import('./pages/collaboration/DocumentsHub')))}
-                          </OnboardingGuard>
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/collaboration/teams" element={
-                        <ProtectedRoute>
-                          <OnboardingGuard>
-                            {React.createElement(React.lazy(() => import('./pages/collaboration/TeamsManagement')))}
-                          </OnboardingGuard>
-                        </ProtectedRoute>
-                      } />
+                      <Route path="/collaboration/documents" element={<DocumentsHub />} />
+                      <Route path="/collaboration/teams" element={<TeamsManagement />} />
+                      <Route path="/collaboration/reviews" element={<PeerReviews />} />
+                      
+                      {/* Analytics Routes */}
+                      <Route path="/analytics/predictive" element={<PredictiveAnalytics />} />
+                      <Route path="/analytics/market-trends" element={<MarketTrends />} />
+                      <Route path="/analytics/salary-insights" element={<SalaryInsights />} />
                       
                       {/* Enhanced feature routes */}
                       <Route path="/analytics" element={
