@@ -1,5 +1,5 @@
-
 import { supabase } from '@/integrations/supabase/client';
+import { castJsonToStringArray } from '@/types/database';
 
 export interface CareerPath {
   id: string;
@@ -45,7 +45,12 @@ export class CareerPathService {
       return [];
     }
 
-    return data || [];
+    // Type-safe casting of JSON fields to string arrays
+    return (data || []).map(path => ({
+      ...path,
+      required_skills: castJsonToStringArray(path.required_skills),
+      recommended_skills: castJsonToStringArray(path.recommended_skills)
+    }));
   }
 
   static async generateCareerRecommendations(
@@ -192,7 +197,11 @@ export class CareerPathService {
       return [];
     }
 
-    return data || [];
+    return (data || []).map(path => ({
+      ...path,
+      required_skills: castJsonToStringArray(path.required_skills),
+      recommended_skills: castJsonToStringArray(path.recommended_skills)
+    }));
   }
 
   static async getPopularTransitions(): Promise<{ from_role: string; to_role: string; count: number }[]> {

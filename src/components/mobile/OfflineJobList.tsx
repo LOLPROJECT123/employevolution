@@ -5,7 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { EnhancedMobileService } from '@/services/enhancedMobileService';
+import { useOfflineMode } from '@/hooks/useOfflineMode';
+import { useIndexedDB, jobCacheDBConfig } from '@/hooks/useIndexedDB';
+import { AdvancedGestureService, GestureEvent } from '@/services/advancedGestureService';
+import { DatabaseJob, castJobData } from '@/types/database';
 import { 
   MapPin, 
   DollarSign, 
@@ -16,22 +19,9 @@ import {
   Share,
   ExternalLink,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  RefreshCw
 } from 'lucide-react';
-
-interface Job {
-  id: string;
-  title: string;
-  company: string;
-  location: string;
-  salary?: string;
-  posted: string;
-  type: string;
-  remote: boolean;
-  description: string;
-  requirements: string[];
-  benefits?: string[];
-}
 
 interface SwipeState {
   startX: number;
@@ -42,9 +32,10 @@ interface SwipeState {
 
 export const OfflineJobList: React.FC = () => {
   const { user } = useAuth();
-  const [jobs, setJobs] = useState<Job[]>([]);
+  const { isOnline, addOfflineAction } = useOfflineMode();
+  const indexedDB = useIndexedDB(jobCacheDBConfig);
+  const [jobs, setJobs] = useState<DatabaseJob[]>([]);
   const [currentJobIndex, setCurrentJobIndex] = useState(0);
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [swipeState, setSwipeState] = useState<SwipeState>({
     startX: 0,
     currentX: 0,
@@ -52,310 +43,273 @@ export const OfflineJobList: React.FC = () => {
     swipeDirection: null
   });
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
   const cardRef = useRef<HTMLDivElement>(null);
+  const gestureHandlerRef = useRef<AdvancedGestureService | null>(null);
   const lastTapRef = useRef<number>(0);
 
   useEffect(() => {
     loadJobs();
-    setupOfflineHandlers();
+    setupGestureHandling();
     
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      if (gestureHandlerRef.current) {
+        gestureHandlerRef.current.destroy();
+      }
     };
   }, []);
 
-  const setupOfflineHandlers = () => {
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+  const setupGestureHandling = () => {
+    if (cardRef.current && AdvancedGestureService.isGestureSupported()) {
+      gestureHandlerRef.current = AdvancedGestureService.enableRealGestures(cardRef.current);
+      
+      gestureHandlerRef.current.on('swipe', handleGestureSwipe);
+      gestureHandlerRef.current.on('tap', handleGestureTap);
+      gestureHandlerRef.current.on('longpress', handleGestureLongPress);
+      gestureHandlerRef.current.on('pinch', handleGesturePinch);
+    }
   };
 
-  const handleOnline = () => {
-    setIsOnline(true);
-    syncOfflineActions();
+  const handleGestureSwipe = (event: GestureEvent) => {
+    if (event.direction === 'left') {
+      saveJob(jobs[currentJobIndex]);
+    } else if (event.direction === 'right') {
+      nextJob();
+    } else if (event.direction === 'up') {
+      // Pull to refresh
+      handlePullToRefresh();
+    }
   };
 
-  const handleOffline = () => {
-    setIsOnline(false);
+  const handleGestureTap = (event: GestureEvent) => {
+    const now = Date.now();
+    const timeSinceLastTap = now - lastTapRef.current;
+    lastTapRef.current = now;
+    
+    if (timeSinceLastTap < 300) {
+      // Double tap - apply to job
+      applyToJob(jobs[currentJobIndex]);
+    }
+  };
+
+  const handleGestureLongPress = (event: GestureEvent) => {
+    // Show job details
+    showJobDetails(jobs[currentJobIndex]);
+  };
+
+  const handleGesturePinch = (event: GestureEvent) => {
+    // Zoom functionality could be added here
+    console.log('Pinch gesture detected, scale:', event.scale);
   };
 
   const loadJobs = async () => {
+    setLoading(true);
     try {
       if (isOnline) {
-        // Load from server
-        const mockJobs: Job[] = [
-          {
-            id: '1',
-            title: 'Senior React Developer',
-            company: 'TechFlow Inc.',
-            location: 'San Francisco, CA',
-            salary: '$130,000 - $160,000',
-            posted: '2 hours ago',
-            type: 'Full-time',
-            remote: true,
-            description: 'We are looking for a Senior React Developer to join our growing team...',
-            requirements: ['React', 'TypeScript', 'Node.js', '5+ years experience'],
-            benefits: ['Health Insurance', 'Remote Work', '401k Matching']
-          },
-          {
-            id: '2',
-            title: 'Full Stack Engineer',
-            company: 'InnovateLab',
-            location: 'Austin, TX',
-            salary: '$110,000 - $140,000',
-            posted: '1 day ago',
-            type: 'Full-time',
-            remote: false,
-            description: 'Join our innovative team building cutting-edge applications...',
-            requirements: ['JavaScript', 'Python', 'AWS', '3+ years experience'],
-            benefits: ['Health Insurance', 'Stock Options', 'Learning Budget']
-          },
-          {
-            id: '3',
-            title: 'Frontend Developer',
-            company: 'DesignStudio',
-            location: 'Remote',
-            salary: '$95,000 - $125,000',
-            posted: '3 days ago',
-            type: 'Contract',
-            remote: true,
-            description: 'We need a talented frontend developer to create amazing user experiences...',
-            requirements: ['React', 'CSS', 'Design Systems', '2+ years experience'],
-            benefits: ['Flexible Hours', 'Remote Work', 'Equipment Allowance']
-          }
-        ];
-        
-        setJobs(mockJobs);
-        
-        // Cache jobs for offline use
-        localStorage.setItem('cachedJobs', JSON.stringify(mockJobs));
+        // Load from server and cache
+        await loadJobsFromServer();
       } else {
         // Load from cache
-        const cachedJobs = localStorage.getItem('cachedJobs');
-        if (cachedJobs) {
-          setJobs(JSON.parse(cachedJobs));
-        }
+        await loadJobsFromCache();
       }
     } catch (error) {
       console.error('Error loading jobs:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const syncOfflineActions = async () => {
+  const loadJobsFromServer = async () => {
     try {
-      const offlineActions = JSON.parse(localStorage.getItem('offlineJobActions') || '[]');
-      
-      for (const action of offlineActions) {
-        if (action.type === 'save') {
-          await saveJobToServer(action.jobId);
-        } else if (action.type === 'apply') {
-          await applyToJobOnServer(action.jobId);
+      // Mock job data - in real implementation, this would come from job APIs
+      const mockJobs: DatabaseJob[] = [
+        {
+          id: '1',
+          title: 'Senior React Developer',
+          company: 'TechFlow Inc.',
+          location: 'San Francisco, CA',
+          salary: '$130,000 - $160,000',
+          posted: '2 hours ago',
+          type: 'Full-time',
+          remote: true,
+          description: 'We are looking for a Senior React Developer to join our growing team...',
+          requirements: ['React', 'TypeScript', 'Node.js', '5+ years experience'],
+          benefits: ['Health Insurance', 'Remote Work', '401k Matching']
+        },
+        {
+          id: '2',
+          title: 'Full Stack Engineer',
+          company: 'InnovateLab',
+          location: 'Austin, TX',
+          salary: '$110,000 - $140,000',
+          posted: '1 day ago',
+          type: 'Full-time',
+          remote: false,
+          description: 'Join our innovative team building cutting-edge applications...',
+          requirements: ['JavaScript', 'Python', 'AWS', '3+ years experience'],
+          benefits: ['Health Insurance', 'Stock Options', 'Learning Budget']
+        },
+        {
+          id: '3',
+          title: 'Frontend Developer',
+          company: 'DesignStudio',
+          location: 'Remote',
+          salary: '$95,000 - $125,000',
+          posted: '3 days ago',
+          type: 'Contract',
+          remote: true,
+          description: 'We need a talented frontend developer to create amazing user experiences...',
+          requirements: ['React', 'CSS', 'Design Systems', '2+ years experience'],
+          benefits: ['Flexible Hours', 'Remote Work', 'Equipment Allowance']
         }
-      }
+      ];
       
-      localStorage.removeItem('offlineJobActions');
+      const typedJobs = mockJobs.map(castJobData);
+      setJobs(typedJobs);
+      
+      // Cache jobs for offline use
+      if (!indexedDB.isLoading && indexedDB.bulkPut) {
+        await indexedDB.bulkPut('jobs', typedJobs);
+      }
     } catch (error) {
-      console.error('Error syncing offline actions:', error);
+      console.error('Error loading jobs from server:', error);
     }
   };
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    setSwipeState({
-      startX: touch.clientX,
-      currentX: touch.clientX,
-      isDragging: true,
-      swipeDirection: null
-    });
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!swipeState.isDragging) return;
-    
-    const touch = e.touches[0];
-    const deltaX = touch.clientX - swipeState.startX;
-    
-    setSwipeState(prev => ({
-      ...prev,
-      currentX: touch.clientX,
-      swipeDirection: deltaX > 50 ? 'right' : deltaX < -50 ? 'left' : null
-    }));
-
-    // Visual feedback during swipe
-    if (cardRef.current) {
-      cardRef.current.style.transform = `translateX(${deltaX * 0.5}px) rotate(${deltaX * 0.05}deg)`;
-      cardRef.current.style.opacity = `${1 - Math.abs(deltaX) / 300}`;
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (!swipeState.isDragging) return;
-    
-    const deltaX = swipeState.currentX - swipeState.startX;
-    
-    if (Math.abs(deltaX) > 100) {
-      if (deltaX > 0) {
-        handleSwipeRight();
-      } else {
-        handleSwipeLeft();
+  const loadJobsFromCache = async () => {
+    try {
+      if (!indexedDB.isLoading && indexedDB.getAll) {
+        const cachedJobs = await indexedDB.getAll('jobs');
+        const typedJobs = cachedJobs.map(castJobData);
+        setJobs(typedJobs);
       }
-    } else {
-      // Reset card position
-      if (cardRef.current) {
-        cardRef.current.style.transform = '';
-        cardRef.current.style.opacity = '';
-      }
+    } catch (error) {
+      console.error('Error loading jobs from cache:', error);
     }
+  };
+
+  const handlePullToRefresh = async () => {
+    if (!isOnline || refreshing) return;
     
-    setSwipeState({
-      startX: 0,
-      currentX: 0,
-      isDragging: false,
-      swipeDirection: null
-    });
-  };
-
-  const handleSwipeLeft = () => {
-    // Dismiss job (pass)
-    nextJob();
-  };
-
-  const handleSwipeRight = () => {
-    // Save job
-    const currentJob = jobs[currentJobIndex];
-    if (currentJob) {
-      saveJob(currentJob.id);
-    }
-    nextJob();
-  };
-
-  const handleDoubleTap = () => {
-    const now = Date.now();
-    const timeDiff = now - lastTapRef.current;
-    
-    if (timeDiff < 300) {
-      // Double tap detected - save job
-      const currentJob = jobs[currentJobIndex];
-      if (currentJob) {
-        saveJob(currentJob.id);
-      }
-    }
-    
-    lastTapRef.current = now;
-  };
-
-  const nextJob = () => {
-    if (currentJobIndex < jobs.length - 1) {
-      setCurrentJobIndex(prev => prev + 1);
-    }
-    
-    // Reset card animation
-    if (cardRef.current) {
-      cardRef.current.style.transform = '';
-      cardRef.current.style.opacity = '';
+    setRefreshing(true);
+    try {
+      await loadJobsFromServer();
+    } finally {
+      setRefreshing(false);
     }
   };
 
-  const previousJob = () => {
-    if (currentJobIndex > 0) {
-      setCurrentJobIndex(prev => prev - 1);
-    }
-  };
-
-  const saveJob = async (jobId: string) => {
+  const saveJob = async (job: DatabaseJob) => {
     if (!user) return;
-
-    const job = jobs.find(j => j.id === jobId);
-    if (!job) return;
-
-    if (isOnline) {
-      await saveJobToServer(jobId);
-    } else {
-      // Save action for offline sync
-      const offlineActions = JSON.parse(localStorage.getItem('offlineJobActions') || '[]');
-      offlineActions.push({ type: 'save', jobId, timestamp: Date.now() });
-      localStorage.setItem('offlineJobActions', JSON.stringify(offlineActions));
-      
-      // Add to offline sync queue
-      EnhancedMobileService.addToSyncQueue('create', 'saved_jobs', {
-        user_id: user.id,
-        job_id: jobId,
-        job_data: job,
-        notes: 'Saved offline'
-      });
-    }
-  };
-
-  const applyToJob = async (jobId: string) => {
-    if (!user) return;
-
-    if (isOnline) {
-      await applyToJobOnServer(jobId);
-    } else {
-      const offlineActions = JSON.parse(localStorage.getItem('offlineJobActions') || '[]');
-      offlineActions.push({ type: 'apply', jobId, timestamp: Date.now() });
-      localStorage.setItem('offlineJobActions', JSON.stringify(offlineActions));
-      
-      EnhancedMobileService.addToSyncQueue('create', 'job_applications', {
-        user_id: user.id,
-        job_id: jobId,
-        status: 'applied'
-      });
-    }
-  };
-
-  const saveJobToServer = async (jobId: string) => {
-    if (!user) return;
-    
-    const job = jobs.find(j => j.id === jobId);
-    if (!job) return;
 
     try {
-      await supabase.from('saved_jobs').insert({
+      const jobData = {
         user_id: user.id,
-        job_id: jobId,
+        job_id: job.id,
         job_data: job,
-        notes: 'Saved from mobile'
-      });
+        notes: ''
+      };
+
+      if (isOnline) {
+        const { error } = await supabase.from('saved_jobs').insert(jobData);
+        if (error) throw error;
+      } else {
+        addOfflineAction('create', 'saved_jobs', jobData);
+      }
+
+      // Visual feedback
+      if (cardRef.current) {
+        cardRef.current.classList.add('gesture-swipe-left');
+        setTimeout(() => {
+          cardRef.current?.classList.remove('gesture-swipe-left');
+        }, 300);
+      }
+
+      nextJob();
     } catch (error) {
       console.error('Error saving job:', error);
     }
   };
 
-  const applyToJobOnServer = async (jobId: string) => {
+  const applyToJob = async (job: DatabaseJob) => {
     if (!user) return;
 
     try {
-      await supabase.from('job_applications').insert({
+      const applicationData = {
         user_id: user.id,
-        job_id: jobId,
-        status: 'applied'
-      });
+        job_id: job.id,
+        status: 'applied',
+        applied_at: new Date().toISOString()
+      };
+
+      if (isOnline) {
+        const { error } = await supabase.from('job_applications').insert(applicationData);
+        if (error) throw error;
+      } else {
+        addOfflineAction('create', 'job_applications', applicationData);
+      }
+
+      // Visual feedback
+      if (cardRef.current) {
+        cardRef.current.classList.add('gesture-longpress');
+        setTimeout(() => {
+          cardRef.current?.classList.remove('gesture-longpress');
+        }, 200);
+      }
+
+      nextJob();
     } catch (error) {
       console.error('Error applying to job:', error);
     }
   };
 
-  const handlePullToRefresh = async () => {
-    if (!isOnline) return;
-    
-    setRefreshing(true);
-    await loadJobs();
-    setTimeout(() => setRefreshing(false), 1000);
+  const nextJob = () => {
+    setCurrentJobIndex(prev => (prev + 1) % jobs.length);
   };
+
+  const previousJob = () => {
+    setCurrentJobIndex(prev => (prev - 1 + jobs.length) % jobs.length);
+  };
+
+  const showJobDetails = (job: DatabaseJob) => {
+    // This could open a modal or navigate to a detailed view
+    console.log('Showing details for:', job.title);
+    // For now, just log the details
+  };
+
+  const shareJob = async (job: DatabaseJob) => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: job.title,
+          text: `${job.title} at ${job.company}`,
+          url: window.location.href
+        });
+      } catch (error) {
+        console.error('Error sharing job:', error);
+      }
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <RefreshCw className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Loading jobs...</span>
+      </div>
+    );
+  }
 
   if (jobs.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="text-gray-500 mb-2">No jobs available</div>
-          {!isOnline && (
-            <div className="flex items-center justify-center text-orange-600">
-              <WifiOff className="h-4 w-4 mr-1" />
-              <span className="text-sm">Offline mode</span>
-            </div>
-          )}
-        </div>
+      <div className="text-center py-8">
+        <p className="text-muted-foreground">No jobs available</p>
+        {!isOnline && (
+          <p className="text-sm text-orange-600 mt-2">
+            <WifiOff className="h-4 w-4 inline mr-1" />
+            You're offline. Connect to internet to load new jobs.
+          </p>
+        )}
       </div>
     );
   }
@@ -363,179 +317,131 @@ export const OfflineJobList: React.FC = () => {
   const currentJob = jobs[currentJobIndex];
 
   return (
-    <div className="relative h-full">
-      {/* Connection Status */}
-      <div className={`fixed top-4 right-4 z-50 px-2 py-1 rounded-full text-xs ${
-        isOnline ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'
-      }`}>
-        {isOnline ? <Wifi className="h-3 w-3 inline mr-1" /> : <WifiOff className="h-3 w-3 inline mr-1" />}
-        {isOnline ? 'Online' : 'Offline'}
-      </div>
-
-      {/* Progress Indicator */}
-      <div className="flex justify-center mb-4">
-        <div className="flex space-x-1">
-          {jobs.map((_, index) => (
-            <div
-              key={index}
-              className={`h-2 w-8 rounded-full transition-colors ${
-                index === currentJobIndex ? 'bg-blue-500' : 'bg-gray-200'
-              }`}
-            />
-          ))}
+    <div className="space-y-4">
+      {/* Status indicator */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          {isOnline ? (
+            <Wifi className="h-4 w-4 text-green-500" />
+          ) : (
+            <WifiOff className="h-4 w-4 text-orange-500" />
+          )}
+          <span className="text-sm text-muted-foreground">
+            {isOnline ? 'Online' : 'Offline'} • {currentJobIndex + 1} of {jobs.length}
+          </span>
         </div>
+        
+        {refreshing && (
+          <RefreshCw className="h-4 w-4 animate-spin" />
+        )}
       </div>
 
-      {/* Job Card */}
-      <div className="relative h-full">
-        <Card
-          ref={cardRef}
-          className="h-full transition-transform"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          onClick={handleDoubleTap}
-        >
-          <CardContent className="p-6 h-full overflow-y-auto">
-            <div className="space-y-4">
-              {/* Header */}
-              <div>
-                <h2 className="text-xl font-bold">{currentJob.title}</h2>
-                <div className="flex items-center space-x-2 text-gray-600 mt-1">
-                  <span className="font-medium">{currentJob.company}</span>
-                  <span>•</span>
-                  <div className="flex items-center">
-                    <MapPin className="h-3 w-3 mr-1" />
-                    {currentJob.location}
-                  </div>
-                </div>
+      {/* Job card */}
+      <Card ref={cardRef} className="relative overflow-hidden">
+        <CardContent className="p-6">
+          <div className="space-y-4">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold">{currentJob.title}</h3>
+                <p className="text-muted-foreground">{currentJob.company}</p>
               </div>
+              <Badge variant={currentJob.remote ? 'default' : 'secondary'}>
+                {currentJob.remote ? 'Remote' : 'On-site'}
+              </Badge>
+            </div>
 
-              {/* Quick Info */}
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="secondary">{currentJob.type}</Badge>
-                {currentJob.remote && <Badge variant="outline">Remote</Badge>}
-                <div className="flex items-center text-sm text-gray-600">
-                  <Clock className="h-3 w-3 mr-1" />
-                  {currentJob.posted}
-                </div>
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center space-x-2 text-muted-foreground">
+                <MapPin className="h-4 w-4" />
+                <span>{currentJob.location}</span>
               </div>
-
-              {/* Salary */}
               {currentJob.salary && (
-                <div className="flex items-center text-green-600">
-                  <DollarSign className="h-4 w-4 mr-1" />
-                  <span className="font-medium">{currentJob.salary}</span>
+                <div className="flex items-center space-x-2 text-muted-foreground">
+                  <DollarSign className="h-4 w-4" />
+                  <span>{currentJob.salary}</span>
                 </div>
               )}
-
-              {/* Description */}
-              <div>
-                <h3 className="font-semibold mb-2">Description</h3>
-                <p className="text-gray-700 text-sm leading-relaxed">
-                  {currentJob.description}
-                </p>
+              <div className="flex items-center space-x-2 text-muted-foreground">
+                <Clock className="h-4 w-4" />
+                <span>{currentJob.posted}</span>
               </div>
+            </div>
 
-              {/* Requirements */}
+            <p className="text-sm text-muted-foreground line-clamp-3">
+              {currentJob.description}
+            </p>
+
+            {currentJob.requirements && (
               <div>
-                <h3 className="font-semibold mb-2">Requirements</h3>
+                <h4 className="text-sm font-medium mb-2">Requirements:</h4>
                 <div className="flex flex-wrap gap-1">
-                  {currentJob.requirements.map((req, index) => (
+                  {currentJob.requirements.slice(0, 4).map((req, index) => (
                     <Badge key={index} variant="outline" className="text-xs">
                       {req}
                     </Badge>
                   ))}
+                  {currentJob.requirements.length > 4 && (
+                    <Badge variant="outline" className="text-xs">
+                      +{currentJob.requirements.length - 4} more
+                    </Badge>
+                  )}
                 </div>
               </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
-              {/* Benefits */}
-              {currentJob.benefits && (
-                <div>
-                  <h3 className="font-semibold mb-2">Benefits</h3>
-                  <div className="flex flex-wrap gap-1">
-                    {currentJob.benefits.map((benefit, index) => (
-                      <Badge key={index} variant="secondary" className="text-xs">
-                        {benefit}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+      {/* Action buttons */}
+      <div className="flex items-center justify-between space-x-4">
+        <Button variant="outline" size="sm" onClick={previousJob}>
+          <ChevronLeft className="h-4 w-4" />
+          Previous
+        </Button>
 
-        {/* Swipe Indicators */}
-        {swipeState.isDragging && (
-          <>
-            <div className={`absolute left-4 top-1/2 transform -translate-y-1/2 transition-opacity ${
-              swipeState.swipeDirection === 'right' ? 'opacity-100' : 'opacity-30'
-            }`}>
-              <div className="bg-green-500 text-white p-3 rounded-full">
-                <Heart className="h-6 w-6" />
-              </div>
-            </div>
-            <div className={`absolute right-4 top-1/2 transform -translate-y-1/2 transition-opacity ${
-              swipeState.swipeDirection === 'left' ? 'opacity-100' : 'opacity-30'
-            }`}>
-              <div className="bg-red-500 text-white p-3 rounded-full">
-                <span className="text-lg">✕</span>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* Navigation Buttons */}
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-4">
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={currentJobIndex === 0}
-            onClick={previousJob}
+        <div className="flex space-x-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => saveJob(currentJob)}
           >
-            <ChevronLeft className="h-4 w-4" />
+            <Heart className="h-4 w-4" />
           </Button>
-          
-          <Button
-            size="sm"
-            onClick={() => saveJob(currentJob.id)}
-            className="bg-blue-500 hover:bg-blue-600"
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => shareJob(currentJob)}
           >
-            <Heart className="h-4 w-4 mr-1" />
-            Save
+            <Share className="h-4 w-4" />
           </Button>
-          
-          <Button
-            size="sm"
-            onClick={() => applyToJob(currentJob.id)}
-            className="bg-green-500 hover:bg-green-600"
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => window.open('#', '_blank')}
           >
-            Apply
-          </Button>
-          
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={currentJobIndex === jobs.length - 1}
-            onClick={nextJob}
-          >
-            <ChevronRight className="h-4 w-4" />
+            <ExternalLink className="h-4 w-4" />
           </Button>
         </div>
+
+        <Button 
+          size="sm" 
+          onClick={() => applyToJob(currentJob)}
+        >
+          Apply Now
+        </Button>
+
+        <Button variant="outline" size="sm" onClick={nextJob}>
+          Next
+          <ChevronRight className="h-4 w-4" />
+        </Button>
       </div>
 
-      {/* Instructions */}
-      <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 text-center text-xs text-gray-500">
-        <p>Swipe right to save • Swipe left to pass • Double tap to save</p>
+      {/* Gesture instructions */}
+      <div className="text-xs text-muted-foreground text-center space-y-1">
+        <p>👈 Swipe left to save • 👉 Swipe right for next job</p>
+        <p>👆 Pull down to refresh • Double tap to apply</p>
+        <p>Long press for details</p>
       </div>
-
-      {/* Pull to Refresh Indicator */}
-      {refreshing && (
-        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white px-4 py-2 rounded-full text-sm">
-          Refreshing jobs...
-        </div>
-      )}
     </div>
   );
 };

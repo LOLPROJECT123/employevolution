@@ -1,91 +1,261 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
+import { EnhancedMobileService, OfflineSyncQueue } from '@/services/enhancedMobileService';
 
-interface PendingAction {
+export interface OfflineAction {
   id: string;
-  type: string;
+  type: 'create' | 'update' | 'delete';
+  table: string;
   data: any;
-  timestamp: number;
+  timestamp: string;
+  retries: number;
+  status: 'pending' | 'syncing' | 'completed' | 'failed';
 }
 
 export const useOfflineMode = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [pendingActions, setPendingActions] = useState<PendingAction[]>([]);
+  const [pendingActions, setPendingActions] = useState<OfflineAction[]>([]);
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'completed' | 'error'>('idle');
+  const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
 
   useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+    // Load pending actions from localStorage
+    loadPendingActions();
+
+    // Set up online/offline event listeners
+    const handleOnline = () => {
+      setIsOnline(true);
+      syncPendingActions();
+    };
+
+    const handleOffline = () => {
+      setIsOnline(false);
+    };
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Load pending actions from localStorage
-    const saved = localStorage.getItem('pendingActions');
-    if (saved) {
-      setPendingActions(JSON.parse(saved));
-    }
+    // Set up periodic sync when online
+    const syncInterval = setInterval(() => {
+      if (navigator.onLine && pendingActions.length > 0) {
+        syncPendingActions();
+      }
+    }, 30000); // Sync every 30 seconds
 
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      clearInterval(syncInterval);
     };
   }, []);
 
-  const cacheData = useCallback((key: string, data: any, expireHours = 24) => {
-    const cacheItem = {
-      data,
-      timestamp: Date.now(),
-      expireTime: Date.now() + (expireHours * 60 * 60 * 1000)
-    };
-    localStorage.setItem(`cache_${key}`, JSON.stringify(cacheItem));
-  }, []);
-
-  const getCachedData = useCallback(<T,>(key: string): T | null => {
-    const cached = localStorage.getItem(`cache_${key}`);
-    if (!cached) return null;
-
+  const loadPendingActions = () => {
     try {
-      const cacheItem = JSON.parse(cached);
-      if (Date.now() > cacheItem.expireTime) {
-        localStorage.removeItem(`cache_${key}`);
-        return null;
+      const stored = localStorage.getItem('offlinePendingActions');
+      if (stored) {
+        const actions: OfflineAction[] = JSON.parse(stored);
+        setPendingActions(actions);
       }
-      return cacheItem.data;
-    } catch {
-      return null;
+    } catch (error) {
+      console.error('Error loading pending actions:', error);
     }
-  }, []);
+  };
 
-  const addPendingAction = useCallback((type: string, data: any) => {
-    const action: PendingAction = {
-      id: Date.now().toString(),
+  const savePendingActions = (actions: OfflineAction[]) => {
+    try {
+      localStorage.setItem('offlinePendingActions', JSON.stringify(actions));
+    } catch (error) {
+      console.error('Error saving pending actions:', error);
+    }
+  };
+
+  const addOfflineAction = (
+    type: 'create' | 'update' | 'delete',
+    table: string,
+    data: any
+  ) => {
+    const action: OfflineAction = {
+      id: crypto.randomUUID(),
       type,
+      table,
       data,
-      timestamp: Date.now()
+      timestamp: new Date().toISOString(),
+      retries: 0,
+      status: 'pending'
     };
 
-    const updated = [...pendingActions, action];
-    setPendingActions(updated);
-    localStorage.setItem('pendingActions', JSON.stringify(updated));
-  }, [pendingActions]);
+    const newActions = [...pendingActions, action];
+    setPendingActions(newActions);
+    savePendingActions(newActions);
 
-  const syncPendingActions = useCallback(async () => {
-    if (!isOnline || pendingActions.length === 0) return;
+    // Add to mobile service queue as well
+    EnhancedMobileService.addToSyncQueue(type, table, data);
 
-    // Simulate syncing pending actions
-    console.log('Syncing pending actions:', pendingActions);
+    // Try to sync immediately if online
+    if (isOnline) {
+      syncPendingActions();
+    }
+
+    return action.id;
+  };
+
+  const syncPendingActions = async () => {
+    if (!isOnline || pendingActions.length === 0 || syncStatus === 'syncing') {
+      return;
+    }
+
+    setSyncStatus('syncing');
     
-    // Clear pending actions after sync
-    setPendingActions([]);
-    localStorage.removeItem('pendingActions');
-  }, [isOnline, pendingActions]);
+    try {
+      const actionsToSync = pendingActions.filter(action => 
+        action.status === 'pending' || action.status === 'failed'
+      );
+
+      const syncPromises = actionsToSync.map(async (action) => {
+        try {
+          // Update action status to syncing
+          updateActionStatus(action.id, 'syncing');
+
+          // Perform the sync operation
+          await performSyncOperation(action);
+
+          // Mark as completed
+          updateActionStatus(action.id, 'completed');
+          
+          return { id: action.id, success: true };
+        } catch (error) {
+          console.error(`Failed to sync action ${action.id}:`, error);
+          
+          // Increment retry count
+          const updatedAction = {
+            ...action,
+            retries: action.retries + 1,
+            status: action.retries >= 2 ? 'failed' : 'pending' as const
+          };
+          
+          updateActionInList(updatedAction);
+          
+          return { id: action.id, success: false, error };
+        }
+      });
+
+      const results = await Promise.allSettled(syncPromises);
+      
+      // Remove completed actions
+      const completedActionIds = results
+        .filter(result => result.status === 'fulfilled' && result.value.success)
+        .map(result => (result as PromiseFulfilledResult<any>).value.id);
+
+      if (completedActionIds.length > 0) {
+        const remainingActions = pendingActions.filter(
+          action => !completedActionIds.includes(action.id)
+        );
+        setPendingActions(remainingActions);
+        savePendingActions(remainingActions);
+      }
+
+      setSyncStatus('completed');
+      setLastSyncTime(new Date().toISOString());
+      
+      // Reset to idle after a brief delay
+      setTimeout(() => setSyncStatus('idle'), 2000);
+      
+    } catch (error) {
+      console.error('Sync failed:', error);
+      setSyncStatus('error');
+      
+      // Reset to idle after error display
+      setTimeout(() => setSyncStatus('idle'), 3000);
+    }
+  };
+
+  const performSyncOperation = async (action: OfflineAction) => {
+    const { type, table, data } = action;
+    
+    // Import supabase dynamically to avoid issues
+    const { supabase } = await import('@/integrations/supabase/client');
+    
+    switch (type) {
+      case 'create':
+        const { error: createError } = await supabase.from(table).insert(data);
+        if (createError) throw createError;
+        break;
+        
+      case 'update':
+        const { error: updateError } = await supabase
+          .from(table)
+          .update(data)
+          .eq('id', data.id);
+        if (updateError) throw updateError;
+        break;
+        
+      case 'delete':
+        const { error: deleteError } = await supabase
+          .from(table)
+          .delete()
+          .eq('id', data.id);
+        if (deleteError) throw deleteError;
+        break;
+        
+      default:
+        throw new Error(`Unknown action type: ${type}`);
+    }
+  };
+
+  const updateActionStatus = (actionId: string, status: OfflineAction['status']) => {
+    setPendingActions(prev => 
+      prev.map(action => 
+        action.id === actionId ? { ...action, status } : action
+      )
+    );
+  };
+
+  const updateActionInList = (updatedAction: OfflineAction) => {
+    setPendingActions(prev => 
+      prev.map(action => 
+        action.id === updatedAction.id ? updatedAction : action
+      )
+    );
+  };
+
+  const clearFailedActions = () => {
+    const remainingActions = pendingActions.filter(action => action.status !== 'failed');
+    setPendingActions(remainingActions);
+    savePendingActions(remainingActions);
+  };
+
+  const retryFailedActions = () => {
+    const updatedActions = pendingActions.map(action => 
+      action.status === 'failed' 
+        ? { ...action, status: 'pending' as const, retries: 0 }
+        : action
+    );
+    setPendingActions(updatedActions);
+    savePendingActions(updatedActions);
+    
+    if (isOnline) {
+      syncPendingActions();
+    }
+  };
+
+  const getOfflineStats = () => {
+    const pending = pendingActions.filter(a => a.status === 'pending').length;
+    const syncing = pendingActions.filter(a => a.status === 'syncing').length;
+    const failed = pendingActions.filter(a => a.status === 'failed').length;
+    const completed = pendingActions.filter(a => a.status === 'completed').length;
+    
+    return { pending, syncing, failed, completed, total: pendingActions.length };
+  };
 
   return {
     isOnline,
-    cacheData,
-    getCachedData,
-    addPendingAction,
+    pendingActions,
+    syncStatus,
+    lastSyncTime,
+    addOfflineAction,
     syncPendingActions,
-    pendingActions
+    clearFailedActions,
+    retryFailedActions,
+    getOfflineStats
   };
 };

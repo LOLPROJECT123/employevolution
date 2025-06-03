@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,9 +19,9 @@ import {
   Award,
   Code,
   Users,
-  Briefcase,
-  Star
+  Briefcase
 } from 'lucide-react';
+import { DatabaseDevelopmentGoal, TypedDevelopmentGoal, castDevelopmentStatus } from '@/types/database';
 
 interface DevelopmentGoal {
   id: string;
@@ -40,7 +39,7 @@ interface DevelopmentGoal {
 
 export const ProfessionalDevelopmentTracker: React.FC = () => {
   const { user } = useAuth();
-  const [goals, setGoals] = useState<DevelopmentGoal[]>([]);
+  const [goals, setGoals] = useState<TypedDevelopmentGoal[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newGoal, setNewGoal] = useState({
@@ -68,7 +67,14 @@ export const ProfessionalDevelopmentTracker: React.FC = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setGoals(data || []);
+      
+      // Type-safe casting of database results
+      const typedGoals: TypedDevelopmentGoal[] = (data || []).map((goal: DatabaseDevelopmentGoal) => ({
+        ...goal,
+        status: castDevelopmentStatus(goal.status)
+      }));
+      
+      setGoals(typedGoals);
     } catch (error) {
       console.error('Error loading goals:', error);
       toast.error('Failed to load development goals');
@@ -100,7 +106,13 @@ export const ProfessionalDevelopmentTracker: React.FC = () => {
 
       if (error) throw error;
 
-      setGoals(prev => [data, ...prev]);
+      // Type-safe addition to state
+      const typedGoal: TypedDevelopmentGoal = {
+        ...data,
+        status: castDevelopmentStatus(data.status)
+      };
+
+      setGoals(prev => [typedGoal, ...prev]);
       setNewGoal({ goal_title: '', category: '', goal_description: '', target_date: '' });
       setShowAddForm(false);
       toast.success('Goal added successfully');
@@ -131,7 +143,12 @@ export const ProfessionalDevelopmentTracker: React.FC = () => {
 
       setGoals(prev => prev.map(goal => 
         goal.id === goalId 
-          ? { ...goal, ...updateData }
+          ? { 
+              ...goal, 
+              progress_percentage: updateData.progress_percentage,
+              status: status ? castDevelopmentStatus(status) : goal.status,
+              completion_date: updateData.completion_date || goal.completion_date
+            }
           : goal
       ));
 
