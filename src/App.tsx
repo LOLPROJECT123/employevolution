@@ -1,4 +1,4 @@
-import { useRoutes } from 'react-router-dom';
+
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -44,263 +44,6 @@ import "./App.css";
 const queryClient = new QueryClient();
 
 function App() {
-  const routes = useRoutes([
-    {
-      path: '/',
-      element: <Index />
-    },
-    {
-      path: '/auth',
-      element: <Auth />
-    },
-    {
-      path: '/dashboard',
-      element: (
-        <ProtectedRoute>
-          <OnboardingGuard>
-            <Dashboard />
-          </OnboardingGuard>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: '/jobs',
-      element: (
-        <ProtectedRoute>
-          <OnboardingGuard>
-            <Jobs />
-          </OnboardingGuard>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: '/mobile-jobs',
-      element: (
-        <ProtectedRoute>
-          <OnboardingGuard>
-            <MobileJobs />
-          </OnboardingGuard>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: '/applications',
-      element: (
-        <ProtectedRoute>
-          <OnboardingGuard>
-            <Applications />
-          </OnboardingGuard>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: '/profile',
-      element: (
-        <ProtectedRoute>
-          <Profile />
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: '/complete-profile',
-      element: (
-        <ProtectedRoute>
-          <CompleteProfile />
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: '/enhanced-complete-profile',
-      element: (
-        <ProtectedRoute>
-          <EnhancedCompleteProfile />
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: '/resume-tools',
-      element: (
-        <ProtectedRoute>
-          <OnboardingGuard>
-            <ResumeTools />
-          </OnboardingGuard>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: '/interview-practice',
-      element: (
-        <ProtectedRoute>
-          <OnboardingGuard>
-            <InterviewPractice />
-          </OnboardingGuard>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: '/leetcode-patterns',
-      element: (
-        <ProtectedRoute>
-          <OnboardingGuard>
-            <LeetcodePatterns />
-          </OnboardingGuard>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: '/networking-tools',
-      element: (
-        <ProtectedRoute>
-          <OnboardingGuard>
-            <NetworkingTools />
-          </OnboardingGuard>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: '/networking',
-      element: (
-        <ProtectedRoute>
-          <OnboardingGuard>
-            <Networking />
-          </OnboardingGuard>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: '/referrals',
-      element: (
-        <ProtectedRoute>
-          <OnboardingGuard>
-            <Referrals />
-          </OnboardingGuard>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: '/salary-negotiations',
-      element: (
-        <ProtectedRoute>
-          <OnboardingGuard>
-            <SalaryNegotiations />
-          </OnboardingGuard>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: '/job-alerts',
-      element: (
-        <ProtectedRoute>
-          <OnboardingGuard>
-            <JobAlerts />
-          </OnboardingGuard>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: '/communications',
-      element: (
-        <ProtectedRoute>
-          <OnboardingGuard>
-            <Communications />
-          </OnboardingGuard>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: '/calendar',
-      element: (
-        <ProtectedRoute>
-          <OnboardingGuard>
-            <Calendar />
-          </OnboardingGuard>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: '/resume-post',
-      element: (
-        <ProtectedRoute>
-          <OnboardingGuard>
-            <ResumePost />
-          </OnboardingGuard>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: '/collaboration/documents',
-      element: (
-        <ProtectedRoute>
-          <OnboardingGuard>
-            <DocumentsHub />
-          </OnboardingGuard>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: '/collaboration/reviews',
-      element: (
-        <ProtectedRoute>
-          <OnboardingGuard>
-            <PeerReviews />
-          </OnboardingGuard>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: '/collaboration/teams',
-      element: (
-        <ProtectedRoute>
-          <OnboardingGuard>
-            <TeamsManagement />
-          </OnboardingGuard>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: '/analytics/market-trends',
-      element: (
-        <ProtectedRoute>
-          <OnboardingGuard>
-            <MarketTrends />
-          </OnboardingGuard>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: '/analytics/predictive',
-      element: (
-        <ProtectedRoute>
-          <OnboardingGuard>
-            <PredictiveAnalytics />
-          </OnboardingGuard>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: '/analytics/salary',
-      element: (
-        <ProtectedRoute>
-          <OnboardingGuard>
-            <SalaryInsights />
-          </OnboardingGuard>
-        </ProtectedRoute>
-      )
-    },
-    {
-      path: '/mobile-features',
-      element: <AdvancedMobileFeatures />
-    },
-    {
-      path: '/offline',
-      element: <OfflineFirstPages />
-    },
-    {
-      path: '*',
-      element: <NotFound />
-    }
-  ]);
-
   return (
     <div className="App">
       <QueryClientProvider client={queryClient}>
@@ -314,7 +57,247 @@ function App() {
                     <Navbar />
                     <MobileHeader title="EmployEvolution" />
                     
-                    {routes}
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/auth" element={<Auth />} />
+                      <Route 
+                        path="/dashboard" 
+                        element={
+                          <ProtectedRoute>
+                            <OnboardingGuard>
+                              <Dashboard />
+                            </OnboardingGuard>
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/jobs" 
+                        element={
+                          <ProtectedRoute>
+                            <OnboardingGuard>
+                              <Jobs />
+                            </OnboardingGuard>
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/mobile-jobs" 
+                        element={
+                          <ProtectedRoute>
+                            <OnboardingGuard>
+                              <MobileJobs />
+                            </OnboardingGuard>
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/applications" 
+                        element={
+                          <ProtectedRoute>
+                            <OnboardingGuard>
+                              <Applications />
+                            </OnboardingGuard>
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/profile" 
+                        element={
+                          <ProtectedRoute>
+                            <Profile />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/complete-profile" 
+                        element={
+                          <ProtectedRoute>
+                            <CompleteProfile />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/enhanced-complete-profile" 
+                        element={
+                          <ProtectedRoute>
+                            <EnhancedCompleteProfile />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/resume-tools" 
+                        element={
+                          <ProtectedRoute>
+                            <OnboardingGuard>
+                              <ResumeTools />
+                            </OnboardingGuard>
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/interview-practice" 
+                        element={
+                          <ProtectedRoute>
+                            <OnboardingGuard>
+                              <InterviewPractice />
+                            </OnboardingGuard>
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/leetcode-patterns" 
+                        element={
+                          <ProtectedRoute>
+                            <OnboardingGuard>
+                              <LeetcodePatterns />
+                            </OnboardingGuard>
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/networking-tools" 
+                        element={
+                          <ProtectedRoute>
+                            <OnboardingGuard>
+                              <NetworkingTools />
+                            </OnboardingGuard>
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/networking" 
+                        element={
+                          <ProtectedRoute>
+                            <OnboardingGuard>
+                              <Networking />
+                            </OnboardingGuard>
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/referrals" 
+                        element={
+                          <ProtectedRoute>
+                            <OnboardingGuard>
+                              <Referrals />
+                            </OnboardingGuard>
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/salary-negotiations" 
+                        element={
+                          <ProtectedRoute>
+                            <OnboardingGuard>
+                              <SalaryNegotiations />
+                            </OnboardingGuard>
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/job-alerts" 
+                        element={
+                          <ProtectedRoute>
+                            <OnboardingGuard>
+                              <JobAlerts />
+                            </OnboardingGuard>
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/communications" 
+                        element={
+                          <ProtectedRoute>
+                            <OnboardingGuard>
+                              <Communications />
+                            </OnboardingGuard>
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/calendar" 
+                        element={
+                          <ProtectedRoute>
+                            <OnboardingGuard>
+                              <Calendar />
+                            </OnboardingGuard>
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/resume-post" 
+                        element={
+                          <ProtectedRoute>
+                            <OnboardingGuard>
+                              <ResumePost />
+                            </OnboardingGuard>
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/collaboration/documents" 
+                        element={
+                          <ProtectedRoute>
+                            <OnboardingGuard>
+                              <DocumentsHub />
+                            </OnboardingGuard>
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/collaboration/reviews" 
+                        element={
+                          <ProtectedRoute>
+                            <OnboardingGuard>
+                              <PeerReviews />
+                            </OnboardingGuard>
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/collaboration/teams" 
+                        element={
+                          <ProtectedRoute>
+                            <OnboardingGuard>
+                              <TeamsManagement />
+                            </OnboardingGuard>
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/analytics/market-trends" 
+                        element={
+                          <ProtectedRoute>
+                            <OnboardingGuard>
+                              <MarketTrends />
+                            </OnboardingGuard>
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/analytics/predictive" 
+                        element={
+                          <ProtectedRoute>
+                            <OnboardingGuard>
+                              <PredictiveAnalytics />
+                            </OnboardingGuard>
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/analytics/salary" 
+                        element={
+                          <ProtectedRoute>
+                            <OnboardingGuard>
+                              <SalaryInsights />
+                            </OnboardingGuard>
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route path="/mobile-features" element={<AdvancedMobileFeatures />} />
+                      <Route path="/offline" element={<OfflineFirstPages />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
                   </div>
                 </BrowserRouter>
               </TooltipProvider>
