@@ -1,97 +1,175 @@
 
 interface TestResult {
   name: string;
+  description: string;
   passed: boolean;
-  duration: number;
   error?: string;
+  duration?: number;
 }
 
-interface TestSuite {
+interface TestSuiteResult {
   passed: number;
   failed: number;
-  totalDuration: number;
   results: TestResult[];
+  totalDuration: number;
 }
 
 export class IntegrationTestHelper {
-  static async runTestSuite(): Promise<TestSuite> {
-    const tests = [
-      { name: 'Profile Save', test: this.testProfileSave },
-      { name: 'Auto Save', test: this.testAutoSave },
-      { name: 'Validation Rules', test: this.testValidationRules },
-      { name: 'Performance Tracking', test: this.testPerformanceTracking },
-      { name: 'Security Logging', test: this.testSecurityLogging },
-      { name: 'Error Handling', test: this.testErrorHandling }
-    ];
-
+  static async runTestSuite(): Promise<TestSuiteResult> {
+    const startTime = performance.now();
     const results: TestResult[] = [];
-    let totalDuration = 0;
-    let passed = 0;
-    let failed = 0;
 
-    for (const { name, test } of tests) {
-      const startTime = performance.now();
-      try {
-        await test();
-        const duration = performance.now() - startTime;
-        results.push({ name, passed: true, duration });
-        totalDuration += duration;
-        passed++;
-      } catch (error) {
-        const duration = performance.now() - startTime;
-        results.push({ 
-          name, 
-          passed: false, 
-          duration, 
-          error: error instanceof Error ? error.message : String(error)
-        });
-        totalDuration += duration;
-        failed++;
+    // Test 1: Profile Service Integration
+    results.push(await this.testProfileService());
+
+    // Test 2: Monitoring Service
+    results.push(await this.testMonitoringService());
+
+    // Test 3: Cache Service
+    results.push(await this.testCacheService());
+
+    // Test 4: Address Validation
+    results.push(await this.testAddressValidation());
+
+    // Test 5: Error Handling
+    results.push(await this.testErrorHandling());
+
+    const endTime = performance.now();
+    const passed = results.filter(r => r.passed).length;
+    const failed = results.filter(r => !r.passed).length;
+
+    return {
+      passed,
+      failed,
+      results,
+      totalDuration: endTime - startTime
+    };
+  }
+
+  private static async testProfileService(): Promise<TestResult> {
+    try {
+      // Test if profile service can be imported and has basic methods
+      const { EnhancedProfileService } = await import('@/services/enhancedProfileService');
+      
+      if (typeof EnhancedProfileService.saveProfileWithValidation === 'function') {
+        return {
+          name: 'Profile Service',
+          description: 'Profile service integration test',
+          passed: true
+        };
+      } else {
+        throw new Error('saveProfileWithValidation method not found');
       }
-    }
-
-    return { passed, failed, totalDuration, results };
-  }
-
-  private static async testProfileSave(): Promise<void> {
-    // Mock profile save test
-    await new Promise(resolve => setTimeout(resolve, 100));
-    if (Math.random() > 0.9) {
-      throw new Error('Mock save failure');
+    } catch (error) {
+      return {
+        name: 'Profile Service',
+        description: 'Profile service integration test',
+        passed: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
     }
   }
 
-  private static async testAutoSave(): Promise<void> {
-    // Mock auto-save test
-    await new Promise(resolve => setTimeout(resolve, 150));
-    if (Math.random() > 0.95) {
-      throw new Error('Auto-save timeout');
+  private static async testMonitoringService(): Promise<TestResult> {
+    try {
+      const { monitoringService } = await import('@/services/monitoringService');
+      
+      // Test basic monitoring functionality
+      monitoringService.recordMetric('test_metric', 100);
+      const metrics = monitoringService.getMetrics('test_metric');
+      
+      if (metrics.length > 0 && metrics[0].value === 100) {
+        return {
+          name: 'Monitoring Service',
+          description: 'Monitoring service functionality test',
+          passed: true
+        };
+      } else {
+        throw new Error('Metric recording failed');
+      }
+    } catch (error) {
+      return {
+        name: 'Monitoring Service',
+        description: 'Monitoring service functionality test',
+        passed: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
     }
   }
 
-  private static async testValidationRules(): Promise<void> {
-    // Mock validation test
-    await new Promise(resolve => setTimeout(resolve, 80));
-    // Always passes for demo
+  private static async testCacheService(): Promise<TestResult> {
+    try {
+      const { cacheService } = await import('@/services/cacheService');
+      
+      // Test basic cache functionality
+      cacheService.set('test_key', 'test_value');
+      const value = cacheService.get('test_key');
+      
+      if (value === 'test_value') {
+        return {
+          name: 'Cache Service',
+          description: 'Cache service functionality test',
+          passed: true
+        };
+      } else {
+        throw new Error('Cache set/get failed');
+      }
+    } catch (error) {
+      return {
+        name: 'Cache Service',
+        description: 'Cache service functionality test',
+        passed: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
   }
 
-  private static async testPerformanceTracking(): Promise<void> {
-    // Mock performance test
-    await new Promise(resolve => setTimeout(resolve, 120));
-    // Always passes for demo
+  private static async testAddressValidation(): Promise<TestResult> {
+    try {
+      const { AddressValidator } = await import('@/utils/addressValidation');
+      
+      // Test address validation
+      const result = AddressValidator.validateZipCode('12345');
+      
+      if (result.isValid) {
+        return {
+          name: 'Address Validation',
+          description: 'Address validation functionality test',
+          passed: true
+        };
+      } else {
+        throw new Error('ZIP code validation failed');
+      }
+    } catch (error) {
+      return {
+        name: 'Address Validation',
+        description: 'Address validation functionality test',
+        passed: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
   }
 
-  private static async testSecurityLogging(): Promise<void> {
-    // Mock security test
-    await new Promise(resolve => setTimeout(resolve, 90));
-    // Always passes for demo
-  }
-
-  private static async testErrorHandling(): Promise<void> {
-    // Mock error handling test
-    await new Promise(resolve => setTimeout(resolve, 110));
-    if (Math.random() > 0.8) {
-      throw new Error('Error handling test failed');
+  private static async testErrorHandling(): Promise<TestResult> {
+    try {
+      const { ErrorHandler } = await import('@/utils/errorHandling');
+      
+      // Test error handling without throwing
+      const testError = new Error('Test error');
+      ErrorHandler.handleError(testError, { operation: 'test' }, false);
+      
+      return {
+        name: 'Error Handling',
+        description: 'Error handling functionality test',
+        passed: true
+      };
+    } catch (error) {
+      return {
+        name: 'Error Handling',
+        description: 'Error handling functionality test',
+        passed: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
     }
   }
 }

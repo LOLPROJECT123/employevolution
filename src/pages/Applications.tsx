@@ -1,214 +1,178 @@
 
-import React, { useState } from "react";
-import Navbar from "@/components/Navbar";
-import { useMobile } from "@/hooks/use-mobile";
-import { MobileRouteLayout } from "@/components/mobile/MobileRouteLayout";
-import { AdvancedGestureHandler } from "@/components/mobile/AdvancedGestureHandler";
-import { VoiceSearchButton } from "@/components/mobile/VoiceSearchButton";
-import { BreadcrumbNav } from "@/components/navigation/BreadcrumbNav";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Calendar, MapPin, Building, ExternalLink, Search } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import Navbar from '@/components/Navbar';
+import MobileHeader from '@/components/MobileHeader';
+import { useMobile } from '@/hooks/use-mobile';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
+import { supabaseApplicationService } from '@/services/supabaseApplicationService';
+import { Calendar, MapPin, DollarSign, Clock, Building } from 'lucide-react';
+
+interface Application {
+  id: string;
+  job_id: string;
+  user_id: string;
+  status: string;
+  applied_at: string;
+  updated_at: string;
+  notes?: string;
+  resume_version?: string;
+  cover_letter?: string;
+  follow_up_date?: string;
+  interview_date?: string;
+  salary_offered?: number;
+  contact_person?: string;
+  application_url?: string;
+}
 
 const Applications = () => {
+  const { user } = useAuth();
   const isMobile = useMobile();
-  const [currentAppIndex, setCurrentAppIndex] = useState(0);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data - replace with real data
-  const applications = [
-    {
-      id: "1",
-      jobTitle: "Senior Software Engineer",
-      company: "Tech Corp",
-      location: "San Francisco, CA",
-      appliedDate: "2024-01-15",
-      status: "interview_scheduled",
-      nextStep: "Technical Interview on Jan 25",
-      salary: "$120k - $150k"
-    },
-    {
-      id: "2",
-      jobTitle: "Frontend Developer",
-      company: "StartupXYZ",
-      location: "Remote",
-      appliedDate: "2024-01-10",
-      status: "under_review",
-      nextStep: "Waiting for response",
-      salary: "$90k - $110k"
+  useEffect(() => {
+    if (user) {
+      loadApplications();
     }
-  ];
+  }, [user]);
 
-  const handleRefresh = async () => {
-    console.log('Refreshing applications...');
-    // Implement refresh logic
-  };
-
-  const handleVoiceSearch = (query: string) => {
-    setSearchQuery(query);
-    // Implement application search
-  };
-
-  const handleSwipeLeft = () => {
-    if (currentAppIndex < applications.length - 1) {
-      setCurrentAppIndex(prev => prev + 1);
+  const loadApplications = async () => {
+    if (!user) return;
+    
+    try {
+      const userApplications = await supabaseApplicationService.getUserApplications(user.id);
+      setApplications(userApplications);
+    } catch (error) {
+      console.error('Error loading applications:', error);
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const handleSwipeRight = () => {
-    if (currentAppIndex > 0) {
-      setCurrentAppIndex(prev => prev - 1);
-    }
-  };
-
-  const handleLongPress = () => {
-    console.log('Application long press - show actions menu');
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'interview_scheduled':
-        return 'bg-blue-100 text-blue-800';
-      case 'under_review':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'accepted':
-        return 'bg-green-100 text-green-800';
-      case 'rejected':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+    switch (status.toLowerCase()) {
+      case 'applied': return 'bg-blue-100 text-blue-800';
+      case 'interview': return 'bg-yellow-100 text-yellow-800';
+      case 'offer': return 'bg-green-100 text-green-800';
+      case 'rejected': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const ApplicationCard = ({ application }: { application: any }) => (
-    <Card className="w-full">
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div>
-            <CardTitle className="text-lg">{application.jobTitle}</CardTitle>
-            <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-1">
-              <Building className="h-4 w-4" />
-              <span>{application.company}</span>
-            </div>
-          </div>
-          <Badge className={getStatusColor(application.status)}>
-            {application.status.replace('_', ' ')}
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-          <div className="flex items-center space-x-1">
-            <MapPin className="h-4 w-4" />
-            <span>{application.location}</span>
-          </div>
-          <div className="flex items-center space-x-1">
-            <Calendar className="h-4 w-4" />
-            <span>Applied {application.appliedDate}</span>
-          </div>
-        </div>
-        
-        <div className="space-y-2">
-          <div className="text-sm">
-            <span className="font-medium">Salary:</span> {application.salary}
-          </div>
-          <div className="text-sm">
-            <span className="font-medium">Next Step:</span> {application.nextStep}
-          </div>
-        </div>
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
 
-        <div className="flex space-x-2">
-          <Button variant="outline" size="sm">
-            <ExternalLink className="h-4 w-4 mr-1" />
-            View Job
-          </Button>
-          <Button size="sm">Update Status</Button>
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background">
+        {!isMobile && <Navbar />}
+        {isMobile && <MobileHeader />}
+        <div className="container mx-auto px-4 py-8">
+          <p>Please log in to view your applications.</p>
         </div>
-      </CardContent>
-    </Card>
-  );
+      </div>
+    );
+  }
 
-  const content = (
+  return (
     <div className="min-h-screen bg-background">
       {!isMobile && <Navbar />}
+      {isMobile && <MobileHeader />}
       
-      <div className={`${!isMobile ? 'container mx-auto px-4 py-8' : 'p-0'} max-w-6xl`}>
-        {!isMobile && (
-          <div className="mb-6">
-            <BreadcrumbNav />
-          </div>
-        )}
-        
-        {!isMobile && (
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Job Applications</h1>
-            <p className="text-muted-foreground">
-              Track and manage your job applications
-            </p>
-          </div>
-        )}
-
-        {/* Search Bar */}
-        <div className={`${isMobile ? 'p-4' : 'mb-6'}`}>
-          <div className="flex items-center space-x-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Search applications..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <VoiceSearchButton onSearch={handleVoiceSearch} />
-          </div>
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">My Applications</h1>
+          <p className="text-muted-foreground">
+            Track your job applications and their status
+          </p>
         </div>
-        
-        {isMobile ? (
-          <AdvancedGestureHandler
-            onSwipeLeft={handleSwipeLeft}
-            onSwipeRight={handleSwipeRight}
-            onLongPress={handleLongPress}
-            className="h-full"
-          >
-            <div className="p-4">
-              {applications[currentAppIndex] && (
-                <ApplicationCard application={applications[currentAppIndex]} />
-              )}
-              <div className="mt-4 text-center text-sm text-muted-foreground">
-                {currentAppIndex + 1} of {applications.length} applications
-                <div className="text-xs mt-1">
-                  Swipe left/right to navigate • Long press for options
-                </div>
-              </div>
-            </div>
-          </AdvancedGestureHandler>
+
+        {loading ? (
+          <div className="text-center py-8">
+            <p>Loading applications...</p>
+          </div>
+        ) : applications.length === 0 ? (
+          <Card>
+            <CardContent className="py-8 text-center">
+              <p className="text-muted-foreground mb-4">No applications found</p>
+              <Button onClick={() => window.location.href = '/jobs'}>
+                Browse Jobs
+              </Button>
+            </CardContent>
+          </Card>
         ) : (
-          <div className="grid gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {applications.map((application) => (
-              <ApplicationCard key={application.id} application={application} />
+              <Card key={application.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <CardTitle className="text-lg mb-2">
+                        Application #{application.job_id.slice(-6)}
+                      </CardTitle>
+                      <Badge className={getStatusColor(application.status)}>
+                        {application.status}
+                      </Badge>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Calendar className="h-4 w-4" />
+                    Applied: {formatDate(application.applied_at)}
+                  </div>
+                  
+                  {application.resume_version && (
+                    <div className="text-sm">
+                      <span className="font-medium">Resume:</span> {application.resume_version}
+                    </div>
+                  )}
+                  
+                  {application.contact_person && (
+                    <div className="text-sm">
+                      <span className="font-medium">Contact:</span> {application.contact_person}
+                    </div>
+                  )}
+                  
+                  {application.follow_up_date && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Clock className="h-4 w-4" />
+                      Follow up: {formatDate(application.follow_up_date)}
+                    </div>
+                  )}
+                  
+                  {application.interview_date && (
+                    <div className="flex items-center gap-2 text-sm text-green-600">
+                      <Calendar className="h-4 w-4" />
+                      Interview: {formatDate(application.interview_date)}
+                    </div>
+                  )}
+                  
+                  {application.salary_offered && (
+                    <div className="flex items-center gap-2 text-sm text-green-600">
+                      <DollarSign className="h-4 w-4" />
+                      Offer: ${application.salary_offered.toLocaleString()}
+                    </div>
+                  )}
+                  
+                  {application.notes && (
+                    <div className="text-sm">
+                      <span className="font-medium">Notes:</span>
+                      <p className="text-muted-foreground mt-1">{application.notes}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             ))}
           </div>
         )}
       </div>
     </div>
   );
-
-  if (isMobile) {
-    return (
-      <MobileRouteLayout
-        title="Applications"
-        onRefresh={handleRefresh}
-        className="bg-background"
-      >
-        {content}
-      </MobileRouteLayout>
-    );
-  }
-
-  return content;
 };
 
 export default Applications;

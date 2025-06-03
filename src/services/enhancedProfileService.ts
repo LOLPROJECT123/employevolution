@@ -1,154 +1,145 @@
-
-import { supabase } from '@/integrations/supabase/client';
+import { profileService } from './profileService';
+import { AddressValidator, AddressComponents } from '@/utils/addressValidation';
+import { ProfileDataSync } from '@/utils/profileDataSync';
+import { ErrorHandler, ProfileErrorHandler } from '@/utils/errorHandling';
+import { OnboardingFlowManager } from '@/utils/onboardingFlow';
+import { ProfileCompletionTracker } from '@/utils/profileCompletionTracker';
+import { DataImportExportService } from '@/utils/dataImportExport';
+import { ParsedResume } from '@/types/resume';
 
 export class EnhancedProfileService {
-  static async saveProfileWithValidation(userId: string, data: any): Promise<boolean> {
+  // Enhanced save with validation and sync
+  static async saveProfileWithValidation(userId: string, profileData: any): Promise<boolean> {
     try {
-      console.log('Saving profile with validation for user:', userId);
-      
-      // Validate data before saving
-      if (!data.personalInfo?.name || !data.personalInfo?.email) {
-        throw new Error('Required fields missing');
+      // Validate address components
+      if (profileData.personalInfo) {
+        const addressComponents: AddressComponents = {
+          streetAddress: profileData.personalInfo.streetAddress || '',
+          city: profileData.personalInfo.city || '',
+          state: profileData.personalInfo.state || '',
+          county: profileData.personalInfo.county || '',
+          zipCode: profileData.personalInfo.zipCode || ''
+        };
+
+        const addressValidation = AddressValidator.validateCompleteAddress(addressComponents);
+        if (!addressValidation.isValid) {
+          throw new Error(`Address validation failed: ${addressValidation.errors.join(', ')}`);
+        }
+
+        // Use standardized address if available
+        if (addressValidation.standardizedAddress) {
+          profileData.personalInfo = {
+            ...profileData.personalInfo,
+            ...addressValidation.standardizedAddress
+          };
+        }
       }
 
-      const { error } = await supabase
-        .from('profiles')
-        .upsert({
-          id: userId,
-          ...data,
-          updated_at: new Date().toISOString()
-        });
-
-      if (error) {
-        console.error('Error saving profile:', error);
-        return false;
+      // Sync data format for database
+      const syncResult = ProfileDataSync.prepareProfileForDatabase(profileData);
+      if (!syncResult.success) {
+        throw new Error(`Data sync failed: ${syncResult.errors?.join(', ')}`);
       }
 
-      return true;
+      // Save with retry mechanism
+      const saveSuccess = await ProfileErrorHandler.handleProfileSaveError(
+        new Error('Initial attempt'), // This will be replaced by the actual operation
+        () => profileService.saveResumeData(userId, syncResult.data!)
+      );
+
+      if (saveSuccess) {
+        // Update completion tracking
+        await ProfileCompletionTracker.updateCompletionTracking(userId, profileData);
+        
+        // Create backup
+        await DataImportExportService.createBackup(userId);
+      }
+
+      return saveSuccess;
     } catch (error) {
-      console.error('Profile save failed:', error);
+      ErrorHandler.handleError(
+        error instanceof Error ? error : new Error(String(error)),
+        { operation: 'Enhanced Profile Save', userId }
+      );
       return false;
     }
   }
 
+  // Enhanced load with format conversion
   static async loadProfileForUI(userId: string): Promise<any> {
     try {
-      console.log('Loading profile for user:', userId);
+      const userData = await profileService.loadUserData(userId);
       
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      if (userData?.profile) {
+        // Convert database format to UI format
+        const uiData = {
+          personalInfo: {
+            name: userData.profile.name || '',
+            email: '', // This should come from auth
+            phone: userData.profile.phone || '',
+            location: userData.profile.location || '',
+            linkedin_url: userData.profile.linkedin_url || '',
+            github_url: userData.profile.github_url || '',
+            portfolio_url: userData.profile.portfolio_url || '',
+            other_url: userData.profile.other_url || ''
+          },
+          workExperiences: userData.workExperiences || [],
+          education: userData.education || [],
+          projects: userData.projects || [],
+          skills: userData.skills || [],
+          languages: userData.languages || [],
+          activities: userData.activities || [],
+          socialLinks: {
+            linkedin: userData.profile.linkedin_url || '',
+            github: userData.profile.github_url || '',
+            portfolio: userData.profile.portfolio_url || '',
+            other: userData.profile.other_url || ''
+          }
+        };
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error loading profile:', error);
-        return null;
+        // Convert location to address components
+        const syncResult = ProfileDataSync.prepareProfileForUI(uiData);
+        return syncResult.success ? syncResult.data : uiData;
       }
 
-      return data;
+      return null;
     } catch (error) {
-      console.error('Profile load failed:', error);
+      ErrorHandler.handleError(
+        error instanceof Error ? error : new Error(String(error)),
+        { operation: 'Enhanced Profile Load', userId }
+      );
       return null;
     }
   }
 
-  static async validateProfileCompletionDetailed(userId: string, profileData: any): Promise<any> {
+  // Validate profile completion with detailed feedback
+  static async validateProfileCompletionDetailed(userId: string, profileData: any) {
     try {
-      console.log('Validating profile completion for user:', userId);
+      // Get onboarding progress with single parameter
+      const progress = await OnboardingFlowManager.getOnboardingProgress(userId);
       
-      const completionItems = [
-        {
-          field: 'personalInfo.name',
-          label: 'Full Name',
-          description: 'Add your complete name',
-          completed: !!(profileData?.personalInfo?.name || profileData?.full_name),
-          priority: 'high'
-        },
-        {
-          field: 'personalInfo.email',
-          label: 'Email Address',
-          description: 'Verify your email address',
-          completed: !!(profileData?.personalInfo?.email || profileData?.email),
-          priority: 'high'
-        },
-        {
-          field: 'personalInfo.phone',
-          label: 'Phone Number',
-          description: 'Add your contact number',
-          completed: !!(profileData?.personalInfo?.phone),
-          priority: 'medium'
-        },
-        {
-          field: 'workExperience',
-          label: 'Work Experience',
-          description: 'Add at least one work experience',
-          completed: !!(profileData?.workExperience && profileData.workExperience.length > 0),
-          priority: 'high'
-        },
-        {
-          field: 'education',
-          label: 'Education',
-          description: 'Add your educational background',
-          completed: !!(profileData?.education && profileData.education.length > 0),
-          priority: 'medium'
-        },
-        {
-          field: 'skills',
-          label: 'Skills',
-          description: 'Add your professional skills',
-          completed: !!(profileData?.skills && profileData.skills.length > 0),
-          priority: 'high'
-        }
-      ];
-
-      const completedItems = completionItems.filter(item => item.completed);
-      const totalSteps = completionItems.length;
-      const completedSteps = completedItems.length;
-      const percentComplete = Math.round((completedSteps / totalSteps) * 100);
-
-      // Quality metrics calculation
-      const highPriorityItems = completionItems.filter(item => item.priority === 'high');
-      const completedHighPriority = highPriorityItems.filter(item => item.completed);
-      const qualityScore = Math.round((completedHighPriority.length / highPriorityItems.length) * 100);
-
-      const strengthAreas = completedItems.map(item => item.label);
-      const improvementAreas = completionItems.filter(item => !item.completed).map(item => item.label);
+      // Get detailed completion analysis
+      const completionItems = ProfileCompletionTracker.calculateDetailedCompletion(profileData);
+      const qualityMetrics = ProfileCompletionTracker.calculateQualityMetrics(profileData);
       
-      const recommendations = [];
-      if (!profileData?.personalInfo?.phone) {
-        recommendations.push('Add your phone number to improve recruiter contact');
-      }
-      if (!profileData?.skills || profileData.skills.length < 5) {
-        recommendations.push('Add more skills to boost your profile visibility');
-      }
-      if (!profileData?.workExperience || profileData.workExperience.length === 0) {
-        recommendations.push('Add work experience to showcase your background');
-      }
-
+      // Get next milestone
+      const nextMilestone = ProfileCompletionTracker.getNextMilestone(qualityMetrics.completionScore);
+      
       return {
-        progress: {
-          currentStep: completedSteps,
-          totalSteps: totalSteps,
-          completedSteps: completedItems.map(item => item.field),
-          percentComplete: percentComplete,
-          canProceed: completedSteps >= 3
-        },
+        progress,
         completionItems,
-        qualityMetrics: {
-          completionScore: percentComplete,
-          qualityScore: qualityScore,
-          strengthAreas: strengthAreas,
-          improvementAreas: improvementAreas,
-          recommendations: recommendations
-        },
-        nextMilestone: completedSteps < totalSteps ? completionItems.find(item => !item.completed) : null,
-        isReadyForCompletion: percentComplete >= 80
+        qualityMetrics,
+        nextMilestone,
+        isReadyForCompletion: progress.canProceed
       };
     } catch (error) {
-      console.error('Profile validation failed:', error);
+      ErrorHandler.handleError(
+        error instanceof Error ? error : new Error(String(error)),
+        { operation: 'Profile Completion Validation', userId }
+      );
+      
       return {
-        progress: { currentStep: 0, totalSteps: 6, completedSteps: [], percentComplete: 0, canProceed: false },
+        progress: { currentStep: 0, totalSteps: 0, completedSteps: [], percentComplete: 0, canProceed: false },
         completionItems: [],
         qualityMetrics: { completionScore: 0, qualityScore: 0, strengthAreas: [], improvementAreas: [], recommendations: [] },
         nextMilestone: null,
@@ -157,30 +148,99 @@ export class EnhancedProfileService {
     }
   }
 
-  static async completeOnboardingWithValidation(userId: string, data: any): Promise<boolean> {
+  // Complete onboarding with all validations
+  static async completeOnboardingWithValidation(userId: string, profileData: any): Promise<boolean> {
     try {
-      console.log('Completing onboarding for user:', userId);
+      // Validate completion requirements
+      const validation = await this.validateProfileCompletionDetailed(userId, profileData);
       
-      // Mark profile as completed
-      const profileData = {
-        ...data,
-        onboarding_completed: true,
-        profile_completed: true,
-        updated_at: new Date().toISOString()
-      };
-
-      const success = await this.saveProfileWithValidation(userId, profileData);
-      
-      if (success) {
-        // Update user metadata
-        await supabase.auth.updateUser({
-          data: { onboarding_completed: true }
-        });
+      if (!validation.isReadyForCompletion) {
+        const missingItems = validation.completionItems
+          .filter(item => !item.isCompleted && item.priority === 'high')
+          .map(item => item.description);
+        
+        throw new Error(`Profile completion requirements not met: ${missingItems.join(', ')}`);
       }
 
-      return success;
+      // Complete onboarding through flow manager
+      return await OnboardingFlowManager.completeOnboarding(userId, profileData);
     } catch (error) {
-      console.error('Onboarding completion failed:', error);
+      ErrorHandler.handleError(
+        error instanceof Error ? error : new Error(String(error)),
+        { operation: 'Complete Onboarding', userId }
+      );
+      return false;
+    }
+  }
+
+  // Export profile data
+  static async exportProfile(userId: string, format: 'json' | 'csv' = 'json') {
+    try {
+      const profileData = await this.loadProfileForUI(userId);
+      
+      if (!profileData) {
+        throw new Error('No profile data found for export');
+      }
+
+      return await DataImportExportService.exportProfileData(userId);
+    } catch (error) {
+      ErrorHandler.handleError(
+        error instanceof Error ? error : new Error(String(error)),
+        { operation: 'Export Profile', userId }
+      );
+      
+      return { success: false, error: 'Export failed' };
+    }
+  }
+
+  // Import and merge profile data
+  static async importAndMergeProfile(userId: string, fileContent: string, format: 'json' | 'csv'): Promise<boolean> {
+    try {
+      // Parse the file content to BackupData format
+      const backupData = JSON.parse(fileContent);
+      const importResult = await DataImportExportService.importProfileData(userId, backupData);
+      
+      if (!importResult.success) {
+        throw new Error(`Import failed: ${importResult.errors?.join(', ')}`);
+      }
+
+      // Load existing profile
+      const existingProfile = await this.loadProfileForUI(userId);
+      
+      // Merge with imported data (existing data takes precedence)
+      const mergedProfile = {
+        ...importResult.data,
+        ...existingProfile,
+        // Merge arrays instead of replacing
+        workExperiences: [
+          ...(existingProfile?.workExperiences || []),
+          ...(importResult.data?.workExperiences || [])
+        ],
+        education: [
+          ...(existingProfile?.education || []),
+          ...(importResult.data?.education || [])
+        ],
+        projects: [
+          ...(existingProfile?.projects || []),
+          ...(importResult.data?.projects || [])
+        ],
+        skills: Array.from(new Set([
+          ...(existingProfile?.skills || []),
+          ...(importResult.data?.skills || [])
+        ])),
+        languages: Array.from(new Set([
+          ...(existingProfile?.languages || []),
+          ...(importResult.data?.languages || [])
+        ]))
+      };
+
+      // Save merged profile
+      return await this.saveProfileWithValidation(userId, mergedProfile);
+    } catch (error) {
+      ErrorHandler.handleError(
+        error instanceof Error ? error : new Error(String(error)),
+        { operation: 'Import Profile', userId }
+      );
       return false;
     }
   }

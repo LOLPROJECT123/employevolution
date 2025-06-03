@@ -1,72 +1,73 @@
 
-import React, { useEffect, useState } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Check, Save, AlertCircle } from 'lucide-react';
 
 interface AutoSaveIndicatorProps {
-  isAutoSaving?: boolean;
+  status: 'idle' | 'saving' | 'saved' | 'error';
   lastSaved?: Date;
-  hasUnsavedChanges?: boolean;
-  className?: string;
+  error?: string;
 }
 
 export const AutoSaveIndicator: React.FC<AutoSaveIndicatorProps> = ({
-  isAutoSaving = false,
+  status,
   lastSaved,
-  hasUnsavedChanges = false,
-  className = ''
+  error
 }) => {
-  const [timeAgo, setTimeAgo] = useState<string>('');
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (!lastSaved) return;
-
-    const updateTimeAgo = () => {
-      const now = new Date();
-      const diff = now.getTime() - lastSaved.getTime();
-      const minutes = Math.floor(diff / 60000);
-      const seconds = Math.floor((diff % 60000) / 1000);
-
-      if (minutes > 0) {
-        setTimeAgo(`${minutes}m ago`);
-      } else {
-        setTimeAgo(`${seconds}s ago`);
+    if (status !== 'idle') {
+      setVisible(true);
+      if (status === 'saved') {
+        const timer = setTimeout(() => setVisible(false), 3000);
+        return () => clearTimeout(timer);
       }
-    };
+    }
+  }, [status]);
 
-    updateTimeAgo();
-    const interval = setInterval(updateTimeAgo, 1000);
-    return () => clearInterval(interval);
-  }, [lastSaved]);
+  if (!visible) return null;
 
-  if (isAutoSaving) {
-    return (
-      <Badge variant="secondary" className={`flex items-center space-x-1 ${className}`}>
-        <Clock className="h-3 w-3 animate-pulse" />
-        <span>Saving...</span>
-      </Badge>
-    );
-  }
+  const getStatusConfig = () => {
+    switch (status) {
+      case 'saving':
+        return {
+          icon: <Save className="h-4 w-4 animate-pulse" />,
+          text: 'Saving...',
+          className: 'bg-blue-50 text-blue-700 border-blue-200'
+        };
+      case 'saved':
+        return {
+          icon: <Check className="h-4 w-4" />,
+          text: 'Saved',
+          className: 'bg-green-50 text-green-700 border-green-200'
+        };
+      case 'error':
+        return {
+          icon: <AlertCircle className="h-4 w-4" />,
+          text: error || 'Save failed',
+          className: 'bg-red-50 text-red-700 border-red-200'
+        };
+      default:
+        return null;
+    }
+  };
 
-  if (hasUnsavedChanges) {
-    return (
-      <Badge variant="outline" className={`flex items-center space-x-1 ${className}`}>
-        <AlertCircle className="h-3 w-3 text-yellow-500" />
-        <span>Unsaved changes</span>
-      </Badge>
-    );
-  }
+  const config = getStatusConfig();
+  if (!config) return null;
 
-  if (lastSaved) {
-    return (
-      <Badge variant="outline" className={`flex items-center space-x-1 ${className}`}>
-        <CheckCircle className="h-3 w-3 text-green-500" />
-        <span>Saved {timeAgo}</span>
-      </Badge>
-    );
-  }
-
-  return null;
+  return (
+    <div className={`
+      fixed bottom-4 right-4 px-3 py-2 rounded-lg border 
+      flex items-center space-x-2 shadow-lg animate-fade-in
+      ${config.className}
+    `}>
+      {config.icon}
+      <span className="text-sm font-medium">{config.text}</span>
+      {lastSaved && status === 'saved' && (
+        <span className="text-xs opacity-75">
+          {lastSaved.toLocaleTimeString()}
+        </span>
+      )}
+    </div>
+  );
 };
-
-export default AutoSaveIndicator;

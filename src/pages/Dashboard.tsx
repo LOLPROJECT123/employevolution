@@ -3,8 +3,6 @@ import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import MobileHeader from '@/components/MobileHeader';
 import { useMobile } from '@/hooks/use-mobile';
-import { MobileRouteLayout } from '@/components/mobile/MobileRouteLayout';
-import { BreadcrumbNav } from '@/components/navigation/BreadcrumbNav';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, FileText, Users, TrendingUp, Bell, Settings } from 'lucide-react';
@@ -17,30 +15,18 @@ const Dashboard = () => {
   const isMobile = useMobile();
   const [activeTab, setActiveTab] = useState('overview');
 
-  const handleRefresh = async () => {
-    console.log('Refreshing dashboard...');
-    // Implement dashboard refresh logic
-  };
-
-  const content = (
+  return (
     <div className="min-h-screen bg-background">
       {!isMobile && <Navbar />}
+      {isMobile && <MobileHeader />}
       
-      <div className={`container mx-auto px-4 py-8 max-w-7xl ${!isMobile ? 'pt-24' : ''}`}>
-        {!isMobile && (
-          <div className="mb-6">
-            <BreadcrumbNav />
-          </div>
-        )}
-        
-        {!isMobile && (
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
-            <p className="text-muted-foreground">
-              Your personalized career management center
-            </p>
-          </div>
-        )}
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
+          <p className="text-muted-foreground">
+            Your personalized career management center
+          </p>
+        </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
@@ -196,20 +182,6 @@ const Dashboard = () => {
       </div>
     </div>
   );
-
-  if (isMobile) {
-    return (
-      <MobileRouteLayout
-        title="Dashboard"
-        onRefresh={handleRefresh}
-        className="bg-background"
-      >
-        {content}
-      </MobileRouteLayout>
-    );
-  }
-
-  return content;
 };
 
 export default Dashboard;

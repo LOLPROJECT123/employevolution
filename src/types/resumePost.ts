@@ -1,5 +1,5 @@
 
-export interface ResumeAuthor {
+export interface ResumePostAuthor {
   id: string;
   name: string;
   avatar?: string;
@@ -7,18 +7,18 @@ export interface ResumeAuthor {
 
 export interface ResumeComment {
   id: string;
-  author: ResumeAuthor;
+  author: ResumePostAuthor;
   content: string;
   upvotes: number;
   downvotes: number;
   createdAt: string;
-  isCurrentUser: boolean;
+  isCurrentUser?: boolean;
 }
 
 export interface ResumePost {
   id: string;
   title: string;
-  author: ResumeAuthor;
+  author: ResumePostAuthor;
   content: string;
   resumeUrl?: string;
   upvotes: number;
@@ -28,7 +28,12 @@ export interface ResumePost {
   tags: string[];
   company?: string;
   role?: string;
+  position?: string;
   matchPercentage?: number;
+  linkedInData?: {
+    recruiters?: LinkedInContact[];
+    alumni?: LinkedInContact[];
+  };
 }
 
 export interface LinkedInContact {
@@ -38,10 +43,11 @@ export interface LinkedInContact {
   company: string;
   profileUrl: string;
   avatar?: string;
-  connectionDegree: number;
-  mutualConnections: number;
+  connectionDegree: 1 | 2 | 3;
+  mutualConnections?: number;
   isAlumni?: boolean;
   graduationYear?: string;
+  emailAddress?: string;
 }
 
 export interface OutreachTemplate {
