@@ -8,16 +8,19 @@ interface SyncResult<T> {
 export class ProfileDataSync {
   static prepareProfileForDatabase(profileData: any): SyncResult<any> {
     try {
+      // Convert UI format to database format (flat ParsedResume structure)
       const dbProfile = {
         personalInfo: {
           name: profileData.personalInfo?.name || '',
           email: profileData.personalInfo?.email || '',
           phone: profileData.personalInfo?.phone || '',
           location: this.combineAddressFields(profileData.personalInfo),
-          linkedin_url: profileData.socialLinks?.linkedin || '',
-          github_url: profileData.socialLinks?.github || '',
-          portfolio_url: profileData.socialLinks?.portfolio || '',
-          other_url: profileData.socialLinks?.other || ''
+        },
+        socialLinks: {
+          linkedin: profileData.socialLinks?.linkedin || '',
+          github: profileData.socialLinks?.github || '',
+          portfolio: profileData.socialLinks?.portfolio || '',
+          other: profileData.socialLinks?.other || ''
         },
         workExperiences: profileData.workExperiences || [],
         education: profileData.education || [],
@@ -27,8 +30,10 @@ export class ProfileDataSync {
         languages: profileData.languages || []
       };
 
+      console.log('📋 Prepared profile data for database:', dbProfile);
       return { success: true, data: dbProfile };
     } catch (error) {
+      console.error('❌ Profile data sync error:', error);
       return {
         success: false,
         errors: [`Data sync error: ${error instanceof Error ? error.message : 'Unknown error'}`]
@@ -46,10 +51,10 @@ export class ProfileDataSync {
           ...this.parseLocationToAddress(dbData.personalInfo?.location || '')
         },
         socialLinks: {
-          linkedin: dbData.personalInfo?.linkedin_url || '',
-          github: dbData.personalInfo?.github_url || '',
-          portfolio: dbData.personalInfo?.portfolio_url || '',
-          other: dbData.personalInfo?.other_url || ''
+          linkedin: dbData.personalInfo?.linkedin_url || dbData.socialLinks?.linkedin || '',
+          github: dbData.personalInfo?.github_url || dbData.socialLinks?.github || '',
+          portfolio: dbData.personalInfo?.portfolio_url || dbData.socialLinks?.portfolio || '',
+          other: dbData.personalInfo?.other_url || dbData.socialLinks?.other || ''
         },
         workExperiences: dbData.workExperiences || [],
         education: dbData.education || [],

@@ -26,9 +26,6 @@ export class ErrorHandler {
 
     console.error('Application Error:', errorInfo);
 
-    // In production, you might want to send this to a logging service
-    // this.sendToLoggingService(errorInfo);
-
     if (shouldThrow) {
       throw error;
     }
@@ -53,29 +50,36 @@ export class ErrorHandler {
 
 export class ProfileErrorHandler extends ErrorHandler {
   static async handleProfileSaveError(
-    error: Error,
-    retryOperation: () => Promise<boolean>,
+    operation: () => Promise<boolean>,
     maxRetries: number = 3
   ): Promise<boolean> {
     let attempts = 0;
+    let lastError: Error | null = null;
     
     while (attempts < maxRetries) {
       try {
-        return await retryOperation();
-      } catch (retryError) {
+        console.log(`💾 Profile save attempt ${attempts + 1}/${maxRetries}`);
+        const result = await operation();
+        if (result) {
+          console.log(`✅ Profile save successful on attempt ${attempts + 1}`);
+          return true;
+        }
+        throw new Error('Save operation returned false');
+      } catch (error) {
         attempts++;
-        console.warn(`Profile save attempt ${attempts} failed:`, retryError);
+        lastError = error instanceof Error ? error : new Error(String(error));
+        console.warn(`❌ Profile save attempt ${attempts} failed:`, lastError.message);
         
         if (attempts >= maxRetries) {
           this.handleError(
-            retryError instanceof Error ? retryError : new Error(String(retryError)),
+            lastError,
             { operation: 'Profile Save', attempts },
             false
           );
           return false;
         }
         
-        // Wait before retry
+        // Wait before retry with exponential backoff
         await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
       }
     }

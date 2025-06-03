@@ -5,10 +5,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { EnhancedProfileService } from '@/services/enhancedProfileService';
+import { SimpleProfileService } from '@/services/simpleProfileService';
+import { profileService } from '@/services/profileService';
 import { toast } from 'sonner';
 import { AutoSaveIndicator } from '@/components/ui/auto-save-indicator';
-import { useAutoSave } from '@/hooks/useAutoSave';
+import { useSimpleAutoSave } from '@/hooks/useSimpleAutoSave';
 import { useEnhancedValidation } from '@/hooks/useEnhancedValidation';
 import { ProfileFormSkeleton } from '@/components/ui/loading-skeleton';
 import { EnhancedErrorDisplay } from '@/components/ui/enhanced-error-display';
@@ -83,19 +84,19 @@ const EnhancedCompleteProfile = () => {
 
   const { validate, isValidating } = useEnhancedValidation(validationRules, 1000);
 
-  // Auto-save functionality with localStorage backup
-  const { saveStatus, lastSaved, error: saveError } = useAutoSave(profileData, {
+  // Simplified auto-save functionality
+  const { saveStatus, lastSaved, error: saveError } = useSimpleAutoSave(profileData, {
     saveFunction: async (data) => {
       if (!user) return false;
-      return await EnhancedProfileService.saveProfileWithValidation(user.id, data);
+      return await SimpleProfileService.saveProfileData(user.id, data);
     },
     interval: 3000,
-    localStorageKey: user ? `profile-draft-${user.id}` : undefined, // Add localStorage backup
+    localStorageKey: user ? `profile-draft-${user.id}` : undefined,
     onSaveSuccess: () => {
-      console.log('Profile auto-saved successfully');
+      console.log('✅ Profile auto-saved successfully');
     },
     onSaveError: (error) => {
-      console.error('Auto-save failed:', error);
+      console.error('❌ Auto-save failed:', error);
     }
   });
 
@@ -112,6 +113,8 @@ const EnhancedCompleteProfile = () => {
     setError(null);
     
     try {
+      console.log('📋 Loading user data...');
+      
       // Check for localStorage backup first
       const localStorageKey = `profile-draft-${user.id}`;
       const localBackup = localStorage.getItem(localStorageKey);
@@ -140,14 +143,15 @@ const EnhancedCompleteProfile = () => {
       }));
 
       // Load existing profile data from database
-      const existingProfile = await EnhancedProfileService.loadProfileForUI(user.id);
+      const existingProfile = await SimpleProfileService.loadProfileData(user.id);
       if (existingProfile) {
+        console.log('📋 Loaded existing profile from database');
         setProfileData(existingProfile);
         // Clear localStorage backup since we have fresh data from server
         localStorage.removeItem(localStorageKey);
       }
     } catch (error) {
-      console.error('Error loading user data:', error);
+      console.error('❌ Error loading user data:', error);
       setError('Failed to load your profile data. Please try again.');
     } finally {
       setInitialLoading(false);
@@ -169,7 +173,6 @@ const EnhancedCompleteProfile = () => {
       profileData.personalInfo.streetAddress &&
       profileData.personalInfo.city &&
       profileData.personalInfo.state &&
-      profileData.personalInfo.county &&
       profileData.personalInfo.zipCode,
       profileData.education.length > 0,
       profileData.workExperiences.length > 0,
@@ -194,9 +197,18 @@ const EnhancedCompleteProfile = () => {
     
     setLoading(true);
     try {
-      const success = await EnhancedProfileService.completeOnboardingWithValidation(user.id, profileData);
+      console.log('🚀 Completing profile...');
+      
+      // Use the standard profileService for final completion with all validations
+      const success = await SimpleProfileService.saveProfileData(user.id, profileData);
       
       if (success) {
+        // Update onboarding status
+        const onboardingUpdated = await profileService.updateOnboardingStatus?.(user.id, {
+          profile_completed: true,
+          onboarding_completed: true
+        });
+
         // Clear localStorage backup on successful completion
         localStorage.removeItem(`profile-draft-${user.id}`);
         toast.success('🎉 Profile completed successfully! Welcome to Streamline!');
@@ -207,7 +219,7 @@ const EnhancedCompleteProfile = () => {
         throw new Error('Failed to complete profile');
       }
     } catch (error) {
-      console.error('Error completing profile:', error);
+      console.error('❌ Error completing profile:', error);
       toast.error('Error completing profile. Please try again.');
     } finally {
       setLoading(false);
