@@ -60,7 +60,7 @@ export class DataAnonymizationService {
 
         // Anonymize specified fields or default sensitive fields
         const fieldsToAnonymize = fields.length > 0 ? fields : [
-          'full_name', 'email'
+          'full_name', 'email', 'phone', 'address'
         ];
 
         fieldsToAnonymize.forEach(field => {
@@ -69,8 +69,14 @@ export class DataAnonymizationService {
               case 'email':
                 anonymizedProfile[field] = this.ANONYMIZATION_PATTERNS.email(profile[field]);
                 break;
+              case 'phone':
+                anonymizedProfile[field] = this.ANONYMIZATION_PATTERNS.phone(profile[field]);
+                break;
               case 'full_name':
                 anonymizedProfile[field] = this.ANONYMIZATION_PATTERNS.name(profile[field]);
+                break;
+              case 'address':
+                anonymizedProfile[field] = this.ANONYMIZATION_PATTERNS.address(profile[field]);
                 break;
               default:
                 anonymizedProfile[field] = '***ANONYMIZED***';
@@ -114,7 +120,7 @@ export class DataAnonymizationService {
         }
       }
 
-      // Log anonymization action for audit (using existing audit_logs table)
+      // Log anonymization action for audit
       await this.logDataAction(userId, 'anonymization', {
         anonymizedFields,
         timestamp: new Date().toISOString()
@@ -251,17 +257,20 @@ export class DataAnonymizationService {
         confirmed
       });
 
-      // Delete from all related tables using existing table names
+      // Delete from all related tables
       const tables = [
         'job_applications',
         'communications',
         'job_preferences',
-        'user_profiles'
+        'user_profiles',
+        'oauth_integrations',
+        'calendar_events',
+        'email_logs',
+        'ats_integrations'
       ];
 
       for (const table of tables) {
-        // Use type assertion to handle the dynamic table names
-        await (supabase as any)
+        await supabase
           .from(table)
           .delete()
           .eq('user_id', userId);
@@ -285,16 +294,15 @@ export class DataAnonymizationService {
 
   private static async logDataAction(userId: string, action: string, metadata: any): Promise<void> {
     try {
-      // Use existing audit_logs table
       await supabase
-        .from('audit_logs')
+        .from('data_audit_logs')
         .insert({
           user_id: userId,
           action,
           metadata,
+          timestamp: new Date().toISOString(),
           ip_address: 'unknown', // Would be captured from request in real implementation
-          user_agent: navigator.userAgent,
-          table_name: 'data_operations'
+          user_agent: navigator.userAgent
         });
     } catch (error) {
       console.error('Failed to log data action:', error);

@@ -1,23 +1,35 @@
 
 import { useState, useEffect } from 'react';
-import type { 
-  SpeechRecognition, 
-  SpeechRecognitionEvent, 
-  SpeechRecognitionErrorEvent 
-} from '@/types/speechRecognition';
+
+interface SpeechRecognitionEvent {
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionErrorEvent {
+  error: string;
+  message: string;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
 
 export const useVoiceJobSearch = (onResult: (transcript: string) => void) => {
   const [isSupported, setIsSupported] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+  const [recognition, setRecognition] = useState<any>(null);
 
   useEffect(() => {
-    const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     
-    if (SpeechRecognitionClass) {
+    if (SpeechRecognition) {
       setIsSupported(true);
-      const recognitionInstance = new SpeechRecognitionClass();
+      const recognitionInstance = new SpeechRecognition();
       
       recognitionInstance.continuous = false;
       recognitionInstance.interimResults = true;

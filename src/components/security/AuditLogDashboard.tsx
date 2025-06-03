@@ -13,13 +13,9 @@ interface AuditLog {
   user_id: string;
   action: string;
   metadata: any;
-  created_at: string;
+  timestamp: string;
   ip_address: string;
   user_agent: string;
-  table_name?: string;
-  record_id?: string;
-  old_values?: any;
-  new_values?: any;
 }
 
 export const AuditLogDashboard: React.FC = () => {
@@ -42,10 +38,10 @@ export const AuditLogDashboard: React.FC = () => {
     setLoading(true);
     try {
       let query = supabase
-        .from('audit_logs')
+        .from('data_audit_logs')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('timestamp', { ascending: false });
 
       // Apply date filter
       if (dateRange !== 'all') {
@@ -53,7 +49,7 @@ export const AuditLogDashboard: React.FC = () => {
         const dateThreshold = new Date();
         dateThreshold.setDate(dateThreshold.getDate() - daysBack);
         
-        query = query.gte('created_at', dateThreshold.toISOString());
+        query = query.gte('timestamp', dateThreshold.toISOString());
       }
 
       // Apply action filter
@@ -67,38 +63,9 @@ export const AuditLogDashboard: React.FC = () => {
         throw error;
       }
 
-      // Transform the data to match our AuditLog interface with proper type casting
-      const transformedLogs: AuditLog[] = (data || []).map(log => ({
-        id: log.id,
-        user_id: log.user_id || '',
-        action: log.action,
-        metadata: log.new_values || log.old_values || {},
-        created_at: log.created_at,
-        ip_address: String(log.ip_address || ''),
-        user_agent: log.user_agent || '',
-        table_name: log.table_name,
-        record_id: log.record_id,
-        old_values: log.old_values,
-        new_values: log.new_values
-      }));
-
-      setLogs(transformedLogs);
+      setLogs(data || []);
     } catch (error) {
       console.error('Failed to load audit logs:', error);
-      // Set mock data for demonstration
-      setLogs([
-        {
-          id: '1',
-          user_id: user.id,
-          action: 'profile_update',
-          metadata: { field: 'name', old_value: 'John', new_value: 'John Doe' },
-          created_at: new Date().toISOString(),
-          ip_address: '192.168.1.1',
-          user_agent: 'Mozilla/5.0...',
-          table_name: 'user_profiles',
-          record_id: user.id
-        }
-      ]);
     } finally {
       setLoading(false);
     }
@@ -113,7 +80,7 @@ export const AuditLogDashboard: React.FC = () => {
     const csvContent = [
       ['Timestamp', 'Action', 'IP Address', 'User Agent', 'Metadata'].join(','),
       ...filteredLogs.map(log => [
-        log.created_at,
+        log.timestamp,
         log.action,
         log.ip_address,
         log.user_agent,
@@ -201,10 +168,10 @@ export const AuditLogDashboard: React.FC = () => {
                 className="w-full p-2 border rounded-md"
               >
                 <option value="all">All Actions</option>
-                <option value="create">Create</option>
-                <option value="update">Update</option>
-                <option value="delete">Delete</option>
-                <option value="access">Access</option>
+                <option value="anonymization">Anonymization</option>
+                <option value="export">Data Export</option>
+                <option value="deletion">Data Deletion</option>
+                <option value="access">Data Access</option>
               </select>
             </div>
 
@@ -253,7 +220,7 @@ export const AuditLogDashboard: React.FC = () => {
                             {log.action}
                           </Badge>
                           <span className="text-sm text-gray-500">
-                            {new Date(log.created_at).toLocaleString()}
+                            {new Date(log.timestamp).toLocaleString()}
                           </span>
                         </div>
                         

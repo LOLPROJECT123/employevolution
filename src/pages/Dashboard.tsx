@@ -1,240 +1,215 @@
-import React, { useEffect, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import PersonalizedDashboard from "@/components/dashboard/PersonalizedDashboard";
-import JobRecommendations from "@/components/dashboard/JobRecommendations";
-import RecentActivity from "@/components/dashboard/RecentActivity";
-import { ContextAwareNavigationSuggestions } from "@/components/navigation/ContextAwareNavigationSuggestions";
-import { EnhancedProfileValidation } from "@/components/enhanced/EnhancedProfileValidation";
-import { ProfessionalDevelopmentTracker } from "@/components/enhanced/ProfessionalDevelopmentTracker";
-import { FeatureStatusDashboard } from "@/components/completion/FeatureStatusDashboard";
-import { NavigationAnalyticsService } from "@/services/navigationAnalyticsService";
-import { CompletionStatusService } from "@/services/completionStatusService";
-import { useAuth } from "@/hooks/useAuth";
-import { toast } from "sonner";
-import { 
-  BarChart3, 
-  TrendingUp, 
-  Users, 
-  Calendar,
-  Target,
-  Award,
-  BookOpen,
-  Zap
-} from "lucide-react";
+
+import React, { useState } from 'react';
+import Navbar from '@/components/Navbar';
+import MobileHeader from '@/components/MobileHeader';
+import { useMobile } from '@/hooks/use-mobile';
+import { MobileRouteLayout } from '@/components/mobile/MobileRouteLayout';
+import { BreadcrumbNav } from '@/components/navigation/BreadcrumbNav';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { BarChart, FileText, Users, TrendingUp, Bell, Settings } from 'lucide-react';
+import PersonalizedDashboard from '@/components/dashboard/PersonalizedDashboard';
+import ProfileCompletionWidget from '@/components/profile/ProfileCompletionWidget';
+import RecentActivity from '@/components/dashboard/RecentActivity';
+import JobRecommendations from '@/components/dashboard/JobRecommendations';
 
 const Dashboard = () => {
-  const { user } = useAuth();
-  const [completionStatus, setCompletionStatus] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const isMobile = useMobile();
+  const [activeTab, setActiveTab] = useState('overview');
 
-  useEffect(() => {
-    // Track navigation to dashboard
-    NavigationAnalyticsService.trackNavigationPatterns(
-      window.location.pathname,
-      '/dashboard',
-      'direct'
-    );
-
-    if (user) {
-      loadDashboardData();
-    }
-  }, [user]);
-
-  const loadDashboardData = async () => {
-    if (!user) return;
-
-    setLoading(true);
-    try {
-      const status = await CompletionStatusService.getCompletionStatus(user.id);
-      setCompletionStatus(status);
-      
-      // Update user metrics
-      await CompletionStatusService.updateUserMetrics(user.id);
-    } catch (error) {
-      console.error('Failed to load dashboard data:', error);
-      toast.error('Failed to load dashboard data');
-    } finally {
-      setLoading(false);
-    }
+  const handleRefresh = async () => {
+    console.log('Refreshing dashboard...');
+    // Implement dashboard refresh logic
   };
 
-  if (loading) {
-    return <div className="container mx-auto p-6">Loading dashboard...</div>;
-  }
-
-  return (
-    <div className="container mx-auto p-6">
-      {/* Context-aware navigation suggestions */}
-      <ContextAwareNavigationSuggestions />
+  const content = (
+    <div className="min-h-screen bg-background">
+      {!isMobile && <Navbar />}
       
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Welcome back!</h1>
-        <p className="text-muted-foreground">
-          Here's your personalized career dashboard with AI insights
-        </p>
-      </div>
-
-      {/* Completion Status Overview */}
-      {completionStatus && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Enhanced Features</CardTitle>
-              <Target className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{completionStatus.enhancedFeatures}%</div>
-              <Progress value={completionStatus.enhancedFeatures} className="mt-2" />
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Navigation</CardTitle>
-              <Zap className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{completionStatus.navigationIntegration}%</div>
-              <Progress value={completionStatus.navigationIntegration} className="mt-2" />
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">ML/AI Features</CardTitle>
-              <BookOpen className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{completionStatus.mlAiFeatures}%</div>
-              <Progress value={completionStatus.mlAiFeatures} className="mt-2" />
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Overall Progress</CardTitle>
-              <Award className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{completionStatus.overall}%</div>
-              <Progress value={completionStatus.overall} className="mt-2" />
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="profile">Profile AI</TabsTrigger>
-          <TabsTrigger value="development">Development</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="features">Features</TabsTrigger>
-          <TabsTrigger value="activity">Activity</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <PersonalizedDashboard />
-            <JobRecommendations />
+      <div className={`container mx-auto px-4 py-8 max-w-7xl ${!isMobile ? 'pt-24' : ''}`}>
+        {!isMobile && (
+          <div className="mb-6">
+            <BreadcrumbNav />
           </div>
-        </TabsContent>
-
-        <TabsContent value="profile">
-          <EnhancedProfileValidation />
-        </TabsContent>
-
-        <TabsContent value="development">
-          <ProfessionalDevelopmentTracker />
-        </TabsContent>
-
-        <TabsContent value="analytics" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Applications Sent</CardTitle>
-                <BarChart3 className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">24</div>
-                <p className="text-xs text-muted-foreground">+3 from last week</p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Response Rate</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">16.7%</div>
-                <p className="text-xs text-muted-foreground">Above average</p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Interviews</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">4</div>
-                <p className="text-xs text-muted-foreground">2 scheduled</p>
-              </CardContent>
-            </Card>
+        )}
+        
+        {!isMobile && (
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
+            <p className="text-muted-foreground">
+              Your personalized career management center
+            </p>
           </div>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Career Progress Analytics</CardTitle>
-              <CardDescription>
-                AI-powered insights into your job search performance
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span>Profile Strength</span>
-                    <span>85%</span>
-                  </div>
-                  <Progress value={85} />
-                </div>
-                
-                <div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span>Market Competitiveness</span>
-                    <span>72%</span>
-                  </div>
-                  <Progress value={72} />
-                </div>
-                
-                <div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span>Application Success Rate</span>
-                    <span>16.7%</span>
-                  </div>
-                  <Progress value={16.7} />
-                </div>
+        )}
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="recommendations">AI Recommendations</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="activity">Activity</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              {/* Main Content */}
+              <div className="lg:col-span-3 space-y-6">
+                <PersonalizedDashboard />
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+              
+              {/* Sidebar */}
+              <div className="lg:col-span-1 space-y-6">
+                <ProfileCompletionWidget />
+                <JobRecommendations />
+              </div>
+            </div>
+          </TabsContent>
 
-        <TabsContent value="features">
-          <FeatureStatusDashboard />
-        </TabsContent>
+          <TabsContent value="recommendations" className="space-y-6">
+            <PersonalizedDashboard />
+          </TabsContent>
 
-        <TabsContent value="activity">
-          <RecentActivity />
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="analytics" className="space-y-6">
+            {/* Analytics Dashboard */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Applications Sent</p>
+                      <p className="text-2xl font-bold">23</p>
+                    </div>
+                    <FileText className="h-8 w-8 text-blue-600" />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    +12% from last month
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Response Rate</p>
+                      <p className="text-2xl font-bold">34%</p>
+                    </div>
+                    <TrendingUp className="h-8 w-8 text-green-600" />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    +8% from last month
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Interviews</p>
+                      <p className="text-2xl font-bold">8</p>
+                    </div>
+                    <Users className="h-8 w-8 text-orange-600" />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    +3 this week
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Job Matches</p>
+                      <p className="text-2xl font-bold">156</p>
+                    </div>
+                    <BarChart className="h-8 w-8 text-purple-600" />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    +45 new this week
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Additional Analytics Components */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Application Success Rate</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between text-sm">
+                      <span>Applications Sent</span>
+                      <span>23</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Responses Received</span>
+                      <span>8</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Interviews Scheduled</span>
+                      <span>3</span>
+                    </div>
+                    <div className="flex justify-between text-sm font-medium">
+                      <span>Success Rate</span>
+                      <span className="text-green-600">34%</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Skill Match Trends</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">JavaScript</span>
+                      <span className="text-sm text-green-600">95% match</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">React</span>
+                      <span className="text-sm text-green-600">88% match</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">TypeScript</span>
+                      <span className="text-sm text-yellow-600">65% match</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Docker</span>
+                      <span className="text-sm text-red-600">23% match</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="activity" className="space-y-6">
+            <RecentActivity />
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
+
+  if (isMobile) {
+    return (
+      <MobileRouteLayout
+        title="Dashboard"
+        onRefresh={handleRefresh}
+        className="bg-background"
+      >
+        {content}
+      </MobileRouteLayout>
+    );
+  }
+
+  return content;
 };
 
 export default Dashboard;

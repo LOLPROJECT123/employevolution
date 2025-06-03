@@ -37,7 +37,7 @@ export const PresenceIndicator: React.FC<PresenceIndicatorProps> = ({
         name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Anonymous',
         status: 'online',
         last_seen: new Date().toISOString(),
-        current_section: currentPage
+        current_page: currentPage
       });
     };
 

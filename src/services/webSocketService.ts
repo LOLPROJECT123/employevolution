@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export interface WebSocketConnection {
@@ -20,10 +21,8 @@ export class WebSocketService {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('No authenticated session');
 
-      // Use the public URL instead of accessing protected property
       const wsUrl = `wss://pmcuyiwuobhqexbpkgnd.supabase.co/realtime/v1/websocket`;
-      const apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBtY3V5aXd1b2JocWV4YnBrZ25kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyMjQ0NjIsImV4cCI6MjA2MzgwMDQ2Mn0.1HF6NS5FOMNcj8YmzFn_V3l6HJNczjbN8zVvTPM1iDc";
-      const socket = new WebSocket(`${wsUrl}?apikey=${apiKey}&vsn=1.0.0`);
+      const socket = new WebSocket(`${wsUrl}?apikey=${supabase.supabaseKey}&vsn=1.0.0`);
 
       const connection: WebSocketConnection = {
         id: connectionId,

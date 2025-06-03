@@ -7,10 +7,12 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface JobSearchRequest {
+interface JobBoardSearchRequest {
   keywords: string;
   location: string;
   sources: ('indeed' | 'linkedin' | 'monster')[];
+  page?: number;
+  limit?: number;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -37,45 +39,80 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    const { keywords, location, sources }: JobSearchRequest = await req.json();
+    const { keywords, location, sources, page = 1, limit = 20 }: JobBoardSearchRequest = await req.json();
 
-    // Mock job search results
-    const mockJobs = [
-      {
-        id: 'job_board_1',
-        title: `${keywords} Engineer`,
-        company: 'TechCorp Inc.',
-        location: location,
-        description: `Looking for a skilled ${keywords} professional...`,
-        salary: '$80,000 - $120,000',
-        source: sources[0] || 'indeed',
-        url: 'https://example.com/job/1',
-        posted_date: new Date().toISOString()
-      },
-      {
-        id: 'job_board_2',
-        title: `Senior ${keywords} Developer`,
-        company: 'Innovation Labs',
-        location: location,
-        description: `Join our team as a ${keywords} expert...`,
-        salary: '$100,000 - $150,000',
-        source: sources[1] || 'linkedin',
-        url: 'https://example.com/job/2',
-        posted_date: new Date().toISOString()
+    const allJobs = [];
+
+    // Search each source
+    for (const source of sources) {
+      try {
+        let jobs = [];
+
+        if (source === 'indeed') {
+          // Use Indeed API (requires partnership)
+          // For demo, return mock data
+          jobs = Array.from({ length: 5 }, (_, i) => ({
+            id: `indeed_${Date.now()}_${i}`,
+            title: `${keywords} Position ${i + 1}`,
+            company: `Indeed Company ${i + 1}`,
+            location: location,
+            description: `Great opportunity for ${keywords} in ${location}`,
+            salary: `$${60000 + (i * 10000)} - $${80000 + (i * 10000)}`,
+            posted_date: new Date(Date.now() - (i * 24 * 60 * 60 * 1000)).toISOString(),
+            apply_url: `https://indeed.com/apply/mock-${i}`,
+            source: 'indeed'
+          }));
+        } else if (source === 'linkedin') {
+          // Use LinkedIn Job Search API
+          jobs = Array.from({ length: 5 }, (_, i) => ({
+            id: `linkedin_${Date.now()}_${i}`,
+            title: `${keywords} Role ${i + 1}`,
+            company: `LinkedIn Corp ${i + 1}`,
+            location: location,
+            description: `Exciting ${keywords} opportunity at LinkedIn Corp`,
+            salary: `$${70000 + (i * 15000)} - $${90000 + (i * 15000)}`,
+            posted_date: new Date(Date.now() - (i * 24 * 60 * 60 * 1000)).toISOString(),
+            apply_url: `https://linkedin.com/jobs/apply/mock-${i}`,
+            source: 'linkedin'
+          }));
+        } else if (source === 'monster') {
+          jobs = Array.from({ length: 5 }, (_, i) => ({
+            id: `monster_${Date.now()}_${i}`,
+            title: `${keywords} Expert ${i + 1}`,
+            company: `Monster Inc ${i + 1}`,
+            location: location,
+            description: `Monster opportunity for ${keywords} professionals`,
+            salary: `$${65000 + (i * 12000)} - $${85000 + (i * 12000)}`,
+            posted_date: new Date(Date.now() - (i * 24 * 60 * 60 * 1000)).toISOString(),
+            apply_url: `https://monster.com/apply/mock-${i}`,
+            source: 'monster'
+          }));
+        }
+
+        allJobs.push(...jobs);
+      } catch (error) {
+        console.error(`Error searching ${source}:`, error);
       }
-    ];
+    }
 
-    console.log('Job board search performed:', {
-      keywords,
-      location,
-      sources,
-      results: mockJobs.length
-    });
+    // Store search results
+    await supabaseClient
+      .from('job_search_results')
+      .insert({
+        user_id: user.id,
+        keywords,
+        location,
+        sources,
+        results_count: allJobs.length,
+        search_date: new Date().toISOString()
+      });
 
     return new Response(JSON.stringify({ 
       success: true, 
-      jobs: mockJobs,
-      total: mockJobs.length
+      jobs: allJobs,
+      total: allJobs.length,
+      page,
+      sources_searched: sources
     }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },

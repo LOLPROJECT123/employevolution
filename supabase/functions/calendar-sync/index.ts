@@ -11,6 +11,7 @@ interface CalendarSyncRequest {
   provider: 'google' | 'outlook';
   clientId: string;
   clientSecret: string;
+  accessToken?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -37,34 +38,56 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    const { provider, clientId, clientSecret }: CalendarSyncRequest = await req.json();
+    const { provider, clientId, clientSecret, accessToken }: CalendarSyncRequest = await req.json();
 
-    // Mock calendar sync implementation
-    const events = [
-      {
-        id: 'cal_event_1',
-        title: 'Interview with Tech Corp',
-        description: 'Technical interview for Software Engineer position',
-        startTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
-        endTime: new Date(Date.now() + 25 * 60 * 60 * 1000),
-        location: 'Virtual - Zoom',
-        attendees: ['interviewer@techcorp.com']
-      }
-    ];
+    let events = [];
+    
+    if (provider === 'google' && accessToken) {
+      const eventsResponse = await fetch(
+        'https://www.googleapis.com/calendar/v3/calendars/primary/events',
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+          },
+        }
+      );
+      
+      const eventsData = await eventsResponse.json();
+      events = eventsData.items || [];
+    } else if (provider === 'outlook' && accessToken) {
+      const eventsResponse = await fetch(
+        'https://graph.microsoft.com/v1.0/me/events',
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+          },
+        }
+      );
+      
+      const eventsData = await eventsResponse.json();
+      events = eventsData.value || [];
+    }
 
-    // Store calendar integration (mock)
-    console.log('Mock calendar integration stored:', {
-      user_id: user.id,
-      provider: provider,
-      client_id: clientId,
-      is_active: true,
-      connected_at: new Date().toISOString()
-    });
+    // Store events in database
+    for (const event of events) {
+      await supabaseClient
+        .from('calendar_events')
+        .upsert({
+          user_id: user.id,
+          external_event_id: event.id,
+          title: event.summary || event.subject,
+          description: event.description || event.body?.content,
+          start_time: event.start?.dateTime || event.start?.date,
+          end_time: event.end?.dateTime || event.end?.date,
+          location: event.location?.displayName || event.location,
+          provider: provider,
+          synced_at: new Date().toISOString()
+        });
+    }
 
     return new Response(JSON.stringify({ 
       success: true, 
-      events: events,
-      provider: provider
+      events: events.length 
     }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },

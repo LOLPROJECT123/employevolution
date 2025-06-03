@@ -45,26 +45,73 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { provider, apiKey, domain, email }: SMTPEmailRequest = await req.json();
 
-    // Mock SMTP email sending
-    const messageId = `mock_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
-    console.log(`Mock ${provider} email sent:`, {
-      to: email.to,
-      subject: email.subject,
-      messageId: messageId,
-      provider: provider
-    });
+    let messageId = '';
 
-    // In real implementation, you would use the actual SMTP service
     if (provider === 'sendgrid') {
-      // Mock SendGrid API call
+      const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          personalizations: [{
+            to: [{ email: email.to }],
+            subject: email.subject,
+          }],
+          from: { email: 'noreply@yourdomain.com' },
+          content: [
+            { type: 'text/html', value: email.html },
+            { type: 'text/plain', value: email.text || email.html },
+          ],
+        }),
+      });
+
+      if (response.ok) {
+        messageId = response.headers.get('x-message-id') || 'sendgrid-' + Date.now();
+      } else {
+        throw new Error('SendGrid API error: ' + response.statusText);
+      }
     } else if (provider === 'mailgun') {
-      // Mock Mailgun API call
+      const formData = new FormData();
+      formData.append('from', `noreply@${domain}`);
+      formData.append('to', email.to);
+      formData.append('subject', email.subject);
+      formData.append('html', email.html);
+      if (email.text) formData.append('text', email.text);
+
+      const response = await fetch(`https://api.mailgun.net/v3/${domain}/messages`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${btoa(`api:${apiKey}`)}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        messageId = data.id;
+      } else {
+        throw new Error('Mailgun API error: ' + data.message);
+      }
     }
+
+    // Log email
+    await supabaseClient
+      .from('email_logs')
+      .insert({
+        user_id: user.id,
+        recipient: email.to,
+        subject: email.subject,
+        provider: provider,
+        message_id: messageId,
+        sent_at: new Date().toISOString(),
+        status: 'sent'
+      });
 
     return new Response(JSON.stringify({ 
       success: true, 
-      messageId: messageId 
+      messageId 
     }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },

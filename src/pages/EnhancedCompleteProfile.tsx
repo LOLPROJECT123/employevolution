@@ -223,7 +223,7 @@ const EnhancedCompleteProfile = () => {
             </CardHeader>
             <CardContent>
               <EnhancedErrorDisplay
-                error={new Error(error)}
+                error={error}
                 suggestions={[
                   'Check your internet connection',
                   'Refresh the page to try again',
@@ -321,9 +321,9 @@ const EnhancedCompleteProfile = () => {
 
       {/* Auto-save indicator */}
       <AutoSaveIndicator 
-        isAutoSaving={saveStatus === 'saving'}
+        status={saveStatus} 
         lastSaved={lastSaved || undefined}
-        hasUnsavedChanges={saveStatus === 'idle'}
+        error={saveError || undefined}
       />
     </div>
   );

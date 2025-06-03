@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { securityService } from './securityService';
 
 export interface TwoFactorSetup {
   secret: string;
@@ -37,10 +38,16 @@ export class EnhancedAuthService {
       const isValid = await this.verifyTOTPCode(code, secret);
       
       if (isValid) {
-        // Mock 2FA status update since properties don't exist in user_profiles
+        // Update user's 2FA status
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          console.log('Mock 2FA: Two-factor authentication enabled for user:', user.id);
+          await supabase
+            .from('user_profiles')
+            .update({ 
+              two_factor_enabled: true,
+              two_factor_verified_at: new Date().toISOString()
+            })
+            .eq('user_id', user.id);
         }
         
         return true;
@@ -91,10 +98,16 @@ export class EnhancedAuthService {
         fallbackEnabled: true
       };
 
-      // Mock biometric config save since properties don't exist
+      // Save biometric config to user profile
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        console.log('Mock biometric: Biometric auth configured for user:', user.id, config);
+        await supabase
+          .from('user_profiles')
+          .update({ 
+            biometric_auth_enabled: config.enabled,
+            biometric_methods: config.supportedMethods
+          })
+          .eq('user_id', user.id);
       }
 
       return config;
@@ -117,10 +130,20 @@ export class EnhancedAuthService {
     };
 
     try {
-      // Mock implementation since security_alerts table doesn't exist
+      // Store alert in database
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        console.log('Mock security: Security alert created for user:', user.id, securityAlert);
+        await supabase
+          .from('security_alerts')
+          .insert({
+            user_id: user.id,
+            alert_type: securityAlert.type,
+            severity: securityAlert.severity,
+            message: securityAlert.message,
+            ip_address: securityAlert.ipAddress,
+            user_agent: securityAlert.userAgent,
+            created_at: securityAlert.timestamp.toISOString()
+          });
       }
 
       // Send real-time notification for high/critical alerts
@@ -144,7 +167,15 @@ export class EnhancedAuthService {
     // Send email notification for critical alerts
     if (alert.severity === 'critical') {
       try {
-        console.log('Mock notification: Would send security alert email for:', alert);
+        await fetch('/api/send-security-alert', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: alert.type,
+            message: alert.message,
+            timestamp: alert.timestamp
+          })
+        });
       } catch (error) {
         console.error('Failed to send security notification:', error);
       }
@@ -162,18 +193,7 @@ export class EnhancedAuthService {
 
   private static async logSecurityEvent(event: string, data: any): Promise<void> {
     try {
-      // Use audit_logs table for security events since security_events table doesn't exist
-      const { data: { user } } = await supabase.auth.getUser();
-      await supabase
-        .from('audit_logs')
-        .insert({
-          user_id: user?.id || null,
-          action: event,
-          metadata: data,
-          ip_address: 'unknown',
-          user_agent: navigator.userAgent,
-          table_name: 'security_events'
-        });
+      await securityService.logSecurityEvent(event, data);
     } catch (error) {
       console.error('Failed to log security event:', error);
     }

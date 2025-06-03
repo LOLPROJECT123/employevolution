@@ -1,159 +1,152 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Job } from '@/types/job';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
-  Building, 
   MapPin, 
   DollarSign, 
   Clock, 
-  Users,
-  Calendar,
+  Building, 
+  Users, 
   ExternalLink,
-  Bookmark,
-  Share
+  Heart,
+  Briefcase,
+  GraduationCap,
+  CheckCircle
 } from 'lucide-react';
+import { JobMatchAnalysis } from '@/components/jobs/JobMatchAnalysis';
+import { useAuth } from '@/hooks/useAuth';
 
 interface JobDetailViewProps {
-  job: any;
-  onApply?: (job: any) => void;
-  onSave?: (job: any) => void;
-  onShare?: (job: any) => void;
+  job: Job | null;
+  onApply: (job: Job) => void;
+  onSave: (job: Job) => void;
 }
 
-const JobDetailView: React.FC<JobDetailViewProps> = ({ 
-  job, 
-  onApply, 
-  onSave, 
-  onShare 
-}) => {
+export const JobDetailView = ({ job, onApply, onSave }: JobDetailViewProps) => {
+  const { userProfile } = useAuth();
+
+  if (!job) {
+    return (
+      <div className="h-full flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No Job Selected</h3>
+          <p className="text-gray-500">Select a job from the list to view details</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Calculate mock match score based on job data
+  const calculateMatchScore = () => {
+    // Create a mock user profile structure for compatibility
+    const mockUserProfile = {
+      profile: {
+        skills: [] as string[]
+      }
+    };
+    
+    const userSkills = mockUserProfile.profile?.skills || [];
+    const jobSkills = job.skills || [];
+    
+    const matchingSkills = jobSkills.filter(skill => 
+      userSkills.some(userSkill => 
+        userSkill.toLowerCase().includes(skill.toLowerCase()) ||
+        skill.toLowerCase().includes(userSkill.toLowerCase())
+      )
+    );
+    
+    const missingSkills = jobSkills.filter(skill => 
+      !userSkills.some(userSkill => 
+        userSkill.toLowerCase().includes(skill.toLowerCase()) ||
+        skill.toLowerCase().includes(userSkill.toLowerCase())
+      )
+    );
+
+    const skillsPercentage = jobSkills.length > 0 
+      ? Math.round((matchingSkills.length / jobSkills.length) * 100)
+      : 100;
+
+    return {
+      overall: job.matchPercentage || skillsPercentage,
+      skills: skillsPercentage,
+      experience: skillsPercentage > 60,
+      education: skillsPercentage > 50,
+      location: !job.remote ? job.location.toLowerCase().includes('austin') : true,
+      missingSkills: missingSkills.slice(0, 6),
+      matchingSkills: matchingSkills.slice(0, 8)
+    };
+  };
+
+  const matchScore = calculateMatchScore();
+
+  const formatSalary = (salary: Job['salary']) => {
+    if (!salary || salary.min === 0) return 'Not specified';
+    
+    const formatter = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    });
+    
+    if (salary.min === salary.max) {
+      return formatter.format(salary.min);
+    }
+    
+    return `${formatter.format(salary.min)} - ${formatter.format(salary.max)}`;
+  };
+
+  const getTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 24) {
+      return `${diffInHours}h ago`;
+    }
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) {
+      return `${diffInDays}d ago`;
+    }
+    
+    const diffInWeeks = Math.floor(diffInDays / 7);
+    return `${diffInWeeks}w ago`;
+  };
+
+  // Create a mock user object for JobMatchAnalysis compatibility
+  const mockUser = userProfile ? {
+    id: userProfile.id || '',
+    email: userProfile.full_name || '',
+    name: userProfile.full_name || '',
+    profile: {
+      skills: [] as string[],
+      experience: 'entry' as const,
+      location: '',
+      salary_range: { min: 0, max: 0 },
+      preferences: {
+        remote: false,
+        job_types: [],
+        industries: []
+      }
+    },
+    created_at: new Date().toISOString()
+  } : null;
+
   return (
-    <Card className="h-full">
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle className="text-xl mb-2">{job.title}</CardTitle>
-            <div className="flex items-center space-x-4 text-muted-foreground">
-              <div className="flex items-center space-x-1">
-                <Building className="h-4 w-4" />
-                <span>{job.company}</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <MapPin className="h-4 w-4" />
-                <span>{job.location}</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <Clock className="h-4 w-4" />
-                <span>{job.posted}</span>
-              </div>
-            </div>
-          </div>
-          <div className="flex space-x-2">
-            <Button size="sm" variant="outline" onClick={() => onSave?.(job)}>
-              <Bookmark className="h-4 w-4" />
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => onShare?.(job)}>
-              <Share className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </CardHeader>
-      
-      <CardContent className="space-y-6">
-        {/* Quick Info */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center p-3 border rounded-lg">
-            <DollarSign className="h-5 w-5 mx-auto mb-1 text-green-600" />
-            <div className="text-sm font-medium">{job.salary}</div>
-            <div className="text-xs text-muted-foreground">Salary</div>
-          </div>
-          
-          <div className="text-center p-3 border rounded-lg">
-            <Users className="h-5 w-5 mx-auto mb-1 text-blue-600" />
-            <div className="text-sm font-medium">{job.type}</div>
-            <div className="text-xs text-muted-foreground">Type</div>
-          </div>
-          
-          <div className="text-center p-3 border rounded-lg">
-            <Calendar className="h-5 w-5 mx-auto mb-1 text-purple-600" />
-            <div className="text-sm font-medium">Immediate</div>
-            <div className="text-xs text-muted-foreground">Start Date</div>
-          </div>
-          
-          <div className="text-center p-3 border rounded-lg">
-            <Clock className="h-5 w-5 mx-auto mb-1 text-orange-600" />
-            <div className="text-sm font-medium">{job.posted}</div>
-            <div className="text-xs text-muted-foreground">Posted</div>
-          </div>
-        </div>
-
-        {/* Job Description */}
-        <div>
-          <h3 className="font-semibold mb-3">Job Description</h3>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            {job.description}
-          </p>
-        </div>
-
-        <Separator />
-
-        {/* Requirements */}
-        <div>
-          <h3 className="font-semibold mb-3">Requirements</h3>
-          <div className="flex flex-wrap gap-2">
-            {job.requirements?.map((req: string, index: number) => (
-              <Badge key={index} variant="secondary">
-                {req}
-              </Badge>
-            ))}
-          </div>
-        </div>
-
-        <Separator />
-
-        {/* Benefits */}
-        {job.benefits && (
-          <>
-            <div>
-              <h3 className="font-semibold mb-3">Benefits</h3>
-              <div className="flex flex-wrap gap-2">
-                {job.benefits.map((benefit: string, index: number) => (
-                  <Badge key={index} variant="outline" className="text-green-700 border-green-200">
-                    {benefit}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-            <Separator />
-          </>
-        )}
-
-        {/* Company Info */}
-        <div>
-          <h3 className="font-semibold mb-3">About {job.company}</h3>
-          <p className="text-sm text-muted-foreground">
-            {job.companyDescription || `Join ${job.company} and be part of an innovative team that's shaping the future of technology. We offer competitive compensation, excellent benefits, and opportunities for professional growth.`}
-          </p>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex space-x-3 pt-4">
-          <Button onClick={() => onApply?.(job)} className="flex-1">
-            Apply Now
-          </Button>
-          <Button variant="outline" onClick={() => onSave?.(job)}>
-            <Bookmark className="h-4 w-4 mr-2" />
-            Save
-          </Button>
-          <Button variant="outline" size="icon">
-            <ExternalLink className="h-4 w-4" />
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+    <ScrollArea className="h-full">
+      <div className="p-6 space-y-6">
+        <JobMatchAnalysis 
+          job={job}
+          userProfile={mockUser}
+          matchScore={matchScore}
+        />
+      </div>
+    </ScrollArea>
   );
 };
-
-export default JobDetailView;

@@ -2,234 +2,296 @@
 import { supabase } from '@/integrations/supabase/client';
 
 export interface AnalyticsEvent {
-  id: string;
-  userId: string;
+  userId?: string;
   eventType: string;
-  eventData: any;
-  timestamp: string;
-  sessionId: string;
+  eventData: Record<string, any>;
   pageUrl?: string;
-  referrer?: string;
+  sessionId: string;
+  timestamp: Date;
 }
 
 export interface UserJourney {
   sessionId: string;
-  userId: string;
+  userId?: string;
   events: AnalyticsEvent[];
-  startTime: string;
-  endTime?: string;
+  startTime: Date;
+  endTime?: Date;
   totalDuration?: number;
   conversionEvents: string[];
 }
 
 export interface ConversionFunnel {
   name: string;
-  steps: Array<{
+  steps: {
     name: string;
+    eventType: string;
     users: number;
     conversionRate: number;
-  }>;
-}
-
-export interface UserEngagement {
-  userId: string;
-  totalSessions: number;
-  totalPageViews: number;
-  averageSessionDuration: number;
-  bounceRate: number;
-  lastActiveDate: string;
+  }[];
 }
 
 export class AnalyticsService {
-  static async trackEvent(event: Omit<AnalyticsEvent, 'id' | 'timestamp'>): Promise<void> {
-    try {
-      console.log('Analytics: Event tracked', {
-        ...event,
-        timestamp: new Date().toISOString()
-      });
-      
-      // Mock implementation since user_analytics table doesn't exist
-      // In a real implementation, you would store this in the database
-    } catch (error) {
-      console.error('Failed to track analytics event:', error);
+  private static sessionId: string = this.generateSessionId();
+  private static eventQueue: AnalyticsEvent[] = [];
+  private static isOnline: boolean = navigator.onLine;
+
+  static {
+    // Set up online/offline listeners
+    window.addEventListener('online', () => {
+      this.isOnline = true;
+      this.flushEventQueue();
+    });
+    
+    window.addEventListener('offline', () => {
+      this.isOnline = false;
+    });
+
+    // Flush events before page unload
+    window.addEventListener('beforeunload', () => {
+      this.flushEventQueue();
+    });
+
+    // Periodic flush
+    setInterval(() => {
+      this.flushEventQueue();
+    }, 30000); // Every 30 seconds
+  }
+
+  private static generateSessionId(): string {
+    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  static track(eventType: string, eventData: Record<string, any> = {}, userId?: string): void {
+    const event: AnalyticsEvent = {
+      userId,
+      eventType,
+      eventData: {
+        ...eventData,
+        userAgent: navigator.userAgent,
+        viewport: {
+          width: window.innerWidth,
+          height: window.innerHeight
+        },
+        referrer: document.referrer
+      },
+      pageUrl: window.location.href,
+      sessionId: this.sessionId,
+      timestamp: new Date()
+    };
+
+    this.eventQueue.push(event);
+
+    // Flush immediately for important events
+    const immediateFlushEvents = ['page_view', 'application_submitted', 'user_signup'];
+    if (immediateFlushEvents.includes(eventType) && this.isOnline) {
+      this.flushEventQueue();
     }
   }
 
-  static async generateApplicationAnalytics(userId: string): Promise<{
-    totalApplications: number;
-    successRate: number;
-    averageResponseTime: number;
-    topCompanies: Array<{ name: string; applications: number }>;
-    monthlyTrend: Array<{ month: string; applications: number; responses: number }>;
-  }> {
+  static trackPageView(userId?: string): void {
+    this.track('page_view', {
+      page: window.location.pathname,
+      title: document.title,
+      loadTime: performance.now()
+    }, userId);
+  }
+
+  static trackUserAction(action: string, details: Record<string, any> = {}, userId?: string): void {
+    this.track('user_action', {
+      action,
+      ...details
+    }, userId);
+  }
+
+  static trackJobInteraction(jobId: string, action: 'view' | 'apply' | 'save' | 'share', userId?: string): void {
+    this.track('job_interaction', {
+      jobId,
+      action,
+      timestamp: new Date().toISOString()
+    }, userId);
+  }
+
+  static trackSearchQuery(query: string, filters: Record<string, any>, resultCount: number, userId?: string): void {
+    this.track('search_query', {
+      query,
+      filters,
+      resultCount,
+      searchDuration: performance.now()
+    }, userId);
+  }
+
+  static trackConversion(conversionType: string, value?: number, userId?: string): void {
+    this.track('conversion', {
+      conversionType,
+      value,
+      conversionTime: new Date().toISOString()
+    }, userId);
+  }
+
+  private static async flushEventQueue(): Promise<void> {
+    if (this.eventQueue.length === 0 || !this.isOnline) return;
+
+    const eventsToFlush = [...this.eventQueue];
+    this.eventQueue = [];
+
     try {
-      // Get user's applications from job_applications table
-      const { data: applications, error } = await supabase
-        .from('job_applications')
-        .select('*')
-        .eq('user_id', userId);
+      const { error } = await supabase
+        .from('user_analytics')
+        .insert(
+          eventsToFlush.map(event => ({
+            user_id: event.userId,
+            event_type: event.eventType,
+            event_data: event.eventData,
+            page_url: event.pageUrl,
+            session_id: event.sessionId,
+            user_agent: event.eventData.userAgent,
+            created_at: event.timestamp.toISOString()
+          }))
+        );
 
       if (error) {
-        console.error('Failed to fetch applications:', error);
-        return {
-          totalApplications: 0,
-          successRate: 0,
-          averageResponseTime: 0,
-          topCompanies: [],
-          monthlyTrend: []
-        };
+        // Re-queue events if failed
+        this.eventQueue.unshift(...eventsToFlush);
+        console.error('Failed to flush analytics events:', error);
       }
+    } catch (error) {
+      // Re-queue events if failed
+      this.eventQueue.unshift(...eventsToFlush);
+      console.error('Failed to flush analytics events:', error);
+    }
+  }
 
-      const totalApplications = applications?.length || 0;
-      const successfulApplications = applications?.filter(app => 
-        ['interview_scheduled', 'offer_received', 'hired'].includes(app.status)
-      ).length || 0;
+  static async getUserJourney(userId: string, sessionId?: string): Promise<UserJourney[]> {
+    let query = supabase
+      .from('user_analytics')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: true });
+
+    if (sessionId) {
+      query = query.eq('session_id', sessionId);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      throw new Error(`Failed to fetch user journey: ${error.message}`);
+    }
+
+    // Group events by session
+    const sessionGroups = data?.reduce((groups, event) => {
+      const sessionId = event.session_id;
+      if (!groups[sessionId]) {
+        groups[sessionId] = [];
+      }
+      groups[sessionId].push({
+        userId: event.user_id,
+        eventType: event.event_type,
+        eventData: event.event_data,
+        pageUrl: event.page_url,
+        sessionId: event.session_id,
+        timestamp: new Date(event.created_at)
+      });
+      return groups;
+    }, {} as Record<string, AnalyticsEvent[]>) || {};
+
+    return Object.entries(sessionGroups).map(([sessionId, events]) => {
+      const startTime = events[0].timestamp;
+      const endTime = events[events.length - 1].timestamp;
+      const conversionEvents = events
+        .filter(e => e.eventType === 'conversion')
+        .map(e => e.eventData.conversionType);
+
+      return {
+        sessionId,
+        userId,
+        events,
+        startTime,
+        endTime,
+        totalDuration: endTime.getTime() - startTime.getTime(),
+        conversionEvents
+      };
+    });
+  }
+
+  static async getConversionFunnel(funnelName: string, timeRange: { start: Date; end: Date }): Promise<ConversionFunnel> {
+    // Define common funnels
+    const funnels = {
+      job_application: [
+        { name: 'Job View', eventType: 'job_interaction' },
+        { name: 'Application Started', eventType: 'user_action' },
+        { name: 'Application Submitted', eventType: 'conversion' }
+      ],
+      user_onboarding: [
+        { name: 'Signup', eventType: 'user_signup' },
+        { name: 'Profile Created', eventType: 'profile_completed' },
+        { name: 'First Job Search', eventType: 'search_query' }
+      ]
+    };
+
+    const funnelSteps = funnels[funnelName as keyof typeof funnels] || [];
+    const steps = [];
+
+    let previousStepUsers = new Set<string>();
+    let isFirstStep = true;
+
+    for (const step of funnelSteps) {
+      const { data } = await supabase
+        .from('user_analytics')
+        .select('user_id')
+        .eq('event_type', step.eventType)
+        .gte('created_at', timeRange.start.toISOString())
+        .lte('created_at', timeRange.end.toISOString());
+
+      const stepUsers = new Set(data?.map(d => d.user_id) || []);
+      const uniqueUsers = isFirstStep ? stepUsers : new Set([...stepUsers].filter(u => previousStepUsers.has(u)));
       
-      const successRate = totalApplications > 0 ? (successfulApplications / totalApplications) * 100 : 0;
+      const conversionRate = isFirstStep ? 100 : (uniqueUsers.size / previousStepUsers.size) * 100;
 
-      // Mock data for companies and trends since we don't have detailed job data
-      const topCompanies = [
-        { name: 'Tech Corp', applications: 5 },
-        { name: 'StartupXYZ', applications: 3 },
-        { name: 'BigCompany', applications: 2 }
-      ];
+      steps.push({
+        name: step.name,
+        eventType: step.eventType,
+        users: uniqueUsers.size,
+        conversionRate
+      });
 
-      const monthlyTrend = [
-        { month: '2024-01', applications: 8, responses: 3 },
-        { month: '2024-02', applications: 12, responses: 5 },
-        { month: '2024-03', applications: 15, responses: 7 }
-      ];
-
-      return {
-        totalApplications,
-        successRate,
-        averageResponseTime: 7, // Mock: 7 days average
-        topCompanies,
-        monthlyTrend
-      };
-    } catch (error) {
-      console.error('Failed to generate application analytics:', error);
-      return {
-        totalApplications: 0,
-        successRate: 0,
-        averageResponseTime: 0,
-        topCompanies: [],
-        monthlyTrend: []
-      };
+      previousStepUsers = uniqueUsers;
+      isFirstStep = false;
     }
+
+    return {
+      name: funnelName,
+      steps
+    };
   }
 
-  static async getUserJourney(userId: string): Promise<UserJourney[]> {
-    try {
-      // Mock implementation since we don't have analytics events table
-      const mockJourneys: UserJourney[] = [
-        {
-          sessionId: 'session-1',
-          userId,
-          events: [
-            {
-              id: 'event-1',
-              userId,
-              eventType: 'page_view',
-              eventData: { page: '/dashboard' },
-              timestamp: new Date().toISOString(),
-              sessionId: 'session-1',
-              pageUrl: '/dashboard'
-            },
-            {
-              id: 'event-2',
-              userId,
-              eventType: 'job_search',
-              eventData: { query: 'software engineer' },
-              timestamp: new Date().toISOString(),
-              sessionId: 'session-1',
-              pageUrl: '/jobs'
-            }
-          ],
-          startTime: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-          endTime: new Date().toISOString(),
-          totalDuration: 30 * 60 * 1000, // 30 minutes
-          conversionEvents: ['job_application']
-        }
-      ];
+  static async getTopEvents(timeRange: { start: Date; end: Date }, limit = 10): Promise<Array<{ eventType: string; count: number }>> {
+    const { data, error } = await supabase
+      .from('user_analytics')
+      .select('event_type')
+      .gte('created_at', timeRange.start.toISOString())
+      .lte('created_at', timeRange.end.toISOString());
 
-      return mockJourneys;
-    } catch (error) {
-      console.error('Failed to get user journey:', error);
-      return [];
+    if (error) {
+      throw new Error(`Failed to fetch top events: ${error.message}`);
     }
+
+    const eventCounts = data?.reduce((counts, event) => {
+      counts[event.event_type] = (counts[event.event_type] || 0) + 1;
+      return counts;
+    }, {} as Record<string, number>) || {};
+
+    return Object.entries(eventCounts)
+      .map(([eventType, count]) => ({ eventType, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, limit);
   }
 
-  static async getConversionFunnel(funnelType: string, timeRange: { start: Date; end: Date }): Promise<ConversionFunnel> {
-    try {
-      // Mock implementation
-      if (funnelType === 'job_application') {
-        return {
-          name: 'Job Application Funnel',
-          steps: [
-            { name: 'Job Search', users: 1000, conversionRate: 100 },
-            { name: 'Job View', users: 500, conversionRate: 50 },
-            { name: 'Application Started', users: 200, conversionRate: 20 },
-            { name: 'Application Submitted', users: 150, conversionRate: 15 }
-          ]
-        };
-      }
-
-      return {
-        name: 'User Onboarding Funnel',
-        steps: [
-          { name: 'Sign Up', users: 800, conversionRate: 100 },
-          { name: 'Profile Created', users: 600, conversionRate: 75 },
-          { name: 'Resume Uploaded', users: 400, conversionRate: 50 },
-          { name: 'First Application', users: 200, conversionRate: 25 }
-        ]
-      };
-    } catch (error) {
-      console.error('Failed to get conversion funnel:', error);
-      return {
-        name: 'Error',
-        steps: []
-      };
-    }
+  static startNewSession(): void {
+    this.sessionId = this.generateSessionId();
   }
 
-  static async getTopEvents(timeRange: { start: Date; end: Date }): Promise<Array<{ eventType: string; count: number }>> {
-    try {
-      // Mock implementation
-      return [
-        { eventType: 'page_view', count: 2500 },
-        { eventType: 'job_search', count: 800 },
-        { eventType: 'job_view', count: 600 },
-        { eventType: 'job_application', count: 150 },
-        { eventType: 'profile_update', count: 200 }
-      ];
-    } catch (error) {
-      console.error('Failed to get top events:', error);
-      return [];
-    }
-  }
-
-  static async getUserEngagement(userId: string): Promise<UserEngagement> {
-    try {
-      // Mock implementation
-      return {
-        userId,
-        totalSessions: 25,
-        totalPageViews: 150,
-        averageSessionDuration: 8.5, // minutes
-        bounceRate: 0.25,
-        lastActiveDate: new Date().toISOString()
-      };
-    } catch (error) {
-      console.error('Failed to get user engagement:', error);
-      return {
-        userId,
-        totalSessions: 0,
-        totalPageViews: 0,
-        averageSessionDuration: 0,
-        bounceRate: 0,
-        lastActiveDate: new Date().toISOString()
-      };
-    }
+  static getCurrentSessionId(): string {
+    return this.sessionId;
   }
 }

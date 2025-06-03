@@ -1,10 +1,10 @@
+
 import React from "react";
 import Navbar from "@/components/Navbar";
 import { useMobile } from "@/hooks/use-mobile";
 import { MobileRouteLayout } from "@/components/mobile/MobileRouteLayout";
-import { BreadcrumbNav } from "@/components/navigation/BreadcrumbNav";
-import ProfileDetails from "@/components/profile/ProfileDetails";
-import EnhancedProfileCompletionWidget from "@/components/profile/EnhancedProfileCompletionWidget";
+import { ProfileDetails } from "@/components/profile/ProfileDetails";
+import { EnhancedProfileCompletionWidget } from "@/components/profile/EnhancedProfileCompletionWidget";
 
 const Profile = () => {
   const isMobile = useMobile();
@@ -18,13 +18,7 @@ const Profile = () => {
     <div className="min-h-screen bg-background">
       {!isMobile && <Navbar />}
       
-      <div className={`${!isMobile ? 'container mx-auto px-4 py-8 pt-24' : 'p-0'} max-w-6xl`}>
-        {!isMobile && (
-          <div className="mb-6">
-            <BreadcrumbNav />
-          </div>
-        )}
-        
+      <div className={`${!isMobile ? 'container mx-auto px-4 py-8' : 'p-0'} max-w-6xl`}>
         {!isMobile && (
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-2">Profile</h1>

@@ -36,25 +36,24 @@ export class EnterpriseService {
     planType: Organization['planType'];
   }): Promise<{ success: boolean; organization?: Organization; error?: string }> {
     try {
-      // Mock implementation since organizations table doesn't exist
-      const organization: Organization = {
-        id: `org_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        name: orgData.name,
-        domain: orgData.domain,
-        planType: orgData.planType,
-        maxUsers: orgData.planType === 'starter' ? 5 : orgData.planType === 'professional' ? 50 : 500,
-        createdAt: new Date().toISOString(),
-        settings: {
-          ssoEnabled: orgData.planType === 'enterprise',
-          auditLogging: orgData.planType !== 'starter',
-          customBranding: orgData.planType === 'enterprise',
-          advancedAnalytics: orgData.planType !== 'starter'
-        }
-      };
+      const { data, error } = await supabase
+        .from('organizations')
+        .insert({
+          ...orgData,
+          maxUsers: orgData.planType === 'starter' ? 5 : orgData.planType === 'professional' ? 50 : 500,
+          settings: {
+            ssoEnabled: orgData.planType === 'enterprise',
+            auditLogging: orgData.planType !== 'starter',
+            customBranding: orgData.planType === 'enterprise',
+            advancedAnalytics: orgData.planType !== 'starter'
+          }
+        })
+        .select()
+        .single();
 
-      console.log('Mock enterprise: Organization created:', organization);
+      if (error) throw error;
 
-      return { success: true, organization };
+      return { success: true, organization: data };
     } catch (error) {
       console.error('Organization creation failed:', error);
       return {
@@ -70,23 +69,23 @@ export class EnterpriseService {
     description: string;
   }): Promise<{ success: boolean; workspace?: TeamWorkspace; error?: string }> {
     try {
-      // Mock implementation since team_workspaces table doesn't exist
-      const workspace: TeamWorkspace = {
-        id: `ws_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        organizationId: workspaceData.organizationId,
-        name: workspaceData.name,
-        description: workspaceData.description,
-        members: [],
-        permissions: {
-          canManageMembers: false,
-          canViewAnalytics: true,
-          canManageSettings: false
-        }
-      };
+      const { data, error } = await supabase
+        .from('team_workspaces')
+        .insert({
+          ...workspaceData,
+          members: [],
+          permissions: {
+            canManageMembers: false,
+            canViewAnalytics: true,
+            canManageSettings: false
+          }
+        })
+        .select()
+        .single();
 
-      console.log('Mock enterprise: Team workspace created:', workspace);
+      if (error) throw error;
 
-      return { success: true, workspace };
+      return { success: true, workspace: data };
     } catch (error) {
       console.error('Workspace creation failed:', error);
       return {

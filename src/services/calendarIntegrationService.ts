@@ -48,16 +48,25 @@ export class CalendarIntegrationService {
     provider: 'google' | 'outlook'
   ): Promise<string> {
     try {
-      // Mock implementation since calendar_integrations table doesn't exist
-      console.log('Calendar integration: Mock schedule interview', {
-        userId,
-        provider,
-        event,
-        timestamp: new Date().toISOString()
-      });
+      // Get user's calendar integration
+      const { data: integration } = await supabase
+        .from('calendar_integrations')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('provider', provider)
+        .eq('is_active', true)
+        .single();
 
-      // Return mock event ID
-      return `event-${Date.now()}`;
+      if (!integration) {
+        throw new Error(`No active ${provider} calendar integration found`);
+      }
+
+      // Create event via appropriate API
+      if (provider === 'google') {
+        return await this.createGoogleEvent(integration, event);
+      } else {
+        return await this.createOutlookEvent(integration, event);
+      }
     } catch (error) {
       console.error('Failed to schedule interview:', error);
       throw error;
@@ -139,20 +148,28 @@ export class CalendarIntegrationService {
   }
 
   static async getUpcomingInterviews(userId: string): Promise<CalendarEvent[]> {
-    // Mock implementation since calendar_integrations table doesn't exist
-    console.log('Calendar integration: Getting mock upcoming interviews for user:', userId);
+    // Fetch from both Google and Outlook if connected
+    const events: CalendarEvent[] = [];
     
-    return [
-      {
-        id: 'event-1',
-        title: 'Interview with TechCorp',
-        description: 'Technical interview for Senior Developer position',
-        startTime: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
-        endTime: new Date(Date.now() + 24 * 60 * 60 * 1000 + 60 * 60 * 1000), // Tomorrow + 1 hour
-        location: 'Virtual Meeting',
-        attendees: ['interviewer@techcorp.com']
+    const { data: integrations } = await supabase
+      .from('calendar_integrations')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('is_active', true);
+
+    if (integrations) {
+      for (const integration of integrations) {
+        if (integration.provider === 'google') {
+          const googleEvents = await this.fetchGoogleEvents(integration);
+          events.push(...googleEvents);
+        } else if (integration.provider === 'outlook') {
+          const outlookEvents = await this.fetchOutlookEvents(integration);
+          events.push(...outlookEvents);
+        }
       }
-    ];
+    }
+
+    return events.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
   }
 
   private static async fetchGoogleEvents(integration: any): Promise<CalendarEvent[]> {

@@ -1,6 +1,7 @@
 
 import React from "react";
 import Navbar from "@/components/Navbar";
+import MobileHeader from "@/components/MobileHeader";
 import { useMobile } from "@/hooks/use-mobile";
 import { MobileRouteLayout } from "@/components/mobile/MobileRouteLayout";
 import { BreadcrumbNav } from "@/components/navigation/BreadcrumbNav";
@@ -18,9 +19,9 @@ const InterviewPractice = () => {
     <div className="min-h-screen bg-background">
       {!isMobile && <Navbar />}
       
-      <div className={`${!isMobile ? 'container mx-auto px-4 py-8 pt-24' : 'p-0'}`}>
+      <div className={`${!isMobile ? 'container mx-auto px-4 py-8' : 'p-0'}`}>
         {!isMobile && (
-          <div className="mb-6">
+          <div className="mb-6 pt-16">
             <BreadcrumbNav />
           </div>
         )}

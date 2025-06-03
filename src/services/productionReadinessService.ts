@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export interface ProductionReadinessChecklist {
@@ -56,9 +57,11 @@ export class ProductionReadinessService {
   }
 
   private static async evaluateChecklist(userId: string): Promise<ProductionReadinessChecklist> {
-    // Mock check for security features since user_2fa_settings table doesn't exist
-    console.log('Mock production readiness: Checking 2FA settings for user:', userId);
-    const has2FAEnabled = false; // Mock result
+    // Check security features
+    const { data: securitySettings } = await supabase
+      .from('user_2fa_settings')
+      .select('*')
+      .eq('user_id', userId);
 
     const { data: auditLogs } = await supabase
       .from('audit_logs')
@@ -70,18 +73,26 @@ export class ProductionReadinessService {
       .select('*')
       .limit(1);
 
-    // Mock check for enterprise features since organizations table doesn't exist
-    console.log('Mock production readiness: Checking organizations');
-    const hasOrganizations = false; // Mock result
+    // Check enterprise features
+    const { data: organizations } = await supabase
+      .from('organizations')
+      .select('*')
+      .limit(1);
 
-    // Mock check for API integrations since oauth_integrations and email_logs tables don't exist
-    console.log('Mock production readiness: Checking OAuth integrations for user:', userId);
-    console.log('Mock production readiness: Checking email logs for user:', userId);
-    const hasIntegrations = false; // Mock result
+    // Check API integrations
+    const { data: oauthIntegrations } = await supabase
+      .from('oauth_integrations')
+      .select('*')
+      .eq('user_id', userId);
+
+    const { data: emailLogs } = await supabase
+      .from('email_logs')
+      .select('*')
+      .eq('user_id', userId);
 
     return {
       security: {
-        twoFactorAuth: has2FAEnabled,
+        twoFactorAuth: (securitySettings?.length || 0) > 0,
         encryptedData: true, // Implemented with Supabase
         rateLimiting: true, // Implemented in edge functions
         auditLogging: (auditLogs?.length || 0) > 0
@@ -99,13 +110,13 @@ export class ProductionReadinessService {
         privacyPolicy: false // Needs to be added
       },
       enterprise: {
-        multiTenant: hasOrganizations,
+        multiTenant: (organizations?.length || 0) > 0,
         teamCollaboration: true, // Team workspaces implemented
         adminDashboard: true, // Organization analytics available
         bulkOperations: true // Bulk user management implemented
       },
       api: {
-        realIntegrations: hasIntegrations,
+        realIntegrations: (oauthIntegrations?.length || 0) > 0 || (emailLogs?.length || 0) > 0,
         errorHandling: true, // Comprehensive error handling
         documentation: false, // API docs need to be created
         testing: false // Test suite needs implementation

@@ -37,11 +37,23 @@ export class EnhancedAnalyticsService {
         timestamp: new Date()
       };
 
-      // Mock implementation since conversion_events table doesn't exist
-      console.log('Mock analytics: Conversion event tracked:', conversionEvent);
+      // Store in database
+      await supabase
+        .from('conversion_events')
+        .insert({
+          event_name: conversionEvent.event_name,
+          user_id: conversionEvent.user_id,
+          session_id: conversionEvent.session_id,
+          properties: conversionEvent.properties,
+          event_value: conversionEvent.value,
+          currency: conversionEvent.currency,
+          created_at: conversionEvent.timestamp.toISOString()
+        });
 
       // Send to analytics service (if configured)
       await this.sendToAnalytics(conversionEvent);
+
+      console.log('Conversion event tracked:', conversionEvent);
     } catch (error) {
       console.error('Failed to track conversion event:', error);
     }
@@ -49,7 +61,8 @@ export class EnhancedAnalyticsService {
 
   private static async sendToAnalytics(event: ConversionEvent): Promise<void> {
     // This would integrate with services like Google Analytics, Mixpanel, etc.
-    console.log('Mock analytics: Sending to analytics:', event);
+    // For now, we'll just log it
+    console.log('Sending to analytics:', event);
   }
 
   // Generate user segments
@@ -113,8 +126,17 @@ export class EnhancedAnalyticsService {
       created_at: new Date()
     };
 
-    // Mock implementation since user_segments table doesn't exist
-    console.log('Mock analytics: Segment created:', segment);
+    // Store segment definition
+    await supabase
+      .from('user_segments')
+      .insert({
+        segment_id: segment.id,
+        name: segment.name,
+        description: segment.description,
+        criteria: segment.criteria,
+        user_count: segment.user_count,
+        created_at: segment.created_at.toISOString()
+      });
 
     return segment;
   }
@@ -152,8 +174,19 @@ export class EnhancedAnalyticsService {
         }
       }
 
-      // Mock implementation since cohort_analysis table doesn't exist
-      console.log('Mock analytics: Cohort analysis calculated:', cohorts.length, 'cohorts');
+      // Store cohort analysis results
+      for (const cohort of cohorts) {
+        await supabase
+          .from('cohort_analysis')
+          .upsert({
+            cohort_date: cohort.cohort_date,
+            period: cohort.period,
+            users_in_cohort: cohort.users_in_cohort,
+            retained_users: cohort.retained_users,
+            retention_rate: cohort.retention_rate,
+            calculated_at: new Date().toISOString()
+          });
+      }
 
       return cohorts;
     } catch (error) {

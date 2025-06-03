@@ -1,3 +1,4 @@
+
 const isLocalhost = Boolean(
   window.location.hostname === 'localhost' ||
   window.location.hostname === '[::1]' ||
@@ -6,14 +7,6 @@ const isLocalhost = Boolean(
   )
 );
 
-// Handle environment variables safely for browser environment
-const getPublicUrl = () => {
-  if (typeof window !== 'undefined') {
-    return window.location.origin;
-  }
-  return '';
-};
-
 type Config = {
   onSuccess?: (registration: ServiceWorkerRegistration) => void;
   onUpdate?: (registration: ServiceWorkerRegistration) => void;
@@ -21,13 +14,13 @@ type Config = {
 
 export function register(config?: Config) {
   if ('serviceWorker' in navigator) {
-    const publicUrl = new URL(getPublicUrl(), window.location.href);
+    const publicUrl = new URL(process.env.PUBLIC_URL || '', window.location.href);
     if (publicUrl.origin !== window.location.origin) {
       return;
     }
 
     window.addEventListener('load', () => {
-      const swUrl = `${getPublicUrl()}/sw.js`;
+      const swUrl = `${process.env.PUBLIC_URL}/sw.js`;
 
       if (isLocalhost) {
         checkValidServiceWorker(swUrl, config);

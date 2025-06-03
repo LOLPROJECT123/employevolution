@@ -2,9 +2,9 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useVoiceJobSearch } from '@/hooks/useVoiceJobSearch';
+import { useVoiceJobSearch } from '@/hooks/useVoiceSearch';
 import { Mic, MicOff } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 
 interface VoiceSearchButtonProps {
   onSearch: (query: string) => void;
@@ -25,7 +25,10 @@ export const VoiceSearchButton: React.FC<VoiceSearchButtonProps> = ({
   } = useVoiceJobSearch((query) => {
     setLastTranscript(query);
     onSearch(query);
-    toast.success(`Voice search: "${query}"`);
+    toast({
+      title: "Voice Search",
+      description: `Searching for: ${query}`,
+    });
   });
 
   if (!isSupported) {

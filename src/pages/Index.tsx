@@ -1,5 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import Navbar from "@/components/Navbar";
+import MobileHeader from "@/components/MobileHeader";
 import { useMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { JobCard } from "@/components/JobCard";
@@ -145,6 +147,12 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      {isMobile ? (
+        <MobileHeader title="Streamline" />
+      ) : (
+        <Navbar />
+      )}
+      
       {/* Hero Section */}
       <section className={`${isMobile ? 'pt-20' : 'pt-32'} pb-20 px-4 relative overflow-hidden`}>
         <div className="absolute inset-0 bg-gradient-to-br from-accent/80 to-transparent z-0"></div>

@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { resumeFileService, OnboardingStatus } from '@/services/resumeFileService';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { CheckCircle, Upload, User } from 'lucide-react';
 import ProfileDetails from '@/components/profile/ProfileDetails';
 import { ParsedResume } from '@/types/resume';
 import { toast } from 'sonner';
@@ -15,7 +18,7 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
   const navigate = useNavigate();
   const [onboardingStatus, setOnboardingStatus] = useState<OnboardingStatus | null>(null);
   const [loading, setLoading] = useState(false);
-  const [showOnboardingWorkflow, setShowOnboardingWorkflow] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
     if (user && !authLoading) {
@@ -34,26 +37,20 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
       const status = await resumeFileService.getOnboardingStatus(user.id);
       setOnboardingStatus(status);
       
-      // Show onboarding workflow if profile not completed
-      if (status && !status.onboarding_completed) {
-        setShowOnboardingWorkflow(true);
+      if (status) {
+        if (!status.resume_uploaded) {
+          setCurrentStep(0);
+        } else if (!status.profile_completed) {
+          setCurrentStep(1);
+        } else {
+          setCurrentStep(2);
+        }
       }
     } catch (error) {
       console.error('Error loading onboarding status:', error);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleStepComplete = (stepId: string) => {
-    console.log('Step completed:', stepId);
-    // Handle step completion logic
-  };
-
-  const handleWorkflowComplete = () => {
-    console.log('Onboarding workflow completed!');
-    setShowOnboardingWorkflow(false);
-    navigate('/dashboard');
   };
 
   const handleResumeUploaded = async (resumeData: ParsedResume) => {
@@ -69,6 +66,7 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
       if (success) {
         console.log('Onboarding status updated successfully');
         setOnboardingStatus(prev => prev ? { ...prev, resume_uploaded: true } : null);
+        setCurrentStep(1);
         toast.success("Resume uploaded successfully!");
         setTimeout(() => {
           loadOnboardingStatus();
@@ -81,6 +79,10 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
       console.error('Error updating onboarding status:', error);
       toast.error("Error updating profile status. Please try again.");
     }
+  };
+
+  const handleNextToProfile = () => {
+    navigate('/complete-profile');
   };
 
   if (authLoading) {
@@ -103,35 +105,92 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
     );
   }
 
-  // Show onboarding workflow if not completed
-  if (showOnboardingWorkflow && !onboardingStatus?.onboarding_completed) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <div className="max-w-4xl w-full">
-          <h1 className="text-2xl font-bold text-center mb-8">Welcome! Let's set up your profile</h1>
-          <ProfileDetails 
-            onResumeDataUpdate={handleResumeUploaded}
-            showNextButton={true}
-            onNext={handleWorkflowComplete}
-          />
-        </div>
-      </div>
-    );
-  }
-
   if (onboardingStatus?.onboarding_completed) {
     return <>{children}</>;
   }
 
-  // Fallback to basic onboarding if workflow fails
+  const steps = [
+    { title: "Upload Resume", icon: Upload, completed: onboardingStatus?.resume_uploaded || false },
+    { title: "Complete Profile", icon: User, completed: onboardingStatus?.profile_completed || false },
+    { title: "Get Started", icon: CheckCircle, completed: onboardingStatus?.onboarding_completed || false }
+  ];
+
+  const completedSteps = steps.filter(step => step.completed).length;
+  const progressPercentage = (completedSteps / steps.length) * 100;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="max-w-4xl w-full">
-        <ProfileDetails 
-          onResumeDataUpdate={handleResumeUploaded}
-          showNextButton={true}
-          onNext={() => navigate('/complete-profile')}
-        />
+        <Card className="shadow-lg">
+          <CardHeader className="text-center pb-4">
+            <CardTitle className="text-3xl font-bold text-gray-900 mb-2">
+              Welcome to Streamline!
+            </CardTitle>
+            <p className="text-gray-600 mb-4">
+              Let's get your profile set up so you can start finding amazing opportunities
+            </p>
+            
+            <div className="space-y-4">
+              <Progress value={progressPercentage} className="h-2" />
+              <div className="flex justify-between">
+                {steps.map((step, index) => {
+                  const StepIcon = step.icon;
+                  return (
+                    <div key={index} className="flex flex-col items-center space-y-2">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                        step.completed 
+                          ? 'bg-green-500 text-white' 
+                          : currentStep === index 
+                            ? 'bg-blue-500 text-white' 
+                            : 'bg-gray-200 text-gray-400'
+                      }`}>
+                        <StepIcon className="h-5 w-5" />
+                      </div>
+                      <span className={`text-sm ${
+                        step.completed ? 'text-green-600' : 'text-gray-600'
+                      }`}>
+                        {step.title}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="space-y-6">
+            {currentStep === 0 && (
+              <div>
+                <h3 className="text-xl font-semibold mb-4">Step 1: Upload Your Resume</h3>
+                <p className="text-gray-600 mb-6">
+                  Upload your resume to automatically populate your profile with your experience, education, and skills. Don't worry if automatic parsing doesn't work perfectly - you can fill in details manually in the next step.
+                </p>
+                <ProfileDetails 
+                  onResumeDataUpdate={handleResumeUploaded} 
+                  showNextButton={true}
+                  onNext={handleNextToProfile}
+                />
+              </div>
+            )}
+
+            {currentStep === 1 && (
+              <div>
+                <h3 className="text-xl font-semibold mb-4">Step 2: Complete Your Profile</h3>
+                <p className="text-gray-600 mb-6">
+                  Great! Your resume has been uploaded. Click the button below to complete your profile with all your information.
+                </p>
+                <div className="text-center">
+                  <button
+                    onClick={handleNextToProfile}
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium"
+                  >
+                    Complete Profile
+                  </button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
