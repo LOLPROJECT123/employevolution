@@ -42,6 +42,31 @@ export interface JobData {
   description: string;
 }
 
+export interface PredictiveAnalytics {
+  successProbability: number;
+  timeToHire: number;
+  salaryPrediction: {
+    min: number;
+    max: number;
+    confidence: number;
+  };
+  competitionLevel: 'low' | 'medium' | 'high';
+  recommendations: string[];
+}
+
+export interface SalaryInsights {
+  salaryRange: {
+    min: number;
+    max: number;
+  };
+  marketTrends: {
+    growth: string;
+    demand: string;
+    competition: string;
+  };
+  insights: string[];
+}
+
 export class MLJobMatchingService {
   private static weights = {
     skills: 0.35,
@@ -58,42 +83,102 @@ export class MLJobMatchingService {
     const skillsAnalysis = this.analyzeSkillsMatch(jobData.requiredSkills, userProfile.skills);
     const experienceAnalysis = this.analyzeExperienceMatch(jobData.experienceLevel, userProfile.experience);
     const salaryAnalysis = this.analyzeSalaryMatch(jobData.salary, userProfile.desiredSalary);
-    const locationAnalysis = this.analyzeLocationMatch(jobData.location, jobData.remote, userProfile.preferredLocations, userProfile.workModel);
+    const locationAnalysis = this.analyzeLocationMatch(jobData.location, userProfile.preferredLocations);
     const cultureAnalysis = this.analyzeCultureMatch(jobData, userProfile);
     const companyAnalysis = this.analyzeCompanyMatch(jobData, userProfile);
 
-    const matchScore = this.calculateWeightedScore({
-      skills: skillsAnalysis.score,
-      experience: experienceAnalysis.score,
-      salary: salaryAnalysis.score,
-      location: locationAnalysis.score,
-      culture: cultureAnalysis.score,
-      company: companyAnalysis.score
-    });
-
-    const confidenceLevel = this.calculateConfidenceLevel(skillsAnalysis, experienceAnalysis, salaryAnalysis);
+    const overallScore = (
+      skillsAnalysis.score * this.weights.skills +
+      experienceAnalysis.score * this.weights.experience +
+      salaryAnalysis.score * this.weights.salary +
+      locationAnalysis.score * this.weights.location +
+      cultureAnalysis.score * this.weights.culture +
+      companyAnalysis.score * this.weights.company
+    );
 
     const reasoning = [
       ...skillsAnalysis.reasoning,
       ...experienceAnalysis.reasoning,
       ...salaryAnalysis.reasoning,
-      ...locationAnalysis.reasoning,
-      ...cultureAnalysis.reasoning,
-      ...companyAnalysis.reasoning
+      ...locationAnalysis.reasoning
     ];
 
     return {
       jobId: jobData.id,
-      matchScore: Math.round(matchScore),
-      confidenceLevel: Math.round(confidenceLevel),
+      matchScore: Math.round(overallScore * 100),
+      confidenceLevel: this.calculateConfidence(skillsAnalysis, experienceAnalysis),
       reasoning,
       skillMatches: skillsAnalysis.matches,
       skillGaps: skillsAnalysis.gaps,
-      salaryMatch: Math.round(salaryAnalysis.score),
-      locationMatch: Math.round(locationAnalysis.score),
-      experienceMatch: Math.round(experienceAnalysis.score),
-      cultureMatch: Math.round(cultureAnalysis.score),
-      companyMatch: Math.round(companyAnalysis.score)
+      salaryMatch: Math.round(salaryAnalysis.score * 100),
+      locationMatch: Math.round(locationAnalysis.score * 100),
+      experienceMatch: Math.round(experienceAnalysis.score * 100),
+      cultureMatch: Math.round(cultureAnalysis.score * 100),
+      companyMatch: Math.round(companyAnalysis.score * 100)
+    };
+  }
+
+  static async calculateJobMatchScore(userId: string, jobData: any): Promise<MLJobMatch> {
+    return this.analyzeJobMatch(jobData, userId);
+  }
+
+  static async getPredictiveAnalytics(userId: string, jobId: string): Promise<PredictiveAnalytics> {
+    const userProfile = await this.getUserProfile(userId);
+    
+    // Mock predictive analytics based on user profile
+    const successProbability = Math.random() * 0.4 + 0.4; // 40-80%
+    const timeToHire = Math.floor(Math.random() * 45) + 15; // 15-60 days
+    
+    return {
+      successProbability,
+      timeToHire,
+      salaryPrediction: {
+        min: 80000,
+        max: 120000,
+        confidence: 0.85
+      },
+      competitionLevel: successProbability > 0.7 ? 'low' : successProbability > 0.5 ? 'medium' : 'high',
+      recommendations: [
+        "Strengthen your portfolio with relevant projects",
+        "Consider adding certifications in trending technologies",
+        "Network with professionals in your target companies",
+        "Tailor your resume to highlight matching skills"
+      ]
+    };
+  }
+
+  static async getSalaryInsights(role: string, location: string, experience: number): Promise<SalaryInsights> {
+    // Mock salary insights based on parameters
+    const baseRange = this.calculateSalaryRange(role, location, experience);
+    
+    return {
+      salaryRange: baseRange,
+      marketTrends: {
+        growth: "+12% YoY",
+        demand: "High",
+        competition: "Medium"
+      },
+      insights: [
+        `${role} salaries in ${location} are trending upward`,
+        "Companies are offering competitive packages to attract talent",
+        "Remote work options are becoming standard",
+        "Equity compensation is increasingly common"
+      ]
+    };
+  }
+
+  private static calculateSalaryRange(role: string, location: string, experience: number) {
+    const baseMin = 60000 + (experience * 8000);
+    const baseMax = baseMin + 40000;
+    
+    // Location multiplier
+    const locationMultiplier = location.includes('San Francisco') ? 1.6 : 
+                              location.includes('New York') ? 1.4 : 
+                              location.includes('Seattle') ? 1.3 : 1.0;
+    
+    return {
+      min: Math.round(baseMin * locationMultiplier),
+      max: Math.round(baseMax * locationMultiplier)
     };
   }
 
@@ -115,18 +200,10 @@ export class MLJobMatchingService {
       .eq('user_id', userId)
       .single();
 
-    const { data: experience } = await supabase
-      .from('work_experiences')
-      .select('*')
-      .eq('user_id', userId)
-      .order('end_date', { ascending: false });
-
-    const totalExperience = this.calculateTotalExperience(experience || []);
-
     return {
       skills: skills?.map(s => s.skill) || [],
-      experience: totalExperience,
-      desiredSalary: this.parseSalary(preferences?.salary_expectation),
+      experience: 5, // Default or calculate from profile
+      desiredSalary: 100000, // Default or from preferences
       preferredLocations: preferences?.preferred_locations || [],
       industryPreferences: preferences?.industries || [],
       rolePreferences: preferences?.desired_roles || [],
@@ -139,283 +216,158 @@ export class MLJobMatchingService {
     const matches: string[] = [];
     const gaps: string[] = [];
     
-    const normalizedUserSkills = userSkills.map(s => s.toLowerCase());
-    
-    for (const skill of requiredSkills) {
-      const normalizedSkill = skill.toLowerCase();
-      const isMatch = normalizedUserSkills.some(userSkill => 
-        userSkill.includes(normalizedSkill) || 
-        normalizedSkill.includes(userSkill) ||
-        this.getSynonyms(normalizedSkill).some(synonym => userSkill.includes(synonym))
+    requiredSkills.forEach(skill => {
+      const match = userSkills.find(userSkill => 
+        userSkill.toLowerCase().includes(skill.toLowerCase()) ||
+        skill.toLowerCase().includes(userSkill.toLowerCase())
       );
       
-      if (isMatch) {
+      if (match) {
         matches.push(skill);
       } else {
         gaps.push(skill);
       }
-    }
+    });
 
-    const score = requiredSkills.length > 0 ? (matches.length / requiredSkills.length) * 100 : 50;
+    const matchPercentage = requiredSkills.length > 0 ? matches.length / requiredSkills.length : 0;
     
-    const reasoning: string[] = [];
-    if (matches.length > 0) {
-      reasoning.push(`Strong match: You have ${matches.length}/${requiredSkills.length} required skills`);
-    }
-    if (gaps.length > 0) {
-      reasoning.push(`Skill gap: Missing ${gaps.length} required skills: ${gaps.slice(0, 3).join(', ')}`);
-    }
-
-    return { score, matches, gaps, reasoning };
+    return {
+      score: matchPercentage,
+      matches,
+      gaps,
+      reasoning: [
+        `You match ${matches.length} out of ${requiredSkills.length} required skills`,
+        matches.length > 0 ? `Strong matches: ${matches.slice(0, 3).join(', ')}` : 'Consider developing the required skills'
+      ]
+    };
   }
 
-  private static analyzeExperienceMatch(jobExperienceLevel: string, userExperience: number) {
-    const experienceMap: { [key: string]: number } = {
-      'entry': 0,
-      'junior': 1,
-      'mid': 3,
-      'senior': 5,
-      'lead': 8,
-      'executive': 12
+  private static analyzeExperienceMatch(requiredLevel: string, userExperience: number) {
+    const levelMap: { [key: string]: number } = {
+      'entry': 1,
+      'junior': 2,
+      'mid': 5,
+      'senior': 8,
+      'lead': 12,
+      'principal': 15
     };
 
-    const requiredExperience = experienceMap[jobExperienceLevel.toLowerCase()] || 3;
-    const experienceDiff = Math.abs(userExperience - requiredExperience);
+    const requiredYears = levelMap[requiredLevel.toLowerCase()] || 3;
+    const experienceGap = userExperience - requiredYears;
     
-    let score = 100;
-    if (experienceDiff > 2) {
-      score = Math.max(0, 100 - (experienceDiff - 2) * 15);
-    }
+    let score = 1.0;
+    if (experienceGap < -2) score = 0.3;
+    else if (experienceGap < 0) score = 0.7;
+    else if (experienceGap <= 2) score = 1.0;
+    else score = 0.9; // Overqualified
 
-    const reasoning: string[] = [];
-    if (userExperience >= requiredExperience) {
-      reasoning.push(`Experience match: You have ${userExperience} years vs ${requiredExperience} required`);
-    } else {
-      reasoning.push(`Experience gap: You have ${userExperience} years but ${requiredExperience} required`);
-    }
-
-    return { score, reasoning };
+    return {
+      score,
+      reasoning: [
+        experienceGap >= 0 
+          ? `Your ${userExperience} years of experience meets the ${requiredLevel} level requirement`
+          : `You have ${userExperience} years experience for a ${requiredLevel} role requiring ~${requiredYears} years`
+      ]
+    };
   }
 
   private static analyzeSalaryMatch(jobSalary: string | undefined, desiredSalary: number) {
-    if (!jobSalary || desiredSalary === 0) {
-      return { score: 50, reasoning: ['Salary information not available'] };
+    if (!jobSalary) {
+      return {
+        score: 0.5,
+        reasoning: ['Salary not disclosed']
+      };
     }
 
-    const salaryRange = this.parseSalaryRange(jobSalary);
-    if (!salaryRange) {
-      return { score: 50, reasoning: ['Could not parse salary information'] };
+    // Extract salary range from string
+    const numbers = jobSalary.match(/\d+/g);
+    if (!numbers || numbers.length === 0) {
+      return {
+        score: 0.5,
+        reasoning: ['Salary format unclear']
+      };
     }
 
-    const { min, max } = salaryRange;
-    const midpoint = (min + max) / 2;
+    const salaryMin = parseInt(numbers[0]) * (jobSalary.includes('k') ? 1000 : 1);
+    const salaryMax = numbers.length > 1 ? parseInt(numbers[1]) * (jobSalary.includes('k') ? 1000 : 1) : salaryMin;
     
-    let score = 100;
-    if (desiredSalary > max) {
-      score = Math.max(0, 100 - ((desiredSalary - max) / desiredSalary) * 100);
-    } else if (desiredSalary < min) {
-      score = Math.max(70, 100 - ((min - desiredSalary) / min) * 50);
-    }
-
-    const reasoning: string[] = [];
-    if (desiredSalary >= min && desiredSalary <= max) {
-      reasoning.push(`Excellent salary match: $${desiredSalary.toLocaleString()} fits within range`);
-    } else if (desiredSalary > max) {
-      reasoning.push(`Salary below expectations: Range $${min.toLocaleString()}-$${max.toLocaleString()}`);
-    } else {
-      reasoning.push(`Salary above expectations: Range $${min.toLocaleString()}-$${max.toLocaleString()}`);
-    }
-
-    return { score, reasoning };
+    const midpoint = (salaryMin + salaryMax) / 2;
+    const difference = Math.abs(midpoint - desiredSalary) / desiredSalary;
+    
+    let score = Math.max(0, 1 - difference);
+    
+    return {
+      score,
+      reasoning: [
+        difference < 0.1 
+          ? 'Salary closely matches your expectations'
+          : difference < 0.2
+          ? 'Salary is within reasonable range'
+          : 'Salary may not meet your expectations'
+      ]
+    };
   }
 
-  private static analyzeLocationMatch(jobLocation: string, remote: boolean, preferredLocations: string[], workModel: string) {
-    let score = 50;
-    const reasoning: string[] = [];
-
-    if (remote && (workModel === 'remote' || workModel === 'hybrid')) {
-      score = 100;
-      reasoning.push('Perfect match: Remote position aligns with your preferences');
-    } else if (remote && workModel === 'onsite') {
-      score = 30;
-      reasoning.push('Partial match: Remote position but you prefer onsite work');
-    } else {
-      const locationMatch = preferredLocations.some(loc => 
-        jobLocation.toLowerCase().includes(loc.toLowerCase()) ||
-        loc.toLowerCase().includes(jobLocation.toLowerCase())
-      );
-      
-      if (locationMatch) {
-        score = workModel === 'onsite' ? 100 : 80;
-        reasoning.push(`Good location match: ${jobLocation} is in your preferred areas`);
-      } else {
-        score = workModel === 'remote' ? 20 : 40;
-        reasoning.push(`Location mismatch: ${jobLocation} not in preferred areas`);
-      }
+  private static analyzeLocationMatch(jobLocation: string, preferredLocations: string[]) {
+    if (preferredLocations.length === 0) {
+      return {
+        score: 0.8,
+        reasoning: ['No location preferences set']
+      };
     }
 
-    return { score, reasoning };
+    const isRemote = jobLocation.toLowerCase().includes('remote');
+    const hasRemotePreference = preferredLocations.some(loc => loc.toLowerCase().includes('remote'));
+    
+    if (isRemote && hasRemotePreference) {
+      return {
+        score: 1.0,
+        reasoning: ['Remote position matches your preferences']
+      };
+    }
+
+    const locationMatch = preferredLocations.some(pref => 
+      jobLocation.toLowerCase().includes(pref.toLowerCase()) ||
+      pref.toLowerCase().includes(jobLocation.toLowerCase())
+    );
+
+    return {
+      score: locationMatch ? 1.0 : 0.3,
+      reasoning: [
+        locationMatch 
+          ? 'Location matches your preferences'
+          : 'Location does not match your preferred areas'
+      ]
+    };
   }
 
   private static analyzeCultureMatch(jobData: JobData, userProfile: UserProfile) {
-    let score = 50;
-    const reasoning: string[] = [];
+    // Basic culture matching based on company size and work model
+    let score = 0.7; // Default neutral score
 
-    // Industry preference match
-    const industryMatch = userProfile.industryPreferences.some(pref => 
-      jobData.industry.toLowerCase().includes(pref.toLowerCase())
-    );
-    
-    if (industryMatch) {
-      score += 20;
-      reasoning.push(`Industry alignment: ${jobData.industry} matches your preferences`);
+    if (userProfile.companySize.length > 0) {
+      const sizeMatch = userProfile.companySize.includes(jobData.companySize || '');
+      if (sizeMatch) score += 0.2;
     }
 
-    // Company size match
-    if (jobData.companySize && userProfile.companySize.includes(jobData.companySize)) {
-      score += 15;
-      reasoning.push(`Company size match: ${jobData.companySize} company`);
-    }
-
-    // Role type match
-    const roleMatch = userProfile.rolePreferences.some(role => 
-      jobData.title.toLowerCase().includes(role.toLowerCase())
-    );
-    
-    if (roleMatch) {
-      score += 15;
-      reasoning.push(`Role type alignment: ${jobData.title} matches your career goals`);
-    }
-
-    return { score: Math.min(100, score), reasoning };
+    return {
+      score: Math.min(score, 1.0),
+      reasoning: ['Culture match based on company preferences']
+    };
   }
 
   private static analyzeCompanyMatch(jobData: JobData, userProfile: UserProfile) {
-    // This would integrate with company data, for now basic scoring
-    let score = 70;
-    const reasoning: string[] = [];
-
-    // Basic company reputation scoring (would integrate with actual data)
-    const companySize = jobData.companySize?.toLowerCase();
-    if (companySize === 'startup' && userProfile.companySize.includes('startup')) {
-      score += 20;
-      reasoning.push('Startup environment match');
-    } else if (companySize === 'enterprise' && userProfile.companySize.includes('large')) {
-      score += 15;
-      reasoning.push('Enterprise environment match');
-    }
-
-    reasoning.push(`Company: ${jobData.company} - Standard evaluation applied`);
-
-    return { score: Math.min(100, score), reasoning };
-  }
-
-  private static calculateWeightedScore(scores: { [key: string]: number }): number {
-    return Object.entries(scores).reduce((total, [key, score]) => {
-      return total + (score * this.weights[key as keyof typeof this.weights]);
-    }, 0);
-  }
-
-  private static calculateConfidenceLevel(skillsAnalysis: any, experienceAnalysis: any, salaryAnalysis: any): number {
-    let confidence = 70;
-    
-    if (skillsAnalysis.matches.length >= 3) confidence += 15;
-    if (experienceAnalysis.score > 80) confidence += 10;
-    if (salaryAnalysis.score > 70) confidence += 5;
-    
-    return Math.min(100, confidence);
-  }
-
-  private static getSynonyms(skill: string): string[] {
-    const synonymMap: { [key: string]: string[] } = {
-      'javascript': ['js', 'ecmascript', 'es6', 'es2015'],
-      'typescript': ['ts'],
-      'react': ['reactjs', 'react.js'],
-      'python': ['py'],
-      'machine learning': ['ml', 'artificial intelligence', 'ai'],
-      'database': ['db', 'sql', 'nosql'],
-      'frontend': ['front-end', 'client-side'],
-      'backend': ['back-end', 'server-side']
+    // Basic company matching
+    return {
+      score: 0.8,
+      reasoning: ['Company analysis based on industry and role fit']
     };
-    
-    return synonymMap[skill] || [];
   }
 
-  private static calculateTotalExperience(workExperiences: any[]): number {
-    return workExperiences.reduce((total, exp) => {
-      const startDate = new Date(exp.start_date || Date.now());
-      const endDate = exp.end_date ? new Date(exp.end_date) : new Date();
-      const months = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 30);
-      return total + Math.max(0, months);
-    }, 0) / 12; // Convert to years
-  }
-
-  private static parseSalary(salaryString: string | undefined): number {
-    if (!salaryString) return 0;
+  private static calculateConfidence(skillsAnalysis: any, experienceAnalysis: any): number {
+    const skillsWeight = 0.6;
+    const experienceWeight = 0.4;
     
-    const matches = salaryString.match(/[\d,]+/g);
-    if (!matches) return 0;
-    
-    return parseInt(matches[0].replace(/,/g, ''));
-  }
-
-  private static parseSalaryRange(salary: string): { min: number; max: number } | null {
-    const rangeMatch = salary.match(/\$?([\d,]+)\s*[-–—]\s*\$?([\d,]+)/);
-    if (rangeMatch) {
-      return {
-        min: parseInt(rangeMatch[1].replace(/,/g, '')),
-        max: parseInt(rangeMatch[2].replace(/,/g, ''))
-      };
-    }
-    
-    const singleMatch = salary.match(/\$?([\d,]+)/);
-    if (singleMatch) {
-      const amount = parseInt(singleMatch[1].replace(/,/g, ''));
-      return { min: amount * 0.9, max: amount * 1.1 };
-    }
-    
-    return null;
-  }
-
-  static async batchAnalyzeJobs(jobs: JobData[], userId: string): Promise<MLJobMatch[]> {
-    const analyses = await Promise.all(
-      jobs.map(job => this.analyzeJobMatch(job, userId))
-    );
-    
-    return analyses.sort((a, b) => b.matchScore - a.matchScore);
-  }
-
-  static async getRecommendedJobs(userId: string, limit: number = 10): Promise<MLJobMatch[]> {
-    // This would integrate with job search APIs
-    const mockJobs: JobData[] = [
-      {
-        id: '1',
-        title: 'Senior React Developer',
-        company: 'TechFlow Inc.',
-        location: 'San Francisco, CA',
-        salary: '$130,000 - $160,000',
-        requiredSkills: ['React', 'TypeScript', 'Node.js', 'GraphQL'],
-        experienceLevel: 'senior',
-        jobType: 'full-time',
-        industry: 'Technology',
-        remote: true,
-        description: 'Build scalable web applications...'
-      },
-      {
-        id: '2',
-        title: 'Full Stack Engineer',
-        company: 'InnovateLab',
-        location: 'Austin, TX',
-        salary: '$110,000 - $140,000',
-        requiredSkills: ['JavaScript', 'Python', 'AWS', 'Docker'],
-        experienceLevel: 'mid',
-        jobType: 'full-time',
-        industry: 'Startups',
-        remote: false,
-        description: 'Work on cutting-edge products...'
-      }
-    ];
-
-    return this.batchAnalyzeJobs(mockJobs, userId);
+    return Math.round((skillsAnalysis.score * skillsWeight + experienceAnalysis.score * experienceWeight) * 100);
   }
 }

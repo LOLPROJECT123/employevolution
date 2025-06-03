@@ -68,7 +68,7 @@ export const BiometricAuthHandler: React.FC<BiometricAuthHandlerProps> = ({
   const handleAuthenticateWithBiometric = async () => {
     setIsAuthenticating(true);
     try {
-      const result = await RealWebAuthService.authenticateWithBiometric();
+      const result = await RealWebAuthService.authenticateBiometric();
       
       if (result.success) {
         toast.success("Authentication successful!");

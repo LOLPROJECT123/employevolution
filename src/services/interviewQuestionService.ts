@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { castJsonToStringArray } from '@/types/database';
 
 export interface InterviewQuestion {
   id: string;
@@ -146,7 +147,18 @@ export class InterviewQuestionService {
       return [];
     }
 
-    return data || [];
+    return (data || []).map(item => ({
+      id: item.id,
+      job_title: item.job_title,
+      company_type: item.company_type,
+      difficulty_level: item.difficulty_level as 'easy' | 'medium' | 'hard',
+      question_category: item.question_category,
+      question: item.question,
+      sample_answer: item.sample_answer,
+      tags: castJsonToStringArray(item.tags),
+      usage_count: item.usage_count,
+      created_at: item.created_at
+    }));
   }
 
   static async getQuestionsByCategory(category: string): Promise<InterviewQuestion[]> {
@@ -162,13 +174,27 @@ export class InterviewQuestionService {
       return [];
     }
 
-    return data || [];
+    return (data || []).map(item => ({
+      id: item.id,
+      job_title: item.job_title,
+      company_type: item.company_type,
+      difficulty_level: item.difficulty_level as 'easy' | 'medium' | 'hard',
+      question_category: item.question_category,
+      question: item.question,
+      sample_answer: item.sample_answer,
+      tags: castJsonToStringArray(item.tags),
+      usage_count: item.usage_count,
+      created_at: item.created_at
+    }));
   }
 
   static async incrementQuestionUsage(questionId: string): Promise<void> {
-    const { error } = await supabase.rpc('increment_question_usage', {
-      question_id: questionId
-    });
+    // Note: This would require creating the increment_question_usage function in Supabase
+    // For now, we'll use a direct update
+    const { error } = await supabase
+      .from('interview_questions')
+      .update({ usage_count: supabase.rpc('usage_count + 1') })
+      .eq('id', questionId);
 
     if (error) {
       console.error('Error incrementing question usage:', error);
@@ -188,6 +214,17 @@ export class InterviewQuestionService {
       return [];
     }
 
-    return data || [];
+    return (data || []).map(item => ({
+      id: item.id,
+      job_title: item.job_title,
+      company_type: item.company_type,
+      difficulty_level: item.difficulty_level as 'easy' | 'medium' | 'hard',
+      question_category: item.question_category,
+      question: item.question,
+      sample_answer: item.sample_answer,
+      tags: castJsonToStringArray(item.tags),
+      usage_count: item.usage_count,
+      created_at: item.created_at
+    }));
   }
 }

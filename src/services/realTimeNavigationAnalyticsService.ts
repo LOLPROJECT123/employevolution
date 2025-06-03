@@ -1,518 +1,513 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { castJsonToStringArray } from '@/types/database';
 
 export interface NavigationEvent {
   id: string;
-  userId?: string;
   sessionId: string;
   fromRoute: string;
   toRoute: string;
+  interactionType: 'click' | 'voice' | 'gesture' | 'direct';
+  deviceType: string;
   timestamp: string;
-  duration?: number;
-  interactionType: 'click' | 'navigation' | 'search' | 'gesture';
-  deviceType: 'desktop' | 'mobile' | 'tablet';
-  browserInfo: {
-    userAgent: string;
-    viewport: { width: number; height: number };
-    connection?: string;
-  };
-  metadata?: any;
+  duration: number;
+  browserInfo: any;
+}
+
+export interface NavigationPattern {
+  route: string;
+  frequency: number;
+  avgDuration: number;
+  bounceRate: number;
+  conversionRate: number;
+  popularNextRoutes: string[];
+  dropoffRate: number;
 }
 
 export interface UserJourney {
   sessionId: string;
-  userId?: string;
-  startTime: string;
-  endTime?: string;
+  routes: string[];
   totalDuration: number;
-  pages: string[];
+  completedGoal: boolean;
+  dropoffPoint?: string;
   conversionEvents: string[];
-  dropOffPoint?: string;
-  deviceType: string;
-  isComplete: boolean;
+  deviceInfo: any;
 }
 
-export interface NavigationPattern {
-  pattern: string[];
-  frequency: number;
-  averageDuration: number;
-  conversionRate: number;
-  dropOffRate: number;
-  deviceBreakdown: { [key: string]: number };
-}
-
-export interface RealTimeMetrics {
-  activeUsers: number;
-  topPages: { route: string; users: number }[];
-  averageSessionDuration: number;
-  bounceRate: number;
-  conversionRate: number;
-  realTimeEvents: NavigationEvent[];
+export interface RouteOptimization {
+  recommendations: string[];
+  performanceMetrics: {
+    loadTime: number;
+    interactionRate: number;
+    retentionRate: number;
+  };
+  userFlow: {
+    entryPoints: string[];
+    exitPoints: string[];
+    commonPaths: string[];
+  };
 }
 
 export class RealTimeNavigationAnalyticsService {
-  private static eventBuffer: NavigationEvent[] = [];
-  private static currentSession: string = '';
-  private static sessionStartTime: number = Date.now();
-  private static realTimeSubscription: any = null;
+  private static sessionId = this.generateSessionId();
+  private static currentRoute = '';
+  private static routeStartTime = Date.now();
+  private static eventQueue: NavigationEvent[] = [];
+  private static isRealTimeEnabled = true;
 
-  static init(): void {
-    this.currentSession = this.generateSessionId();
-    this.sessionStartTime = Date.now();
-    this.setupRealTimeListening();
-    this.startPeriodicFlush();
-    this.setupBeforeUnloadHandler();
-  }
-
-  private static generateSessionId(): string {
+  static generateSessionId(): string {
     return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  static trackNavigation(fromRoute: string, toRoute: string, interactionType: 'click' | 'navigation' | 'search' | 'gesture' = 'navigation'): void {
-    const event: NavigationEvent = {
-      id: crypto.randomUUID(),
-      sessionId: this.currentSession,
-      fromRoute,
-      toRoute,
-      timestamp: new Date().toISOString(),
-      interactionType,
-      deviceType: this.getDeviceType(),
-      browserInfo: this.getBrowserInfo()
+  static async initializeAnalytics(userId?: string): Promise<void> {
+    this.sessionId = this.generateSessionId();
+    this.setupRouteTracking();
+    this.setupRealTimeSync();
+    
+    if (userId) {
+      await this.trackSessionStart(userId);
+    }
+  }
+
+  private static setupRouteTracking(): void {
+    // Track initial route
+    this.currentRoute = window.location.pathname;
+    this.routeStartTime = Date.now();
+
+    // Listen for route changes
+    const originalPushState = history.pushState;
+    const originalReplaceState = history.replaceState;
+
+    history.pushState = function(...args) {
+      originalPushState.apply(history, args);
+      RealTimeNavigationAnalyticsService.handleRouteChange();
     };
 
-    // Add user ID if authenticated
-    this.addUserIdToEvent(event);
+    history.replaceState = function(...args) {
+      originalReplaceState.apply(history, args);
+      RealTimeNavigationAnalyticsService.handleRouteChange();
+    };
 
-    this.eventBuffer.push(event);
-    
-    // Real-time processing
-    this.processEventRealTime(event);
-
-    // Flush if buffer is getting large
-    if (this.eventBuffer.length >= 10) {
-      this.flushEvents();
-    }
-  }
-
-  private static async addUserIdToEvent(event: NavigationEvent): Promise<void> {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        event.userId = user.id;
-      }
-    } catch (error) {
-      // User not authenticated, continue without user ID
-    }
-  }
-
-  private static processEventRealTime(event: NavigationEvent): void {
-    // Broadcast to real-time listeners
-    this.broadcastToRealTimeChannel(event);
-    
-    // Update local metrics
-    this.updateLocalMetrics(event);
-    
-    // Trigger any immediate actions
-    this.triggerImmediateActions(event);
-  }
-
-  private static broadcastToRealTimeChannel(event: NavigationEvent): void {
-    const channel = supabase.channel('navigation-analytics');
-    channel.send({
-      type: 'broadcast',
-      event: 'navigation',
-      payload: event
+    window.addEventListener('popstate', () => {
+      this.handleRouteChange();
     });
   }
 
-  private static updateLocalMetrics(event: NavigationEvent): void {
-    // Update performance metrics in localStorage
-    const metrics = this.getLocalMetrics();
-    metrics.totalEvents++;
-    metrics.lastActivity = event.timestamp;
-    metrics.routes[event.toRoute] = (metrics.routes[event.toRoute] || 0) + 1;
-    
-    localStorage.setItem('navigation_metrics', JSON.stringify(metrics));
-  }
-
-  private static getLocalMetrics(): any {
-    const stored = localStorage.getItem('navigation_metrics');
-    return stored ? JSON.parse(stored) : {
-      totalEvents: 0,
-      lastActivity: new Date().toISOString(),
-      routes: {},
-      sessionStart: this.sessionStartTime
-    };
-  }
-
-  private static triggerImmediateActions(event: NavigationEvent): void {
-    // Check for conversion events
-    if (this.isConversionPage(event.toRoute)) {
-      this.trackConversionEvent(event);
-    }
-
-    // Check for drop-off patterns
-    if (this.isHighDropOffRoute(event.fromRoute, event.toRoute)) {
-      this.trackDropOffEvent(event);
-    }
-
-    // Performance monitoring
-    if (event.duration && event.duration > 5000) {
-      this.trackSlowNavigation(event);
-    }
-  }
-
-  private static isConversionPage(route: string): boolean {
-    const conversionRoutes = ['/applications', '/profile/complete', '/jobs/apply'];
-    return conversionRoutes.some(convRoute => route.includes(convRoute));
-  }
-
-  private static isHighDropOffRoute(fromRoute: string, toRoute: string): boolean {
-    // Define patterns that indicate user confusion or frustration
-    const problematicPatterns = [
-      { from: '/jobs', to: '/dashboard' }, // Back to dashboard from jobs
-      { from: '/profile', to: '/jobs' }, // Profile to jobs without completing
-    ];
-    
-    return problematicPatterns.some(pattern => 
-      fromRoute.includes(pattern.from) && toRoute.includes(pattern.to)
-    );
-  }
-
-  private static trackConversionEvent(event: NavigationEvent): void {
-    const conversionEvent = {
-      session_id: event.sessionId,
-      user_id: event.userId || 'anonymous',
-      event_name: 'page_conversion',
-      timestamp: event.timestamp,
-      properties: {
-        route: event.toRoute,
-        fromRoute: event.fromRoute,
-        deviceType: event.deviceType
+  private static setupRealTimeSync(): void {
+    // Sync events every 5 seconds
+    setInterval(() => {
+      if (this.eventQueue.length > 0 && this.isRealTimeEnabled) {
+        this.syncEvents();
       }
-    };
+    }, 5000);
 
-    // Store conversion event
-    this.storeConversionEvent(conversionEvent);
+    // Sync on page unload
+    window.addEventListener('beforeunload', () => {
+      this.syncEvents();
+    });
   }
 
-  private static trackDropOffEvent(event: NavigationEvent): void {
-    console.log('Drop-off detected:', { from: event.fromRoute, to: event.toRoute });
-    // This could trigger alerts or optimization suggestions
-  }
+  private static handleRouteChange(): void {
+    const newRoute = window.location.pathname;
+    const duration = Date.now() - this.routeStartTime;
 
-  private static trackSlowNavigation(event: NavigationEvent): void {
-    console.log('Slow navigation detected:', { route: event.toRoute, duration: event.duration });
-    // This could trigger performance monitoring alerts
-  }
-
-  private static async storeConversionEvent(conversionEvent: any): Promise<void> {
-    try {
-      await supabase.from('conversion_events').insert(conversionEvent);
-    } catch (error) {
-      console.error('Error storing conversion event:', error);
+    if (newRoute !== this.currentRoute) {
+      this.trackNavigation(this.currentRoute, newRoute, 'direct', duration);
+      this.currentRoute = newRoute;
+      this.routeStartTime = Date.now();
     }
   }
 
-  static async flushEvents(): Promise<void> {
-    if (this.eventBuffer.length === 0) return;
+  static async trackNavigation(
+    fromRoute: string, 
+    toRoute: string, 
+    interactionType: 'click' | 'voice' | 'gesture' | 'direct' = 'click',
+    duration?: number
+  ): Promise<void> {
+    const event: NavigationEvent = {
+      id: crypto.randomUUID(),
+      sessionId: this.sessionId,
+      fromRoute,
+      toRoute,
+      interactionType,
+      deviceType: this.getDeviceType(),
+      timestamp: new Date().toISOString(),
+      duration: duration || Date.now() - this.routeStartTime,
+      browserInfo: this.getBrowserInfo()
+    };
 
-    const eventsToFlush = [...this.eventBuffer];
-    this.eventBuffer = [];
+    this.eventQueue.push(event);
+
+    // Real-time sync for important navigation events
+    if (this.isImportantRoute(toRoute)) {
+      await this.syncEvents();
+    }
+  }
+
+  private static async syncEvents(): Promise<void> {
+    if (this.eventQueue.length === 0) return;
 
     try {
-      // Transform events for database storage
-      const dbEvents = eventsToFlush.map(event => ({
-        user_id: event.userId,
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const eventsToSync = this.eventQueue.map(event => ({
+        user_id: user?.id || null,
         session_id: event.sessionId,
         from_route: event.fromRoute,
         to_route: event.toRoute,
         interaction_type: event.interactionType,
         device_type: event.deviceType,
         duration_ms: event.duration,
-        browser_info: event.browserInfo,
-        created_at: event.timestamp
+        browser_info: event.browserInfo
       }));
 
-      await supabase.from('navigation_analytics').insert(dbEvents);
-      console.log(`Flushed ${eventsToFlush.length} navigation events`);
+      const { error } = await supabase
+        .from('navigation_analytics')
+        .insert(eventsToSync);
+
+      if (!error) {
+        this.eventQueue = [];
+      }
     } catch (error) {
-      console.error('Error flushing navigation events:', error);
-      // Re-add events to buffer for retry
-      this.eventBuffer.unshift(...eventsToFlush);
+      console.error('Failed to sync navigation events:', error);
     }
   }
 
-  static async analyzeUserJourney(sessionId?: string, userId?: string): Promise<UserJourney | null> {
+  static async analyzeNavigationPatterns(timeRange: '1h' | '24h' | '7d' | '30d' = '24h'): Promise<NavigationPattern[]> {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      const timeFilter = this.getTimeFilter(timeRange);
+      
+      const { data: analytics } = await supabase
+        .from('navigation_analytics')
+        .select('*')
+        .eq('user_id', user.id)
+        .gte('created_at', timeFilter)
+        .order('created_at', { ascending: true });
+
+      if (!analytics) return [];
+
+      return this.processNavigationPatterns(analytics);
+    } catch (error) {
+      console.error('Navigation pattern analysis error:', error);
+      return [];
+    }
+  }
+
+  private static processNavigationPatterns(analytics: any[]): NavigationPattern[] {
+    const routeStats: { [route: string]: any } = {};
+
+    analytics.forEach(item => {
+      const route = item.to_route;
+      if (!routeStats[route]) {
+        routeStats[route] = {
+          frequency: 0,
+          totalDuration: 0,
+          sessions: new Set(),
+          nextRoutes: [],
+          bounces: 0,
+          conversions: 0
+        };
+      }
+
+      routeStats[route].frequency++;
+      routeStats[route].totalDuration += item.duration_ms || 0;
+      routeStats[route].sessions.add(item.session_id);
+      
+      // Track next routes for flow analysis
+      const nextItem = analytics.find(a => 
+        a.session_id === item.session_id && 
+        a.from_route === route &&
+        new Date(a.created_at) > new Date(item.created_at)
+      );
+      
+      if (nextItem) {
+        routeStats[route].nextRoutes.push(nextItem.to_route);
+      } else {
+        routeStats[route].bounces++;
+      }
+
+      // Check for conversions (reaching goal pages)
+      if (this.isConversionRoute(route)) {
+        routeStats[route].conversions++;
+      }
+    });
+
+    return Object.entries(routeStats).map(([route, stats]) => ({
+      route,
+      frequency: stats.frequency,
+      avgDuration: stats.totalDuration / stats.frequency,
+      bounceRate: (stats.bounces / stats.frequency) * 100,
+      conversionRate: (stats.conversions / stats.frequency) * 100,
+      popularNextRoutes: this.getMostFrequent(stats.nextRoutes, 3),
+      dropoffRate: (stats.bounces / stats.sessions.size) * 100
+    }));
+  }
+
+  static async analyzeUserJourneys(sessionId?: string): Promise<UserJourney[]> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
       let query = supabase
         .from('navigation_analytics')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: true });
 
       if (sessionId) {
         query = query.eq('session_id', sessionId);
-      } else if (userId) {
-        query = query.eq('user_id', userId);
-      } else {
-        query = query.eq('session_id', this.currentSession);
       }
 
-      const { data: events, error } = await query;
-      if (error || !events || events.length === 0) return null;
+      const { data: analytics } = await query;
+      if (!analytics) return [];
 
-      const firstEvent = events[0];
-      const lastEvent = events[events.length - 1];
-      
-      const journey: UserJourney = {
-        sessionId: firstEvent.session_id,
-        userId: firstEvent.user_id,
-        startTime: firstEvent.created_at,
-        endTime: lastEvent.created_at,
-        totalDuration: new Date(lastEvent.created_at).getTime() - new Date(firstEvent.created_at).getTime(),
-        pages: [...new Set(events.map(e => e.to_route))],
-        conversionEvents: await this.getConversionEvents(firstEvent.session_id),
-        deviceType: firstEvent.device_type,
-        isComplete: this.isJourneyComplete(events)
+      // Map database response to NavigationEvent format
+      const mappedAnalytics: NavigationEvent[] = analytics.map(item => ({
+        id: item.id,
+        sessionId: item.session_id,
+        fromRoute: item.from_route || '',
+        toRoute: item.to_route,
+        interactionType: item.interaction_type as 'click' | 'voice' | 'gesture' | 'direct',
+        deviceType: item.device_type || 'unknown',
+        timestamp: item.created_at,
+        duration: item.duration_ms || 0,
+        browserInfo: item.browser_info
+      }));
+
+      return this.processUserJourneys(mappedAnalytics);
+    } catch (error) {
+      console.error('User journey analysis error:', error);
+      return [];
+    }
+  }
+
+  private static processUserJourneys(analytics: NavigationEvent[]): UserJourney[] {
+    const sessionGroups: { [sessionId: string]: NavigationEvent[] } = {};
+
+    analytics.forEach(event => {
+      if (!sessionGroups[event.sessionId]) {
+        sessionGroups[event.sessionId] = [];
+      }
+      sessionGroups[event.sessionId].push(event);
+    });
+
+    return Object.entries(sessionGroups).map(([sessionId, events]) => {
+      const routes = events.map(e => e.toRoute);
+      const totalDuration = events.reduce((sum, e) => sum + e.duration, 0);
+      const completedGoal = this.hasCompletedGoal(routes);
+      const dropoffPoint = this.findDropoffPoint(events);
+      const conversionEvents = this.findConversionEvents(routes);
+
+      return {
+        sessionId,
+        routes,
+        totalDuration,
+        completedGoal,
+        dropoffPoint,
+        conversionEvents,
+        deviceInfo: events[0]?.browserInfo || {}
       };
-
-      // Detect drop-off point
-      const dropOffPoint = this.detectDropOffPoint(events);
-      if (dropOffPoint) {
-        journey.dropOffPoint = dropOffPoint;
-      }
-
-      return journey;
-    } catch (error) {
-      console.error('Error analyzing user journey:', error);
-      return null;
-    }
+    });
   }
 
-  private static async getConversionEvents(sessionId: string): Promise<string[]> {
+  static async optimizeRouteFlow(): Promise<RouteOptimization> {
     try {
-      const { data, error } = await supabase
-        .from('conversion_events')
-        .select('event_name')
-        .eq('session_id', sessionId);
+      const patterns = await this.analyzeNavigationPatterns('7d');
+      const journeys = await this.analyzeUserJourneys();
 
-      if (error) return [];
-      return data.map(event => event.event_name);
+      const recommendations = this.generateOptimizationRecommendations(patterns, journeys);
+      const performanceMetrics = this.calculatePerformanceMetrics(patterns);
+      const userFlow = this.analyzeUserFlow(journeys);
+
+      return {
+        recommendations,
+        performanceMetrics,
+        userFlow
+      };
     } catch (error) {
-      return [];
+      console.error('Route optimization error:', error);
+      return {
+        recommendations: [],
+        performanceMetrics: { loadTime: 0, interactionRate: 0, retentionRate: 0 },
+        userFlow: { entryPoints: [], exitPoints: [], commonPaths: [] }
+      };
     }
   }
 
-  private static isJourneyComplete(events: any[]): boolean {
-    const conversionRoutes = ['/applications', '/profile/complete'];
-    return events.some(event => 
-      conversionRoutes.some(route => event.to_route.includes(route))
-    );
-  }
+  private static generateOptimizationRecommendations(patterns: NavigationPattern[], journeys: UserJourney[]): string[] {
+    const recommendations: string[] = [];
 
-  private static detectDropOffPoint(events: any[]): string | undefined {
-    // Simple heuristic: if user spent more than 2 minutes on a page and then left
-    for (let i = 0; i < events.length - 1; i++) {
-      const duration = events[i].duration_ms;
-      if (duration && duration > 120000) { // 2 minutes
-        return events[i].to_route;
+    patterns.forEach(pattern => {
+      if (pattern.bounceRate > 70) {
+        recommendations.push(`Improve user engagement on ${pattern.route} (high bounce rate: ${pattern.bounceRate.toFixed(1)}%)`);
       }
+      if (pattern.avgDuration < 5000) {
+        recommendations.push(`Consider adding more content to ${pattern.route} (short visit duration)`);
+      }
+      if (pattern.frequency > 10 && pattern.conversionRate < 20) {
+        recommendations.push(`Optimize conversion flow on ${pattern.route} (low conversion rate)`);
+      }
+      if (pattern.dropoffRate > 50) {
+        recommendations.push(`Reduce friction on ${pattern.route} (high dropoff rate)`);
+      }
+    });
+
+    // Journey-based recommendations
+    const incompletedJourneys = journeys.filter(j => !j.completedGoal);
+    if (incompletedJourneys.length > journeys.length * 0.5) {
+      recommendations.push('Simplify the user flow to improve goal completion rates');
     }
-    return undefined;
+
+    return recommendations;
   }
 
-  static async getNavigationPatterns(timeframe: 'hour' | 'day' | 'week' = 'day'): Promise<NavigationPattern[]> {
+  private static calculatePerformanceMetrics(patterns: NavigationPattern[]) {
+    const totalFrequency = patterns.reduce((sum, p) => sum + p.frequency, 0);
+    const avgDuration = patterns.reduce((sum, p) => sum + p.avgDuration, 0) / patterns.length;
+    const avgBounceRate = patterns.reduce((sum, p) => sum + p.bounceRate, 0) / patterns.length;
+
+    return {
+      loadTime: avgDuration,
+      interactionRate: 100 - avgBounceRate,
+      retentionRate: patterns.reduce((sum, p) => sum + (100 - p.dropoffRate), 0) / patterns.length
+    };
+  }
+
+  private static analyzeUserFlow(journeys: UserJourney[]) {
+    const entryPoints = journeys.map(j => j.routes[0]).filter(Boolean);
+    const exitPoints = journeys.map(j => j.routes[j.routes.length - 1]).filter(Boolean);
+    const commonPaths = this.findCommonPaths(journeys);
+
+    return {
+      entryPoints: this.getMostFrequent(entryPoints, 5),
+      exitPoints: this.getMostFrequent(exitPoints, 5),
+      commonPaths: commonPaths.slice(0, 5)
+    };
+  }
+
+  private static findCommonPaths(journeys: UserJourney[]): string[] {
+    const pathCounts: { [path: string]: number } = {};
+
+    journeys.forEach(journey => {
+      for (let i = 0; i < journey.routes.length - 1; i++) {
+        const path = `${journey.routes[i]} → ${journey.routes[i + 1]}`;
+        pathCounts[path] = (pathCounts[path] || 0) + 1;
+      }
+    });
+
+    return Object.entries(pathCounts)
+      .sort(([, a], [, b]) => b - a)
+      .map(([path]) => path);
+  }
+
+  // Utility methods
+  private static async trackSessionStart(userId: string): Promise<void> {
     try {
-      const startTime = this.getTimeframeStart(timeframe);
-      
-      const { data: events, error } = await supabase
-        .from('navigation_analytics')
-        .select('session_id, from_route, to_route, duration_ms, device_type, created_at')
-        .gte('created_at', startTime)
-        .order('session_id, created_at');
-
-      if (error) return [];
-
-      // Group events by session to build patterns
-      const sessionJourneys = this.groupEventsBySession(events);
-      
-      // Extract patterns
-      const patterns = this.extractPatterns(sessionJourneys);
-      
-      return patterns.sort((a, b) => b.frequency - a.frequency);
+      await supabase.from('navigation_analytics').insert({
+        user_id: userId,
+        session_id: this.sessionId,
+        from_route: '',
+        to_route: window.location.pathname,
+        interaction_type: 'direct',
+        device_type: this.getDeviceType(),
+        browser_info: this.getBrowserInfo()
+      });
     } catch (error) {
-      console.error('Error getting navigation patterns:', error);
-      return [];
+      console.error('Failed to track session start:', error);
     }
   }
 
-  private static getTimeframeStart(timeframe: string): string {
+  private static getDeviceType(): string {
+    const userAgent = navigator.userAgent;
+    if (/tablet|ipad|playbook|silk/i.test(userAgent)) return 'tablet';
+    if (/mobile|iphone|ipod|android|blackberry|opera|mini|windows\sce|palm|smartphone|iemobile/i.test(userAgent)) return 'mobile';
+    return 'desktop';
+  }
+
+  private static getBrowserInfo(): any {
+    return {
+      userAgent: navigator.userAgent,
+      language: navigator.language,
+      platform: navigator.platform,
+      cookieEnabled: navigator.cookieEnabled,
+      onLine: navigator.onLine,
+      screen: {
+        width: screen.width,
+        height: screen.height
+      }
+    };
+  }
+
+  private static getTimeFilter(timeRange: string): string {
     const now = new Date();
-    switch (timeframe) {
-      case 'hour':
+    switch (timeRange) {
+      case '1h':
         return new Date(now.getTime() - 60 * 60 * 1000).toISOString();
-      case 'day':
+      case '24h':
         return new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
-      case 'week':
+      case '7d':
         return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      case '30d':
+        return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
       default:
         return new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
     }
   }
 
-  private static groupEventsBySession(events: any[]): { [sessionId: string]: any[] } {
-    return events.reduce((groups, event) => {
-      const sessionId = event.session_id;
-      if (!groups[sessionId]) {
-        groups[sessionId] = [];
-      }
-      groups[sessionId].push(event);
-      return groups;
-    }, {});
+  private static isImportantRoute(route: string): boolean {
+    const importantRoutes = ['/dashboard', '/jobs', '/applications', '/profile'];
+    return importantRoutes.includes(route);
   }
 
-  private static extractPatterns(sessionJourneys: { [sessionId: string]: any[] }): NavigationPattern[] {
-    const patternMap: { [pattern: string]: any } = {};
+  private static isConversionRoute(route: string): boolean {
+    const conversionRoutes = ['/applications', '/profile', '/jobs'];
+    return conversionRoutes.includes(route);
+  }
 
-    Object.values(sessionJourneys).forEach(journey => {
-      if (journey.length < 2) return;
+  private static hasCompletedGoal(routes: string[]): boolean {
+    const goalRoutes = ['/applications', '/profile', '/jobs'];
+    return goalRoutes.some(goal => routes.includes(goal));
+  }
 
-      const routes = journey.map(event => event.to_route);
-      const patternKey = routes.join(' -> ');
-      
-      if (!patternMap[patternKey]) {
-        patternMap[patternKey] = {
-          pattern: routes,
-          frequency: 0,
-          totalDuration: 0,
-          conversions: 0,
-          dropOffs: 0,
-          deviceBreakdown: {}
-        };
-      }
+  private static findDropoffPoint(events: NavigationEvent[]): string | undefined {
+    return events[events.length - 1]?.toRoute;
+  }
 
-      const pattern = patternMap[patternKey];
-      pattern.frequency++;
-      
-      const totalDuration = journey.reduce((sum, event) => sum + (event.duration_ms || 0), 0);
-      pattern.totalDuration += totalDuration;
+  private static findConversionEvents(routes: string[]): string[] {
+    const conversionRoutes = ['/applications', '/profile', '/jobs'];
+    return routes.filter(route => conversionRoutes.includes(route));
+  }
 
-      // Check for conversions and drop-offs
-      const lastRoute = routes[routes.length - 1];
-      if (this.isConversionPage(lastRoute)) {
-        pattern.conversions++;
-      } else {
-        pattern.dropOffs++;
-      }
-
-      // Device breakdown
-      const deviceType = journey[0].device_type;
-      pattern.deviceBreakdown[deviceType] = (pattern.deviceBreakdown[deviceType] || 0) + 1;
+  private static getMostFrequent<T>(array: T[], limit: number): T[] {
+    const counts: { [key: string]: number } = {};
+    array.forEach(item => {
+      const key = String(item);
+      counts[key] = (counts[key] || 0) + 1;
     });
 
-    return Object.values(patternMap).map(pattern => ({
-      pattern: pattern.pattern,
-      frequency: pattern.frequency,
-      averageDuration: pattern.totalDuration / pattern.frequency,
-      conversionRate: (pattern.conversions / pattern.frequency) * 100,
-      dropOffRate: (pattern.dropOffs / pattern.frequency) * 100,
-      deviceBreakdown: pattern.deviceBreakdown
-    }));
+    return Object.entries(counts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, limit)
+      .map(([key]) => key as T);
   }
 
-  static async getRealTimeMetrics(): Promise<RealTimeMetrics> {
-    try {
-      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-      
-      const { data: recentEvents } = await supabase
-        .from('navigation_analytics')
-        .select('*')
-        .gte('created_at', fiveMinutesAgo);
-
-      const activeUsers = new Set(recentEvents?.map(e => e.session_id) || []).size;
-      
-      const routeCounts: { [route: string]: number } = {};
-      recentEvents?.forEach(event => {
-        routeCounts[event.to_route] = (routeCounts[event.to_route] || 0) + 1;
-      });
-
-      const topPages = Object.entries(routeCounts)
-        .sort(([,a], [,b]) => b - a)
-        .slice(0, 5)
-        .map(([route, users]) => ({ route, users }));
-
-      return {
-        activeUsers,
-        topPages,
-        averageSessionDuration: 0, // Would calculate from actual session data
-        bounceRate: 0, // Would calculate from session patterns
-        conversionRate: 0, // Would calculate from conversion events
-        realTimeEvents: recentEvents || []
-      };
-    } catch (error) {
-      console.error('Error getting real-time metrics:', error);
-      return {
-        activeUsers: 0,
-        topPages: [],
-        averageSessionDuration: 0,
-        bounceRate: 0,
-        conversionRate: 0,
-        realTimeEvents: []
-      };
-    }
+  // Public API methods for real-time control
+  static enableRealTimeTracking(): void {
+    this.isRealTimeEnabled = true;
   }
 
-  private static setupRealTimeListening(): void {
-    this.realTimeSubscription = supabase
-      .channel('navigation-analytics')
-      .on('broadcast', { event: 'navigation' }, (payload) => {
-        console.log('Real-time navigation event:', payload);
-        // Handle real-time updates
-      })
-      .subscribe();
+  static disableRealTimeTracking(): void {
+    this.isRealTimeEnabled = false;
   }
 
-  private static startPeriodicFlush(): void {
-    setInterval(() => {
-      this.flushEvents();
-    }, 30000); // Flush every 30 seconds
+  static async flushEvents(): Promise<void> {
+    await this.syncEvents();
   }
 
-  private static setupBeforeUnloadHandler(): void {
-    window.addEventListener('beforeunload', () => {
-      this.flushEvents();
-    });
-  }
-
-  private static getDeviceType(): 'desktop' | 'mobile' | 'tablet' {
-    const userAgent = navigator.userAgent;
-    if (/tablet|ipad|playbook|silk/i.test(userAgent)) {
-      return 'tablet';
-    }
-    if (/mobile|iphone|ipod|android|blackberry|opera|mini|windows\sce|palm|smartphone|iemobile/i.test(userAgent)) {
-      return 'mobile';
-    }
-    return 'desktop';
-  }
-
-  private static getBrowserInfo() {
-    return {
-      userAgent: navigator.userAgent,
-      viewport: {
-        width: window.innerWidth,
-        height: window.innerHeight
-      },
-      connection: (navigator as any).connection?.effectiveType || 'unknown'
-    };
-  }
-
-  static destroy(): void {
-    this.flushEvents();
-    if (this.realTimeSubscription) {
-      supabase.removeChannel(this.realTimeSubscription);
-    }
+  static getQueuedEvents(): NavigationEvent[] {
+    return [...this.eventQueue];
   }
 }
-
-// Auto-initialize on import
-RealTimeNavigationAnalyticsService.init();
