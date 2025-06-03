@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +7,7 @@ import { RefreshCw, Wifi, WifiOff, Download, Upload } from 'lucide-react';
 import { useOfflineMode } from '@/hooks/useOfflineMode';
 
 const OfflineFirstPages = () => {
-  const { isOnline, cacheData, getCachedData, addPendingAction, syncPendingActions, pendingActions } = useOfflineMode();
+  const { isOnline, addOfflineAction, syncPendingActions, pendingActions, cacheData, getCachedData } = useOfflineMode();
 
   const handleCacheData = () => {
     const data = { message: 'Hello from cached data!', timestamp: Date.now() };
@@ -23,7 +24,7 @@ const OfflineFirstPages = () => {
   };
 
   const handleAddPendingAction = () => {
-    addPendingAction('exampleAction', { data: 'Some data to sync' });
+    addOfflineAction('create', 'general_actions', { data: 'Some data to sync' });
   };
 
   const handleSyncPendingActions = () => {

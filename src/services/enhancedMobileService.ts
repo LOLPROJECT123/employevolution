@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface PushSubscription {
@@ -35,16 +34,13 @@ export class EnhancedMobileService {
         return false;
       }
 
-      // Register service worker
       const registration = await navigator.serviceWorker.register('/sw.js');
       
-      // Request permission
       const permission = await Notification.requestPermission();
       if (permission !== 'granted') {
         return false;
       }
 
-      // Subscribe to push notifications
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: this.urlB64ToUint8Array(
@@ -52,14 +48,18 @@ export class EnhancedMobileService {
         )
       });
 
-      // Save subscription to database
       await this.savePushSubscription(userId, subscription);
       
-      // Also save to user profile for backward compatibility
+      const subscriptionJson = subscription.toJSON();
+      const jsonData = {
+        endpoint: subscriptionJson.endpoint,
+        keys: subscriptionJson.keys
+      } as any; // Cast to any to satisfy Json type requirement
+
       await supabase
         .from('user_profiles')
         .update({ 
-          push_subscription: subscription.toJSON() 
+          push_subscription: jsonData 
         })
         .eq('user_id', userId);
 
@@ -162,7 +162,6 @@ export class EnhancedMobileService {
   }
 
   static setupOfflineSync(): void {
-    // Listen for online/offline events
     window.addEventListener('online', () => {
       this.isOnline = true;
       this.processSyncQueue();
@@ -172,7 +171,6 @@ export class EnhancedMobileService {
       this.isOnline = false;
     });
 
-    // Process any existing queue items
     this.processSyncQueue();
   }
 
@@ -189,7 +187,6 @@ export class EnhancedMobileService {
     this.syncQueue.push(queueItem);
     this.saveQueueToStorage();
 
-    // Try to process immediately if online
     if (this.isOnline) {
       this.processSyncQueue();
     }
@@ -208,7 +205,6 @@ export class EnhancedMobileService {
         console.error('Error processing queue item:', error);
         item.retries += 1;
         
-        // Remove failed items after 3 retries
         if (item.retries >= 3) {
           this.syncQueue = this.syncQueue.filter(q => q.id !== item.id);
         }
@@ -219,15 +215,36 @@ export class EnhancedMobileService {
   }
 
   private static async processQueueItem(item: OfflineSyncQueue): Promise<void> {
+    const validTables = [
+      'achievements', 'activities_leadership', 'api_usage_logs', 'application_events',
+      'ats_integrations', 'audit_logs', 'career_paths', 'communications', 'contacts',
+      'company_insights', 'conversion_events', 'cover_letters', 'document_usage',
+      'education', 'email_logs', 'email_templates', 'encryption_keys',
+      'follow_up_sequence_steps', 'follow_up_sequences', 'github_repositories',
+      'interview_questions', 'interviews', 'job_alerts', 'job_applications',
+      'job_preferences', 'job_recommendations', 'navigation_analytics',
+      'notification_preferences', 'notifications', 'oauth_integrations',
+      'peer_reviews', 'professional_development', 'profile_completion_tracking',
+      'profiles', 'projects', 'push_subscriptions', 'rate_limits', 'reminders',
+      'resume_versions', 'resumes', 'review_feedback', 'saved_jobs', 'saved_searches',
+      'security_events', 'user_2fa', 'user_consents', 'user_documents',
+      'user_languages', 'user_metrics', 'user_onboarding', 'user_profiles',
+      'user_resume_files', 'user_skills'
+    ];
+
+    if (!validTables.includes(item.table)) {
+      throw new Error(`Invalid table name: ${item.table}`);
+    }
+
     switch (item.action) {
       case 'create':
-        await supabase.from(item.table).insert(item.data);
+        await (supabase as any).from(item.table).insert(item.data);
         break;
       case 'update':
-        await supabase.from(item.table).update(item.data).eq('id', item.data.id);
+        await (supabase as any).from(item.table).update(item.data).eq('id', item.data.id);
         break;
       case 'delete':
-        await supabase.from(item.table).delete().eq('id', item.data.id);
+        await (supabase as any).from(item.table).delete().eq('id', item.data.id);
         break;
     }
   }
@@ -258,12 +275,10 @@ export class EnhancedMobileService {
         return false;
       }
 
-      // Request camera permission
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment' }
       });
 
-      // Stop the stream immediately (we just needed permission)
       stream.getTracks().forEach(track => track.stop());
       
       return true;
@@ -283,28 +298,21 @@ export class EnhancedMobileService {
         video: { facingMode: 'environment' }
       });
 
-      // Create video element to capture frame
       const video = document.createElement('video');
       video.srcObject = stream;
       video.play();
 
       await new Promise(resolve => video.addEventListener('loadedmetadata', resolve));
 
-      // Capture frame to canvas
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d')!;
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       ctx.drawImage(video, 0, 0);
 
-      // Stop camera
       stream.getTracks().forEach(track => track.stop());
 
-      // Get image data
       const imageData = canvas.toDataURL('image/jpeg', 0.8);
-
-      // In a real implementation, you would send this to an OCR service
-      // For now, return mock extracted text
       const mockExtractedText = this.generateMockOCRText();
 
       return {
@@ -319,7 +327,6 @@ export class EnhancedMobileService {
   }
 
   private static generateMockOCRText(): string {
-    // Mock OCR result for demonstration
     return `John Doe
 Senior Software Engineer
 Email: john.doe@email.com
@@ -350,12 +357,10 @@ JavaScript, Python, React, Node.js, AWS, Docker`;
     };
   }
 
-  // Initialize the service
   static init(): void {
     this.loadQueueFromStorage();
     this.setupOfflineSync();
   }
 }
 
-// Initialize on import
 EnhancedMobileService.init();

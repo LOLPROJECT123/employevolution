@@ -57,7 +57,6 @@ export class AdvancedGestureService {
       touches: Array.from(event.touches)
     };
 
-    // Start long press timer
     this.longPressTimer = window.setTimeout(() => {
       if (this.touchStart) {
         this.triggerGesture({
@@ -69,7 +68,6 @@ export class AdvancedGestureService {
       }
     }, this.config.longPressDelay);
 
-    // Handle multi-touch for pinch
     if (event.touches.length > 1) {
       this.clearLongPressTimer();
       event.preventDefault();
@@ -86,13 +84,11 @@ export class AdvancedGestureService {
     const deltaY = touch.clientY - this.touchStart.y;
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
-    // Handle pinch gesture
     if (event.touches.length === 2) {
       this.handlePinchGesture(event);
       return;
     }
 
-    // Handle pan gesture (continuous movement)
     if (distance > this.config.swipeThreshold / 4) {
       const velocity = distance / (Date.now() - this.touchStart.time);
       
@@ -118,9 +114,7 @@ export class AdvancedGestureService {
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
     const duration = Date.now() - this.touchStart.time;
 
-    // Determine gesture type
     if (distance < this.config.tapMaxDistance && duration < this.config.tapMaxDelay) {
-      // Tap gesture
       this.triggerGesture({
         type: 'tap',
         startPoint: { x: this.touchStart.x, y: this.touchStart.y },
@@ -128,7 +122,6 @@ export class AdvancedGestureService {
         target: event.target as Element
       });
     } else if (distance > this.config.swipeThreshold) {
-      // Swipe gesture
       const direction = this.getSwipeDirection(deltaX, deltaY);
       const velocity = distance / duration;
       
@@ -157,13 +150,11 @@ export class AdvancedGestureService {
     const touch1 = event.touches[0];
     const touch2 = event.touches[1];
     
-    // Calculate current distance between fingers
     const currentDistance = Math.sqrt(
       Math.pow(touch2.clientX - touch1.clientX, 2) + 
       Math.pow(touch2.clientY - touch1.clientY, 2)
     );
 
-    // Calculate initial distance between fingers
     const initialTouch1 = this.touchStart.touches[0];
     const initialTouch2 = this.touchStart.touches[1];
     const initialDistance = Math.sqrt(
@@ -173,7 +164,6 @@ export class AdvancedGestureService {
 
     const scale = currentDistance / initialDistance;
     
-    // Only trigger if scale change is significant
     if (Math.abs(scale - 1) > this.config.pinchThreshold / 100) {
       const centerX = (touch1.clientX + touch2.clientX) / 2;
       const centerY = (touch1.clientY + touch2.clientY) / 2;
@@ -208,7 +198,6 @@ export class AdvancedGestureService {
       callback(gesture);
     }
     
-    // Also trigger generic gesture callback
     const genericCallback = this.gestureCallbacks.get('*');
     if (genericCallback) {
       genericCallback(gesture);
@@ -232,7 +221,6 @@ export class AdvancedGestureService {
     this.gestureCallbacks.clear();
   }
 
-  // Static utility methods
   static createGestureHandler(element: Element, config?: Partial<GestureConfig>): AdvancedGestureService {
     return new AdvancedGestureService(element, config);
   }
@@ -244,14 +232,16 @@ export class AdvancedGestureService {
   static enableRealGestures(element: Element): AdvancedGestureService {
     const gestureHandler = new AdvancedGestureService(element);
     
-    // Add visual feedback for gestures
     gestureHandler.on('longpress', (event) => {
       element.classList.add('gesture-longpress');
       setTimeout(() => element.classList.remove('gesture-longpress'), 200);
     });
     
     gestureHandler.on('pinch', (event) => {
-      element.style.transform = `scale(${event.scale})`;
+      // Type-safe element style access
+      if (element instanceof HTMLElement) {
+        element.style.transform = `scale(${event.scale})`;
+      }
     });
     
     gestureHandler.on('swipe', (event) => {
@@ -265,7 +255,6 @@ export class AdvancedGestureService {
   }
 }
 
-// CSS classes for gesture feedback (to be added to global styles)
 export const gestureStyles = `
 .gesture-longpress {
   animation: pulse 0.2s ease-in-out;

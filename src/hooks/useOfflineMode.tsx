@@ -17,12 +17,12 @@ export const useOfflineMode = () => {
   const [pendingActions, setPendingActions] = useState<OfflineAction[]>([]);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'completed' | 'error'>('idle');
   const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
+  const [cachedData, setCachedData] = useState<Map<string, any>>(new Map());
 
   useEffect(() => {
-    // Load pending actions from localStorage
     loadPendingActions();
+    loadCachedData();
 
-    // Set up online/offline event listeners
     const handleOnline = () => {
       setIsOnline(true);
       syncPendingActions();
@@ -35,12 +35,11 @@ export const useOfflineMode = () => {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Set up periodic sync when online
     const syncInterval = setInterval(() => {
       if (navigator.onLine && pendingActions.length > 0) {
         syncPendingActions();
       }
-    }, 30000); // Sync every 30 seconds
+    }, 30000);
 
     return () => {
       window.removeEventListener('online', handleOnline);
@@ -61,12 +60,44 @@ export const useOfflineMode = () => {
     }
   };
 
+  const loadCachedData = () => {
+    try {
+      const stored = localStorage.getItem('offlineCachedData');
+      if (stored) {
+        const data = JSON.parse(stored);
+        setCachedData(new Map(Object.entries(data)));
+      }
+    } catch (error) {
+      console.error('Error loading cached data:', error);
+    }
+  };
+
   const savePendingActions = (actions: OfflineAction[]) => {
     try {
       localStorage.setItem('offlinePendingActions', JSON.stringify(actions));
     } catch (error) {
       console.error('Error saving pending actions:', error);
     }
+  };
+
+  const saveCachedData = (data: Map<string, any>) => {
+    try {
+      const obj = Object.fromEntries(data);
+      localStorage.setItem('offlineCachedData', JSON.stringify(obj));
+    } catch (error) {
+      console.error('Error saving cached data:', error);
+    }
+  };
+
+  const cacheData = (key: string, data: any) => {
+    const newCachedData = new Map(cachedData);
+    newCachedData.set(key, data);
+    setCachedData(newCachedData);
+    saveCachedData(newCachedData);
+  };
+
+  const getCachedData = (key: string) => {
+    return cachedData.get(key);
   };
 
   const addOfflineAction = (
@@ -88,15 +119,17 @@ export const useOfflineMode = () => {
     setPendingActions(newActions);
     savePendingActions(newActions);
 
-    // Add to mobile service queue as well
     EnhancedMobileService.addToSyncQueue(type, table, data);
 
-    // Try to sync immediately if online
     if (isOnline) {
       syncPendingActions();
     }
 
     return action.id;
+  };
+
+  const addPendingAction = (actionType: string, data: any) => {
+    return addOfflineAction('create', 'general_actions', { actionType, ...data });
   };
 
   const syncPendingActions = async () => {
@@ -113,35 +146,26 @@ export const useOfflineMode = () => {
 
       const syncPromises = actionsToSync.map(async (action) => {
         try {
-          // Update action status to syncing
           updateActionStatus(action.id, 'syncing');
-
-          // Perform the sync operation
           await performSyncOperation(action);
-
-          // Mark as completed
           updateActionStatus(action.id, 'completed');
-          
           return { id: action.id, success: true };
         } catch (error) {
           console.error(`Failed to sync action ${action.id}:`, error);
           
-          // Increment retry count
           const updatedAction = {
             ...action,
             retries: action.retries + 1,
-            status: action.retries >= 2 ? 'failed' : 'pending' as const
+            status: action.retries >= 2 ? 'failed' as const : 'pending' as const
           };
           
           updateActionInList(updatedAction);
-          
           return { id: action.id, success: false, error };
         }
       });
 
       const results = await Promise.allSettled(syncPromises);
       
-      // Remove completed actions
       const completedActionIds = results
         .filter(result => result.status === 'fulfilled' && result.value.success)
         .map(result => (result as PromiseFulfilledResult<any>).value.id);
@@ -157,14 +181,11 @@ export const useOfflineMode = () => {
       setSyncStatus('completed');
       setLastSyncTime(new Date().toISOString());
       
-      // Reset to idle after a brief delay
       setTimeout(() => setSyncStatus('idle'), 2000);
       
     } catch (error) {
       console.error('Sync failed:', error);
       setSyncStatus('error');
-      
-      // Reset to idle after error display
       setTimeout(() => setSyncStatus('idle'), 3000);
     }
   };
@@ -172,17 +193,39 @@ export const useOfflineMode = () => {
   const performSyncOperation = async (action: OfflineAction) => {
     const { type, table, data } = action;
     
-    // Import supabase dynamically to avoid issues
+    // Import supabase dynamically
     const { supabase } = await import('@/integrations/supabase/client');
     
+    // Type-safe table operations using known table names
+    const validTables = [
+      'achievements', 'activities_leadership', 'api_usage_logs', 'application_events',
+      'ats_integrations', 'audit_logs', 'career_paths', 'communications', 'contacts',
+      'company_insights', 'conversion_events', 'cover_letters', 'document_usage',
+      'education', 'email_logs', 'email_templates', 'encryption_keys',
+      'follow_up_sequence_steps', 'follow_up_sequences', 'github_repositories',
+      'interview_questions', 'interviews', 'job_alerts', 'job_applications',
+      'job_preferences', 'job_recommendations', 'navigation_analytics',
+      'notification_preferences', 'notifications', 'oauth_integrations',
+      'peer_reviews', 'professional_development', 'profile_completion_tracking',
+      'profiles', 'projects', 'push_subscriptions', 'rate_limits', 'reminders',
+      'resume_versions', 'resumes', 'review_feedback', 'saved_jobs', 'saved_searches',
+      'security_events', 'user_2fa', 'user_consents', 'user_documents',
+      'user_languages', 'user_metrics', 'user_onboarding', 'user_profiles',
+      'user_resume_files', 'user_skills'
+    ];
+
+    if (!validTables.includes(table)) {
+      throw new Error(`Invalid table name: ${table}`);
+    }
+
     switch (type) {
       case 'create':
-        const { error: createError } = await supabase.from(table).insert(data);
+        const { error: createError } = await (supabase as any).from(table).insert(data);
         if (createError) throw createError;
         break;
         
       case 'update':
-        const { error: updateError } = await supabase
+        const { error: updateError } = await (supabase as any)
           .from(table)
           .update(data)
           .eq('id', data.id);
@@ -190,7 +233,7 @@ export const useOfflineMode = () => {
         break;
         
       case 'delete':
-        const { error: deleteError } = await supabase
+        const { error: deleteError } = await (supabase as any)
           .from(table)
           .delete()
           .eq('id', data.id);
@@ -253,9 +296,12 @@ export const useOfflineMode = () => {
     syncStatus,
     lastSyncTime,
     addOfflineAction,
+    addPendingAction,
     syncPendingActions,
     clearFailedActions,
     retryFailedActions,
-    getOfflineStats
+    getOfflineStats,
+    cacheData,
+    getCachedData
   };
 };
