@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,21 +21,25 @@ import { useIndexedDB } from '@/hooks/useIndexedDB';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-const jobCacheDBConfig = {
-  dbName: 'JobCacheDB',
-  version: 1,
-  stores: {
-    jobs: 'id, title, company, location, description, cached_at'
-  }
-};
-
 const AdvancedMobileFeatures = () => {
   const [gestureHandler, setGestureHandler] = useState<AdvancedGestureService | null>(null);
   const [batteryLevel, setBatteryLevel] = useState<number>(100);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [scanResults, setScanResults] = useState<string>('');
   const [cacheStats, setCacheStats] = useState({ stored: 0, size: 0 });
-  const { openDB, getAllData, addData, clearData } = useIndexedDB(jobCacheDBConfig);
+  
+  // Use the correct IndexedDB hook interface
+  const indexedDB = useIndexedDB({
+    name: 'JobCacheDB',
+    version: 1,
+    stores: [
+      {
+        name: 'jobs',
+        keyPath: 'id',
+        autoIncrement: false
+      }
+    ]
+  });
 
   useEffect(() => {
     // Initialize gesture handling
@@ -91,8 +94,7 @@ const AdvancedMobileFeatures = () => {
 
   const loadCacheStats = async () => {
     try {
-      const db = await openDB();
-      const jobs = await getAllData(db, 'jobs');
+      const jobs = await indexedDB.getAll('jobs');
       setCacheStats({
         stored: jobs.length,
         size: JSON.stringify(jobs).length
@@ -137,9 +139,8 @@ const AdvancedMobileFeatures = () => {
         }
       ];
 
-      const db = await openDB();
       for (const job of mockJobs) {
-        await addData(db, 'jobs', job);
+        await indexedDB.add('jobs', job);
       }
 
       loadCacheStats();
@@ -151,8 +152,7 @@ const AdvancedMobileFeatures = () => {
 
   const clearCache = async () => {
     try {
-      const db = await openDB();
-      await clearData(db, 'jobs');
+      await indexedDB.clear('jobs');
       loadCacheStats();
       toast.success('Cache cleared!');
     } catch (error) {
@@ -160,6 +160,7 @@ const AdvancedMobileFeatures = () => {
     }
   };
 
+  // ... keep existing code (JSX return) the same
   return (
     <div className="container mx-auto p-4 space-y-6">
       <div className="text-center mb-8">

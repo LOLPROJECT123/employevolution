@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { castJsonToStringArray } from '@/types/database';
 
@@ -189,14 +188,29 @@ export class InterviewQuestionService {
   }
 
   static async incrementQuestionUsage(questionId: string): Promise<void> {
-    // Note: This would require creating the increment_question_usage function in Supabase
-    // For now, we'll use a direct update
-    const { error } = await supabase
-      .from('interview_questions')
-      .update({ usage_count: supabase.rpc('usage_count + 1') })
-      .eq('id', questionId);
+    try {
+      // First get the current usage count
+      const { data: currentData, error: fetchError } = await supabase
+        .from('interview_questions')
+        .select('usage_count')
+        .eq('id', questionId)
+        .single();
 
-    if (error) {
+      if (fetchError) {
+        console.error('Error fetching current usage count:', fetchError);
+        return;
+      }
+
+      // Then increment it
+      const { error: updateError } = await supabase
+        .from('interview_questions')
+        .update({ usage_count: (currentData?.usage_count || 0) + 1 })
+        .eq('id', questionId);
+
+      if (updateError) {
+        console.error('Error incrementing question usage:', updateError);
+      }
+    } catch (error) {
       console.error('Error incrementing question usage:', error);
     }
   }

@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { castJsonToStringArray } from '@/types/database';
 
@@ -14,6 +13,7 @@ export interface MLJobMatch {
   experienceMatch: number;
   cultureMatch: number;
   companyMatch: number;
+  recommendations?: string[]; // Add this missing property
 }
 
 export interface UserProfile {
@@ -103,6 +103,12 @@ export class MLJobMatchingService {
       ...locationAnalysis.reasoning
     ];
 
+    const recommendations = [
+      "Tailor your resume to highlight matching skills",
+      "Consider adding certifications in trending technologies",
+      "Network with professionals in your target companies"
+    ];
+
     return {
       jobId: jobData.id,
       matchScore: Math.round(overallScore * 100),
@@ -114,7 +120,8 @@ export class MLJobMatchingService {
       locationMatch: Math.round(locationAnalysis.score * 100),
       experienceMatch: Math.round(experienceAnalysis.score * 100),
       cultureMatch: Math.round(cultureAnalysis.score * 100),
-      companyMatch: Math.round(companyAnalysis.score * 100)
+      companyMatch: Math.round(companyAnalysis.score * 100),
+      recommendations
     };
   }
 
