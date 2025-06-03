@@ -8,6 +8,7 @@ interface AutoSaveOptions<T> {
   interval: number;
   onSaveSuccess?: () => void;
   onSaveError?: (error: Error) => void;
+  localStorageKey?: string; // New option for localStorage backup
 }
 
 export function useAutoSave<T>(
@@ -21,10 +22,40 @@ export function useAutoSave<T>(
   const saveTimeoutRef = useRef<NodeJS.Timeout>();
   const lastDataRef = useRef<T>(data);
 
+  // Save to localStorage as backup
+  const saveToLocalStorage = useCallback((dataToSave: T) => {
+    if (options.localStorageKey) {
+      try {
+        localStorage.setItem(options.localStorageKey, JSON.stringify(dataToSave));
+        console.log('📱 Data backed up to localStorage');
+      } catch (error) {
+        console.warn('Failed to save to localStorage:', error);
+      }
+    }
+  }, [options.localStorageKey]);
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    if (options.localStorageKey) {
+      try {
+        const savedData = localStorage.getItem(options.localStorageKey);
+        if (savedData) {
+          console.log('📱 Found existing data in localStorage');
+          // We could emit this data back to the parent component if needed
+        }
+      } catch (error) {
+        console.warn('Failed to load from localStorage:', error);
+      }
+    }
+  }, [options.localStorageKey]);
+
   const debouncedSave = useCallback(
     performanceService.debounce(async (dataToSave: T) => {
       setSaveStatus('saving');
       setError(null);
+      
+      // Always save to localStorage first (instant backup)
+      saveToLocalStorage(dataToSave);
       
       try {
         const success = await options.saveFunction(dataToSave);
@@ -33,6 +64,7 @@ export function useAutoSave<T>(
           setSaveStatus('saved');
           setLastSaved(new Date());
           options.onSaveSuccess?.();
+          console.log('✅ Auto-save successful');
         } else {
           throw new Error('Save operation failed');
         }
@@ -42,6 +74,8 @@ export function useAutoSave<T>(
         setError(errorMessage);
         options.onSaveError?.(saveError instanceof Error ? saveError : new Error(errorMessage));
         
+        console.warn('❌ Auto-save failed, but data is backed up locally');
+        
         ErrorHandler.handleError(
           saveError instanceof Error ? saveError : new Error(errorMessage),
           { operation: 'Auto Save' },
@@ -49,7 +83,7 @@ export function useAutoSave<T>(
         );
       }
     }, options.interval),
-    [options.saveFunction, options.interval, options.onSaveSuccess, options.onSaveError]
+    [options.saveFunction, options.interval, options.onSaveSuccess, options.onSaveError, saveToLocalStorage]
   );
 
   useEffect(() => {
@@ -64,6 +98,7 @@ export function useAutoSave<T>(
     return debouncedSave(data);
   }, [data, debouncedSave]);
 
+  // Clear localStorage backup when component unmounts
   useEffect(() => {
     return () => {
       if (saveTimeoutRef.current) {

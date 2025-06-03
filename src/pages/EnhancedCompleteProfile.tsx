@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -82,13 +83,14 @@ const EnhancedCompleteProfile = () => {
 
   const { validate, isValidating } = useEnhancedValidation(validationRules, 1000);
 
-  // Auto-save functionality
+  // Auto-save functionality with localStorage backup
   const { saveStatus, lastSaved, error: saveError } = useAutoSave(profileData, {
     saveFunction: async (data) => {
       if (!user) return false;
       return await EnhancedProfileService.saveProfileWithValidation(user.id, data);
     },
     interval: 3000,
+    localStorageKey: user ? `profile-draft-${user.id}` : undefined, // Add localStorage backup
     onSaveSuccess: () => {
       console.log('Profile auto-saved successfully');
     },
@@ -110,6 +112,20 @@ const EnhancedCompleteProfile = () => {
     setError(null);
     
     try {
+      // Check for localStorage backup first
+      const localStorageKey = `profile-draft-${user.id}`;
+      const localBackup = localStorage.getItem(localStorageKey);
+      
+      if (localBackup) {
+        try {
+          const backupData = JSON.parse(localBackup);
+          console.log('📱 Loading from localStorage backup');
+          setProfileData(backupData);
+        } catch (parseError) {
+          console.warn('Failed to parse localStorage backup:', parseError);
+        }
+      }
+
       // Pre-populate with user data from authentication
       const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || '';
       const userEmail = user.email || '';
@@ -123,10 +139,12 @@ const EnhancedCompleteProfile = () => {
         }
       }));
 
-      // Load existing profile data
+      // Load existing profile data from database
       const existingProfile = await EnhancedProfileService.loadProfileForUI(user.id);
       if (existingProfile) {
         setProfileData(existingProfile);
+        // Clear localStorage backup since we have fresh data from server
+        localStorage.removeItem(localStorageKey);
       }
     } catch (error) {
       console.error('Error loading user data:', error);
@@ -179,6 +197,8 @@ const EnhancedCompleteProfile = () => {
       const success = await EnhancedProfileService.completeOnboardingWithValidation(user.id, profileData);
       
       if (success) {
+        // Clear localStorage backup on successful completion
+        localStorage.removeItem(`profile-draft-${user.id}`);
         toast.success('🎉 Profile completed successfully! Welcome to Streamline!');
         setTimeout(() => {
           navigate('/dashboard');
@@ -248,7 +268,7 @@ const EnhancedCompleteProfile = () => {
               Complete Your Profile
             </CardTitle>
             <p className="text-gray-600 mb-4">
-              Build a profile that attracts opportunities • Auto-saved as you type
+              Build a profile that attracts opportunities • Auto-saved as you type • Data preserved when switching tabs
             </p>
             
             <div className="space-y-2">

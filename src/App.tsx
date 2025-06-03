@@ -20,7 +20,7 @@ import Referrals from "./pages/Referrals";
 import SalaryNegotiations from "./pages/SalaryNegotiations";
 import JobAlerts from "./pages/JobAlerts";
 import Auth from "./pages/Auth";
-import CompleteProfile from "./pages/CompleteProfile";
+import EnhancedCompleteProfile from "./pages/EnhancedCompleteProfile";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
 
 const queryClient = new QueryClient();
@@ -40,7 +40,7 @@ const App = () => (
             {/* Profile completion route - protected but bypasses onboarding guard */}
             <Route path="/complete-profile" element={
               <ProtectedRoute>
-                <CompleteProfile />
+                <EnhancedCompleteProfile />
               </ProtectedRoute>
             } />
             

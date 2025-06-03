@@ -9,6 +9,48 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          achievement_type: string
+          created_at: string
+          date_achieved: string | null
+          description: string | null
+          id: string
+          is_verified: boolean | null
+          issuing_organization: string | null
+          skills_gained: Json | null
+          title: string
+          user_id: string
+          verification_url: string | null
+        }
+        Insert: {
+          achievement_type: string
+          created_at?: string
+          date_achieved?: string | null
+          description?: string | null
+          id?: string
+          is_verified?: boolean | null
+          issuing_organization?: string | null
+          skills_gained?: Json | null
+          title: string
+          user_id: string
+          verification_url?: string | null
+        }
+        Update: {
+          achievement_type?: string
+          created_at?: string
+          date_achieved?: string | null
+          description?: string | null
+          id?: string
+          is_verified?: boolean | null
+          issuing_organization?: string | null
+          skills_gained?: Json | null
+          title?: string
+          user_id?: string
+          verification_url?: string | null
+        }
+        Relationships: []
+      }
       activities_leadership: {
         Row: {
           created_at: string | null
@@ -45,6 +87,51 @@ export type Database = {
         }
         Relationships: []
       }
+      api_usage_logs: {
+        Row: {
+          created_at: string
+          endpoint: string
+          error_message: string | null
+          id: string
+          ip_address: unknown | null
+          method: string
+          request_size_bytes: number | null
+          response_size_bytes: number | null
+          response_time_ms: number | null
+          status_code: number
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          error_message?: string | null
+          id?: string
+          ip_address?: unknown | null
+          method: string
+          request_size_bytes?: number | null
+          response_size_bytes?: number | null
+          response_time_ms?: number | null
+          status_code: number
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          error_message?: string | null
+          id?: string
+          ip_address?: unknown | null
+          method?: string
+          request_size_bytes?: number | null
+          response_size_bytes?: number | null
+          response_time_ms?: number | null
+          status_code?: number
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       application_events: {
         Row: {
           application_id: string
@@ -74,6 +161,51 @@ export type Database = {
           event_type?: string
           id?: string
           title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ats_integrations: {
+        Row: {
+          api_endpoint: string | null
+          ats_system: string
+          company_name: string
+          created_at: string | null
+          credentials_encrypted: string | null
+          id: string
+          integration_status: string | null
+          last_sync_at: string | null
+          sync_data_types: string[] | null
+          sync_frequency: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          api_endpoint?: string | null
+          ats_system: string
+          company_name: string
+          created_at?: string | null
+          credentials_encrypted?: string | null
+          id?: string
+          integration_status?: string | null
+          last_sync_at?: string | null
+          sync_data_types?: string[] | null
+          sync_frequency?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          api_endpoint?: string | null
+          ats_system?: string
+          company_name?: string
+          created_at?: string | null
+          credentials_encrypted?: string | null
+          id?: string
+          integration_status?: string | null
+          last_sync_at?: string | null
+          sync_data_types?: string[] | null
+          sync_frequency?: string | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -114,6 +246,48 @@ export type Database = {
           table_name?: string | null
           user_agent?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      career_paths: {
+        Row: {
+          average_timeline_months: number | null
+          created_at: string | null
+          from_role: string
+          id: string
+          industry: string | null
+          recommended_skills: Json | null
+          required_skills: Json | null
+          salary_change_percentage: number | null
+          to_role: string
+          transition_probability: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          average_timeline_months?: number | null
+          created_at?: string | null
+          from_role: string
+          id?: string
+          industry?: string | null
+          recommended_skills?: Json | null
+          required_skills?: Json | null
+          salary_change_percentage?: number | null
+          to_role: string
+          transition_probability?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          average_timeline_months?: number | null
+          created_at?: string | null
+          from_role?: string
+          id?: string
+          industry?: string | null
+          recommended_skills?: Json | null
+          required_skills?: Json | null
+          salary_change_percentage?: number | null
+          to_role?: string
+          transition_probability?: number | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -288,6 +462,36 @@ export type Database = {
         }
         Relationships: []
       }
+      conversion_events: {
+        Row: {
+          created_at: string | null
+          event_name: string
+          id: string
+          properties: Json | null
+          session_id: string
+          timestamp: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_name: string
+          id?: string
+          properties?: Json | null
+          session_id: string
+          timestamp?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          event_name?: string
+          id?: string
+          properties?: Json | null
+          session_id?: string
+          timestamp?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       cover_letters: {
         Row: {
           content: string
@@ -394,6 +598,57 @@ export type Database = {
           school?: string
           start_date?: string | null
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      email_logs: {
+        Row: {
+          bounced_at: string | null
+          clicked_at: string | null
+          created_at: string
+          email_provider: string | null
+          error_message: string | null
+          id: string
+          opened_at: string | null
+          recipient_email: string
+          sender_email: string
+          sent_at: string | null
+          status: string
+          subject: string
+          template_id: string | null
+          user_id: string
+        }
+        Insert: {
+          bounced_at?: string | null
+          clicked_at?: string | null
+          created_at?: string
+          email_provider?: string | null
+          error_message?: string | null
+          id?: string
+          opened_at?: string | null
+          recipient_email: string
+          sender_email: string
+          sent_at?: string | null
+          status?: string
+          subject: string
+          template_id?: string | null
+          user_id: string
+        }
+        Update: {
+          bounced_at?: string | null
+          clicked_at?: string | null
+          created_at?: string
+          email_provider?: string | null
+          error_message?: string | null
+          id?: string
+          opened_at?: string | null
+          recipient_email?: string
+          sender_email?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          template_id?: string | null
           user_id?: string
         }
         Relationships: []
@@ -536,6 +791,105 @@ export type Database = {
           trigger_event?: string
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      github_repositories: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          forks_count: number | null
+          full_name: string
+          github_repo_id: number
+          html_url: string
+          id: string
+          is_featured: boolean | null
+          language: string | null
+          languages: Json | null
+          last_synced_at: string | null
+          name: string
+          stars_count: number | null
+          topics: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          forks_count?: number | null
+          full_name: string
+          github_repo_id: number
+          html_url: string
+          id?: string
+          is_featured?: boolean | null
+          language?: string | null
+          languages?: Json | null
+          last_synced_at?: string | null
+          name: string
+          stars_count?: number | null
+          topics?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          forks_count?: number | null
+          full_name?: string
+          github_repo_id?: number
+          html_url?: string
+          id?: string
+          is_featured?: boolean | null
+          language?: string | null
+          languages?: Json | null
+          last_synced_at?: string | null
+          name?: string
+          stars_count?: number | null
+          topics?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      interview_questions: {
+        Row: {
+          company_type: string | null
+          created_at: string | null
+          difficulty_level: string | null
+          id: string
+          job_title: string
+          question: string
+          question_category: string
+          sample_answer: string | null
+          tags: Json | null
+          updated_at: string | null
+          usage_count: number | null
+        }
+        Insert: {
+          company_type?: string | null
+          created_at?: string | null
+          difficulty_level?: string | null
+          id?: string
+          job_title: string
+          question: string
+          question_category: string
+          sample_answer?: string | null
+          tags?: Json | null
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Update: {
+          company_type?: string | null
+          created_at?: string | null
+          difficulty_level?: string | null
+          id?: string
+          job_title?: string
+          question?: string
+          question_category?: string
+          sample_answer?: string | null
+          tags?: Json | null
+          updated_at?: string | null
+          usage_count?: number | null
         }
         Relationships: []
       }
@@ -776,6 +1130,45 @@ export type Database = {
         }
         Relationships: []
       }
+      navigation_analytics: {
+        Row: {
+          browser_info: Json | null
+          created_at: string
+          device_type: string | null
+          duration_ms: number | null
+          from_route: string | null
+          id: string
+          interaction_type: string
+          session_id: string
+          to_route: string
+          user_id: string | null
+        }
+        Insert: {
+          browser_info?: Json | null
+          created_at?: string
+          device_type?: string | null
+          duration_ms?: number | null
+          from_route?: string | null
+          id?: string
+          interaction_type: string
+          session_id: string
+          to_route: string
+          user_id?: string | null
+        }
+        Update: {
+          browser_info?: Json | null
+          created_at?: string
+          device_type?: string | null
+          duration_ms?: number | null
+          from_route?: string | null
+          id?: string
+          interaction_type?: string
+          session_id?: string
+          to_route?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       notification_preferences: {
         Row: {
           application_updates: boolean | null
@@ -844,6 +1237,147 @@ export type Database = {
           message?: string
           title?: string
           type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      oauth_integrations: {
+        Row: {
+          access_token_encrypted: string
+          connected_at: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          last_sync_at: string | null
+          profile_data: Json | null
+          provider: string
+          provider_user_id: string
+          refresh_token_encrypted: string | null
+          scope: string | null
+          token_expires_at: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          access_token_encrypted: string
+          connected_at?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_sync_at?: string | null
+          profile_data?: Json | null
+          provider: string
+          provider_user_id: string
+          refresh_token_encrypted?: string | null
+          scope?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          access_token_encrypted?: string
+          connected_at?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_sync_at?: string | null
+          profile_data?: Json | null
+          provider?: string
+          provider_user_id?: string
+          refresh_token_encrypted?: string | null
+          scope?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      peer_reviews: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          document_id: string
+          document_type: string
+          feedback_provided: boolean | null
+          id: string
+          rating: number | null
+          review_content: string
+          reviewee_id: string
+          reviewer_id: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          document_id: string
+          document_type: string
+          feedback_provided?: boolean | null
+          id?: string
+          rating?: number | null
+          review_content: string
+          reviewee_id: string
+          reviewer_id: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          document_id?: string
+          document_type?: string
+          feedback_provided?: boolean | null
+          id?: string
+          rating?: number | null
+          review_content?: string
+          reviewee_id?: string
+          reviewer_id?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      professional_development: {
+        Row: {
+          category: string
+          completion_date: string | null
+          created_at: string
+          goal_description: string | null
+          goal_title: string
+          id: string
+          notes: string | null
+          progress_percentage: number | null
+          status: string | null
+          target_date: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          completion_date?: string | null
+          created_at?: string
+          goal_description?: string | null
+          goal_title: string
+          id?: string
+          notes?: string | null
+          progress_percentage?: number | null
+          status?: string | null
+          target_date?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          completion_date?: string | null
+          created_at?: string
+          goal_description?: string | null
+          goal_title?: string
+          id?: string
+          notes?: string | null
+          progress_percentage?: number | null
+          status?: string | null
+          target_date?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -934,6 +1468,42 @@ export type Database = {
           technologies?: string[] | null
           updated_at?: string | null
           url?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string | null
+          endpoint: string
+          id: string
+          is_active: boolean | null
+          p256dh: string
+          updated_at: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string | null
+          endpoint: string
+          id?: string
+          is_active?: boolean | null
+          p256dh: string
+          updated_at?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string | null
+          endpoint?: string
+          id?: string
+          is_active?: boolean | null
+          p256dh?: string
+          updated_at?: string | null
+          user_agent?: string | null
           user_id?: string
         }
         Relationships: []
@@ -1088,6 +1658,41 @@ export type Database = {
         }
         Relationships: []
       }
+      review_feedback: {
+        Row: {
+          created_at: string | null
+          feedback_comment: string | null
+          feedback_type: string
+          id: string
+          provided_by: string
+          review_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          feedback_comment?: string | null
+          feedback_type: string
+          id?: string
+          provided_by: string
+          review_id: string
+        }
+        Update: {
+          created_at?: string | null
+          feedback_comment?: string | null
+          feedback_type?: string
+          id?: string
+          provided_by?: string
+          review_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_feedback_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "peer_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_jobs: {
         Row: {
           id: string
@@ -1175,6 +1780,39 @@ export type Database = {
           severity?: string
           user_agent?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_2fa: {
+        Row: {
+          backup_codes: Json
+          created_at: string
+          id: string
+          is_enabled: boolean | null
+          last_used_at: string | null
+          secret_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          backup_codes: Json
+          created_at?: string
+          id?: string
+          is_enabled?: boolean | null
+          last_used_at?: string | null
+          secret_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          backup_codes?: Json
+          created_at?: string
+          id?: string
+          is_enabled?: boolean | null
+          last_used_at?: string | null
+          secret_key?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -1280,6 +1918,54 @@ export type Database = {
         }
         Relationships: []
       }
+      user_metrics: {
+        Row: {
+          application_success_rate: number | null
+          created_at: string | null
+          engagement_score: number | null
+          id: string
+          interview_success_rate: number | null
+          last_activity_date: string | null
+          profile_completion_score: number | null
+          profile_quality_score: number | null
+          total_applications: number | null
+          total_interviews: number | null
+          total_offers: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          application_success_rate?: number | null
+          created_at?: string | null
+          engagement_score?: number | null
+          id?: string
+          interview_success_rate?: number | null
+          last_activity_date?: string | null
+          profile_completion_score?: number | null
+          profile_quality_score?: number | null
+          total_applications?: number | null
+          total_interviews?: number | null
+          total_offers?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          application_success_rate?: number | null
+          created_at?: string | null
+          engagement_score?: number | null
+          id?: string
+          interview_success_rate?: number | null
+          last_activity_date?: string | null
+          profile_completion_score?: number | null
+          profile_quality_score?: number | null
+          total_applications?: number | null
+          total_interviews?: number | null
+          total_offers?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_onboarding: {
         Row: {
           created_at: string
@@ -1325,6 +2011,7 @@ export type Database = {
           portfolio_url: string | null
           primary_language: string | null
           profile_completion: number | null
+          push_subscription: Json | null
           updated_at: string | null
           user_id: string
         }
@@ -1342,6 +2029,7 @@ export type Database = {
           portfolio_url?: string | null
           primary_language?: string | null
           profile_completion?: number | null
+          push_subscription?: Json | null
           updated_at?: string | null
           user_id: string
         }
@@ -1359,6 +2047,7 @@ export type Database = {
           portfolio_url?: string | null
           primary_language?: string | null
           profile_completion?: number | null
+          push_subscription?: Json | null
           updated_at?: string | null
           user_id?: string
         }
