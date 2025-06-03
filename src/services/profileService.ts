@@ -87,6 +87,31 @@ class ProfileService {
     return true;
   }
 
+  async updateOnboardingStatus(userId: string, updates: { profile_completed?: boolean; onboarding_completed?: boolean }): Promise<boolean> {
+    try {
+      console.log('🔄 Updating onboarding status for user:', userId, updates);
+      
+      const { error } = await supabase
+        .from('user_onboarding')
+        .upsert({
+          user_id: userId,
+          ...updates,
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) {
+        console.error('Error updating onboarding status:', error);
+        return false;
+      }
+
+      console.log('✅ Onboarding status updated successfully');
+      return true;
+    } catch (error) {
+      console.error('Error in updateOnboardingStatus:', error);
+      return false;
+    }
+  }
+
   async saveResumeData(userId: string, resumeData: ParsedResume): Promise<boolean> {
     try {
       console.log('💾 Saving complete resume data for user:', userId);

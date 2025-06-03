@@ -1,3 +1,4 @@
+
 import { profileService } from './profileService';
 import { AddressValidator, AddressComponents } from '@/utils/addressValidation';
 import { ProfileDataSync } from '@/utils/profileDataSync';
@@ -41,9 +42,8 @@ export class EnhancedProfileService {
         throw new Error(`Data sync failed: ${syncResult.errors?.join(', ')}`);
       }
 
-      // Save with retry mechanism
+      // Save with retry mechanism - fix the function call
       const saveSuccess = await ProfileErrorHandler.handleProfileSaveError(
-        new Error('Initial attempt'), // This will be replaced by the actual operation
         () => profileService.saveResumeData(userId, syncResult.data!)
       );
 
