@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,7 +31,7 @@ const AdvancedMobileFeatures = () => {
   
   // Use the correct IndexedDB hook interface
   const indexedDB = useIndexedDB({
-    name: 'JobCacheDB',
+    dbName: 'JobCacheDB',
     version: 1,
     stores: [
       {
