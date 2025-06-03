@@ -23,7 +23,7 @@ interface JobDetailViewProps {
   onShare?: (job: any) => void;
 }
 
-export const JobDetailView: React.FC<JobDetailViewProps> = ({ 
+const JobDetailView: React.FC<JobDetailViewProps> = ({ 
   job, 
   onApply, 
   onSave, 
