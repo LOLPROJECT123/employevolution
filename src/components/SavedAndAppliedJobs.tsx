@@ -49,25 +49,21 @@ export function SavedAndAppliedJobs({
 }: SavedAndAppliedJobsProps) {
   const [activeTab, setActiveTab] = useState<string>("saved");
   
-  const { 
-    savedJobs: contextSavedJobs, 
-    appliedJobs: contextAppliedJobs, 
-    applyToJob: contextApplyToJob, 
-    saveJob: contextSaveJob, 
-    applications,
-    updateApplicationStatus,
-    getApplicationByJobId
-  } = useJobApplications();
+  // Only use context if props are not provided
+  const contextData = propSavedJobs && propAppliedJobs ? null : useJobApplications();
   
   // Use props if provided, otherwise fall back to context values
-  const savedJobs = propSavedJobs || contextSavedJobs;
-  const appliedJobs = propAppliedJobs || contextAppliedJobs;
-  const applyToJob = propOnApply || contextApplyToJob;
-  const saveJob = propOnSave || contextSaveJob;
+  const savedJobs = propSavedJobs || contextData?.savedJobs || [];
+  const appliedJobs = propAppliedJobs || contextData?.appliedJobs || [];
+  const applyToJob = propOnApply || contextData?.applyToJob || (() => {});
+  const saveJob = propOnSave || contextData?.saveJob || (() => {});
+  const applications = contextData?.applications || [];
+  const updateApplicationStatus = contextData?.updateApplicationStatus || (() => {});
+  const getApplicationByJobId = contextData?.getApplicationByJobId || (() => undefined);
   
   const handleStatusChange = (jobId: string, status: JobStatus) => {
     const application = getApplicationByJobId(jobId);
-    if (application) {
+    if (application && updateApplicationStatus) {
       updateApplicationStatus(application.id, status);
     }
   };
