@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, LogOut, Bell, Save, TrendingUp, RefreshCw, Zap } from "lucide-react";
+import { Loader2, Bell, Save, TrendingUp, RefreshCw, Zap } from "lucide-react";
 import EnhancedJobCard from "@/components/jobs/EnhancedJobCard";
 
 type SortOption = 'relevance' | 'date-newest' | 'date-oldest' | 'salary-highest' | 'salary-lowest';
@@ -475,29 +475,6 @@ const Jobs = () => {
             </h1>
             
             <div className="flex items-center space-x-4">
-              {user && (
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-600">Welcome, {userProfile?.full_name || user.email}</span>
-                    {activeAlerts > 0 && (
-                      <Badge variant="outline" className="bg-blue-50 text-blue-600">
-                        <Bell className="w-3 h-3 mr-1" />
-                        {activeAlerts} alerts
-                      </Badge>
-                    )}
-                    {unreadNotifications > 0 && (
-                      <Badge variant="outline" className="bg-red-50 text-red-600">
-                        {unreadNotifications} new
-                      </Badge>
-                    )}
-                  </div>
-                  <Button variant="outline" size="sm" onClick={logout}>
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Logout
-                  </Button>
-                </div>
-              )}
-              
               <div className="hidden md:block">
                 <AutomationSettings />
               </div>
