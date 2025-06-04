@@ -44,8 +44,8 @@ export const JobDetailView = ({ job, onApply, onSave }: JobDetailViewProps) => {
     );
   }
 
-  // Calculate real match score using actual user skills
-  const calculateRealMatchScore = () => {
+  // Calculate match score using actual user skills for detailed analysis
+  const calculateMatchScore = () => {
     if (skillsLoading) {
       return {
         overall: job.matchPercentage || 0,
@@ -72,42 +72,7 @@ export const JobDetailView = ({ job, onApply, onSave }: JobDetailViewProps) => {
     };
   };
 
-  const matchScore = calculateRealMatchScore();
-
-  const formatSalary = (salary: Job['salary']) => {
-    if (!salary || salary.min === 0) return 'Not specified';
-    
-    const formatter = new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    });
-    
-    if (salary.min === salary.max) {
-      return formatter.format(salary.min);
-    }
-    
-    return `${formatter.format(salary.min)} - ${formatter.format(salary.max)}`;
-  };
-
-  const getTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
-    if (diffInHours < 24) {
-      return `${diffInHours}h ago`;
-    }
-    
-    const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays < 7) {
-      return `${diffInDays}d ago`;
-    }
-    
-    const diffInWeeks = Math.floor(diffInDays / 7);
-    return `${diffInWeeks}w ago`;
-  };
+  const matchScore = calculateMatchScore();
 
   // Create a user object with real skills for JobMatchAnalysis compatibility
   const userWithRealSkills = userProfile ? {

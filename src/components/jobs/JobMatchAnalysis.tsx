@@ -40,40 +40,9 @@ export const JobMatchAnalysis = ({ job, userProfile, matchScore }: JobMatchAnaly
     return unifiedSkillsMatchingService.getMatchLabel(score);
   };
 
-  // Calculate skills gap percentage (inverse of match percentage)
-  const skillsGapPercentage = 100 - matchScore.skills;
-
   return (
     <ScrollArea className="h-full max-h-[calc(100vh-200px)]">
       <div className="space-y-4 pr-4">
-        {/* Overall Match Score */}
-        <Card className="bg-green-50 border-green-200">
-          <CardContent className="pt-6">
-            <div className="space-y-4">
-              <div>
-                <h3 className={cn("text-xl font-bold", getMatchColor(matchScore.overall))}>
-                  {matchScore.overall}% {getMatchLabel(matchScore.overall)}
-                </h3>
-                <p className="text-sm text-gray-600">Based on your profile, skills, and experience</p>
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Skills Gap: {skillsGapPercentage}%</span>
-                  <span className="text-sm font-medium">Match: {matchScore.overall}%</span>
-                </div>
-                <Progress 
-                  value={matchScore.overall} 
-                  className="h-3"
-                />
-                <p className="text-sm text-gray-600">
-                  You have {matchScore.overall}% of the required skills for this job.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Job Details Card */}
         <Card>
           <CardHeader className="pb-4">
@@ -162,14 +131,8 @@ export const JobMatchAnalysis = ({ job, userProfile, matchScore }: JobMatchAnaly
                 </span>
               </div>
               <Progress value={matchScore.overall} className="h-2 mb-4" />
-              <div className="flex justify-between items-center mb-2">
-                <span className="font-medium">Skills Gap</span>
-                <span className={cn("text-lg font-bold", getMatchColor(100 - skillsGapPercentage))}>
-                  {skillsGapPercentage}%
-                </span>
-              </div>
               <p className="text-sm text-gray-600">
-                You have {matchScore.overall}% of the required skills. Skills gap: {skillsGapPercentage}%
+                You have {matchScore.overall}% of the required skills.
               </p>
             </div>
 
