@@ -5,12 +5,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Github, Mail, Loader2 } from "lucide-react";
+import { Github, Mail, Loader2, Eye, EyeOff } from "lucide-react";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -20,6 +19,8 @@ const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
@@ -32,34 +33,59 @@ const Auth = () => {
     }
   }, [user, navigate]);
 
+  const validateSignUpForm = () => {
+    if (!fullName.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter your full name",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    if (password.length < 6) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 6 characters long",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    if (password !== confirmPassword) {
+      toast({
+        title: "Error",
+        description: "Passwords don't match",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter your email address",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
       if (isSignUp) {
-        if (password !== confirmPassword) {
-          toast({
-            title: "Error",
-            description: "Passwords don't match",
-            variant: "destructive"
-          });
-          return;
-        }
-
-        if (!fullName.trim()) {
-          toast({
-            title: "Error",
-            description: "Please enter your full name",
-            variant: "destructive"
-          });
-          return;
-        }
+        if (!validateSignUpForm()) return;
         
         await signUp(email, password, fullName.trim());
         toast({
           title: "Success",
-          description: "Account created successfully!"
+          description: "Account created successfully! Welcome to Streamline.",
         });
         navigate("/dashboard");
       } else {
@@ -105,6 +131,16 @@ const Auth = () => {
       });
     } finally {
       setSocialLoading(null);
+    }
+  };
+
+  const handleTabChange = (value: string) => {
+    setIsSignUp(value === "signup");
+    // Clear form when switching tabs
+    setPassword("");
+    setConfirmPassword("");
+    if (value === "signin") {
+      setFullName("");
     }
   };
 
@@ -203,13 +239,30 @@ const Auth = () => {
               </div>
             </div>
 
-            <Tabs value={isSignUp ? "signup" : "signin"} onValueChange={(value) => setIsSignUp(value === "signup")} className="w-full">
+            <Tabs value={isSignUp ? "signup" : "signin"} onValueChange={handleTabChange} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="signin">Sign In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                <TabsTrigger value="signup">Create Account</TabsTrigger>
               </TabsList>
               
               <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email Address</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Enter any email address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    disabled={loading || socialLoading !== null}
+                    autoFocus
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {isSignUp ? "Enter any email address to create your account" : "Enter your registered email address"}
+                  </p>
+                </div>
+
                 {isSignUp && (
                   <div className="space-y-2">
                     <Label htmlFor="fullName">Full Name</Label>
@@ -226,43 +279,64 @@ const Auth = () => {
                 )}
                 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    disabled={loading || socialLoading !== null}
-                  />
-                </div>
-                
-                <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    disabled={loading || socialLoading !== null}
-                  />
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder={isSignUp ? "Create a password (min 6 characters)" : "Enter your password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      disabled={loading || socialLoading !== null}
+                      className="pr-10"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                      disabled={loading || socialLoading !== null}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
                 
                 {isSignUp && (
                   <div className="space-y-2">
                     <Label htmlFor="confirmPassword">Confirm Password</Label>
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      placeholder="Confirm your password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
-                      disabled={loading || socialLoading !== null}
-                    />
+                    <div className="relative">
+                      <Input
+                        id="confirmPassword"
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="Confirm your password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                        disabled={loading || socialLoading !== null}
+                        className="pr-10"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        disabled={loading || socialLoading !== null}
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <Eye className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 )}
                 
@@ -277,6 +351,14 @@ const Auth = () => {
                   )}
                 </Button>
               </form>
+              
+              {isSignUp && (
+                <div className="text-center mt-4">
+                  <p className="text-xs text-muted-foreground">
+                    Your email will be used to create your account and can be any valid email address.
+                  </p>
+                </div>
+              )}
             </Tabs>
           </CardContent>
         </Card>

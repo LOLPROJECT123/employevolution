@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from '@/hooks/use-toast';
-import { Loader2, Mail, Github } from 'lucide-react';
+import { Loader2, Mail, Github, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface EmailVerificationProps {
@@ -17,6 +17,7 @@ export const EmailVerification = ({ onEmailVerified, onSocialSuccess }: EmailVer
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
   const [showManualOptions, setShowManualOptions] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -68,7 +69,7 @@ export const EmailVerification = ({ onEmailVerified, onSocialSuccess }: EmailVer
       return;
     }
 
-    setLoading(true);
+    setCheckingEmail(true);
     setShowManualOptions(false);
 
     try {
@@ -78,11 +79,10 @@ export const EmailVerification = ({ onEmailVerified, onSocialSuccess }: EmailVer
         console.error('Email check failed:', result.error);
         toast({
           title: "Unable to verify account",
-          description: "Please choose sign in or sign up below",
-          variant: "destructive",
+          description: "Don't worry! You can still proceed with sign in or sign up below.",
+          variant: "default",
         });
         setShowManualOptions(true);
-        setLoading(false);
         return;
       }
 
@@ -91,13 +91,13 @@ export const EmailVerification = ({ onEmailVerified, onSocialSuccess }: EmailVer
     } catch (error) {
       console.error('Error during email verification:', error);
       toast({
-        title: "Something went wrong",
-        description: "Please choose sign in or sign up below",
-        variant: "destructive",
+        title: "Connection issue",
+        description: "Choose sign in or sign up below to continue",
+        variant: "default",
       });
       setShowManualOptions(true);
     } finally {
-      setLoading(false);
+      setCheckingEmail(false);
     }
   };
 
@@ -143,6 +143,11 @@ export const EmailVerification = ({ onEmailVerified, onSocialSuccess }: EmailVer
     }
   };
 
+  const resetFlow = () => {
+    setShowManualOptions(false);
+    setCheckingEmail(false);
+  };
+
   return (
     <div className="space-y-6">
       <div className="text-center mb-6">
@@ -157,7 +162,7 @@ export const EmailVerification = ({ onEmailVerified, onSocialSuccess }: EmailVer
           variant="outline"
           className="w-full"
           onClick={() => handleSocialLogin('github')}
-          disabled={socialLoading !== null || loading}
+          disabled={socialLoading !== null || loading || checkingEmail}
         >
           {socialLoading === 'github' ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -171,7 +176,7 @@ export const EmailVerification = ({ onEmailVerified, onSocialSuccess }: EmailVer
           variant="outline"
           className="w-full"
           onClick={() => handleSocialLogin('google')}
-          disabled={socialLoading !== null || loading}
+          disabled={socialLoading !== null || loading || checkingEmail}
         >
           {socialLoading === 'google' ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -190,7 +195,7 @@ export const EmailVerification = ({ onEmailVerified, onSocialSuccess }: EmailVer
           variant="outline"
           className="w-full"
           onClick={() => handleSocialLogin('linkedin_oidc')}
-          disabled={socialLoading !== null || loading}
+          disabled={socialLoading !== null || loading || checkingEmail}
         >
           {socialLoading === 'linkedin_oidc' ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -206,7 +211,7 @@ export const EmailVerification = ({ onEmailVerified, onSocialSuccess }: EmailVer
           variant="outline"
           className="w-full"
           onClick={() => handleSocialLogin('azure')}
-          disabled={socialLoading !== null || loading}
+          disabled={socialLoading !== null || loading || checkingEmail}
         >
           {socialLoading === 'azure' ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -237,8 +242,8 @@ export const EmailVerification = ({ onEmailVerified, onSocialSuccess }: EmailVer
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Enter your email"
-            disabled={loading || socialLoading !== null}
+            placeholder="Enter your email address"
+            disabled={loading || socialLoading !== null || checkingEmail}
             autoFocus
             className="mt-1"
           />
@@ -247,40 +252,61 @@ export const EmailVerification = ({ onEmailVerified, onSocialSuccess }: EmailVer
         <Button 
           onClick={handleContinue} 
           className="w-full" 
-          disabled={!email || loading || socialLoading !== null}
+          disabled={!email || loading || socialLoading !== null || checkingEmail}
         >
-          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {loading ? "Checking account..." : "Continue"}
+          {checkingEmail && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {checkingEmail ? "Checking..." : "Continue"}
         </Button>
 
         {showManualOptions && (
-          <div className="space-y-2 pt-4 border-t">
-            <p className="text-sm text-muted-foreground text-center">
-              Choose how you'd like to continue:
-            </p>
-            <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-4 pt-4 border-t">
+            <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 p-3 rounded-lg">
+              <AlertCircle className="h-4 w-4 flex-shrink-0" />
+              <div>
+                <p className="font-medium">No worries!</p>
+                <p>Choose how you'd like to proceed with <strong>{email}</strong>:</p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-3">
               <Button 
-                variant="outline" 
                 onClick={() => handleManualSelection(true)}
                 disabled={loading || socialLoading !== null}
+                variant="outline"
+                className="h-auto py-3"
               >
-                Sign In
+                <div className="text-left">
+                  <div className="font-medium">Sign In</div>
+                  <div className="text-xs text-muted-foreground">I already have an account</div>
+                </div>
               </Button>
               <Button 
-                variant="outline" 
                 onClick={() => handleManualSelection(false)}
                 disabled={loading || socialLoading !== null}
+                className="h-auto py-3"
               >
-                Sign Up
+                <div className="text-left">
+                  <div className="font-medium">Create Account</div>
+                  <div className="text-xs text-muted-foreground">I'm new to Streamline</div>
+                </div>
               </Button>
             </div>
+
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={resetFlow}
+              className="w-full"
+            >
+              Try checking email again
+            </Button>
           </div>
         )}
 
         <div className="text-xs text-muted-foreground text-center">
           {showManualOptions ? 
-            "We couldn't automatically detect your account status" :
-            "We'll automatically detect if you have an existing account"
+            "We couldn't automatically verify your account, but you can still proceed" :
+            "We'll check if you have an existing account and guide you accordingly"
           }
         </div>
       </div>
