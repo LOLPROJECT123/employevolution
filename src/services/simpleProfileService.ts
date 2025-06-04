@@ -8,6 +8,7 @@ export class SimpleProfileService {
   static async saveProfileData(userId: string, profileData: any): Promise<{ success: boolean; error?: string }> {
     try {
       console.log('💾 Enhanced profile save starting for user:', userId);
+      console.log('📋 Raw profile data received:', JSON.stringify(profileData, null, 2));
       
       // Validate input data
       if (!userId) {
@@ -30,6 +31,8 @@ export class SimpleProfileService {
         return { success: false, error };
       }
 
+      console.log('📤 Converted data for database:', JSON.stringify(syncResult.data, null, 2));
+
       // Enhanced save with retry mechanism and UPSERT logic
       const maxRetries = 3;
       let lastError: Error | null = null;
@@ -50,11 +53,11 @@ export class SimpleProfileService {
         } catch (error) {
           lastError = error instanceof Error ? error : new Error(String(error));
           console.warn(`❌ Save attempt ${attempt} failed:`, lastError.message);
+          console.warn('📋 Full error details:', lastError);
           
           // Check for specific error types
           if (lastError.message.includes('duplicate') || lastError.message.includes('unique_violation')) {
             console.log('🔄 Handling duplicate record conflict, trying UPSERT...');
-            // Try direct UPSERT on next iteration
           } else if (lastError.message.includes('network') || lastError.message.includes('timeout')) {
             console.log('🌐 Network issue detected, retrying...');
           } else if (lastError.message.includes('permission') || lastError.message.includes('unauthorized')) {
@@ -74,6 +77,7 @@ export class SimpleProfileService {
       // All retries failed
       const finalError = lastError?.message || 'Unknown database error';
       console.error('❌ All save attempts failed:', finalError);
+      console.error('📋 Last error object:', lastError);
       
       // Provide user-friendly error messages
       if (finalError.includes('network') || finalError.includes('timeout')) {
@@ -81,12 +85,13 @@ export class SimpleProfileService {
       } else if (finalError.includes('duplicate') || finalError.includes('unique')) {
         return { success: false, error: 'Data conflict detected. Please refresh the page and try again.' };
       } else {
-        return { success: false, error: 'Failed to save to database. Your data is saved locally and will sync when connection is restored.' };
+        return { success: false, error: `Save failed: ${finalError}. Please try again or contact support.` };
       }
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       console.error('❌ Critical error in enhanced profile save:', errorMessage);
+      console.error('📋 Full error object:', error);
       return { 
         success: false, 
         error: `Critical save error: ${errorMessage}. Please refresh the page and contact support if this persists.` 
@@ -94,10 +99,21 @@ export class SimpleProfileService {
     }
   }
 
-  // New method to handle UPSERT operations using database function
+  // Updated method to handle UPSERT operations using database function
   private static async upsertProfileData(userId: string, profileData: any): Promise<boolean> {
     try {
-      // Use our new database function for robust UPSERT
+      console.log('📤 Calling database function with data:', {
+        userId,
+        name: profileData.personalInfo?.name,
+        phone: profileData.personalInfo?.phone,
+        location: profileData.personalInfo?.location,
+        linkedin: profileData.socialLinks?.linkedin,
+        github: profileData.socialLinks?.github,
+        portfolio: profileData.socialLinks?.portfolio,
+        other: profileData.socialLinks?.other
+      });
+
+      // Use our database function for robust UPSERT
       const { data, error } = await supabase
         .rpc('upsert_user_profile', {
           p_user_id: userId,
@@ -116,8 +132,16 @@ export class SimpleProfileService {
         throw error;
       }
 
+      console.log('✅ Database function returned data:', data);
+
       // Also save to the legacy profileService for backward compatibility
-      await profileService.saveResumeData(userId, profileData);
+      try {
+        await profileService.saveResumeData(userId, profileData);
+        console.log('✅ Legacy profile service backup completed');
+      } catch (legacyError) {
+        console.warn('⚠️ Legacy profile service backup failed:', legacyError);
+        // Don't fail the main operation for legacy backup issues
+      }
       
       return true;
     } catch (error) {

@@ -44,7 +44,7 @@ const CompleteProfile = () => {
     languages: []
   });
 
-  // Enhanced auto-save with the new robust service
+  // Enhanced auto-save with better error handling
   const autoSave = useSimpleAutoSave(profileData, {
     saveFunction: async (data) => {
       if (!user?.id) {
@@ -52,7 +52,13 @@ const CompleteProfile = () => {
       }
       
       console.log('🔄 Auto-saving profile data...');
-      return await SimpleProfileService.saveProfileData(user.id, data);
+      const result = await SimpleProfileService.saveProfileData(user.id, data);
+      
+      if (!result.success) {
+        console.error('❌ Auto-save failed:', result.error);
+      }
+      
+      return result;
     },
     interval: 3000, // Save every 3 seconds
     localStorageKey: 'profile-draft-data',
@@ -186,7 +192,10 @@ const CompleteProfile = () => {
   };
 
   const handleSaveAndContinue = async () => {
-    if (!user) return;
+    if (!user) {
+      toast.error('You must be logged in to complete your profile.');
+      return;
+    }
     
     // Add email validation check
     if (!profileData.personalInfo.email) {
@@ -197,10 +206,14 @@ const CompleteProfile = () => {
     setLoading(true);
     try {
       console.log('🔄 Starting enhanced profile completion process...');
+      console.log('📋 Current profile data:', JSON.stringify(profileData, null, 2));
       
       // Force save current data immediately using auto-save
       console.log('💾 Force saving current profile data...');
       await autoSave.forceSave();
+      
+      // Wait a moment for the save to complete
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       // Validate profile completion using the new service
       const validation = SimpleProfileService.validateLocalProfileCompletion(profileData);
@@ -213,6 +226,19 @@ const CompleteProfile = () => {
 
       console.log('✅ Enhanced profile validation passed');
       
+      // Force another save to ensure latest data is in database
+      console.log('💾 Final save before completion...');
+      const finalSaveResult = await SimpleProfileService.saveProfileData(user.id, profileData);
+      
+      if (!finalSaveResult.success) {
+        console.error('❌ Final save failed:', finalSaveResult.error);
+        toast.error(`Failed to save profile: ${finalSaveResult.error}`);
+        setLoading(false);
+        return;
+      }
+      
+      console.log('✅ Final save completed successfully');
+      
       // Update onboarding status using the enhanced service
       const onboardingResult = await resumeFileService.updateOnboardingStatus(user.id, {
         profile_completed: true,
@@ -221,7 +247,7 @@ const CompleteProfile = () => {
 
       if (!onboardingResult.success) {
         console.error('❌ Failed to update onboarding status:', onboardingResult.error);
-        toast.error('Failed to complete onboarding. Please try again.');
+        toast.error('Profile saved but failed to complete onboarding. Please try again.');
         setLoading(false);
         return;
       }
@@ -243,7 +269,8 @@ const CompleteProfile = () => {
       
     } catch (error) {
       console.error('❌ Error completing enhanced profile:', error);
-      toast.error('Error completing profile. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      toast.error(`Error completing profile: ${errorMessage}. Please try again.`);
     } finally {
       setLoading(false);
     }
@@ -323,7 +350,7 @@ const CompleteProfile = () => {
           </CardContent>
         </Card>
         
-        {/* Auto-save indicator */}
+        {/* Auto-save indicator with enhanced error display */}
         <AutoSaveIndicator 
           status={autoSave.saveStatus}
           lastSaved={autoSave.lastSaved}
