@@ -21,7 +21,6 @@ const CompleteProfile = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [emailLoadError, setEmailLoadError] = useState<string | null>(null);
   const [profileData, setProfileData] = useState<any>({
     personalInfo: { 
       name: '', 
@@ -54,21 +53,14 @@ const CompleteProfile = () => {
     try {
       console.log('🔍 Loading user data for:', user.id);
       console.log('📧 User email from auth:', user.email);
-      console.log('👤 User metadata:', user.user_metadata);
       
-      // Get email with fallback options
-      const userEmail = user.email || user.user_metadata?.email || '';
+      // Get email directly from authenticated user - this should always be available
+      const userEmail = user.email || '';
       const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || '';
-      
-      if (!userEmail) {
-        console.error('❌ No email found for user');
-        setEmailLoadError('Unable to load your email from your account. Please contact support.');
-        return;
-      }
       
       console.log('✅ Using email:', userEmail, 'and name:', userName);
       
-      // Set initial profile data with user info from auth
+      // Set initial profile data with user info from auth immediately
       setProfileData(prev => ({
         ...prev,
         personalInfo: {
@@ -97,7 +89,7 @@ const CompleteProfile = () => {
       }
     } catch (error) {
       console.error('❌ Error loading user data:', error);
-      setEmailLoadError('Failed to load your profile data. Please refresh the page.');
+      toast.error('Failed to load your profile data. Please refresh the page.');
     }
   };
 
@@ -224,20 +216,6 @@ const CompleteProfile = () => {
               Review and complete your profile information to get started
             </p>
             
-            {emailLoadError && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
-                <p className="text-red-700 text-sm">{emailLoadError}</p>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={loadUserData}
-                  className="mt-2"
-                >
-                  Try Again
-                </Button>
-              </div>
-            )}
-            
             <div className="space-y-2">
               <Progress value={completionPercentage} className="h-2" />
               <p className="text-sm text-gray-600">{completionPercentage}% Complete</p>
@@ -288,7 +266,7 @@ const CompleteProfile = () => {
             <div className="flex justify-end pt-6">
               <Button 
                 onClick={handleSaveAndContinue}
-                disabled={loading || !!emailLoadError}
+                disabled={loading}
                 size="lg"
                 className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3"
               >

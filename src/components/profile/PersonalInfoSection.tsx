@@ -57,12 +57,12 @@ const PersonalInfoSection = ({ data, onChange }: PersonalInfoSectionProps) => {
             value={data.email}
             readOnly
             className="bg-gray-50 cursor-not-allowed"
-            placeholder="Loading your email..."
+            placeholder="Your email address"
           />
           <p className="text-xs text-gray-500">
             {data.email 
               ? "✓ Email loaded from your account (cannot be changed here)" 
-              : "Loading email from your account..."}
+              : "Email should load automatically from your account"}
           </p>
         </div>
         
