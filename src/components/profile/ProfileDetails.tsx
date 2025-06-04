@@ -34,10 +34,14 @@ const ProfileDetails = ({ onResumeDataUpdate, showNextButton = false, onNext }: 
     
     setLoading(true);
     try {
+      console.log('🔍 Loading existing resume for user:', user.id);
       const resumeFile = await resumeFileService.getCurrentResumeFile(user.id);
+      
       if (resumeFile) {
+        console.log('📄 Found existing resume file:', resumeFile.file_name);
         setExistingResumeFile(resumeFile);
         setResume(resumeFile.parsed_data);
+        
         // Create a virtual file object for display
         const virtualFile = new File(
           [resumeFile.file_content], 
@@ -46,9 +50,25 @@ const ProfileDetails = ({ onResumeDataUpdate, showNextButton = false, onNext }: 
         );
         setUploadedFile(virtualFile);
         setParsingSuccess(true);
+        
+        // Check and fix onboarding status if needed
+        const onboardingStatus = await resumeFileService.getOnboardingStatus(user.id);
+        if (onboardingStatus && !onboardingStatus.resume_uploaded) {
+          console.log('🔧 Fixing onboarding status - resume exists but status is false');
+          await resumeFileService.updateOnboardingStatus(user.id, { 
+            resume_uploaded: true 
+          });
+          
+          // Notify parent component
+          if (onResumeDataUpdate) {
+            onResumeDataUpdate(resumeFile.parsed_data);
+          }
+        }
+      } else {
+        console.log('📄 No existing resume file found');
       }
     } catch (error) {
-      console.error('Error loading existing resume:', error);
+      console.error('❌ Error loading existing resume:', error);
     } finally {
       setLoading(false);
     }
@@ -58,51 +78,77 @@ const ProfileDetails = ({ onResumeDataUpdate, showNextButton = false, onNext }: 
     const file = e.target.files?.[0];
     if (!file || !user) return;
     
+    console.log('🚀 Starting resume upload process for file:', file.name);
     setUploadedFile(file);
     setParsing(true);
     setParsingSuccess(null);
     
     try {
-      console.log('Starting resume upload and parsing...');
-      const parsed = await parseResume(file, false); // Don't show toast here, we'll handle it
+      // Step 1: Parse the resume
+      console.log('📝 Step 1: Parsing resume content...');
+      const parsed = await parseResume(file, false);
       setResume(parsed);
       
-      // Save to database - this should always succeed
-      const success = await resumeFileService.saveResumeFile(user.id, file, parsed);
+      // Step 2: Save to database
+      console.log('💾 Step 2: Saving resume file to database...');
+      const saveSuccess = await resumeFileService.saveResumeFile(user.id, file, parsed);
       
-      if (success) {
-        console.log('Resume saved successfully to database');
-        
-        // Determine if parsing was successful based on extracted data
-        const hasPersonalInfo = parsed.personalInfo.name || parsed.personalInfo.email;
-        const hasWorkExp = parsed.workExperiences.length > 0;
-        const hasEducation = parsed.education.length > 0;
-        const hasSkills = parsed.skills.length > 0;
-        
-        const parsedSuccessfully = Boolean(hasPersonalInfo || hasWorkExp || hasEducation || hasSkills);
-        setParsingSuccess(parsedSuccessfully);
-        
-        if (parsedSuccessfully) {
-          toast.success("Resume uploaded and parsed successfully! Some information was extracted automatically.");
-        } else {
-          toast.success("Resume uploaded successfully! Please complete your profile information manually.");
-        }
-        
-        // Always pass the resume data to parent, even if parsing was minimal
-        if (onResumeDataUpdate) {
-          onResumeDataUpdate(parsed);
-        }
-
-        // Reload the existing resume data to ensure UI is in sync
-        await loadExistingResume();
-      } else {
-        toast.error("Failed to save resume. Please try again.");
-        setParsingSuccess(false);
+      if (!saveSuccess) {
+        throw new Error('Failed to save resume file to database');
       }
+      
+      console.log('✅ Resume file saved successfully');
+      
+      // Step 3: Update onboarding status
+      console.log('🔄 Step 3: Updating onboarding status...');
+      const statusSuccess = await resumeFileService.updateOnboardingStatus(user.id, { 
+        resume_uploaded: true 
+      });
+      
+      if (!statusSuccess) {
+        console.error('❌ Failed to update onboarding status');
+        toast.error("Resume saved but failed to update progress. Please refresh the page.");
+        return;
+      }
+      
+      console.log('✅ Onboarding status updated successfully');
+      
+      // Step 4: Determine parsing success and show appropriate feedback
+      const hasPersonalInfo = parsed.personalInfo.name || parsed.personalInfo.email;
+      const hasWorkExp = parsed.workExperiences.length > 0;
+      const hasEducation = parsed.education.length > 0;
+      const hasSkills = parsed.skills.length > 0;
+      
+      const parsedSuccessfully = Boolean(hasPersonalInfo || hasWorkExp || hasEducation || hasSkills);
+      setParsingSuccess(parsedSuccessfully);
+      
+      if (parsedSuccessfully) {
+        toast.success("Resume uploaded and parsed successfully! Some information was extracted automatically.");
+      } else {
+        toast.success("Resume uploaded successfully! Please complete your profile information manually.");
+      }
+      
+      // Step 5: Notify parent component
+      if (onResumeDataUpdate) {
+        console.log('📤 Notifying parent component of resume data update');
+        onResumeDataUpdate(parsed);
+      }
+
+      // Step 6: Reload to ensure UI is in sync
+      await loadExistingResume();
+      
     } catch (error) {
-      console.error('Resume upload/parsing failed:', error);
-      toast.error("Failed to process resume. Please try again.");
+      console.error('❌ Resume upload failed:', error);
       setParsingSuccess(false);
+      
+      // Provide specific error messages
+      if (error.message.includes('database')) {
+        toast.error("Failed to save resume to database. Please try again.");
+      } else if (error.message.includes('parsing')) {
+        toast.error("Failed to parse resume content. Please try a different file or complete manually.");
+      } else {
+        toast.error("Failed to process resume. Please try again.");
+      }
     } finally {
       setParsing(false);
     }
@@ -131,6 +177,7 @@ const ProfileDetails = ({ onResumeDataUpdate, showNextButton = false, onNext }: 
     return (
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin h-6 w-6 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+        <span className="ml-2">Loading your resume...</span>
       </div>
     );
   }
@@ -222,11 +269,11 @@ const ProfileDetails = ({ onResumeDataUpdate, showNextButton = false, onNext }: 
               )}
               <div>
                 <h4 className={`font-medium ${parsingSuccess ? 'text-green-800' : 'text-yellow-800'}`}>
-                  {parsingSuccess ? '✅ Resume Successfully Parsed & Saved!' : '⚠️ Resume Uploaded - Manual Entry Required'}
+                  {parsingSuccess ? '✅ Resume Successfully Processed!' : '⚠️ Resume Uploaded - Manual Entry Required'}
                 </h4>
                 <p className={`text-sm ${parsingSuccess ? 'text-green-700' : 'text-yellow-700'}`}>
                   {parsingSuccess 
-                    ? 'Your resume has been saved and some information was extracted automatically. Please review and complete your profile.'
+                    ? 'Your resume has been saved and information was extracted. You can now proceed to complete your profile.'
                     : 'Your resume has been saved but automatic parsing was limited. Please complete your profile information manually.'
                   }
                 </p>

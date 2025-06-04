@@ -43,16 +43,23 @@ class ResumeFileService {
 
   async saveResumeFile(userId: string, file: File, parsedData: ParsedResume): Promise<boolean> {
     try {
-      console.log('Saving resume file for user:', userId);
+      console.log('💾 Saving resume file for user:', userId, 'File:', file.name);
       
       const fileContent = await this.fileToBase64(file);
       
-      await supabase
+      // First, mark all existing files as not current
+      const { error: updateError } = await supabase
         .from('user_resume_files')
         .update({ is_current: false })
         .eq('user_id', userId);
 
-      const { error } = await supabase
+      if (updateError) {
+        console.error('❌ Error updating existing files:', updateError);
+        throw new Error(`Failed to update existing files: ${updateError.message}`);
+      }
+
+      // Insert the new resume file
+      const { error: insertError } = await supabase
         .from('user_resume_files')
         .insert({
           user_id: userId,
@@ -64,23 +71,23 @@ class ResumeFileService {
           is_current: true
         });
 
-      if (error) {
-        console.error('Error saving resume file:', error);
-        return false;
+      if (insertError) {
+        console.error('❌ Error inserting resume file:', insertError);
+        throw new Error(`Failed to insert resume file: ${insertError.message}`);
       }
 
-      await this.updateOnboardingStatus(userId, { resume_uploaded: true });
-      
-      console.log('Resume file saved successfully');
+      console.log('✅ Resume file saved successfully');
       return true;
     } catch (error) {
-      console.error('Error in saveResumeFile:', error);
+      console.error('❌ Error in saveResumeFile:', error);
       return false;
     }
   }
 
   async getCurrentResumeFile(userId: string): Promise<ResumeFile | null> {
     try {
+      console.log('🔍 Fetching current resume file for user:', userId);
+      
       const { data, error } = await supabase
         .from('user_resume_files')
         .select('*')
@@ -89,26 +96,30 @@ class ResumeFileService {
         .maybeSingle();
 
       if (error) {
-        console.error('Error fetching current resume file:', error);
+        console.error('❌ Error fetching current resume file:', error);
         return null;
       }
 
       if (data) {
+        console.log('✅ Found current resume file:', data.file_name);
         return {
           ...data,
           parsed_data: data.parsed_data as unknown as ParsedResume
         } as ResumeFile;
       }
 
+      console.log('📄 No current resume file found');
       return null;
     } catch (error) {
-      console.error('Error in getCurrentResumeFile:', error);
+      console.error('❌ Error in getCurrentResumeFile:', error);
       return null;
     }
   }
 
   async getOnboardingStatus(userId: string): Promise<OnboardingStatus | null> {
     try {
+      console.log('🔍 Fetching onboarding status for user:', userId);
+      
       const { data, error } = await supabase
         .from('user_onboarding')
         .select('*')
@@ -116,11 +127,12 @@ class ResumeFileService {
         .maybeSingle();
 
       if (error) {
-        console.error('Error fetching onboarding status:', error);
+        console.error('❌ Error fetching onboarding status:', error);
         return null;
       }
 
       if (!data) {
+        console.log('🆕 No onboarding record found, creating new one');
         const { data: newData, error: insertError } = await supabase
           .from('user_onboarding')
           .insert({
@@ -133,23 +145,25 @@ class ResumeFileService {
           .single();
 
         if (insertError) {
-          console.error('Error creating onboarding record:', insertError);
+          console.error('❌ Error creating onboarding record:', insertError);
           return null;
         }
 
+        console.log('✅ Created new onboarding record');
         return newData;
       }
 
+      console.log('✅ Found onboarding status:', data);
       return data;
     } catch (error) {
-      console.error('Error in getOnboardingStatus:', error);
+      console.error('❌ Error in getOnboardingStatus:', error);
       return null;
     }
   }
 
   async updateOnboardingStatus(userId: string, updates: Partial<Omit<OnboardingStatus, 'id' | 'user_id' | 'created_at' | 'updated_at'>>): Promise<boolean> {
     try {
-      console.log('🔄 Updating onboarding status for user:', userId, updates);
+      console.log('🔄 Updating onboarding status for user:', userId, 'Updates:', updates);
       
       const { error } = await supabase
         .from('user_onboarding')
@@ -160,14 +174,14 @@ class ResumeFileService {
         });
 
       if (error) {
-        console.error('Error updating onboarding status:', error);
-        return false;
+        console.error('❌ Error updating onboarding status:', error);
+        throw new Error(`Failed to update onboarding status: ${error.message}`);
       }
 
       console.log('✅ Onboarding status updated successfully');
       return true;
     } catch (error) {
-      console.error('Error in updateOnboardingStatus:', error);
+      console.error('❌ Error in updateOnboardingStatus:', error);
       return false;
     }
   }
@@ -187,7 +201,7 @@ class ResumeFileService {
 
       const isComplete = requiredFields.every(field => Boolean(field));
 
-      console.log('Profile completion check:', {
+      console.log('📊 Profile completion check:', {
         requiredFields: requiredFields.map(Boolean),
         isComplete
       });
@@ -199,14 +213,14 @@ class ResumeFileService {
         });
         
         if (!success) {
-          console.error('Failed to update onboarding status after completion check');
+          console.error('❌ Failed to update onboarding status after completion check');
           return false;
         }
       }
 
       return isComplete;
     } catch (error) {
-      console.error('Error in checkProfileCompletion:', error);
+      console.error('❌ Error in checkProfileCompletion:', error);
       return false;
     }
   }

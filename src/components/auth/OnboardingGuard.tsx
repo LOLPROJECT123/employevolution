@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -34,7 +35,31 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
     
     setLoading(true);
     try {
-      const status = await resumeFileService.getOnboardingStatus(user.id);
+      console.log('🔍 Loading onboarding status for user:', user.id);
+      
+      // Get both onboarding status and check for existing resume
+      const [status, resumeFile] = await Promise.all([
+        resumeFileService.getOnboardingStatus(user.id),
+        resumeFileService.getCurrentResumeFile(user.id)
+      ]);
+      
+      console.log('📊 Onboarding status:', status);
+      console.log('📄 Resume file exists:', !!resumeFile);
+      
+      // Fix inconsistent state: resume exists but status says it doesn't
+      if (resumeFile && status && !status.resume_uploaded) {
+        console.log('🔧 Fixing inconsistent state - resume exists but status is false');
+        const updateSuccess = await resumeFileService.updateOnboardingStatus(user.id, {
+          resume_uploaded: true
+        });
+        
+        if (updateSuccess) {
+          // Update the status object
+          status.resume_uploaded = true;
+          toast.success("Your resume status has been restored!");
+        }
+      }
+      
       setOnboardingStatus(status);
       
       if (status) {
@@ -47,7 +72,8 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
         }
       }
     } catch (error) {
-      console.error('Error loading onboarding status:', error);
+      console.error('❌ Error loading onboarding status:', error);
+      toast.error('Failed to load onboarding status. Please refresh the page.');
     } finally {
       setLoading(false);
     }
@@ -57,31 +83,34 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
     if (!user) return;
 
     try {
-      console.log('Resume uploaded, updating onboarding status...');
+      console.log('📝 Resume uploaded, updating onboarding status...');
       
       const success = await resumeFileService.updateOnboardingStatus(user.id, {
         resume_uploaded: true
       });
 
       if (success) {
-        console.log('Onboarding status updated successfully');
+        console.log('✅ Onboarding status updated successfully');
         setOnboardingStatus(prev => prev ? { ...prev, resume_uploaded: true } : null);
         setCurrentStep(1);
-        toast.success("Resume uploaded successfully!");
+        toast.success("Resume uploaded successfully! You can now complete your profile.");
+        
+        // Small delay to ensure UI updates
         setTimeout(() => {
           loadOnboardingStatus();
-        }, 1000);
+        }, 500);
       } else {
-        console.error('Failed to update onboarding status');
-        toast.error("Failed to update onboarding status. Please try again.");
+        console.error('❌ Failed to update onboarding status');
+        toast.error("Resume uploaded but failed to update status. Please refresh the page.");
       }
     } catch (error) {
-      console.error('Error updating onboarding status:', error);
-      toast.error("Error updating profile status. Please try again.");
+      console.error('❌ Error updating onboarding status:', error);
+      toast.error("Error updating profile status. Please refresh the page.");
     }
   };
 
   const handleNextToProfile = () => {
+    console.log('🚀 Navigating to complete profile page');
     navigate('/complete-profile');
   };
 
