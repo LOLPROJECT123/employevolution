@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Job } from '@/types/job';
 import { Button } from '@/components/ui/button';
@@ -93,8 +94,8 @@ export const JobDetailView = ({ job, onApply, onSave }: JobDetailViewProps) => {
   } : null;
 
   return (
-    <div className="h-full">
-      <div className="p-6 space-y-6">
+    <div className="h-full overflow-hidden">
+      <div className="p-6 h-full">
         <JobMatchAnalysis 
           job={job}
           userProfile={userWithRealSkills}

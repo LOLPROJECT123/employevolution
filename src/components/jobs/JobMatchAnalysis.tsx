@@ -48,8 +48,8 @@ export const JobMatchAnalysis = ({ job, userProfile, matchScore }: JobMatchAnaly
   };
 
   return (
-    <ScrollArea className="h-full max-h-[calc(100vh-200px)]">
-      <div className="space-y-4 pr-4">
+    <ScrollArea className="h-full">
+      <div className="space-y-4 pr-4 pb-6">
         {/* Match Score Banner */}
         <Card className={cn("border-2", getMatchBgColor(matchScore.overall))}>
           <CardContent className="pt-6">
@@ -106,7 +106,7 @@ export const JobMatchAnalysis = ({ job, userProfile, matchScore }: JobMatchAnaly
             <div>
               <h4 className="font-semibold mb-2">Description</h4>
               <ScrollArea className="h-32 w-full rounded border p-2">
-                <p className="text-gray-700 text-sm leading-relaxed">{job.description}</p>
+                <p className="text-gray-700 text-sm leading-relaxed pr-4">{job.description}</p>
               </ScrollArea>
             </div>
 
@@ -127,7 +127,7 @@ export const JobMatchAnalysis = ({ job, userProfile, matchScore }: JobMatchAnaly
             {/* Required Skills */}
             <div>
               <h4 className="font-semibold mb-2">Required Skills ({job.skills?.length || 0} total)</h4>
-              <ScrollArea className="h-20 w-full">
+              <ScrollArea className="h-24 w-full">
                 <div className="flex flex-wrap gap-2 pr-4">
                   {job.skills?.map((skill, index) => (
                     <Badge key={index} variant="secondary" className="text-xs">
@@ -174,7 +174,7 @@ export const JobMatchAnalysis = ({ job, userProfile, matchScore }: JobMatchAnaly
                 </div>
               </CollapsibleTrigger>
               <CollapsibleContent className="p-4 border border-gray-200 rounded-lg mt-2">
-                <ScrollArea className="h-48 w-full">
+                <ScrollArea className="h-64 w-full">
                   <div className="space-y-3 pr-4">
                     {matchScore.missingSkills.length > 0 && (
                       <div>
