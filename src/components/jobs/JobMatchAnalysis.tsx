@@ -40,9 +40,33 @@ export const JobMatchAnalysis = ({ job, userProfile, matchScore }: JobMatchAnaly
     return unifiedSkillsMatchingService.getMatchLabel(score);
   };
 
+  const getMatchBgColor = (score: number) => {
+    if (score >= 85) return 'bg-emerald-50 border-emerald-200';
+    if (score >= 70) return 'bg-green-50 border-green-200';
+    if (score >= 50) return 'bg-amber-50 border-amber-200';
+    return 'bg-red-50 border-red-200';
+  };
+
   return (
     <ScrollArea className="h-full max-h-[calc(100vh-200px)]">
       <div className="space-y-4 pr-4">
+        {/* Match Score Banner */}
+        <Card className={cn("border-2", getMatchBgColor(matchScore.overall))}>
+          <CardContent className="pt-6">
+            <div className="text-center space-y-2">
+              <div className={cn("text-3xl font-bold", getMatchColor(matchScore.overall))}>
+                {matchScore.overall}% {getMatchLabel(matchScore.overall)}
+              </div>
+              <p className="text-sm text-gray-600">
+                Based on your profile, skills, and experience
+              </p>
+              <div className="mt-4">
+                <Progress value={matchScore.overall} className="h-2" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Job Details Card */}
         <Card>
           <CardHeader className="pb-4">
@@ -86,12 +110,12 @@ export const JobMatchAnalysis = ({ job, userProfile, matchScore }: JobMatchAnaly
               </ScrollArea>
             </div>
 
-            {/* Requirements */}
+            {/* Requirements - Increased height */}
             {job.requirements && job.requirements.length > 0 && (
               <div>
                 <h4 className="font-semibold mb-2">Requirements</h4>
-                <ScrollArea className="h-24 w-full">
-                  <ul className="list-disc list-inside space-y-1">
+                <ScrollArea className="h-48 w-full rounded border p-2">
+                  <ul className="list-disc list-inside space-y-1 pr-4">
                     {job.requirements.map((req, index) => (
                       <li key={index} className="text-gray-700 text-sm">{req}</li>
                     ))}
