@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -113,8 +112,35 @@ const EnhancedCompleteProfile = () => {
     setError(null);
     
     try {
-      console.log('📋 Loading user data...');
+      console.log('📋 Loading user data for user:', user.id);
+      console.log('📧 User email from auth:', user.email);
+      console.log('👤 User metadata:', user.user_metadata);
+
+      // Get email and name directly from authenticated user - this should always be available
+      const userEmail = user.email || '';
+      const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || '';
       
+      console.log('✅ Setting initial email:', userEmail, 'and name:', userName);
+      
+      // Set initial profile data with user info from auth immediately
+      const initialPersonalInfo = {
+        name: userName,
+        email: userEmail,
+        phone: '',
+        streetAddress: '',
+        city: '',
+        state: '',
+        county: '',
+        zipCode: ''
+      };
+
+      setProfileData(prev => ({
+        ...prev,
+        personalInfo: initialPersonalInfo
+      }));
+
+      console.log('📝 Initial profile data set with email:', userEmail);
+
       // Check for localStorage backup first
       const localStorageKey = `profile-draft-${user.id}`;
       const localBackup = localStorage.getItem(localStorageKey);
@@ -123,32 +149,42 @@ const EnhancedCompleteProfile = () => {
         try {
           const backupData = JSON.parse(localBackup);
           console.log('📱 Loading from localStorage backup');
-          setProfileData(backupData);
+          
+          // Merge localStorage backup while preserving auth email and name
+          setProfileData({
+            ...backupData,
+            personalInfo: {
+              ...backupData.personalInfo,
+              name: userName || backupData.personalInfo?.name || '',
+              email: userEmail, // Always use auth email
+            }
+          });
         } catch (parseError) {
           console.warn('Failed to parse localStorage backup:', parseError);
         }
       }
 
-      // Pre-populate with user data from authentication
-      const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || '';
-      const userEmail = user.email || '';
-      
-      setProfileData(prev => ({
-        ...prev,
-        personalInfo: {
-          ...prev.personalInfo,
-          name: userName,
-          email: userEmail,
-        }
-      }));
-
       // Load existing profile data from database
       const existingProfile = await SimpleProfileService.loadProfileData(user.id);
       if (existingProfile) {
         console.log('📋 Loaded existing profile from database');
-        setProfileData(existingProfile);
+        
+        // Merge database data while preserving auth email and name
+        setProfileData({
+          ...existingProfile,
+          personalInfo: {
+            ...existingProfile.personalInfo,
+            name: userName || existingProfile.personalInfo?.name || '',
+            email: userEmail, // Always prioritize auth email
+          }
+        });
+        
+        console.log('✅ Database profile merged, email should still be:', userEmail);
+        
         // Clear localStorage backup since we have fresh data from server
         localStorage.removeItem(localStorageKey);
+      } else {
+        console.log('📄 No existing profile found in database, keeping auth-based profile data');
       }
     } catch (error) {
       console.error('❌ Error loading user data:', error);
