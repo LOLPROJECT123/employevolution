@@ -94,29 +94,25 @@ export class SimpleProfileService {
     }
   }
 
-  // New method to handle UPSERT operations
+  // New method to handle UPSERT operations using database function
   private static async upsertProfileData(userId: string, profileData: any): Promise<boolean> {
     try {
-      // Use Supabase's upsert functionality to handle conflicts
-      const { error } = await supabase
-        .from('user_profiles')
-        .upsert({
-          user_id: userId,
-          name: profileData.personalInfo?.name || '',
-          phone: profileData.personalInfo?.phone || '',
-          location: profileData.personalInfo?.location || '',
-          linkedin_url: profileData.socialLinks?.linkedin || '',
-          github_url: profileData.socialLinks?.github || '',
-          portfolio_url: profileData.socialLinks?.portfolio || '',
-          other_url: profileData.socialLinks?.other || '',
-          profile_completion: this.calculateCompletionScore(profileData),
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id'
+      // Use our new database function for robust UPSERT
+      const { data, error } = await supabase
+        .rpc('upsert_user_profile', {
+          p_user_id: userId,
+          p_name: profileData.personalInfo?.name || null,
+          p_phone: profileData.personalInfo?.phone || null,
+          p_location: profileData.personalInfo?.location || null,
+          p_linkedin_url: profileData.socialLinks?.linkedin || null,
+          p_github_url: profileData.socialLinks?.github || null,
+          p_portfolio_url: profileData.socialLinks?.portfolio || null,
+          p_other_url: profileData.socialLinks?.other || null,
+          p_profile_completion: this.calculateCompletionScore(profileData)
         });
 
       if (error) {
-        console.error('❌ UPSERT profile data failed:', error);
+        console.error('❌ Database function profile save failed:', error);
         throw error;
       }
 
@@ -204,65 +200,28 @@ export class SimpleProfileService {
     }
   }
 
-  // Enhanced method to check and fix consistency issues
+  // Enhanced method to check and fix consistency issues using database function
   static async checkAndFixConsistency(userId: string): Promise<{ success: boolean; statusFixed?: boolean; error?: string }> {
     try {
       console.log('🔧 Checking data consistency for user:', userId);
       
-      // Check if resume file exists
-      const { data: resumeFile } = await supabase
-        .from('user_resume_files')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('is_current', true)
-        .maybeSingle();
+      const { data, error } = await supabase
+        .rpc('check_and_fix_onboarding_consistency', {
+          p_user_id: userId
+        });
       
-      const resumeExists = !!resumeFile;
+      if (error) {
+        console.error('❌ Failed to check consistency:', error);
+        return { success: false, error: error.message };
+      }
       
-      // Check if profile has minimum required data
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('name, phone')
-        .eq('user_id', userId)
-        .maybeSingle();
-      
-      const profileComplete = profile?.name?.trim() && profile?.phone?.trim();
-      
-      // Get current onboarding status
-      const { data: currentStatus } = await supabase
-        .from('user_onboarding')
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle();
-      
-      // Check if status needs fixing
-      const statusNeedsFixing = !currentStatus || 
-        currentStatus.resume_uploaded !== resumeExists ||
-        currentStatus.profile_completed !== profileComplete ||
-        currentStatus.onboarding_completed !== (resumeExists && profileComplete);
-      
-      if (statusNeedsFixing) {
-        console.log('🔄 Fixing inconsistent onboarding status...');
-        
-        const { error } = await supabase
-          .from('user_onboarding')
-          .upsert({
-            user_id: userId,
-            resume_uploaded: resumeExists,
-            profile_completed: profileComplete,
-            onboarding_completed: resumeExists && profileComplete,
-            updated_at: new Date().toISOString()
-          }, {
-            onConflict: 'user_id'
-          });
-        
-        if (error) {
-          console.error('❌ Failed to fix onboarding status:', error);
-          return { success: false, error: error.message };
-        }
-        
-        console.log('✅ Onboarding status fixed successfully');
-        return { success: true, statusFixed: true };
+      const result = data?.[0];
+      if (result) {
+        console.log('✅ Data consistency check completed:', result);
+        return { 
+          success: true, 
+          statusFixed: result.status_fixed 
+        };
       }
       
       console.log('✅ Data consistency check passed - no fixes needed');

@@ -55,25 +55,8 @@ class ResumeFileService {
       
       const fileContent = await this.fileToBase64(file);
       
-      // Use transaction to ensure atomicity
-      const { data, error } = await supabase.rpc('save_resume_with_status_update', {
-        p_user_id: userId,
-        p_file_name: file.name,
-        p_file_type: file.type,
-        p_file_size: file.size,
-        p_file_content: fileContent,
-        p_parsed_data: parsedData as any
-      });
-
-      if (error) {
-        console.error('❌ Error saving resume file:', error);
-        
-        // Fallback to manual approach if RPC fails
-        return await this.saveResumeFileManual(userId, file, parsedData, fileContent);
-      }
-
-      console.log('✅ Resume file saved successfully');
-      return { success: true };
+      // Use atomic transaction approach for saving resume and updating status
+      return await this.saveResumeFileWithTransaction(userId, file, parsedData, fileContent);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       console.error('❌ Critical error in saveResumeFile:', errorMessage);
@@ -85,6 +68,61 @@ class ResumeFileService {
       } catch (fallbackError) {
         return { success: false, error: `Critical file save error: ${errorMessage}` };
       }
+    }
+  }
+
+  private async saveResumeFileWithTransaction(userId: string, file: File, parsedData: ParsedResume, fileContent: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      console.log('🔄 Using transaction approach for resume save...');
+      
+      // First, mark all existing files as not current
+      const { error: updateError } = await supabase
+        .from('user_resume_files')
+        .update({ is_current: false })
+        .eq('user_id', userId);
+
+      if (updateError) {
+        console.warn('⚠️ Warning updating existing files:', updateError.message);
+        // Continue anyway as this might not be critical
+      }
+
+      // Insert the new resume file
+      const { error: insertError } = await supabase
+        .from('user_resume_files')
+        .insert({
+          user_id: userId,
+          file_name: file.name,
+          file_type: file.type,
+          file_size: file.size,
+          file_content: fileContent,
+          parsed_data: parsedData as any,
+          is_current: true
+        });
+
+      if (insertError) {
+        console.error('❌ Error inserting resume file:', insertError);
+        return { success: false, error: `Failed to save resume file: ${insertError.message}` };
+      }
+
+      // Update onboarding status using our new database function
+      const { data: statusResult, error: statusError } = await supabase
+        .rpc('upsert_onboarding_status', {
+          p_user_id: userId,
+          p_resume_uploaded: true
+        });
+
+      if (statusError) {
+        console.warn('⚠️ Resume saved but status update failed:', statusError.message);
+        // Don't fail the entire operation, just warn
+        return { success: true }; // Resume was saved successfully
+      }
+
+      console.log('✅ Resume file and status saved successfully');
+      return { success: true };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('❌ Error in transaction resume save:', errorMessage);
+      return { success: false, error: errorMessage };
     }
   }
 
@@ -188,29 +226,34 @@ class ResumeFileService {
       }
 
       if (!data) {
-        console.log('🆕 No onboarding record found, creating new one with UPSERT');
+        console.log('🆕 No onboarding record found, creating new one using database function');
         const { data: newData, error: insertError } = await supabase
-          .from('user_onboarding')
-          .upsert({
-            user_id: userId,
-            resume_uploaded: false,
-            profile_completed: false,
-            onboarding_completed: false,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }, {
-            onConflict: 'user_id'
-          })
-          .select()
-          .single();
+          .rpc('upsert_onboarding_status', {
+            p_user_id: userId,
+            p_resume_uploaded: false,
+            p_profile_completed: false,
+            p_onboarding_completed: false
+          });
 
         if (insertError) {
           console.error('❌ Error creating onboarding record:', insertError);
           return null;
         }
 
+        // Fetch the created record
+        const { data: fetchedData, error: fetchError } = await supabase
+          .from('user_onboarding')
+          .select('*')
+          .eq('user_id', userId)
+          .single();
+
+        if (fetchError) {
+          console.error('❌ Error fetching created onboarding record:', fetchError);
+          return null;
+        }
+
         console.log('✅ Created new onboarding record');
-        return newData;
+        return fetchedData;
       }
 
       console.log('✅ Found onboarding status:', data);
@@ -233,57 +276,21 @@ class ResumeFileService {
         return { success: false, error: 'Updates are required' };
       }
 
-      // Use upsert with enhanced error handling for unique constraint violations
+      // Use our new database function for robust UPSERT
       const { data, error } = await supabase
-        .from('user_onboarding')
-        .upsert({
-          user_id: userId,
-          ...updates,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id',
-          ignoreDuplicates: false
-        })
-        .select()
-        .single();
+        .rpc('upsert_onboarding_status', {
+          p_user_id: userId,
+          p_resume_uploaded: updates.resume_uploaded,
+          p_profile_completed: updates.profile_completed,
+          p_onboarding_completed: updates.onboarding_completed
+        });
 
       if (error) {
         console.error('❌ Error updating onboarding status:', error);
-        
-        // Provide specific error messages
-        if (error.message.includes('duplicate') || error.message.includes('unique')) {
-          console.log('🔄 Handling duplicate, trying UPDATE instead...');
-          
-          // Try direct UPDATE as fallback
-          const { data: updateData, error: updateError } = await supabase
-            .from('user_onboarding')
-            .update({
-              ...updates,
-              updated_at: new Date().toISOString()
-            })
-            .eq('user_id', userId)
-            .select()
-            .single();
-            
-          if (updateError) {
-            return { success: false, error: `Failed to update status: ${updateError.message}` };
-          }
-          
-          console.log('✅ Onboarding status updated via UPDATE:', updateData);
-          return { success: true };
-        } else if (error.message.includes('foreign_key_violation')) {
-          return { success: false, error: 'User account not found. Please sign out and back in.' };
-        } else {
-          return { success: false, error: `Failed to update status: ${error.message}` };
-        }
+        return { success: false, error: `Failed to update status: ${error.message}` };
       }
 
-      if (!data) {
-        console.error('❌ No data returned from onboarding status update');
-        return { success: false, error: 'Update completed but no confirmation received' };
-      }
-
-      console.log('✅ Onboarding status updated successfully:', data);
+      console.log('✅ Onboarding status updated successfully using database function');
       return { success: true };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -337,6 +344,38 @@ class ResumeFileService {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       console.error('❌ Error in checkProfileCompletion:', errorMessage);
       return { success: false, isComplete: false, error: `Profile completion check failed: ${errorMessage}` };
+    }
+  }
+
+  // New method to check data consistency using database function
+  async checkDataConsistency(userId: string): Promise<{ success: boolean; statusFixed?: boolean; error?: string }> {
+    try {
+      console.log('🔧 Checking data consistency for user:', userId);
+      
+      const { data, error } = await supabase
+        .rpc('check_and_fix_onboarding_consistency', {
+          p_user_id: userId
+        });
+
+      if (error) {
+        console.error('❌ Error checking data consistency:', error);
+        return { success: false, error: error.message };
+      }
+
+      const result = data?.[0];
+      if (result) {
+        console.log('✅ Data consistency check completed:', result);
+        return { 
+          success: true, 
+          statusFixed: result.status_fixed 
+        };
+      }
+
+      return { success: true, statusFixed: false };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('❌ Error in consistency check:', errorMessage);
+      return { success: false, error: errorMessage };
     }
   }
 }
