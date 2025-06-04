@@ -1,10 +1,12 @@
+
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { resumeFileService, OnboardingStatus } from '@/services/resumeFileService';
+import { SimpleProfileService } from '@/services/simpleProfileService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle, Upload, User } from 'lucide-react';
+import { CheckCircle, Upload, User, AlertCircle } from 'lucide-react';
 import ProfileDetails from '@/components/profile/ProfileDetails';
 import { ParsedResume } from '@/types/resume';
 import { toast } from 'sonner';
@@ -19,6 +21,7 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
   const [onboardingStatus, setOnboardingStatus] = useState<OnboardingStatus | null>(null);
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [offlineMode, setOfflineMode] = useState(false);
 
   useEffect(() => {
     // Don't do anything if user is logging out
@@ -35,12 +38,56 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
     }
   }, [user, authLoading, isLoggingOut]);
 
+  const checkLocalCompletion = () => {
+    if (!user) return false;
+    
+    const localStorageKey = `profile-draft-${user.id}`;
+    const localBackup = localStorage.getItem(localStorageKey);
+    
+    if (localBackup) {
+      try {
+        const localData = JSON.parse(localBackup);
+        const { isComplete } = SimpleProfileService.validateLocalProfileCompletion(localData);
+        console.log('📱 Local profile completion check:', isComplete);
+        return isComplete;
+      } catch (error) {
+        console.warn('Failed to parse local profile data:', error);
+      }
+    }
+    
+    return false;
+  };
+
   const loadOnboardingStatus = async () => {
     if (!user || isLoggingOut) return;
     
     setLoading(true);
     try {
       console.log('🔍 Loading onboarding status for user:', user.id);
+      
+      // Check database health first
+      const healthCheck = await SimpleProfileService.checkDatabaseHealth();
+      
+      if (!healthCheck.healthy) {
+        console.warn('⚠️ Database unhealthy, checking local completion');
+        setOfflineMode(true);
+        
+        // Check if profile is complete locally
+        const locallyComplete = checkLocalCompletion();
+        if (locallyComplete) {
+          console.log('✅ Local profile is complete, allowing access in offline mode');
+          setOnboardingStatus({
+            id: 'offline',
+            user_id: user.id,
+            resume_uploaded: true,
+            profile_completed: true,
+            onboarding_completed: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+          return;
+        }
+      }
       
       // Get both onboarding status and check for existing resume
       const [status, resumeFile] = await Promise.all([
@@ -58,7 +105,7 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
           resume_uploaded: true
         });
         
-        if (updateSuccess) {
+        if (updateSuccess.success) {
           // Update the status object
           status.resume_uploaded = true;
           toast.success("Your resume status has been restored!");
@@ -78,7 +125,25 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
       }
     } catch (error) {
       console.error('❌ Error loading onboarding status:', error);
-      toast.error('Failed to load onboarding status. Please refresh the page.');
+      
+      // If database fails, check local completion
+      const locallyComplete = checkLocalCompletion();
+      if (locallyComplete) {
+        console.log('✅ Database failed but local profile is complete, allowing access');
+        setOfflineMode(true);
+        setOnboardingStatus({
+          id: 'offline',
+          user_id: user.id,
+          resume_uploaded: true,
+          profile_completed: true,
+          onboarding_completed: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+        toast.warning('Working in offline mode. Your data will sync when connection is restored.');
+      } else {
+        toast.error('Failed to load onboarding status. Please refresh the page.');
+      }
     } finally {
       setLoading(false);
     }
@@ -90,11 +155,11 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
     try {
       console.log('📝 Resume uploaded, updating onboarding status...');
       
-      const success = await resumeFileService.updateOnboardingStatus(user.id, {
+      const result = await resumeFileService.updateOnboardingStatus(user.id, {
         resume_uploaded: true
       });
 
-      if (success) {
+      if (result.success) {
         console.log('✅ Onboarding status updated successfully');
         setOnboardingStatus(prev => prev ? { ...prev, resume_uploaded: true } : null);
         setCurrentStep(1);
@@ -117,6 +182,24 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
   const handleNextToProfile = () => {
     console.log('🚀 Navigating to complete profile page');
     navigate('/complete-profile');
+  };
+
+  const handleSkipOnboarding = () => {
+    console.log('⏭️ Skipping onboarding - allowing access with local data');
+    
+    // Create a mock completed status for offline mode
+    setOnboardingStatus({
+      id: 'offline-skip',
+      user_id: user?.id || '',
+      resume_uploaded: true,
+      profile_completed: true,
+      onboarding_completed: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    });
+    
+    setOfflineMode(true);
+    toast.warning('Working in offline mode. Complete your profile later for the best experience.');
   };
 
   // Show loading during auth initialization
@@ -180,6 +263,13 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
               Let's get your profile set up so you can start finding amazing opportunities
             </p>
             
+            {offlineMode && (
+              <div className="flex items-center gap-2 text-amber-600 text-sm mb-4 p-2 bg-amber-50 rounded-md">
+                <AlertCircle className="h-4 w-4" />
+                <span>Working in offline mode - your data will sync when connection is restored</span>
+              </div>
+            )}
+            
             <div className="space-y-4">
               <Progress value={progressPercentage} className="h-2" />
               <div className="flex justify-between">
@@ -220,6 +310,15 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
                   showNextButton={true}
                   onNext={handleNextToProfile}
                 />
+                
+                <div className="mt-6 text-center">
+                  <button
+                    onClick={handleSkipOnboarding}
+                    className="text-gray-500 hover:text-gray-700 text-sm underline"
+                  >
+                    Skip for now and explore the app
+                  </button>
+                </div>
               </div>
             )}
 
@@ -229,13 +328,22 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
                 <p className="text-gray-600 mb-6">
                   Great! Your resume has been uploaded. Click the button below to complete your profile with all your information.
                 </p>
-                <div className="text-center">
+                <div className="text-center space-y-4">
                   <button
                     onClick={handleNextToProfile}
                     className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium"
                   >
                     Complete Profile
                   </button>
+                  
+                  <div>
+                    <button
+                      onClick={handleSkipOnboarding}
+                      className="text-gray-500 hover:text-gray-700 text-sm underline"
+                    >
+                      Skip for now and explore the app
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

@@ -143,4 +143,23 @@ export class SimpleProfileService {
       return { healthy: false, error: errorMessage };
     }
   }
+
+  // Check if local profile meets completion requirements
+  static validateLocalProfileCompletion(profileData: any): { isComplete: boolean; missingFields: string[] } {
+    const requiredFields = [
+      { field: 'personalInfo.name', value: profileData.personalInfo?.name?.trim() },
+      { field: 'personalInfo.email', value: profileData.personalInfo?.email?.trim() },
+      { field: 'personalInfo.phone', value: profileData.personalInfo?.phone?.trim() },
+      { field: 'skills', value: profileData.skills?.length > 0 },
+    ];
+
+    const missingFields = requiredFields
+      .filter(({ value }) => !value)
+      .map(({ field }) => field);
+
+    return {
+      isComplete: missingFields.length === 0,
+      missingFields
+    };
+  }
 }

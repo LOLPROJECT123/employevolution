@@ -30,6 +30,7 @@ const EnhancedCompleteProfile = () => {
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [databaseHealthy, setDatabaseHealthy] = useState(true);
+  const [canSkip, setCanSkip] = useState(false);
   const [profileData, setProfileData] = useState<any>({
     personalInfo: { 
       name: '', 
@@ -100,6 +101,12 @@ const EnhancedCompleteProfile = () => {
       checkDatabaseHealthAndLoadData();
     }
   }, [user]);
+
+  // Check if local profile meets minimum requirements
+  useEffect(() => {
+    const { isComplete } = SimpleProfileService.validateLocalProfileCompletion(profileData);
+    setCanSkip(isComplete);
+  }, [profileData]);
 
   // Enhanced database health check and data loading
   const checkDatabaseHealthAndLoadData = async () => {
@@ -327,6 +334,12 @@ const EnhancedCompleteProfile = () => {
     }
   };
 
+  const handleSkipForNow = () => {
+    console.log('⏭️ Skipping profile completion');
+    toast.success('You can complete your profile anytime from the Profile page');
+    navigate('/dashboard');
+  };
+
   const handleSaveAndContinue = async () => {
     if (!user) {
       console.error('❌ No user found');
@@ -336,14 +349,11 @@ const EnhancedCompleteProfile = () => {
     
     console.log('🚀 Starting enhanced profile completion process for user:', user.id);
     
-    // Basic validation - only check essential fields
-    if (!profileData.personalInfo?.name?.trim()) {
-      toast.error('Please enter your name');
-      return;
-    }
+    // Check local completion first
+    const { isComplete, missingFields } = SimpleProfileService.validateLocalProfileCompletion(profileData);
     
-    if (!profileData.personalInfo?.email?.includes('@')) {
-      toast.error('Please enter a valid email address');
+    if (!isComplete) {
+      toast.error(`Please complete these required fields: ${missingFields.join(', ')}`);
       return;
     }
     
@@ -355,8 +365,35 @@ const EnhancedCompleteProfile = () => {
       
       if (!saveResult.success) {
         console.error('❌ Profile save failed:', saveResult.error);
-        toast.error(`Failed to save profile: ${saveResult.error || 'Unknown error'}`);
-        return;
+        
+        // If save fails but local profile is complete, offer to continue anyway
+        if (canSkip) {
+          toast.error(
+            'Failed to sync with server, but your profile is saved locally. Continue anyway?',
+            {
+              action: {
+                label: 'Continue',
+                onClick: () => {
+                  console.log('✅ Continuing with local profile completion');
+                  // Clear localStorage backup since we're completing
+                  const localStorageKey = `profile-draft-${user.id}`;
+                  const timestampKey = `profile-draft-timestamp-${user.id}`;
+                  localStorage.removeItem(localStorageKey);
+                  localStorage.removeItem(timestampKey);
+                  
+                  toast.success('🎉 Profile completed! Your data will sync when connection is restored.');
+                  navigate('/dashboard');
+                },
+              },
+            }
+          );
+          setLoading(false);
+          return;
+        } else {
+          toast.error(`Failed to save profile: ${saveResult.error || 'Unknown error'}`);
+          setLoading(false);
+          return;
+        }
       }
 
       console.log('✅ Profile data saved successfully');
@@ -371,6 +408,7 @@ const EnhancedCompleteProfile = () => {
       if (!onboardingResult) {
         console.error('❌ Failed to update onboarding status');
         toast.error('Profile saved but failed to complete onboarding. Please contact support.');
+        setLoading(false);
         return;
       }
 
@@ -548,15 +586,27 @@ const EnhancedCompleteProfile = () => {
               onChange={(data) => updateSection('languages', data)}
             />
 
-            <div className="flex justify-end pt-6">
-              <Button 
-                onClick={handleSaveAndContinue}
-                disabled={loading || saveStatus === 'saving'}
-                size="lg"
-                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-3 shadow-lg hover-scale"
-              >
-                {loading ? 'Completing Profile...' : '🚀 Complete Profile'}
-              </Button>
+            <div className="flex justify-between items-center pt-6">
+              {canSkip && (
+                <Button 
+                  onClick={handleSkipForNow}
+                  variant="outline"
+                  className="text-gray-600 hover:text-gray-800"
+                >
+                  Skip for Now
+                </Button>
+              )}
+              
+              <div className="flex gap-3 ml-auto">
+                <Button 
+                  onClick={handleSaveAndContinue}
+                  disabled={loading || saveStatus === 'saving'}
+                  size="lg"
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-3 shadow-lg hover-scale"
+                >
+                  {loading ? 'Completing Profile...' : '🚀 Complete Profile'}
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
