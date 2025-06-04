@@ -215,7 +215,7 @@ export class SimpleProfileService {
         return { success: false, error: error.message };
       }
       
-      const result = data?.[0];
+      const result = data && data.length > 0 ? data[0] : null;
       if (result) {
         console.log('✅ Data consistency check completed:', result);
         return { 

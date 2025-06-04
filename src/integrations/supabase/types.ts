@@ -2160,9 +2160,63 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_and_fix_onboarding_consistency: {
+        Args: { p_user_id: string }
+        Returns: {
+          status_fixed: boolean
+          resume_found: boolean
+          profile_found: boolean
+          onboarding_status_before: Json
+          onboarding_status_after: Json
+        }[]
+      }
       cleanup_rate_limits: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      upsert_onboarding_status: {
+        Args: {
+          p_user_id: string
+          p_resume_uploaded?: boolean
+          p_profile_completed?: boolean
+          p_onboarding_completed?: boolean
+        }
+        Returns: {
+          id: string
+          user_id: string
+          resume_uploaded: boolean
+          profile_completed: boolean
+          onboarding_completed: boolean
+          created_at: string
+          updated_at: string
+        }[]
+      }
+      upsert_user_profile: {
+        Args: {
+          p_user_id: string
+          p_name?: string
+          p_phone?: string
+          p_location?: string
+          p_linkedin_url?: string
+          p_github_url?: string
+          p_portfolio_url?: string
+          p_other_url?: string
+          p_profile_completion?: number
+        }
+        Returns: {
+          id: string
+          user_id: string
+          name: string
+          phone: string
+          location: string
+          linkedin_url: string
+          github_url: string
+          portfolio_url: string
+          other_url: string
+          profile_completion: number
+          created_at: string
+          updated_at: string
+        }[]
       }
     }
     Enums: {
