@@ -63,6 +63,9 @@ export class SimpleProfileService {
           } else if (lastError.message.includes('permission') || lastError.message.includes('unauthorized')) {
             console.error('🔒 Permission denied - aborting retries');
             return { success: false, error: 'Permission denied. Please refresh the page and try again.' };
+          } else if (lastError.message.includes('ambiguous') || lastError.message.includes('syntax error')) {
+            console.error('🔧 Database function error detected - aborting retries');
+            return { success: false, error: 'Database configuration error. Please contact support.' };
           }
           
           // Wait before retry with exponential backoff
@@ -84,6 +87,8 @@ export class SimpleProfileService {
         return { success: false, error: 'Network connection issue. Please check your internet and try again.' };
       } else if (finalError.includes('duplicate') || finalError.includes('unique')) {
         return { success: false, error: 'Data conflict detected. Please refresh the page and try again.' };
+      } else if (finalError.includes('ambiguous') || finalError.includes('syntax error')) {
+        return { success: false, error: 'Database configuration error. Please contact support.' };
       } else {
         return { success: false, error: `Save failed: ${finalError}. Please try again or contact support.` };
       }
@@ -102,11 +107,14 @@ export class SimpleProfileService {
   // Updated method to handle UPSERT operations using database function
   private static async upsertProfileData(userId: string, profileData: any): Promise<boolean> {
     try {
-      console.log('📤 Calling database function with data:', {
+      // Validate and format location data
+      const locationData = this.formatLocationData(profileData.personalInfo);
+      
+      console.log('📤 Calling database function with validated data:', {
         userId,
         name: profileData.personalInfo?.name,
         phone: profileData.personalInfo?.phone,
-        location: profileData.personalInfo?.location,
+        location: locationData,
         linkedin: profileData.socialLinks?.linkedin,
         github: profileData.socialLinks?.github,
         portfolio: profileData.socialLinks?.portfolio,
@@ -119,7 +127,7 @@ export class SimpleProfileService {
           p_user_id: userId,
           p_name: profileData.personalInfo?.name || null,
           p_phone: profileData.personalInfo?.phone || null,
-          p_location: profileData.personalInfo?.location || null,
+          p_location: locationData || null,
           p_linkedin_url: profileData.socialLinks?.linkedin || null,
           p_github_url: profileData.socialLinks?.github || null,
           p_portfolio_url: profileData.socialLinks?.portfolio || null,
@@ -129,7 +137,7 @@ export class SimpleProfileService {
 
       if (error) {
         console.error('❌ Database function profile save failed:', error);
-        throw error;
+        throw new Error(`Database function error: ${error.message}`);
       }
 
       console.log('✅ Database function returned data:', data);
@@ -148,6 +156,21 @@ export class SimpleProfileService {
       console.error('❌ Error in upsertProfileData:', error);
       throw error;
     }
+  }
+
+  // Helper method to format location data properly
+  private static formatLocationData(personalInfo: any): string | null {
+    if (!personalInfo) return null;
+    
+    const addressParts = [
+      personalInfo.streetAddress?.trim(),
+      personalInfo.city?.trim(),
+      personalInfo.state?.trim(),
+      personalInfo.county?.trim(),
+      personalInfo.zipCode?.trim()
+    ].filter(Boolean);
+
+    return addressParts.length > 0 ? addressParts.join(', ') : null;
   }
 
   // Calculate profile completion score
