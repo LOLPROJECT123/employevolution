@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -5,9 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { resumeFileService } from '@/services/resumeFileService';
-import { profileService } from '@/services/profileService';
+import { SimpleProfileService } from '@/services/simpleProfileService';
 import { ParsedResume } from '@/types/resume';
 import { toast } from 'sonner';
+import { useSimpleAutoSave } from '@/hooks/useSimpleAutoSave';
+import { AutoSaveIndicator } from '@/components/ui/auto-save-indicator';
 import PersonalInfoSection from '@/components/profile/PersonalInfoSection';
 import SocialLinksSection from '@/components/profile/SocialLinksSection';
 import EducationSection from '@/components/profile/EducationSection';
@@ -39,6 +42,26 @@ const CompleteProfile = () => {
     activities: [],
     skills: [],
     languages: []
+  });
+
+  // Enhanced auto-save with the new robust service
+  const autoSave = useSimpleAutoSave(profileData, {
+    saveFunction: async (data) => {
+      if (!user?.id) {
+        return { success: false, error: 'User not authenticated' };
+      }
+      
+      console.log('🔄 Auto-saving profile data...');
+      return await SimpleProfileService.saveProfileData(user.id, data);
+    },
+    interval: 3000, // Save every 3 seconds
+    localStorageKey: 'profile-draft-data',
+    onSaveSuccess: () => {
+      console.log('✅ Auto-save successful');
+    },
+    onSaveError: (error) => {
+      console.warn('❌ Auto-save failed:', error);
+    }
   });
 
   useEffect(() => {
@@ -80,43 +103,54 @@ const CompleteProfile = () => {
 
       console.log('📝 Initial profile data set with email:', userEmail);
 
-      // Load resume data if available
-      const resumeFile = await resumeFileService.getCurrentResumeFile(user.id);
-      if (resumeFile?.parsed_data) {
-        console.log('📄 Loading resume data:', resumeFile.parsed_data);
+      // Load enhanced profile data using new service
+      const profileResult = await SimpleProfileService.loadProfileData(user.id);
+      if (profileResult.success && profileResult.data) {
+        console.log('📄 Loading enhanced profile data:', profileResult.data);
         
-        // Merge resume data while preserving the email and name from auth
+        // Merge enhanced profile data while preserving the email and name from auth
         setProfileData(prev => ({
+          ...profileResult.data,
           personalInfo: {
-            // Keep the email and name from auth, but allow resume data to fill other fields
-            name: prev.personalInfo.name || resumeFile.parsed_data.personalInfo?.name || userName,
-            email: prev.personalInfo.email || userEmail, // Always prioritize auth email
-            phone: resumeFile.parsed_data.personalInfo?.phone || '',
-            streetAddress: '',
-            city: '',
-            state: '',
-            county: '',
-            zipCode: '',
-            // Extract location components if available
-            ...(resumeFile.parsed_data.personalInfo?.location && {
-              // Try to parse location into components (this is a simple approach)
-              streetAddress: resumeFile.parsed_data.personalInfo.location.includes(',') 
-                ? resumeFile.parsed_data.personalInfo.location.split(',')[0]?.trim() || ''
-                : ''
-            })
-          },
-          socialLinks: resumeFile.parsed_data.socialLinks || prev.socialLinks,
-          education: resumeFile.parsed_data.education || [],
-          workExperiences: resumeFile.parsed_data.workExperiences || [],
-          projects: resumeFile.parsed_data.projects || [],
-          activities: resumeFile.parsed_data.activities || [],
-          skills: resumeFile.parsed_data.skills || [],
-          languages: resumeFile.parsed_data.languages || []
+            ...profileResult.data.personalInfo,
+            // Always prioritize auth email and name if available
+            email: userEmail || profileResult.data.personalInfo?.email || '',
+            name: userName || profileResult.data.personalInfo?.name || ''
+          }
         }));
         
-        console.log('✅ Resume data merged, email should still be:', userEmail);
+        console.log('✅ Enhanced profile data merged, email should still be:', userEmail);
       } else {
-        console.log('📄 No resume data found, keeping auth-based profile data');
+        // Fallback to resume data if enhanced profile loading fails
+        const resumeFile = await resumeFileService.getCurrentResumeFile(user.id);
+        if (resumeFile?.parsed_data) {
+          console.log('📄 Loading resume data as fallback:', resumeFile.parsed_data);
+          
+          setProfileData(prev => ({
+            personalInfo: {
+              name: prev.personalInfo.name || resumeFile.parsed_data.personalInfo?.name || userName,
+              email: prev.personalInfo.email || userEmail,
+              phone: resumeFile.parsed_data.personalInfo?.phone || '',
+              streetAddress: '',
+              city: '',
+              state: '',
+              county: '',
+              zipCode: '',
+              ...(resumeFile.parsed_data.personalInfo?.location && {
+                streetAddress: resumeFile.parsed_data.personalInfo.location.includes(',') 
+                  ? resumeFile.parsed_data.personalInfo.location.split(',')[0]?.trim() || ''
+                  : ''
+              })
+            },
+            socialLinks: resumeFile.parsed_data.socialLinks || prev.socialLinks,
+            education: resumeFile.parsed_data.education || [],
+            workExperiences: resumeFile.parsed_data.workExperiences || [],
+            projects: resumeFile.parsed_data.projects || [],
+            activities: resumeFile.parsed_data.activities || [],
+            skills: resumeFile.parsed_data.skills || [],
+            languages: resumeFile.parsed_data.languages || []
+          }));
+        }
       }
     } catch (error) {
       console.error('❌ Error loading user data:', error);
@@ -162,27 +196,14 @@ const CompleteProfile = () => {
     
     setLoading(true);
     try {
-      console.log('🔄 Starting profile completion process...');
+      console.log('🔄 Starting enhanced profile completion process...');
       
-      // Combine address fields into location for database storage
-      const combinedLocation = [
-        profileData.personalInfo.streetAddress,
-        profileData.personalInfo.city,
-        profileData.personalInfo.state,
-        profileData.personalInfo.county,
-        profileData.personalInfo.zipCode
-      ].filter(Boolean).join(', ');
-
-      const profileDataForValidation = {
-        ...profileData,
-        personalInfo: {
-          ...profileData.personalInfo,
-          location: combinedLocation
-        }
-      };
+      // Force save current data immediately using auto-save
+      console.log('💾 Force saving current profile data...');
+      await autoSave.forceSave();
       
-      // Validate profile completion
-      const validation = await profileService.validateProfileCompletion(profileDataForValidation);
+      // Validate profile completion using the new service
+      const validation = SimpleProfileService.validateLocalProfileCompletion(profileData);
       
       if (!validation.isComplete) {
         toast.error(`Please complete the following fields: ${validation.missingFields.join(', ')}`);
@@ -190,33 +211,28 @@ const CompleteProfile = () => {
         return;
       }
 
-      console.log('✅ Profile validation passed');
+      console.log('✅ Enhanced profile validation passed');
       
-      // Save profile data to database
-      const success = await profileService.saveResumeData(user.id, profileDataForValidation as ParsedResume);
-      
-      if (!success) {
-        toast.error('Failed to save profile. Please try again.');
-        setLoading(false);
-        return;
-      }
-
-      console.log('✅ Profile data saved successfully');
-      
-      // Update onboarding status to mark completion
-      const onboardingUpdated = await resumeFileService.updateOnboardingStatus(user.id, {
+      // Update onboarding status using the enhanced service
+      const onboardingResult = await resumeFileService.updateOnboardingStatus(user.id, {
         profile_completed: true,
         onboarding_completed: true
       });
 
-      if (!onboardingUpdated) {
-        console.error('Failed to update onboarding status');
+      if (!onboardingResult.success) {
+        console.error('❌ Failed to update onboarding status:', onboardingResult.error);
         toast.error('Failed to complete onboarding. Please try again.');
         setLoading(false);
         return;
       }
 
-      console.log('✅ Onboarding status updated successfully');
+      console.log('✅ Enhanced onboarding status updated successfully');
+      
+      // Check and fix any data consistency issues
+      const consistencyResult = await SimpleProfileService.checkAndFixConsistency(user.id);
+      if (consistencyResult.success && consistencyResult.statusFixed) {
+        console.log('🔧 Data consistency issues were detected and fixed');
+      }
       
       toast.success('Profile completed successfully! Welcome to Streamline!');
       
@@ -226,7 +242,7 @@ const CompleteProfile = () => {
       }, 1000);
       
     } catch (error) {
-      console.error('Error completing profile:', error);
+      console.error('❌ Error completing enhanced profile:', error);
       toast.error('Error completing profile. Please try again.');
     } finally {
       setLoading(false);
@@ -306,6 +322,13 @@ const CompleteProfile = () => {
             </div>
           </CardContent>
         </Card>
+        
+        {/* Auto-save indicator */}
+        <AutoSaveIndicator 
+          status={autoSave.saveStatus}
+          lastSaved={autoSave.lastSaved}
+          error={autoSave.error}
+        />
       </div>
     </div>
   );
