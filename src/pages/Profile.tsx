@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { useTheme } from 'next-themes';
 import Navbar from '@/components/Navbar';
 import MobileHeader from '@/components/MobileHeader';
 import { useMobile } from '@/hooks/use-mobile';
@@ -16,6 +17,8 @@ import SkillsSection from '@/components/profile/SkillsSection';
 import ProjectsSection from '@/components/profile/ProjectsSection';
 import MultiLanguageSelector from '@/components/profile/MultiLanguageSelector';
 import ResumeVersionManager from '@/components/resume/ResumeVersionManager';
+import EqualEmploymentSection from '@/components/profile/EqualEmploymentSection';
+import SettingsSection from '@/components/profile/SettingsSection';
 
 interface Language {
   language: string;
@@ -40,6 +43,7 @@ interface UserProfile {
 const Profile = () => {
   const { user } = useAuth();
   const isMobile = useMobile();
+  const { theme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('contact');
   const [showToRecruiters, setShowToRecruiters] = useState(true);
@@ -153,16 +157,16 @@ const Profile = () => {
 
     setLoading(true);
     try {
-      // Convert languages array to JSON format for database storage
-      const updateData = {
+      // Prepare update data with proper JSON serialization for languages
+      const updateData: any = {
         user_id: user.id,
         ...profile,
         ...updates,
       };
 
-      // Convert languages to JSON if present
+      // Convert languages to proper JSON format for database storage
       if (updateData.languages) {
-        updateData.languages = updateData.languages as any; // Cast to Json type
+        updateData.languages = JSON.parse(JSON.stringify(updateData.languages));
       }
 
       const { error } = await supabase
@@ -198,17 +202,17 @@ const Profile = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <div className="text-white text-center">
+      <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-950' : 'bg-gray-50'} flex items-center justify-center`}>
+        <div className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'} text-center`}>
           <h2 className="text-2xl font-bold mb-4">Please log in</h2>
-          <p className="text-gray-400">You need to be logged in to view your profile.</p>
+          <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>You need to be logged in to view your profile.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-950' : 'bg-gray-50'}`}>
       {!isMobile && <Navbar />}
       {isMobile && <MobileHeader />}
       
@@ -229,7 +233,7 @@ const Profile = () => {
 
         {/* Tab Navigation */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="bg-gray-900 border-gray-800 w-full justify-start p-1">
+          <TabsList className={`${theme === 'dark' ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'} w-full justify-start p-1 border`}>
             <TabsTrigger value="contact" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               Contact
             </TabsTrigger>
@@ -244,6 +248,12 @@ const Profile = () => {
             </TabsTrigger>
             <TabsTrigger value="preferences" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               Job Preferences
+            </TabsTrigger>
+            <TabsTrigger value="employment" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              Equal Employment
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              Settings
             </TabsTrigger>
           </TabsList>
 
@@ -342,10 +352,18 @@ const Profile = () => {
           </TabsContent>
 
           <TabsContent value="preferences" className="space-y-6">
-            <div className="bg-gray-900 border border-gray-800 rounded-lg p-8 text-center text-white">
+            <div className={`${theme === 'dark' ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-200 text-gray-900'} border rounded-lg p-8 text-center`}>
               <h3 className="text-xl font-semibold mb-4">Job Preferences</h3>
-              <p className="text-gray-400">Job preferences settings coming soon...</p>
+              <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Job preferences settings coming soon...</p>
             </div>
+          </TabsContent>
+
+          <TabsContent value="employment" className="space-y-6">
+            <EqualEmploymentSection />
+          </TabsContent>
+
+          <TabsContent value="settings" className="space-y-6">
+            <SettingsSection />
           </TabsContent>
         </Tabs>
       </div>

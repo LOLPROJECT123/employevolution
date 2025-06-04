@@ -2,7 +2,8 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { GraduationCap, Plus, Edit, Calendar } from 'lucide-react';
+import { useTheme } from 'next-themes';
+import { GraduationCap, Plus, Edit, Calendar, Building } from 'lucide-react';
 
 interface Education {
   school: string;
@@ -20,8 +21,10 @@ interface ModernEducationSectionProps {
 }
 
 const ModernEducationSection = ({ data, onAdd, onEdit }: ModernEducationSectionProps) => {
+  const { theme } = useTheme();
+
   return (
-    <Card className="bg-gray-900 border-gray-800 text-white">
+    <Card className={`${theme === 'dark' ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-200 text-gray-900'}`}>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2">
           <GraduationCap className="h-5 w-5 text-blue-400" />
@@ -34,8 +37,8 @@ const ModernEducationSection = ({ data, onAdd, onEdit }: ModernEducationSectionP
       </CardHeader>
       <CardContent className="space-y-4">
         {data.length === 0 ? (
-          <div className="text-center py-8 text-gray-400">
-            <GraduationCap className="h-12 w-12 mx-auto mb-4 text-gray-600" />
+          <div className={`text-center py-8 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+            <Building className={`h-12 w-12 mx-auto mb-4 ${theme === 'dark' ? 'text-gray-600' : 'text-gray-400'}`} />
             <p>No education added yet</p>
             <Button onClick={onAdd} variant="outline" className="mt-4">
               Add Your Education
@@ -43,16 +46,16 @@ const ModernEducationSection = ({ data, onAdd, onEdit }: ModernEducationSectionP
           </div>
         ) : (
           data.map((education, index) => (
-            <Card key={index} className="bg-gray-800 border-gray-700">
+            <Card key={index} className={`${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
               <CardContent className="p-6">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
                       <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
-                        <GraduationCap className="h-6 w-6 text-white" />
+                        <Building className="h-6 w-6 text-white" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-lg text-white">{education.school}</h3>
+                        <h3 className={`font-semibold text-lg ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{education.school}</h3>
                         <p className="text-blue-400">
                           {education.degree}
                           {education.field_of_study && ` in ${education.field_of_study}`}
@@ -60,7 +63,7 @@ const ModernEducationSection = ({ data, onAdd, onEdit }: ModernEducationSectionP
                       </div>
                     </div>
                     
-                    <div className="flex items-center space-x-4 text-sm text-gray-400 mb-2">
+                    <div className={`flex items-center space-x-4 text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} mb-2`}>
                       {(education.start_date || education.end_date) && (
                         <div className="flex items-center space-x-1">
                           <Calendar className="h-4 w-4" />
@@ -79,7 +82,7 @@ const ModernEducationSection = ({ data, onAdd, onEdit }: ModernEducationSectionP
                     variant="ghost"
                     size="sm"
                     onClick={() => onEdit(index)}
-                    className="text-gray-400 hover:text-white"
+                    className={`${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
