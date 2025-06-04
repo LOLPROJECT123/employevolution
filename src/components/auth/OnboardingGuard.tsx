@@ -85,8 +85,16 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           });
+          toast.warning('Working in offline mode. Your data will sync when connection is restored.');
           return;
         }
+      }
+      
+      // Check and fix any data consistency issues first
+      const consistencyCheck = await SimpleProfileService.checkAndFixConsistency(user.id);
+      if (consistencyCheck.success && consistencyCheck.statusFixed) {
+        console.log('🔧 Fixed data consistency issues');
+        toast.success('Your profile status has been updated!');
       }
       
       // Get both onboarding status and check for existing resume
@@ -98,7 +106,7 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
       console.log('📊 Onboarding status:', status);
       console.log('📄 Resume file exists:', !!resumeFile);
       
-      // Fix inconsistent state: resume exists but status says it doesn't
+      // Additional consistency check: resume exists but status says it doesn't
       if (resumeFile && status && !status.resume_uploaded) {
         console.log('🔧 Fixing inconsistent state - resume exists but status is false');
         const updateSuccess = await resumeFileService.updateOnboardingStatus(user.id, {
@@ -109,6 +117,8 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
           // Update the status object
           status.resume_uploaded = true;
           toast.success("Your resume status has been restored!");
+        } else {
+          console.warn('⚠️ Failed to fix resume status:', updateSuccess.error);
         }
       }
       
@@ -170,8 +180,17 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
           loadOnboardingStatus();
         }, 500);
       } else {
-        console.error('❌ Failed to update onboarding status');
-        toast.error("Resume uploaded but failed to update status. Please refresh the page.");
+        console.error('❌ Failed to update onboarding status:', result.error);
+        
+        // Still allow progression if resume was actually saved
+        if (result.error?.includes('duplicate') || result.error?.includes('unique')) {
+          console.log('🔄 Resume saved despite status error, continuing...');
+          setOnboardingStatus(prev => prev ? { ...prev, resume_uploaded: true } : null);
+          setCurrentStep(1);
+          toast.success("Resume uploaded successfully!");
+        } else {
+          toast.error("Resume uploaded but failed to update status. Please refresh the page.");
+        }
       }
     } catch (error) {
       console.error('❌ Error updating onboarding status:', error);
