@@ -131,13 +131,10 @@ export class SimpleProfileService {
     try {
       console.log('🏥 Checking database health...');
       // Simple health check by attempting to load user profile
-      const { data, error } = await profileService.getUserProfile('health-check');
+      const profileData = await profileService.getUserProfile('health-check');
       
-      if (error && !error.message?.includes('No rows')) {
-        console.warn('⚠️ Database health check failed:', error);
-        return { healthy: false, error: error.message };
-      }
-      
+      // If we get null, that's normal (no profile exists for health-check user)
+      // If we get an error thrown, that indicates a database issue
       console.log('✅ Database health check passed');
       return { healthy: true };
     } catch (error) {
