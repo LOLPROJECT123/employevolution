@@ -20,7 +20,7 @@ import ProjectsSection from '@/components/profile/ProjectsSection';
 import ActivitiesSection from '@/components/profile/ActivitiesSection';
 import SkillsSection from '@/components/profile/SkillsSection';
 import LanguagesSection from '@/components/profile/LanguagesSection';
-import { Save } from 'lucide-react';
+import { Save, AlertCircle, CheckCircle } from 'lucide-react';
 
 const EnhancedCompleteProfile = () => {
   const { user } = useAuth();
@@ -29,6 +29,7 @@ const EnhancedCompleteProfile = () => {
   const [manualSaving, setManualSaving] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [databaseHealthy, setDatabaseHealthy] = useState(true);
   const [profileData, setProfileData] = useState<any>({
     personalInfo: { 
       name: '', 
@@ -49,7 +50,7 @@ const EnhancedCompleteProfile = () => {
     languages: []
   });
 
-  // Simplified validation rules that are less strict
+  // Enhanced validation rules
   const validationRules = [
     {
       validate: (data: any) => data.personalInfo?.name?.trim().length > 0,
@@ -70,10 +71,10 @@ const EnhancedCompleteProfile = () => {
 
   const { validate, isValidating } = useEnhancedValidation(validationRules, 1000);
 
-  // Simplified auto-save functionality
+  // Enhanced auto-save functionality with better error handling
   const { saveStatus, lastSaved, error: saveError } = useSimpleAutoSave(profileData, {
     saveFunction: async (data) => {
-      if (!user) return false;
+      if (!user) return { success: false, error: 'User not authenticated' };
       return await SimpleProfileService.saveProfileData(user.id, data);
     },
     interval: 3000,
@@ -83,15 +84,48 @@ const EnhancedCompleteProfile = () => {
     },
     onSaveError: (error) => {
       console.error('❌ Auto-save failed:', error);
-      toast.error('Auto-save failed - your changes are saved locally but not synced to the server');
+      // Show more specific error message based on error type
+      if (error.includes('network') || error.includes('timeout')) {
+        toast.error('Connection issue - your changes are saved locally and will sync when connection is restored');
+      } else if (error.includes('permission')) {
+        toast.error('Permission denied - please refresh the page and sign in again');
+      } else {
+        toast.error(`Auto-save failed: ${error}`);
+      }
     }
   });
 
   useEffect(() => {
     if (user) {
-      loadUserData();
+      checkDatabaseHealthAndLoadData();
     }
   }, [user]);
+
+  // Enhanced database health check and data loading
+  const checkDatabaseHealthAndLoadData = async () => {
+    if (!user) return;
+    
+    setInitialLoading(true);
+    setError(null);
+    
+    try {
+      console.log('🏥 Checking database health...');
+      const healthCheck = await SimpleProfileService.checkDatabaseHealth();
+      setDatabaseHealthy(healthCheck.healthy);
+      
+      if (!healthCheck.healthy) {
+        console.warn('⚠️ Database health check failed:', healthCheck.error);
+        toast.warning('Database connection issues detected. Your changes will be saved locally.');
+      }
+      
+      await loadUserData();
+    } catch (error) {
+      console.error('❌ Error during initialization:', error);
+      setError('Failed to initialize profile page. Please refresh and try again.');
+    } finally {
+      setInitialLoading(false);
+    }
+  };
 
   // Helper function to check if data has meaningful content
   const hasContent = (data: any) => {
@@ -155,11 +189,8 @@ const EnhancedCompleteProfile = () => {
   const loadUserData = async () => {
     if (!user) return;
     
-    setInitialLoading(true);
-    setError(null);
-    
     try {
-      console.log('📋 Loading user data for user:', user.id);
+      console.log('📋 Enhanced loading user data for user:', user.id);
       
       // Get email and name directly from authenticated user
       const userEmail = user.email || '';
@@ -179,9 +210,12 @@ const EnhancedCompleteProfile = () => {
       const localTimestamp = localStorage.getItem(localStorageTimestampKey);
       
       let localData = null;
+      let localTimestampDate: Date | null = null;
+      
       if (localBackup) {
         try {
           localData = JSON.parse(localBackup);
+          localTimestampDate = localTimestamp ? new Date(localTimestamp) : null;
           console.log('📱 Found localStorage backup from:', localTimestamp || 'unknown time');
           console.log('📱 localStorage has content:', hasContent(localData));
         } catch (parseError) {
@@ -189,24 +223,41 @@ const EnhancedCompleteProfile = () => {
         }
       }
 
-      // Load existing profile data from database
+      // Load existing profile data from database only if database is healthy
       let dbData = null;
-      try {
-        dbData = await SimpleProfileService.loadProfileData(user.id);
-        console.log('📋 Database data loaded, has content:', hasContent(dbData));
-      } catch (error) {
-        console.warn('Failed to load database profile:', error);
+      let dbTimestampDate: Date | null = null;
+      
+      if (databaseHealthy) {
+        try {
+          const dbResult = await SimpleProfileService.loadProfileData(user.id);
+          if (dbResult.success) {
+            dbData = dbResult.data;
+            // Estimate database timestamp (not perfect but reasonable approximation)
+            dbTimestampDate = new Date(Date.now() - 60000); // Assume db data is at least 1 minute old
+            console.log('📋 Database data loaded, has content:', hasContent(dbData));
+          } else {
+            console.warn('Failed to load database profile:', dbResult.error);
+            toast.warning('Could not load your saved profile from server. Using local backup.');
+          }
+        } catch (error) {
+          console.warn('Failed to load database profile:', error);
+        }
       }
 
-      // Smart merging: prioritize localStorage if it has more content or is more recent
+      // Enhanced merging: prioritize localStorage if it's newer or has more content
       let finalData;
       
-      if (localData && hasContent(localData)) {
-        console.log('🔄 Using localStorage data as primary source (has content)');
+      const localIsNewer = localTimestampDate && dbTimestampDate && localTimestampDate > dbTimestampDate;
+      const localHasMoreContent = localData && hasContent(localData);
+      const dbHasContent = dbData && hasContent(dbData);
+      
+      if (localHasMoreContent && (!dbHasContent || localIsNewer)) {
+        console.log('🔄 Using localStorage data as primary source (newer or more complete)');
         finalData = mergeProfileData(localData, dbData, authData);
-      } else if (dbData && hasContent(dbData)) {
+        toast.success('Restored your recent changes from local backup');
+      } else if (dbHasContent) {
         console.log('🔄 Using database data as primary source');
-        finalData = mergeProfileData(null, dbData, authData);
+        finalData = mergeProfileData(localData, dbData, authData);
       } else {
         console.log('🔄 Using auth data only (no existing content)');
         finalData = mergeProfileData(null, null, authData);
@@ -222,8 +273,7 @@ const EnhancedCompleteProfile = () => {
     } catch (error) {
       console.error('❌ Error loading user data:', error);
       setError('Failed to load your profile data. Please try again.');
-    } finally {
-      setInitialLoading(false);
+      toast.error('Failed to load profile data. Please refresh the page.');
     }
   };
 
@@ -263,11 +313,11 @@ const EnhancedCompleteProfile = () => {
     
     setManualSaving(true);
     try {
-      const success = await SimpleProfileService.saveProfileData(user.id, profileData);
-      if (success) {
+      const result = await SimpleProfileService.saveProfileData(user.id, profileData);
+      if (result.success) {
         toast.success('Profile saved successfully!');
       } else {
-        toast.error('Failed to save profile. Please try again.');
+        toast.error(`Failed to save profile: ${result.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Manual save failed:', error);
@@ -284,7 +334,7 @@ const EnhancedCompleteProfile = () => {
       return;
     }
     
-    console.log('🚀 Starting profile completion process for user:', user.id);
+    console.log('🚀 Starting enhanced profile completion process for user:', user.id);
     
     // Basic validation - only check essential fields
     if (!profileData.personalInfo?.name?.trim()) {
@@ -301,24 +351,24 @@ const EnhancedCompleteProfile = () => {
     try {
       console.log('💾 Attempting to save profile data...');
       
-      const success = await SimpleProfileService.saveProfileData(user.id, profileData);
+      const saveResult = await SimpleProfileService.saveProfileData(user.id, profileData);
       
-      if (!success) {
-        console.error('❌ Profile save failed');
-        toast.error('Failed to save profile data. Please try again or contact support.');
+      if (!saveResult.success) {
+        console.error('❌ Profile save failed:', saveResult.error);
+        toast.error(`Failed to save profile: ${saveResult.error || 'Unknown error'}`);
         return;
       }
 
       console.log('✅ Profile data saved successfully');
 
-      // Update onboarding status
+      // Update onboarding status with enhanced error handling
       console.log('🔄 Updating onboarding status...');
-      const onboardingUpdated = await profileService.updateOnboardingStatus(user.id, {
+      const onboardingResult = await profileService.updateOnboardingStatus(user.id, {
         profile_completed: true,
         onboarding_completed: true
       });
 
-      if (!onboardingUpdated) {
+      if (!onboardingResult) {
         console.error('❌ Failed to update onboarding status');
         toast.error('Profile saved but failed to complete onboarding. Please contact support.');
         return;
@@ -390,7 +440,7 @@ const EnhancedCompleteProfile = () => {
                   'Refresh the page to try again',
                   'Clear your browser cache'
                 ]}
-                onRetry={loadUserData}
+                onRetry={checkDatabaseHealthAndLoadData}
                 contextHelp="We're having trouble loading your profile data. This might be a temporary issue."
               />
             </CardContent>
@@ -412,6 +462,13 @@ const EnhancedCompleteProfile = () => {
               Build a profile that attracts opportunities • Auto-saved as you type • Data preserved when switching tabs
             </p>
             
+            {!databaseHealthy && (
+              <div className="flex items-center gap-2 text-amber-600 text-sm mb-4 p-2 bg-amber-50 rounded-md">
+                <AlertCircle className="h-4 w-4" />
+                <span>Connection issues detected - changes saved locally</span>
+              </div>
+            )}
+            
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <Progress value={completionPercentage} className="h-3 flex-1" />
@@ -424,17 +481,28 @@ const EnhancedCompleteProfile = () => {
               )}
             </div>
 
-            {/* Manual Save Button */}
+            {/* Enhanced Manual Save Button with status indicators */}
             <div className="flex justify-center mt-4">
               <Button
                 onClick={handleManualSave}
                 disabled={manualSaving || saveStatus === 'saving'}
                 variant="outline"
                 size="sm"
-                className="gap-2"
+                className={`gap-2 ${
+                  saveStatus === 'saved' ? 'border-green-500 text-green-600' : 
+                  saveStatus === 'error' ? 'border-red-500 text-red-600' : ''
+                }`}
               >
-                <Save className="h-4 w-4" />
-                {manualSaving ? 'Saving...' : 'Save Draft'}
+                {saveStatus === 'saved' ? (
+                  <CheckCircle className="h-4 w-4" />
+                ) : saveStatus === 'error' ? (
+                  <AlertCircle className="h-4 w-4" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                {manualSaving ? 'Saving...' : 
+                 saveStatus === 'saved' ? 'Saved!' :
+                 saveStatus === 'error' ? 'Failed' : 'Save Draft'}
               </Button>
             </div>
           </CardHeader>
@@ -494,7 +562,7 @@ const EnhancedCompleteProfile = () => {
         </Card>
       </div>
 
-      {/* Auto-save indicator */}
+      {/* Enhanced Auto-save indicator with better error display */}
       <AutoSaveIndicator 
         status={saveStatus} 
         lastSaved={lastSaved || undefined}

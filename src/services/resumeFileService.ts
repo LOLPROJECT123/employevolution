@@ -41,13 +41,21 @@ class ResumeFileService {
     });
   }
 
-  async saveResumeFile(userId: string, file: File, parsedData: ParsedResume): Promise<boolean> {
+  async saveResumeFile(userId: string, file: File, parsedData: ParsedResume): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log('💾 Saving resume file for user:', userId, 'File:', file.name);
+      console.log('💾 Enhanced resume file save for user:', userId, 'File:', file.name);
+      
+      if (!userId) {
+        return { success: false, error: 'User ID is required' };
+      }
+      
+      if (!file) {
+        return { success: false, error: 'File is required' };
+      }
       
       const fileContent = await this.fileToBase64(file);
       
-      // First, mark all existing files as not current
+      // First, mark all existing files as not current with proper error handling
       const { error: updateError } = await supabase
         .from('user_resume_files')
         .update({ is_current: false })
@@ -55,10 +63,10 @@ class ResumeFileService {
 
       if (updateError) {
         console.error('❌ Error updating existing files:', updateError);
-        throw new Error(`Failed to update existing files: ${updateError.message}`);
+        return { success: false, error: `Failed to update existing files: ${updateError.message}` };
       }
 
-      // Insert the new resume file
+      // Insert the new resume file with enhanced error handling
       const { error: insertError } = await supabase
         .from('user_resume_files')
         .insert({
@@ -73,14 +81,15 @@ class ResumeFileService {
 
       if (insertError) {
         console.error('❌ Error inserting resume file:', insertError);
-        throw new Error(`Failed to insert resume file: ${insertError.message}`);
+        return { success: false, error: `Failed to save resume file: ${insertError.message}` };
       }
 
       console.log('✅ Resume file saved successfully');
-      return true;
+      return { success: true };
     } catch (error) {
-      console.error('❌ Error in saveResumeFile:', error);
-      return false;
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.error('❌ Critical error in saveResumeFile:', errorMessage);
+      return { success: false, error: `Critical file save error: ${errorMessage}` };
     }
   }
 
@@ -118,7 +127,7 @@ class ResumeFileService {
 
   async getOnboardingStatus(userId: string): Promise<OnboardingStatus | null> {
     try {
-      console.log('🔍 Fetching onboarding status for user:', userId);
+      console.log('🔍 Enhanced onboarding status fetch for user:', userId);
       
       const { data, error } = await supabase
         .from('user_onboarding')
@@ -161,34 +170,67 @@ class ResumeFileService {
     }
   }
 
-  async updateOnboardingStatus(userId: string, updates: Partial<Omit<OnboardingStatus, 'id' | 'user_id' | 'created_at' | 'updated_at'>>): Promise<boolean> {
+  async updateOnboardingStatus(userId: string, updates: Partial<Omit<OnboardingStatus, 'id' | 'user_id' | 'created_at' | 'updated_at'>>): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log('🔄 Updating onboarding status for user:', userId, 'Updates:', updates);
+      console.log('🔄 Enhanced onboarding status update for user:', userId, 'Updates:', updates);
       
-      const { error } = await supabase
+      if (!userId) {
+        return { success: false, error: 'User ID is required' };
+      }
+
+      if (!updates || Object.keys(updates).length === 0) {
+        return { success: false, error: 'Updates are required' };
+      }
+
+      // Use upsert with enhanced error handling
+      const { data, error } = await supabase
         .from('user_onboarding')
         .upsert({
           user_id: userId,
           ...updates,
           updated_at: new Date().toISOString()
-        });
+        })
+        .select()
+        .single();
 
       if (error) {
         console.error('❌ Error updating onboarding status:', error);
-        throw new Error(`Failed to update onboarding status: ${error.message}`);
+        
+        // Provide specific error messages
+        if (error.message.includes('unique_violation')) {
+          return { success: false, error: 'Duplicate onboarding record detected. Please refresh and try again.' };
+        } else if (error.message.includes('foreign_key_violation')) {
+          return { success: false, error: 'User account not found. Please sign out and back in.' };
+        } else {
+          return { success: false, error: `Failed to update status: ${error.message}` };
+        }
       }
 
-      console.log('✅ Onboarding status updated successfully');
-      return true;
+      if (!data) {
+        console.error('❌ No data returned from onboarding status update');
+        return { success: false, error: 'Update completed but no confirmation received' };
+      }
+
+      console.log('✅ Onboarding status updated successfully:', data);
+      return { success: true };
     } catch (error) {
-      console.error('❌ Error in updateOnboardingStatus:', error);
-      return false;
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.error('❌ Critical error in updateOnboardingStatus:', errorMessage);
+      return { success: false, error: `Critical status update error: ${errorMessage}` };
     }
   }
 
-  async checkProfileCompletion(userId: string, profileData: any): Promise<boolean> {
+  async checkProfileCompletion(userId: string, profileData: any): Promise<{ success: boolean; isComplete: boolean; error?: string }> {
     try {
-      console.log('🔄 Checking profile completion for user:', userId);
+      console.log('🔄 Enhanced profile completion check for user:', userId);
+      
+      if (!userId) {
+        return { success: false, isComplete: false, error: 'User ID is required' };
+      }
+
+      if (!profileData) {
+        return { success: false, isComplete: false, error: 'Profile data is required' };
+      }
       
       const requiredFields = [
         profileData.personalInfo?.name?.trim(),
@@ -201,27 +243,28 @@ class ResumeFileService {
 
       const isComplete = requiredFields.every(field => Boolean(field));
 
-      console.log('📊 Profile completion check:', {
+      console.log('📊 Enhanced profile completion check:', {
         requiredFields: requiredFields.map(Boolean),
         isComplete
       });
 
       if (isComplete) {
-        const success = await this.updateOnboardingStatus(userId, { 
+        const updateResult = await this.updateOnboardingStatus(userId, { 
           profile_completed: true,
           onboarding_completed: true 
         });
         
-        if (!success) {
+        if (!updateResult.success) {
           console.error('❌ Failed to update onboarding status after completion check');
-          return false;
+          return { success: false, isComplete: true, error: updateResult.error };
         }
       }
 
-      return isComplete;
+      return { success: true, isComplete };
     } catch (error) {
-      console.error('❌ Error in checkProfileCompletion:', error);
-      return false;
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.error('❌ Error in checkProfileCompletion:', errorMessage);
+      return { success: false, isComplete: false, error: `Profile completion check failed: ${errorMessage}` };
     }
   }
 }

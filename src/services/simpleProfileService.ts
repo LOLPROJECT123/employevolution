@@ -3,64 +3,147 @@ import { profileService } from './profileService';
 import { ProfileDataSync } from '@/utils/profileDataSync';
 
 export class SimpleProfileService {
-  // Simplified save that bypasses complex validation for auto-save
-  static async saveProfileData(userId: string, profileData: any): Promise<boolean> {
+  // Enhanced save with better error handling and retry logic
+  static async saveProfileData(userId: string, profileData: any): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log('💾 Simple profile save starting for user:', userId);
+      console.log('💾 Enhanced profile save starting for user:', userId);
       
-      // Convert UI format to database format
-      const syncResult = ProfileDataSync.prepareProfileForDatabase(profileData);
-      if (!syncResult.success) {
-        console.error('❌ Data sync failed:', syncResult.errors);
-        return false;
+      // Validate input data
+      if (!userId) {
+        const error = 'User ID is required for saving profile data';
+        console.error('❌', error);
+        return { success: false, error };
       }
 
-      // Direct save to database using existing profileService with improved error handling
-      try {
-        const success = await profileService.saveResumeData(userId, syncResult.data!);
-        
-        if (success) {
-          console.log('✅ Simple profile save completed successfully');
-        } else {
-          console.error('❌ Simple profile save failed - database operation failed');
-        }
-        
-        return success;
-      } catch (error) {
-        console.error('❌ Simple profile save database error:', error);
-        
-        // If it's a conflict error, try to handle it gracefully
-        if (error instanceof Error && error.message.includes('conflict')) {
-          console.log('🔄 Retrying save after conflict...');
-          // Try one more time - the UPSERT should handle the conflict
-          return await profileService.saveResumeData(userId, syncResult.data!);
-        }
-        
-        return false;
+      if (!profileData) {
+        const error = 'Profile data is required for saving';
+        console.error('❌', error);
+        return { success: false, error };
       }
+
+      // Convert UI format to database format with enhanced error handling
+      const syncResult = ProfileDataSync.prepareProfileForDatabase(profileData);
+      if (!syncResult.success) {
+        const error = `Data validation failed: ${syncResult.errors?.join(', ') || 'Unknown validation error'}`;
+        console.error('❌ Data sync failed:', syncResult.errors);
+        return { success: false, error };
+      }
+
+      // Enhanced save with retry mechanism
+      const maxRetries = 3;
+      let lastError: Error | null = null;
+      
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          console.log(`🔄 Save attempt ${attempt}/${maxRetries}`);
+          
+          const success = await profileService.saveResumeData(userId, syncResult.data!);
+          
+          if (success) {
+            console.log('✅ Enhanced profile save completed successfully');
+            return { success: true };
+          } else {
+            throw new Error('Database save operation returned false');
+          }
+        } catch (error) {
+          lastError = error instanceof Error ? error : new Error(String(error));
+          console.warn(`❌ Save attempt ${attempt} failed:`, lastError.message);
+          
+          // Check for specific error types
+          if (lastError.message.includes('conflict') || lastError.message.includes('unique_violation')) {
+            console.log('🔄 Handling database conflict, retrying...');
+          } else if (lastError.message.includes('network') || lastError.message.includes('timeout')) {
+            console.log('🌐 Network issue detected, retrying...');
+          } else if (lastError.message.includes('permission') || lastError.message.includes('unauthorized')) {
+            console.error('🔒 Permission denied - aborting retries');
+            return { success: false, error: 'Permission denied. Please refresh the page and try again.' };
+          }
+          
+          // Wait before retry with exponential backoff
+          if (attempt < maxRetries) {
+            const delay = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
+            console.log(`⏳ Waiting ${delay}ms before retry...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
+        }
+      }
+      
+      // All retries failed
+      const finalError = lastError?.message || 'Unknown database error';
+      console.error('❌ All save attempts failed:', finalError);
+      
+      // Provide user-friendly error messages
+      if (finalError.includes('network') || finalError.includes('timeout')) {
+        return { success: false, error: 'Network connection issue. Please check your internet and try again.' };
+      } else if (finalError.includes('conflict')) {
+        return { success: false, error: 'Data conflict detected. Please refresh the page and try again.' };
+      } else {
+        return { success: false, error: 'Failed to save to database. Your data is saved locally and will sync when connection is restored.' };
+      }
+      
     } catch (error) {
-      console.error('❌ Simple profile save error:', error);
-      return false;
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.error('❌ Critical error in enhanced profile save:', errorMessage);
+      return { 
+        success: false, 
+        error: `Critical save error: ${errorMessage}. Please refresh the page and contact support if this persists.` 
+      };
     }
   }
 
-  // Load profile data with proper format conversion
-  static async loadProfileData(userId: string): Promise<any> {
+  // Enhanced load with better error handling
+  static async loadProfileData(userId: string): Promise<{ success: boolean; data?: any; error?: string }> {
     try {
-      console.log('📋 Loading profile data for user:', userId);
+      console.log('📋 Enhanced loading profile data for user:', userId);
+      
+      if (!userId) {
+        return { success: false, error: 'User ID is required for loading profile data' };
+      }
       
       const userData = await profileService.loadUserData(userId);
       
       if (userData?.profile) {
         // Convert database format to UI format
         const syncResult = ProfileDataSync.prepareProfileForUI(userData);
-        return syncResult.success ? syncResult.data : null;
+        if (syncResult.success) {
+          console.log('✅ Profile data loaded and converted successfully');
+          return { success: true, data: syncResult.data };
+        } else {
+          console.error('❌ Failed to convert profile data:', syncResult.errors);
+          return { success: false, error: `Data conversion failed: ${syncResult.errors?.join(', ')}` };
+        }
       }
 
-      return null;
+      console.log('📄 No profile data found in database');
+      return { success: true, data: null };
     } catch (error) {
-      console.error('❌ Failed to load profile data:', error);
-      return null;
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.error('❌ Failed to load profile data:', errorMessage);
+      return { 
+        success: false, 
+        error: `Failed to load profile: ${errorMessage}. Please refresh the page and try again.` 
+      };
+    }
+  }
+
+  // Database health check
+  static async checkDatabaseHealth(): Promise<{ healthy: boolean; error?: string }> {
+    try {
+      console.log('🏥 Checking database health...');
+      // Simple health check by attempting to load user profile
+      const { data, error } = await profileService.getUserProfile('health-check');
+      
+      if (error && !error.message?.includes('No rows')) {
+        console.warn('⚠️ Database health check failed:', error);
+        return { healthy: false, error: error.message };
+      }
+      
+      console.log('✅ Database health check passed');
+      return { healthy: true };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('❌ Database health check failed:', errorMessage);
+      return { healthy: false, error: errorMessage };
     }
   }
 }
