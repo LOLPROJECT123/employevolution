@@ -20,11 +20,13 @@ import ProjectsSection from '@/components/profile/ProjectsSection';
 import ActivitiesSection from '@/components/profile/ActivitiesSection';
 import SkillsSection from '@/components/profile/SkillsSection';
 import LanguagesSection from '@/components/profile/LanguagesSection';
+import { Save } from 'lucide-react';
 
 const EnhancedCompleteProfile = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [manualSaving, setManualSaving] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [profileData, setProfileData] = useState<any>({
@@ -81,6 +83,7 @@ const EnhancedCompleteProfile = () => {
     },
     onSaveError: (error) => {
       console.error('❌ Auto-save failed:', error);
+      toast.error('Auto-save failed - your changes are saved locally but not synced to the server');
     }
   });
 
@@ -90,6 +93,65 @@ const EnhancedCompleteProfile = () => {
     }
   }, [user]);
 
+  // Helper function to check if data has meaningful content
+  const hasContent = (data: any) => {
+    if (!data) return false;
+    
+    const personalInfoContent = data.personalInfo?.name?.trim() || 
+                               data.personalInfo?.phone?.trim() || 
+                               data.personalInfo?.streetAddress?.trim() ||
+                               data.personalInfo?.city?.trim() ||
+                               data.personalInfo?.state?.trim() ||
+                               data.personalInfo?.county?.trim() ||
+                               data.personalInfo?.zipCode?.trim();
+    
+    const hasArrayContent = (arr: any[]) => arr && arr.length > 0;
+    
+    return personalInfoContent ||
+           hasArrayContent(data.education) ||
+           hasArrayContent(data.workExperiences) ||
+           hasArrayContent(data.projects) ||
+           hasArrayContent(data.activities) ||
+           hasArrayContent(data.skills) ||
+           hasArrayContent(data.languages) ||
+           data.socialLinks?.linkedin?.trim() ||
+           data.socialLinks?.github?.trim() ||
+           data.socialLinks?.portfolio?.trim() ||
+           data.socialLinks?.other?.trim();
+  };
+
+  // Smart data merging - keeps the most complete version of each section
+  const mergeProfileData = (localData: any, dbData: any, authData: any) => {
+    const merged = {
+      personalInfo: {
+        // Always use auth email, prefer auth name, but merge other fields intelligently
+        name: authData.name || localData?.personalInfo?.name || dbData?.personalInfo?.name || '',
+        email: authData.email, // Always use auth email
+        phone: localData?.personalInfo?.phone || dbData?.personalInfo?.phone || '',
+        streetAddress: localData?.personalInfo?.streetAddress || dbData?.personalInfo?.streetAddress || '',
+        city: localData?.personalInfo?.city || dbData?.personalInfo?.city || '',
+        state: localData?.personalInfo?.state || dbData?.personalInfo?.state || '',
+        county: localData?.personalInfo?.county || dbData?.personalInfo?.county || '',
+        zipCode: localData?.personalInfo?.zipCode || dbData?.personalInfo?.zipCode || ''
+      },
+      socialLinks: {
+        linkedin: localData?.socialLinks?.linkedin || dbData?.socialLinks?.linkedin || '',
+        github: localData?.socialLinks?.github || dbData?.socialLinks?.github || '',
+        portfolio: localData?.socialLinks?.portfolio || dbData?.socialLinks?.portfolio || '',
+        other: localData?.socialLinks?.other || dbData?.socialLinks?.other || ''
+      },
+      // For arrays, prefer the version that has more content
+      education: (localData?.education?.length > 0) ? localData.education : (dbData?.education || []),
+      workExperiences: (localData?.workExperiences?.length > 0) ? localData.workExperiences : (dbData?.workExperiences || []),
+      projects: (localData?.projects?.length > 0) ? localData.projects : (dbData?.projects || []),
+      activities: (localData?.activities?.length > 0) ? localData.activities : (dbData?.activities || []),
+      skills: (localData?.skills?.length > 0) ? localData.skills : (dbData?.skills || []),
+      languages: (localData?.languages?.length > 0) ? localData.languages : (dbData?.languages || [])
+    };
+
+    return merged;
+  };
+
   const loadUserData = async () => {
     if (!user) return;
     
@@ -98,77 +160,65 @@ const EnhancedCompleteProfile = () => {
     
     try {
       console.log('📋 Loading user data for user:', user.id);
-      console.log('📧 User email from auth:', user.email);
-      console.log('👤 User metadata:', user.user_metadata);
-
-      // Get email and name directly from authenticated user - this should always be available
+      
+      // Get email and name directly from authenticated user
       const userEmail = user.email || '';
       const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || '';
       
-      console.log('✅ Setting initial email:', userEmail, 'and name:', userName);
-      
-      // Set initial profile data with user info from auth immediately
-      const initialPersonalInfo = {
+      const authData = {
         name: userName,
-        email: userEmail,
-        phone: '',
-        streetAddress: '',
-        city: '',
-        state: '',
-        county: '',
-        zipCode: ''
+        email: userEmail
       };
 
-      setProfileData(prev => ({
-        ...prev,
-        personalInfo: initialPersonalInfo
-      }));
+      console.log('✅ Auth data:', authData);
 
-      console.log('📝 Initial profile data set with email:', userEmail);
-
-      // Check for localStorage backup first
+      // Check for localStorage backup first with timestamp
       const localStorageKey = `profile-draft-${user.id}`;
+      const localStorageTimestampKey = `profile-draft-timestamp-${user.id}`;
       const localBackup = localStorage.getItem(localStorageKey);
+      const localTimestamp = localStorage.getItem(localStorageTimestampKey);
       
+      let localData = null;
       if (localBackup) {
         try {
-          const backupData = JSON.parse(localBackup);
-          console.log('📱 Loading from localStorage backup');
-          
-          // Merge localStorage backup while preserving auth email and name
-          setProfileData({
-            ...backupData,
-            personalInfo: {
-              ...backupData.personalInfo,
-              name: userName || backupData.personalInfo?.name || '',
-              email: userEmail, // Always use auth email
-            }
-          });
+          localData = JSON.parse(localBackup);
+          console.log('📱 Found localStorage backup from:', localTimestamp || 'unknown time');
+          console.log('📱 localStorage has content:', hasContent(localData));
         } catch (parseError) {
           console.warn('Failed to parse localStorage backup:', parseError);
         }
       }
 
-      // Load existing profile data from database - but don't clear localStorage yet
-      const existingProfile = await SimpleProfileService.loadProfileData(user.id);
-      if (existingProfile) {
-        console.log('📋 Loaded existing profile from database');
-        
-        // Merge database data while preserving auth email and name
-        setProfileData({
-          ...existingProfile,
-          personalInfo: {
-            ...existingProfile.personalInfo,
-            name: userName || existingProfile.personalInfo?.name || '',
-            email: userEmail, // Always prioritize auth email
-          }
-        });
-        
-        console.log('✅ Database profile merged, email should still be:', userEmail);
-        // Don't clear localStorage here - only clear on successful completion
-      } else {
-        console.log('📄 No existing profile found in database, keeping auth-based profile data');
+      // Load existing profile data from database
+      let dbData = null;
+      try {
+        dbData = await SimpleProfileService.loadProfileData(user.id);
+        console.log('📋 Database data loaded, has content:', hasContent(dbData));
+      } catch (error) {
+        console.warn('Failed to load database profile:', error);
       }
+
+      // Smart merging: prioritize localStorage if it has more content or is more recent
+      let finalData;
+      
+      if (localData && hasContent(localData)) {
+        console.log('🔄 Using localStorage data as primary source (has content)');
+        finalData = mergeProfileData(localData, dbData, authData);
+      } else if (dbData && hasContent(dbData)) {
+        console.log('🔄 Using database data as primary source');
+        finalData = mergeProfileData(null, dbData, authData);
+      } else {
+        console.log('🔄 Using auth data only (no existing content)');
+        finalData = mergeProfileData(null, null, authData);
+      }
+
+      setProfileData(finalData);
+      console.log('✅ Final merged profile data set');
+      
+      // Update localStorage with the merged data and current timestamp
+      localStorage.setItem(localStorageKey, JSON.stringify(finalData));
+      localStorage.setItem(localStorageTimestampKey, new Date().toISOString());
+      
     } catch (error) {
       console.error('❌ Error loading user data:', error);
       setError('Failed to load your profile data. Please try again.');
@@ -178,10 +228,20 @@ const EnhancedCompleteProfile = () => {
   };
 
   const updateSection = (section: string, data: any) => {
-    setProfileData(prev => ({
-      ...prev,
-      [section]: data
-    }));
+    setProfileData(prev => {
+      const updated = {
+        ...prev,
+        [section]: data
+      };
+      
+      // Update localStorage timestamp when data changes
+      if (user) {
+        const timestampKey = `profile-draft-timestamp-${user.id}`;
+        localStorage.setItem(timestampKey, new Date().toISOString());
+      }
+      
+      return updated;
+    });
   };
 
   const calculateCompletionPercentage = () => {
@@ -198,6 +258,25 @@ const EnhancedCompleteProfile = () => {
     return Math.round((completedSections / sections.length) * 100);
   };
 
+  const handleManualSave = async () => {
+    if (!user) return;
+    
+    setManualSaving(true);
+    try {
+      const success = await SimpleProfileService.saveProfileData(user.id, profileData);
+      if (success) {
+        toast.success('Profile saved successfully!');
+      } else {
+        toast.error('Failed to save profile. Please try again.');
+      }
+    } catch (error) {
+      console.error('Manual save failed:', error);
+      toast.error('Failed to save profile. Please try again.');
+    } finally {
+      setManualSaving(false);
+    }
+  };
+
   const handleSaveAndContinue = async () => {
     if (!user) {
       console.error('❌ No user found');
@@ -206,7 +285,6 @@ const EnhancedCompleteProfile = () => {
     }
     
     console.log('🚀 Starting profile completion process for user:', user.id);
-    console.log('📊 Profile data to save:', profileData);
     
     // Basic validation - only check essential fields
     if (!profileData.personalInfo?.name?.trim()) {
@@ -223,34 +301,10 @@ const EnhancedCompleteProfile = () => {
     try {
       console.log('💾 Attempting to save profile data...');
       
-      // Use the standard profileService for final completion with better error handling
-      let success = false;
-      try {
-        success = await SimpleProfileService.saveProfileData(user.id, profileData);
-      } catch (error) {
-        console.error('❌ Profile save failed with error:', error);
-        
-        // Provide more specific error message based on the error type
-        if (error instanceof Error) {
-          if (error.message.includes('conflict') || error.message.includes('409')) {
-            toast.error('Profile data conflict detected. Retrying...');
-            // Try one more time for conflict errors
-            success = await SimpleProfileService.saveProfileData(user.id, profileData);
-          } else if (error.message.includes('network')) {
-            toast.error('Network error. Please check your connection and try again.');
-            return;
-          } else {
-            toast.error('Error saving profile. Please try again.');
-            return;
-          }
-        } else {
-          toast.error('Unknown error occurred. Please try again.');
-          return;
-        }
-      }
+      const success = await SimpleProfileService.saveProfileData(user.id, profileData);
       
       if (!success) {
-        console.error('❌ Profile save failed after retry');
+        console.error('❌ Profile save failed');
         toast.error('Failed to save profile data. Please try again or contact support.');
         return;
       }
@@ -274,7 +328,9 @@ const EnhancedCompleteProfile = () => {
 
       // Clear localStorage backup only on successful completion
       const localStorageKey = `profile-draft-${user.id}`;
+      const timestampKey = `profile-draft-timestamp-${user.id}`;
       localStorage.removeItem(localStorageKey);
+      localStorage.removeItem(timestampKey);
       console.log('🗑️ Cleared localStorage backup after successful completion');
       
       toast.success('🎉 Profile completed successfully! Welcome to Streamline!');
@@ -286,15 +342,11 @@ const EnhancedCompleteProfile = () => {
     } catch (error) {
       console.error('❌ Error completing profile:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.error('❌ Detailed error:', errorMessage);
       
-      // Show specific error message to user
       if (errorMessage.includes('onboarding')) {
         toast.error('Error setting up your account. Please try again or contact support.');
       } else if (errorMessage.includes('save') || errorMessage.includes('database')) {
         toast.error('Error saving your profile. Please check your connection and try again.');
-      } else if (errorMessage.includes('conflict') || errorMessage.includes('409')) {
-        toast.error('Profile data conflict. Please refresh the page and try again.');
       } else {
         toast.error(`Error completing profile: ${errorMessage}`);
       }
@@ -370,6 +422,20 @@ const EnhancedCompleteProfile = () => {
               {isValidating && (
                 <p className="text-xs text-blue-600 animate-pulse">Validating...</p>
               )}
+            </div>
+
+            {/* Manual Save Button */}
+            <div className="flex justify-center mt-4">
+              <Button
+                onClick={handleManualSave}
+                disabled={manualSaving || saveStatus === 'saving'}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+              >
+                <Save className="h-4 w-4" />
+                {manualSaving ? 'Saving...' : 'Save Draft'}
+              </Button>
             </div>
           </CardHeader>
 
