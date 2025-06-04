@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { User } from 'lucide-react';
+import { User, CheckCircle } from 'lucide-react';
 
 interface PersonalInfoSectionProps {
   data: {
@@ -47,16 +47,23 @@ const PersonalInfoSection = ({ data, onChange }: PersonalInfoSectionProps) => {
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="email">Email *</Label>
+          <Label htmlFor="email" className="flex items-center gap-2">
+            Email *
+            {data.email && <CheckCircle className="h-4 w-4 text-green-500" />}
+          </Label>
           <Input
             id="email"
             type="email"
             value={data.email}
             readOnly
             className="bg-gray-50 cursor-not-allowed"
-            placeholder="Your email from sign-up"
+            placeholder="Loading your email..."
           />
-          <p className="text-xs text-gray-500">Email cannot be changed (from your account)</p>
+          <p className="text-xs text-gray-500">
+            {data.email 
+              ? "✓ Email loaded from your account (cannot be changed here)" 
+              : "Loading email from your account..."}
+          </p>
         </div>
         
         <div className="space-y-2 md:col-span-2">
