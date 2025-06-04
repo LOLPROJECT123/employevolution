@@ -153,13 +153,21 @@ const Profile = () => {
 
     setLoading(true);
     try {
+      // Convert languages array to JSON format for database storage
+      const updateData = {
+        user_id: user.id,
+        ...profile,
+        ...updates,
+      };
+
+      // Convert languages to JSON if present
+      if (updateData.languages) {
+        updateData.languages = updateData.languages as any; // Cast to Json type
+      }
+
       const { error } = await supabase
         .from('user_profiles')
-        .upsert({
-          user_id: user.id,
-          ...profile,
-          ...updates,
-        });
+        .upsert(updateData);
 
       if (error) throw error;
 
