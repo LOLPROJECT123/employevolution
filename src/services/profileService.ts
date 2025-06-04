@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { ParsedResume } from "@/types/resume";
 
@@ -71,20 +72,26 @@ class ProfileService {
   async saveUserProfile(userId: string, profile: DatabaseProfile): Promise<boolean> {
     console.log('💾 Saving user profile for:', userId, profile);
     
-    const { error } = await supabase
-      .from('user_profiles')
-      .upsert({
-        user_id: userId,
-        ...profile
-      });
-    
-    if (error) {
-      console.error('Error saving user profile:', error);
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .upsert({
+          user_id: userId,
+          ...profile,
+          updated_at: new Date().toISOString()
+        });
+      
+      if (error) {
+        console.error('Error saving user profile:', error);
+        return false;
+      }
+      
+      console.log('✅ User profile saved successfully');
+      return true;
+    } catch (error) {
+      console.error('Exception saving user profile:', error);
       return false;
     }
-    
-    console.log('✅ User profile saved successfully');
-    return true;
   }
 
   async updateOnboardingStatus(userId: string, updates: { profile_completed?: boolean; onboarding_completed?: boolean }): Promise<boolean> {
@@ -119,7 +126,7 @@ class ProfileService {
       // Calculate profile completion percentage
       const completionScore = this.calculateProfileCompletion(resumeData);
       
-      // Save profile data with completion score
+      // Save profile data with completion score using UPSERT
       const profileSaved = await this.saveUserProfile(userId, {
         name: resumeData.personalInfo?.name || '',
         phone: resumeData.personalInfo?.phone || '',

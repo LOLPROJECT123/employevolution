@@ -223,17 +223,41 @@ const EnhancedCompleteProfile = () => {
     try {
       console.log('💾 Attempting to save profile data...');
       
-      // Use the standard profileService for final completion
-      const success = await SimpleProfileService.saveProfileData(user.id, profileData);
+      // Use the standard profileService for final completion with better error handling
+      let success = false;
+      try {
+        success = await SimpleProfileService.saveProfileData(user.id, profileData);
+      } catch (error) {
+        console.error('❌ Profile save failed with error:', error);
+        
+        // Provide more specific error message based on the error type
+        if (error instanceof Error) {
+          if (error.message.includes('conflict') || error.message.includes('409')) {
+            toast.error('Profile data conflict detected. Retrying...');
+            // Try one more time for conflict errors
+            success = await SimpleProfileService.saveProfileData(user.id, profileData);
+          } else if (error.message.includes('network')) {
+            toast.error('Network error. Please check your connection and try again.');
+            return;
+          } else {
+            toast.error('Error saving profile. Please try again.');
+            return;
+          }
+        } else {
+          toast.error('Unknown error occurred. Please try again.');
+          return;
+        }
+      }
       
       if (!success) {
-        console.error('❌ Profile save failed');
-        throw new Error('Failed to save profile data');
+        console.error('❌ Profile save failed after retry');
+        toast.error('Failed to save profile data. Please try again or contact support.');
+        return;
       }
 
       console.log('✅ Profile data saved successfully');
 
-      // Update onboarding status - remove optional chaining since method exists
+      // Update onboarding status
       console.log('🔄 Updating onboarding status...');
       const onboardingUpdated = await profileService.updateOnboardingStatus(user.id, {
         profile_completed: true,
@@ -242,7 +266,8 @@ const EnhancedCompleteProfile = () => {
 
       if (!onboardingUpdated) {
         console.error('❌ Failed to update onboarding status');
-        throw new Error('Failed to complete onboarding setup');
+        toast.error('Profile saved but failed to complete onboarding. Please contact support.');
+        return;
       }
 
       console.log('✅ Onboarding status updated successfully');
@@ -266,8 +291,10 @@ const EnhancedCompleteProfile = () => {
       // Show specific error message to user
       if (errorMessage.includes('onboarding')) {
         toast.error('Error setting up your account. Please try again or contact support.');
-      } else if (errorMessage.includes('save')) {
+      } else if (errorMessage.includes('save') || errorMessage.includes('database')) {
         toast.error('Error saving your profile. Please check your connection and try again.');
+      } else if (errorMessage.includes('conflict') || errorMessage.includes('409')) {
+        toast.error('Profile data conflict. Please refresh the page and try again.');
       } else {
         toast.error(`Error completing profile: ${errorMessage}`);
       }

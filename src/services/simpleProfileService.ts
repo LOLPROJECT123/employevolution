@@ -15,16 +15,29 @@ export class SimpleProfileService {
         return false;
       }
 
-      // Direct save to database using existing profileService
-      const success = await profileService.saveResumeData(userId, syncResult.data!);
-      
-      if (success) {
-        console.log('✅ Simple profile save completed successfully');
-      } else {
-        console.error('❌ Simple profile save failed');
+      // Direct save to database using existing profileService with improved error handling
+      try {
+        const success = await profileService.saveResumeData(userId, syncResult.data!);
+        
+        if (success) {
+          console.log('✅ Simple profile save completed successfully');
+        } else {
+          console.error('❌ Simple profile save failed - database operation failed');
+        }
+        
+        return success;
+      } catch (error) {
+        console.error('❌ Simple profile save database error:', error);
+        
+        // If it's a conflict error, try to handle it gracefully
+        if (error instanceof Error && error.message.includes('conflict')) {
+          console.log('🔄 Retrying save after conflict...');
+          // Try one more time - the UPSERT should handle the conflict
+          return await profileService.saveResumeData(userId, syncResult.data!);
+        }
+        
+        return false;
       }
-      
-      return success;
     } catch (error) {
       console.error('❌ Simple profile save error:', error);
       return false;
