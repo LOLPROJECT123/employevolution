@@ -47,7 +47,7 @@ const EnhancedCompleteProfile = () => {
     languages: []
   });
 
-  // Validation rules
+  // Simplified validation rules that are less strict
   const validationRules = [
     {
       validate: (data: any) => data.personalInfo?.name?.trim().length > 0,
@@ -60,24 +60,9 @@ const EnhancedCompleteProfile = () => {
       severity: 'error' as const
     },
     {
-      validate: (data: any) => data.personalInfo?.phone?.trim().length > 0,
-      message: 'Phone number is required',
-      severity: 'error' as const
-    },
-    {
-      validate: (data: any) => data.personalInfo?.streetAddress?.trim().length > 0,
-      message: 'Address is required',
-      severity: 'error' as const
-    },
-    {
-      validate: (data: any) => data.skills?.length >= 3,
-      message: 'At least 3 skills recommended for better visibility',
+      validate: (data: any) => data.skills?.length >= 2,
+      message: 'At least 2 skills recommended',
       severity: 'warning' as const
-    },
-    {
-      validate: (data: any) => data.workExperiences?.length > 0,
-      message: 'Work experience helps employers understand your background',
-      severity: 'info' as const
     }
   ];
 
@@ -164,7 +149,7 @@ const EnhancedCompleteProfile = () => {
         }
       }
 
-      // Load existing profile data from database
+      // Load existing profile data from database - but don't clear localStorage yet
       const existingProfile = await SimpleProfileService.loadProfileData(user.id);
       if (existingProfile) {
         console.log('📋 Loaded existing profile from database');
@@ -180,9 +165,7 @@ const EnhancedCompleteProfile = () => {
         });
         
         console.log('✅ Database profile merged, email should still be:', userEmail);
-        
-        // Clear localStorage backup since we have fresh data from server
-        localStorage.removeItem(localStorageKey);
+        // Don't clear localStorage here - only clear on successful completion
       } else {
         console.log('📄 No existing profile found in database, keeping auth-based profile data');
       }
@@ -205,14 +188,9 @@ const EnhancedCompleteProfile = () => {
     const sections = [
       profileData.personalInfo.name && 
       profileData.personalInfo.email && 
-      profileData.personalInfo.phone &&
-      profileData.personalInfo.streetAddress &&
-      profileData.personalInfo.city &&
-      profileData.personalInfo.state &&
-      profileData.personalInfo.zipCode,
+      profileData.personalInfo.phone,
       profileData.education.length > 0,
       profileData.workExperiences.length > 0,
-      profileData.projects.length > 0,
       profileData.skills.length > 0
     ];
     
@@ -221,42 +199,78 @@ const EnhancedCompleteProfile = () => {
   };
 
   const handleSaveAndContinue = async () => {
-    if (!user) return;
+    if (!user) {
+      console.error('❌ No user found');
+      toast.error('User session not found. Please refresh and try again.');
+      return;
+    }
     
-    // Validate before final save
-    const validationResult = validate(profileData);
+    console.log('🚀 Starting profile completion process for user:', user.id);
+    console.log('📊 Profile data to save:', profileData);
     
-    if (!validationResult.isValid) {
-      toast.error(`Please fix the following issues: ${validationResult.errors.join(', ')}`);
+    // Basic validation - only check essential fields
+    if (!profileData.personalInfo?.name?.trim()) {
+      toast.error('Please enter your name');
+      return;
+    }
+    
+    if (!profileData.personalInfo?.email?.includes('@')) {
+      toast.error('Please enter a valid email address');
       return;
     }
     
     setLoading(true);
     try {
-      console.log('🚀 Completing profile...');
+      console.log('💾 Attempting to save profile data...');
       
-      // Use the standard profileService for final completion with all validations
+      // Use the standard profileService for final completion
       const success = await SimpleProfileService.saveProfileData(user.id, profileData);
       
-      if (success) {
-        // Update onboarding status
-        const onboardingUpdated = await profileService.updateOnboardingStatus?.(user.id, {
-          profile_completed: true,
-          onboarding_completed: true
-        });
-
-        // Clear localStorage backup on successful completion
-        localStorage.removeItem(`profile-draft-${user.id}`);
-        toast.success('🎉 Profile completed successfully! Welcome to Streamline!');
-        setTimeout(() => {
-          navigate('/dashboard');
-        }, 1500);
-      } else {
-        throw new Error('Failed to complete profile');
+      if (!success) {
+        console.error('❌ Profile save failed');
+        throw new Error('Failed to save profile data');
       }
+
+      console.log('✅ Profile data saved successfully');
+
+      // Update onboarding status - remove optional chaining since method exists
+      console.log('🔄 Updating onboarding status...');
+      const onboardingUpdated = await profileService.updateOnboardingStatus(user.id, {
+        profile_completed: true,
+        onboarding_completed: true
+      });
+
+      if (!onboardingUpdated) {
+        console.error('❌ Failed to update onboarding status');
+        throw new Error('Failed to complete onboarding setup');
+      }
+
+      console.log('✅ Onboarding status updated successfully');
+
+      // Clear localStorage backup only on successful completion
+      const localStorageKey = `profile-draft-${user.id}`;
+      localStorage.removeItem(localStorageKey);
+      console.log('🗑️ Cleared localStorage backup after successful completion');
+      
+      toast.success('🎉 Profile completed successfully! Welcome to Streamline!');
+      
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1500);
+      
     } catch (error) {
       console.error('❌ Error completing profile:', error);
-      toast.error('Error completing profile. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.error('❌ Detailed error:', errorMessage);
+      
+      // Show specific error message to user
+      if (errorMessage.includes('onboarding')) {
+        toast.error('Error setting up your account. Please try again or contact support.');
+      } else if (errorMessage.includes('save')) {
+        toast.error('Error saving your profile. Please check your connection and try again.');
+      } else {
+        toast.error(`Error completing profile: ${errorMessage}`);
+      }
     } finally {
       setLoading(false);
     }
