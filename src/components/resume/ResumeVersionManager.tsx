@@ -8,11 +8,13 @@ import { FileText, Star, Trash2, Upload, Eye } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { resumeVersionService, ResumeVersion } from '@/services/resumeVersionService';
 import { toast } from 'sonner';
+import ResumeUpload from './ResumeUpload';
 
 const ResumeVersionManager: React.FC = () => {
   const { user } = useAuth();
   const [resumeVersions, setResumeVersions] = useState<ResumeVersion[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showUpload, setShowUpload] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -69,6 +71,12 @@ const ResumeVersionManager: React.FC = () => {
     }
   };
 
+  const handleUploadSuccess = (newResume: ResumeVersion) => {
+    setResumeVersions(prev => [newResume, ...prev]);
+    setShowUpload(false);
+    toast.success('Resume uploaded successfully!');
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -101,116 +109,134 @@ const ResumeVersionManager: React.FC = () => {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="h-5 w-5" />
-          Resume Versions
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {resumeVersions.length > 0 ? (
-          <div className="space-y-3">
-            {resumeVersions.map((resume) => (
-              <div key={resume.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h4 className="font-semibold">{resume.name}</h4>
-                    {resume.is_active && (
-                      <Badge className="bg-green-100 text-green-800">
-                        <Star className="h-3 w-3 mr-1" />
-                        Active
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Resume Versions
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {resumeVersions.length > 0 ? (
+            <div className="space-y-3">
+              {resumeVersions.map((resume) => (
+                <div key={resume.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="font-semibold">{resume.name}</h4>
+                      {resume.is_active && (
+                        <Badge className="bg-green-100 text-green-800">
+                          <Star className="h-3 w-3 mr-1" />
+                          Active
+                        </Badge>
+                      )}
+                      <Badge variant="outline">
+                        v{resume.version_number}
                       </Badge>
-                    )}
-                    <Badge variant="outline">
-                      v{resume.version_number}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Created: {formatDate(resume.created_at)}
-                  </p>
-                  {resume.updated_at !== resume.created_at && (
+                    </div>
                     <p className="text-sm text-muted-foreground">
-                      Updated: {formatDate(resume.updated_at)}
+                      Created: {formatDate(resume.created_at)}
                     </p>
-                  )}
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleSetActive(resume.id)}
-                    disabled={resume.is_active}
-                  >
-                    {resume.is_active ? (
-                      <Star className="h-4 w-4" />
-                    ) : (
-                      'Set Active'
+                    {resume.updated_at !== resume.created_at && (
+                      <p className="text-sm text-muted-foreground">
+                        Updated: {formatDate(resume.updated_at)}
+                      </p>
                     )}
-                  </Button>
+                  </div>
                   
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Resume Version</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete "{resume.name}"? This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDelete(resume.id)}
-                          className="bg-red-600 hover:bg-red-700"
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSetActive(resume.id)}
+                      disabled={resume.is_active}
+                    >
+                      {resume.is_active ? (
+                        <Star className="h-4 w-4" />
+                      ) : (
+                        'Set Active'
+                      )}
+                    </Button>
+                    
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700"
                         >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Resume Version</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete "{resume.name}"? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDelete(resume.id)}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>No resume versions uploaded yet</p>
-            <p className="text-sm">Upload your first resume to get started</p>
-            <Button className="mt-4" variant="outline">
-              <Upload className="h-4 w-4 mr-2" />
-              Upload Resume
-            </Button>
-          </div>
-        )}
-        
-        {resumeVersions.length > 0 && (
-          <div className="pt-4 border-t">
-            <Button className="w-full" variant="outline">
-              <Upload className="h-4 w-4 mr-2" />
-              Upload New Version
-            </Button>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No resume versions uploaded yet</p>
+              <p className="text-sm">Upload your first resume to get started</p>
+              <Button 
+                className="mt-4" 
+                variant="outline"
+                onClick={() => setShowUpload(true)}
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Upload Resume
+              </Button>
+            </div>
+          )}
+          
+          {resumeVersions.length > 0 && (
+            <div className="pt-4 border-t">
+              <Button 
+                className="w-full" 
+                variant="outline"
+                onClick={() => setShowUpload(true)}
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Upload New Version
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Upload Modal */}
+      {showUpload && (
+        <ResumeUpload
+          onSuccess={handleUploadSuccess}
+          onCancel={() => setShowUpload(false)}
+        />
+      )}
+    </>
   );
 };
 
