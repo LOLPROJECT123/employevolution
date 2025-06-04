@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Job } from '@/types/job';
 import { Button } from '@/components/ui/button';
@@ -94,7 +93,7 @@ export const JobDetailView = ({ job, onApply, onSave }: JobDetailViewProps) => {
   } : null;
 
   return (
-    <ScrollArea className="h-full">
+    <div className="h-full">
       <div className="p-6 space-y-6">
         <JobMatchAnalysis 
           job={job}
@@ -102,6 +101,6 @@ export const JobDetailView = ({ job, onApply, onSave }: JobDetailViewProps) => {
           matchScore={matchScore}
         />
       </div>
-    </ScrollArea>
+    </div>
   );
 };
