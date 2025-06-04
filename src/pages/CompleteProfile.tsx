@@ -53,30 +53,57 @@ const CompleteProfile = () => {
     try {
       console.log('🔍 Loading user data for:', user.id);
       console.log('📧 User email from auth:', user.email);
+      console.log('👤 User metadata:', user.user_metadata);
       
-      // Get email directly from authenticated user - this should always be available
+      // Get email and name directly from authenticated user - this should always be available
       const userEmail = user.email || '';
       const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || '';
       
-      console.log('✅ Using email:', userEmail, 'and name:', userName);
+      console.log('✅ Setting initial email:', userEmail, 'and name:', userName);
       
       // Set initial profile data with user info from auth immediately
+      const initialPersonalInfo = {
+        name: userName,
+        email: userEmail,
+        phone: '',
+        streetAddress: '',
+        city: '',
+        state: '',
+        county: '',
+        zipCode: ''
+      };
+
       setProfileData(prev => ({
         ...prev,
-        personalInfo: {
-          ...prev.personalInfo,
-          name: userName,
-          email: userEmail,
-        }
+        personalInfo: initialPersonalInfo
       }));
+
+      console.log('📝 Initial profile data set with email:', userEmail);
 
       // Load resume data if available
       const resumeFile = await resumeFileService.getCurrentResumeFile(user.id);
       if (resumeFile?.parsed_data) {
         console.log('📄 Loading resume data:', resumeFile.parsed_data);
+        
+        // Merge resume data while preserving the email and name from auth
         setProfileData(prev => ({
           personalInfo: {
-            ...prev.personalInfo, // Keep the pre-populated name and email
+            // Keep the email and name from auth, but allow resume data to fill other fields
+            name: prev.personalInfo.name || resumeFile.parsed_data.personalInfo?.name || userName,
+            email: prev.personalInfo.email || userEmail, // Always prioritize auth email
+            phone: resumeFile.parsed_data.personalInfo?.phone || '',
+            streetAddress: '',
+            city: '',
+            state: '',
+            county: '',
+            zipCode: '',
+            // Extract location components if available
+            ...(resumeFile.parsed_data.personalInfo?.location && {
+              // Try to parse location into components (this is a simple approach)
+              streetAddress: resumeFile.parsed_data.personalInfo.location.includes(',') 
+                ? resumeFile.parsed_data.personalInfo.location.split(',')[0]?.trim() || ''
+                : ''
+            })
           },
           socialLinks: resumeFile.parsed_data.socialLinks || prev.socialLinks,
           education: resumeFile.parsed_data.education || [],
@@ -86,6 +113,10 @@ const CompleteProfile = () => {
           skills: resumeFile.parsed_data.skills || [],
           languages: resumeFile.parsed_data.languages || []
         }));
+        
+        console.log('✅ Resume data merged, email should still be:', userEmail);
+      } else {
+        console.log('📄 No resume data found, keeping auth-based profile data');
       }
     } catch (error) {
       console.error('❌ Error loading user data:', error);
