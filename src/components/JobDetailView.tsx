@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import { JobMatchAnalysis } from '@/components/jobs/JobMatchAnalysis';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserSkills } from '@/hooks/useUserSkills';
+import { unifiedSkillsMatchingService } from '@/services/unifiedSkillsMatchingService';
 
 interface JobDetailViewProps {
   job: Job | null;
@@ -28,6 +30,7 @@ interface JobDetailViewProps {
 
 export const JobDetailView = ({ job, onApply, onSave }: JobDetailViewProps) => {
   const { userProfile } = useAuth();
+  const { skills: userSkills, loading: skillsLoading } = useUserSkills();
 
   if (!job) {
     return (
@@ -41,48 +44,35 @@ export const JobDetailView = ({ job, onApply, onSave }: JobDetailViewProps) => {
     );
   }
 
-  // Calculate mock match score based on job data
-  const calculateMatchScore = () => {
-    // Create a mock user profile structure for compatibility
-    const mockUserProfile = {
-      profile: {
-        skills: [] as string[]
-      }
-    };
-    
-    const userSkills = mockUserProfile.profile?.skills || [];
+  // Calculate real match score using actual user skills
+  const calculateRealMatchScore = () => {
+    if (skillsLoading) {
+      return {
+        overall: job.matchPercentage || 0,
+        skills: job.matchPercentage || 0,
+        experience: true,
+        education: true,
+        location: true,
+        missingSkills: [],
+        matchingSkills: []
+      };
+    }
+
     const jobSkills = job.skills || [];
+    const skillsMatch = unifiedSkillsMatchingService.calculateSkillsMatch(jobSkills, userSkills);
     
-    const matchingSkills = jobSkills.filter(skill => 
-      userSkills.some(userSkill => 
-        userSkill.toLowerCase().includes(skill.toLowerCase()) ||
-        skill.toLowerCase().includes(userSkill.toLowerCase())
-      )
-    );
-    
-    const missingSkills = jobSkills.filter(skill => 
-      !userSkills.some(userSkill => 
-        userSkill.toLowerCase().includes(skill.toLowerCase()) ||
-        skill.toLowerCase().includes(userSkill.toLowerCase())
-      )
-    );
-
-    const skillsPercentage = jobSkills.length > 0 
-      ? Math.round((matchingSkills.length / jobSkills.length) * 100)
-      : 100;
-
     return {
-      overall: job.matchPercentage || skillsPercentage,
-      skills: skillsPercentage,
-      experience: skillsPercentage > 60,
-      education: skillsPercentage > 50,
+      overall: skillsMatch.matchPercentage,
+      skills: skillsMatch.matchPercentage,
+      experience: skillsMatch.matchPercentage > 60,
+      education: skillsMatch.matchPercentage > 50,
       location: !job.remote ? job.location.toLowerCase().includes('austin') : true,
-      missingSkills: missingSkills.slice(0, 6),
-      matchingSkills: matchingSkills.slice(0, 8)
+      missingSkills: skillsMatch.missingSkills,
+      matchingSkills: skillsMatch.matchingSkills
     };
   };
 
-  const matchScore = calculateMatchScore();
+  const matchScore = calculateRealMatchScore();
 
   const formatSalary = (salary: Job['salary']) => {
     if (!salary || salary.min === 0) return 'Not specified';
@@ -119,13 +109,13 @@ export const JobDetailView = ({ job, onApply, onSave }: JobDetailViewProps) => {
     return `${diffInWeeks}w ago`;
   };
 
-  // Create a mock user object for JobMatchAnalysis compatibility
-  const mockUser = userProfile ? {
+  // Create a user object with real skills for JobMatchAnalysis compatibility
+  const userWithRealSkills = userProfile ? {
     id: userProfile.id || '',
     email: userProfile.full_name || '',
     name: userProfile.full_name || '',
     profile: {
-      skills: [] as string[],
+      skills: userSkills,
       experience: 'entry' as const,
       location: '',
       salary_range: { min: 0, max: 0 },
@@ -143,7 +133,7 @@ export const JobDetailView = ({ job, onApply, onSave }: JobDetailViewProps) => {
       <div className="p-6 space-y-6">
         <JobMatchAnalysis 
           job={job}
-          userProfile={mockUser}
+          userProfile={userWithRealSkills}
           matchScore={matchScore}
         />
       </div>

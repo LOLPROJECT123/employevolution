@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -21,10 +20,11 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { Job } from '@/types/job';
+import { useUserSkills } from '@/hooks/useUserSkills';
+import { unifiedSkillsMatchingService } from '@/services/unifiedSkillsMatchingService';
 
 interface EnhancedJobCardProps {
   job: Job;
-  userSkills?: string[];
   onApply: (job: Job) => void;
   onSave: (job: Job) => void;
   onSelect?: (job: Job) => void;
@@ -37,7 +37,6 @@ interface EnhancedJobCardProps {
 
 const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
   job,
-  userSkills = [],
   onApply,
   onSave,
   onSelect,
@@ -48,35 +47,25 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
   variant = 'card'
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const { skills: userSkills, loading: skillsLoading } = useUserSkills();
 
-  // Calculate skill matches
-  const normalizedUserSkills = userSkills.map(skill => skill.toLowerCase());
-  const normalizedJobSkills = job.skills?.map(skill => skill.toLowerCase()) || [];
-  
-  const matchingSkills = job.skills?.filter(skill => 
-    normalizedUserSkills.includes(skill.toLowerCase())
-  ) || [];
-  
-  const missingSkills = job.skills?.filter(skill => 
-    !normalizedUserSkills.includes(skill.toLowerCase())
-  ) || [];
+  // Calculate skill matches using the unified service
+  const skillsMatch = unifiedSkillsMatchingService.calculateSkillsMatch(
+    job.skills || [], 
+    userSkills
+  );
 
-  const skillMatchPercentage = job.skills?.length 
-    ? Math.round((matchingSkills.length / job.skills.length) * 100)
-    : job.matchPercentage || 75; // Use job's match percentage or default
+  // Use the calculated match percentage or fallback to job's match percentage
+  const skillMatchPercentage = skillsLoading 
+    ? (job.matchPercentage || 75) 
+    : skillsMatch.matchPercentage;
 
   const getMatchColor = (percentage: number) => {
-    if (percentage >= 80) return 'text-green-600 bg-green-50';
-    if (percentage >= 60) return 'text-blue-600 bg-blue-50';
-    if (percentage >= 40) return 'text-yellow-600 bg-yellow-50';
-    return 'text-red-600 bg-red-50';
+    return unifiedSkillsMatchingService.getMatchColor(percentage);
   };
 
   const getMatchLabel = (percentage: number) => {
-    if (percentage >= 80) return 'Excellent Match';
-    if (percentage >= 60) return 'Good Match';
-    if (percentage >= 40) return 'Fair Match';
-    return 'Skills Gap';
+    return unifiedSkillsMatchingService.getMatchLabel(percentage);
   };
 
   const formatSalary = (salary: Job['salary']) => {
@@ -146,7 +135,7 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
           </div>
           
           {/* Match Score */}
-          <div className={`px-3 py-2 rounded-lg text-center ${getMatchColor(skillMatchPercentage)}`}>
+          <div className={`px-3 py-2 rounded-lg text-center bg-gray-50 ${getMatchColor(skillMatchPercentage).replace('text-', 'text-')}`}>
             <div className="text-2xl font-bold">{skillMatchPercentage}%</div>
             <div className="text-xs font-medium">{getMatchLabel(skillMatchPercentage)}</div>
           </div>
@@ -172,7 +161,7 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
             <div className="flex items-center justify-between">
               <span className="font-medium">Skill Match</span>
               <span className="text-sm text-muted-foreground">
-                {matchingSkills.length} of {job.skills?.length || 0} skills
+                {skillsMatch.matchingSkills.length} of {job.skills?.length || 0} skills
               </span>
             </div>
             
@@ -180,19 +169,19 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
             
             {/* Quick Skills Preview */}
             <div className="flex flex-wrap gap-2">
-              {matchingSkills.slice(0, 3).map((skill, index) => (
+              {skillsMatch.matchingSkills.slice(0, 3).map((skill, index) => (
                 <Badge key={index} className="bg-green-100 text-green-800">
                   <CheckCircle className="h-3 w-3 mr-1" />
                   {skill}
                 </Badge>
               ))}
-              {missingSkills.slice(0, 2).map((skill, index) => (
+              {skillsMatch.missingSkills.slice(0, 2).map((skill, index) => (
                 <Badge key={index} variant="outline" className="text-orange-600">
                   <AlertCircle className="h-3 w-3 mr-1" />
                   {skill}
                 </Badge>
               ))}
-              {(matchingSkills.length + missingSkills.length > 5) && (
+              {(skillsMatch.matchingSkills.length + skillsMatch.missingSkills.length > 5) && (
                 <Badge variant="secondary">
                   +{(job.skills?.length || 0) - 5} more
                 </Badge>
@@ -220,10 +209,10 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm font-medium text-green-700 mb-2">
-                      ✓ Skills You Have ({matchingSkills.length})
+                      ✓ Skills You Have ({skillsMatch.matchingSkills.length})
                     </p>
                     <div className="space-y-1">
-                      {matchingSkills.map((skill, index) => (
+                      {skillsMatch.matchingSkills.map((skill, index) => (
                         <div key={index} className="flex items-center gap-2 text-sm">
                           <CheckCircle className="h-4 w-4 text-green-600" />
                           <span>{skill}</span>
@@ -234,10 +223,10 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
                   
                   <div>
                     <p className="text-sm font-medium text-orange-700 mb-2">
-                      ⚠ Skills to Develop ({missingSkills.length})
+                      ⚠ Skills to Develop ({skillsMatch.missingSkills.length})
                     </p>
                     <div className="space-y-1">
-                      {missingSkills.map((skill, index) => (
+                      {skillsMatch.missingSkills.map((skill, index) => (
                         <div key={index} className="flex items-center gap-2 text-sm">
                           <XCircle className="h-4 w-4 text-orange-600" />
                           <span>{skill}</span>
@@ -250,19 +239,19 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
             )}
 
             {/* Learning Recommendations */}
-            {missingSkills.length > 0 && (
+            {skillsMatch.missingSkills.length > 0 && (
               <div className="bg-blue-50 p-3 rounded-lg">
                 <h4 className="font-medium text-blue-800 mb-2">
                   <TrendingUp className="h-4 w-4 inline mr-1" />
                   Skill Development Recommendations
                 </h4>
                 <ul className="text-sm text-blue-700 space-y-1">
-                  {missingSkills.slice(0, 3).map((skill, index) => (
+                  {skillsMatch.missingSkills.slice(0, 3).map((skill, index) => (
                     <li key={index}>
                       • Consider taking an online course in {skill}
                     </li>
                   ))}
-                  {missingSkills.length > 3 && (
+                  {skillsMatch.missingSkills.length > 3 && (
                     <li>• Focus on the most critical missing skills first</li>
                   )}
                 </ul>
