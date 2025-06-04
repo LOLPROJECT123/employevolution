@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -15,23 +14,29 @@ interface OnboardingGuardProps {
 }
 
 const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, isLoggingOut } = useAuth();
   const navigate = useNavigate();
   const [onboardingStatus, setOnboardingStatus] = useState<OnboardingStatus | null>(null);
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
+    // Don't do anything if user is logging out
+    if (isLoggingOut) {
+      console.log('🚪 User is logging out, skipping onboarding check');
+      return;
+    }
+
     if (user && !authLoading) {
       loadOnboardingStatus();
     } else if (!authLoading && !user) {
       setOnboardingStatus(null);
       setLoading(false);
     }
-  }, [user, authLoading]);
+  }, [user, authLoading, isLoggingOut]);
 
   const loadOnboardingStatus = async () => {
-    if (!user) return;
+    if (!user || isLoggingOut) return;
     
     setLoading(true);
     try {
@@ -114,6 +119,7 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
     navigate('/complete-profile');
   };
 
+  // Show loading during auth initialization
   if (authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -122,10 +128,24 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
     );
   }
 
+  // If user is logging out, show a simple loading state
+  if (isLoggingOut) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600">Signing out...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If no user, render children (which should be public routes)
   if (!user) {
     return <>{children}</>;
   }
 
+  // Show loading while checking onboarding status
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -134,6 +154,7 @@ const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
     );
   }
 
+  // If onboarding is complete, render protected content
   if (onboardingStatus?.onboarding_completed) {
     return <>{children}</>;
   }

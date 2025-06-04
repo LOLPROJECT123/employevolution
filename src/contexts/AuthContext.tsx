@@ -19,6 +19,7 @@ interface AuthContextType {
   session: Session | null;
   userProfile: UserProfile | null;
   loading: boolean;
+  isLoggingOut: boolean;
   signIn: (email: string, password: string) => Promise<any>;
   signUp: (email: string, password: string, fullName?: string) => Promise<any>;
   signOut: () => Promise<void>;
@@ -42,6 +43,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [authListenerReady, setAuthListenerReady] = useState(false);
   const [initialSessionChecked, setInitialSessionChecked] = useState(false);
 
@@ -159,10 +161,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       async (event, session) => {
         console.log('🔐 Auth state change:', event, session?.user?.id);
         
+        // If we're logging out, don't process the session change
+        if (isLoggingOut && event === 'SIGNED_OUT') {
+          console.log('🔐 Logout completed, clearing state...');
+          setSession(null);
+          setUser(null);
+          setUserProfile(null);
+          setIsLoggingOut(false);
+          return;
+        }
+        
         setSession(session);
         setUser(session?.user ?? null);
         
-        if (session?.user) {
+        if (session?.user && !isLoggingOut) {
           setTimeout(async () => {
             try {
               await ensureUserProfile(
@@ -183,7 +195,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               console.error('Error loading user profile:', error);
             }
           }, 0);
-        } else {
+        } else if (!session?.user) {
           setUserProfile(null);
         }
         
@@ -203,7 +215,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [isLoggingOut]);
 
   useEffect(() => {
     if (authListenerReady && initialSessionChecked) {
@@ -251,12 +263,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     try {
-      console.log('🔐 Signing out user...');
+      console.log('🔐 Starting logout process...');
+      setIsLoggingOut(true);
       
+      // Clear state immediately
       setUser(null);
       setSession(null);
       setUserProfile(null);
       
+      // Sign out from Supabase
       const { error } = await supabase.auth.signOut();
       
       if (error) {
@@ -264,13 +279,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         throw error;
       }
       
-      console.log('🔐 Sign out successful');
-      window.location.href = '/auth';
+      console.log('🔐 Sign out successful, redirecting...');
+      
+      // Use a small delay to ensure state is cleared, then redirect
+      setTimeout(() => {
+        window.location.href = '/auth';
+      }, 100);
+      
     } catch (error) {
       console.error('Error during sign out:', error);
+      // Even if there's an error, clear local state and redirect
       setUser(null);
       setSession(null);
       setUserProfile(null);
+      setIsLoggingOut(false);
       window.location.href = '/auth';
     }
   };
@@ -286,6 +308,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     session,
     userProfile,
     loading,
+    isLoggingOut,
     signIn,
     signUp,
     signOut,
@@ -294,7 +317,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     logout,
   };
 
-  console.log('🔐 AuthContext render - loading:', loading, 'user:', user?.id, 'session:', session?.user?.id);
+  console.log('🔐 AuthContext render - loading:', loading, 'user:', user?.id, 'session:', session?.user?.id, 'isLoggingOut:', isLoggingOut);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
