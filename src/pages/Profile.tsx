@@ -1,19 +1,20 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
 import MobileHeader from '@/components/MobileHeader';
 import { useMobile } from '@/hooks/use-mobile';
-import { User, MapPin, Phone, Mail, Briefcase, GraduationCap, Plus, X } from 'lucide-react';
+import ModernProfileHeader from '@/components/profile/ModernProfileHeader';
+import ContactSection from '@/components/profile/ContactSection';
+import ModernWorkExperienceSection from '@/components/profile/ModernWorkExperienceSection';
+import ModernEducationSection from '@/components/profile/ModernEducationSection';
+import SocialLinksSection from '@/components/profile/SocialLinksSection';
+import SkillsSection from '@/components/profile/SkillsSection';
+import ProjectsSection from '@/components/profile/ProjectsSection';
 import MultiLanguageSelector from '@/components/profile/MultiLanguageSelector';
-import ProfileCompletionWidget from '@/components/profile/ProfileCompletionWidget';
 import ResumeVersionManager from '@/components/resume/ResumeVersionManager';
 
 interface Language {
@@ -40,6 +41,14 @@ const Profile = () => {
   const { user } = useAuth();
   const isMobile = useMobile();
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('contact');
+  const [showToRecruiters, setShowToRecruiters] = useState(true);
+  const [jobSearchActive, setJobSearchActive] = useState(true);
+  const [workExperiences, setWorkExperiences] = useState([]);
+  const [education, setEducation] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [skills, setSkills] = useState([]);
+  
   const [profile, setProfile] = useState<UserProfile>({
     user_id: user?.id || '',
     name: '',
@@ -57,6 +66,7 @@ const Profile = () => {
   useEffect(() => {
     if (user) {
       loadProfile();
+      loadUserData();
     }
   }, [user]);
 
@@ -75,7 +85,6 @@ const Profile = () => {
       }
 
       if (data) {
-        // Properly handle the languages field conversion from Json to Language[]
         const languagesData = data.languages as any;
         const languages: Language[] = Array.isArray(languagesData) 
           ? languagesData.map((lang: any) => ({
@@ -89,6 +98,12 @@ const Profile = () => {
           languages,
           primary_language: data.primary_language || 'English'
         });
+      } else {
+        // Set default values if no profile exists
+        setProfile(prev => ({
+          ...prev,
+          name: user.user_metadata?.full_name || user.email?.split('@')[0] || '',
+        }));
       }
     } catch (error) {
       console.error('Error loading profile:', error);
@@ -100,32 +115,55 @@ const Profile = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const loadUserData = async () => {
+    if (!user) return;
+
+    try {
+      const [workExp, edu, proj, skillsData] = await Promise.all([
+        supabase.from('work_experiences').select('*').eq('user_id', user.id),
+        supabase.from('education').select('*').eq('user_id', user.id),
+        supabase.from('projects').select('*').eq('user_id', user.id),
+        supabase.from('user_skills').select('*').eq('user_id', user.id)
+      ]);
+
+      setWorkExperiences(workExp.data || []);
+      setEducation(edu.data || []);
+      setProjects(proj.data || []);
+      setSkills((skillsData.data || []).map(s => s.skill));
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    }
+  };
+
+  const calculateCompletionPercentage = () => {
+    const sections = [
+      profile.name && profile.phone && profile.location,
+      workExperiences.length > 0,
+      education.length > 0,
+      skills.length > 0,
+      profile.linkedin_url || profile.github_url
+    ];
+    
+    const completedSections = sections.filter(Boolean).length;
+    return Math.round((completedSections / sections.length) * 100);
+  };
+
+  const handleProfileUpdate = async (updates: Partial<UserProfile>) => {
     if (!user) return;
 
     setLoading(true);
     try {
-      const profileData = {
-        user_id: user.id,
-        name: profile.name,
-        phone: profile.phone,
-        location: profile.location,
-        linkedin_url: profile.linkedin_url,
-        github_url: profile.github_url,
-        portfolio_url: profile.portfolio_url,
-        other_url: profile.other_url,
-        job_status: profile.job_status,
-        languages: profile.languages || [] as any, // Cast to any to satisfy Json type
-        primary_language: profile.primary_language || 'English'
-      };
-
       const { error } = await supabase
         .from('user_profiles')
-        .upsert(profileData);
+        .upsert({
+          user_id: user.id,
+          ...profile,
+          ...updates,
+        });
 
       if (error) throw error;
 
+      setProfile(prev => ({ ...prev, ...updates }));
       toast({
         title: "Profile updated",
         description: "Your profile has been successfully updated.",
@@ -143,155 +181,165 @@ const Profile = () => {
   };
 
   const handleLanguagesChange = (languages: Language[]) => {
-    setProfile(prev => ({ ...prev, languages }));
+    handleProfileUpdate({ languages });
   };
 
   const handlePrimaryLanguageChange = (primaryLanguage: string) => {
-    setProfile(prev => ({ ...prev, primary_language: primaryLanguage }));
+    handleProfileUpdate({ primary_language: primaryLanguage });
   };
 
   if (!user) {
-    return <div>Please log in to view your profile.</div>;
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+        <div className="text-white text-center">
+          <h2 className="text-2xl font-bold mb-4">Please log in</h2>
+          <p className="text-gray-400">You need to be logged in to view your profile.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gray-950">
       {!isMobile && <Navbar />}
       {isMobile && <MobileHeader />}
       
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Profile Completion Widget */}
-          <div className="lg:col-span-1">
-            <ProfileCompletionWidget />
-          </div>
-          
-          {/* Main Profile Form */}
-          <div className="lg:col-span-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5" />
-                  Profile Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* Basic Information */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="name">Full Name</Label>
-                      <Input
-                        id="name"
-                        value={profile.name || ''}
-                        onChange={(e) => setProfile(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="Enter your full name"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="phone">Phone Number</Label>
-                      <Input
-                        id="phone"
-                        value={profile.phone || ''}
-                        onChange={(e) => setProfile(prev => ({ ...prev, phone: e.target.value }))}
-                        placeholder="Enter your phone number"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="location">Location</Label>
-                    <Input
-                      id="location"
-                      value={profile.location || ''}
-                      onChange={(e) => setProfile(prev => ({ ...prev, location: e.target.value }))}
-                      placeholder="City, State/Country"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="job_status">Job Search Status</Label>
-                    <select
-                      id="job_status"
-                      className="w-full p-2 border rounded-md"
-                      value={profile.job_status || 'Actively looking'}
-                      onChange={(e) => setProfile(prev => ({ ...prev, job_status: e.target.value }))}
-                    >
-                      <option value="Actively looking">Actively looking</option>
-                      <option value="Open to opportunities">Open to opportunities</option>
-                      <option value="Not looking">Not looking</option>
-                      <option value="Employed">Currently employed</option>
-                    </select>
-                  </div>
-
-                  {/* Social Links */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Social Links</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="linkedin_url">LinkedIn URL</Label>
-                        <Input
-                          id="linkedin_url"
-                          value={profile.linkedin_url || ''}
-                          onChange={(e) => setProfile(prev => ({ ...prev, linkedin_url: e.target.value }))}
-                          placeholder="https://linkedin.com/in/yourprofile"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="github_url">GitHub URL</Label>
-                        <Input
-                          id="github_url"
-                          value={profile.github_url || ''}
-                          onChange={(e) => setProfile(prev => ({ ...prev, github_url: e.target.value }))}
-                          placeholder="https://github.com/yourusername"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="portfolio_url">Portfolio URL</Label>
-                        <Input
-                          id="portfolio_url"
-                          value={profile.portfolio_url || ''}
-                          onChange={(e) => setProfile(prev => ({ ...prev, portfolio_url: e.target.value }))}
-                          placeholder="https://yourportfolio.com"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="other_url">Other URL</Label>
-                        <Input
-                          id="other_url"
-                          value={profile.other_url || ''}
-                          onChange={(e) => setProfile(prev => ({ ...prev, other_url: e.target.value }))}
-                          placeholder="Any other relevant URL"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <Button type="submit" disabled={loading} className="w-full">
-                    {loading ? 'Updating...' : 'Update Profile'}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* Language Selector */}
-        <div className="mt-6">
-          <MultiLanguageSelector
-            languages={profile.languages || []}
-            onLanguagesChange={handleLanguagesChange}
-            primaryLanguage={profile.primary_language}
-            onPrimaryLanguageChange={handlePrimaryLanguageChange}
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        {/* Modern Profile Header */}
+        <div className="mb-8">
+          <ModernProfileHeader
+            name={profile.name || ''}
+            email={user.email || ''}
+            jobStatus={profile.job_status || ''}
+            completionPercentage={calculateCompletionPercentage()}
+            showToRecruiters={showToRecruiters}
+            onToggleShowToRecruiters={setShowToRecruiters}
+            jobSearchActive={jobSearchActive}
+            onToggleJobSearch={setJobSearchActive}
           />
         </div>
 
-        {/* Resume Version Manager */}
-        <div className="mt-6">
-          <ResumeVersionManager />
-        </div>
+        {/* Tab Navigation */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="bg-gray-900 border-gray-800 w-full justify-start p-1">
+            <TabsTrigger value="contact" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              Contact
+            </TabsTrigger>
+            <TabsTrigger value="resume" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              Resume
+            </TabsTrigger>
+            <TabsTrigger value="experience" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              Experience
+            </TabsTrigger>
+            <TabsTrigger value="skills" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              Skills & Languages
+            </TabsTrigger>
+            <TabsTrigger value="preferences" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              Job Preferences
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="contact" className="space-y-6">
+            <ContactSection
+              data={{
+                phone: profile.phone || '',
+                location: profile.location || '',
+                email: user.email || ''
+              }}
+              onEdit={() => {
+                toast({
+                  title: "Edit Contact",
+                  description: "Contact editing modal would open here",
+                });
+              }}
+            />
+            
+            <SocialLinksSection
+              data={{
+                linkedin: profile.linkedin_url || '',
+                github: profile.github_url || '',
+                portfolio: profile.portfolio_url || '',
+                other: profile.other_url || ''
+              }}
+              onChange={(data) => {
+                handleProfileUpdate({
+                  linkedin_url: data.linkedin,
+                  github_url: data.github,
+                  portfolio_url: data.portfolio,
+                  other_url: data.other
+                });
+              }}
+            />
+          </TabsContent>
+
+          <TabsContent value="resume" className="space-y-6">
+            <ResumeVersionManager />
+          </TabsContent>
+
+          <TabsContent value="experience" className="space-y-6">
+            <ModernWorkExperienceSection
+              data={workExperiences}
+              onAdd={() => {
+                toast({
+                  title: "Add Experience",
+                  description: "Work experience form would open here",
+                });
+              }}
+              onEdit={(index) => {
+                toast({
+                  title: "Edit Experience",
+                  description: `Edit experience ${index + 1}`,
+                });
+              }}
+            />
+            
+            <ModernEducationSection
+              data={education}
+              onAdd={() => {
+                toast({
+                  title: "Add Education",
+                  description: "Education form would open here",
+                });
+              }}
+              onEdit={(index) => {
+                toast({
+                  title: "Edit Education",
+                  description: `Edit education ${index + 1}`,
+                });
+              }}
+            />
+            
+            <ProjectsSection
+              data={projects}
+              onChange={(data) => {
+                setProjects(data);
+              }}
+            />
+          </TabsContent>
+
+          <TabsContent value="skills" className="space-y-6">
+            <SkillsSection
+              data={skills}
+              onChange={(data) => {
+                setSkills(data);
+              }}
+            />
+            
+            <MultiLanguageSelector
+              languages={profile.languages || []}
+              onLanguagesChange={handleLanguagesChange}
+              primaryLanguage={profile.primary_language}
+              onPrimaryLanguageChange={handlePrimaryLanguageChange}
+            />
+          </TabsContent>
+
+          <TabsContent value="preferences" className="space-y-6">
+            <div className="bg-gray-900 border border-gray-800 rounded-lg p-8 text-center text-white">
+              <h3 className="text-xl font-semibold mb-4">Job Preferences</h3>
+              <p className="text-gray-400">Job preferences settings coming soon...</p>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

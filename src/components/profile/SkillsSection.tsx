@@ -34,42 +34,43 @@ const SkillsSection = ({ data, onChange }: SkillsSectionProps) => {
   };
 
   return (
-    <Card>
+    <Card className="bg-gray-900 border-gray-800 text-white">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Zap className="h-5 w-5" />
+          <Zap className="h-5 w-5 text-blue-400" />
           Skills
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex gap-2">
           <div className="flex-1">
-            <Label htmlFor="newSkill">Add Skills</Label>
+            <Label htmlFor="newSkill" className="text-gray-300">Add Skills</Label>
             <Input
               id="newSkill"
               value={newSkill}
               onChange={(e) => setNewSkill(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Enter a skill (e.g., JavaScript, Project Management)"
+              className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
             />
           </div>
-          <Button onClick={addSkill} className="mt-6">
+          <Button onClick={addSkill} className="mt-6 bg-blue-600 hover:bg-blue-700">
             <Plus className="h-4 w-4" />
           </Button>
         </div>
         
         {data.length > 0 && (
           <div className="space-y-2">
-            <Label>Your Skills</Label>
+            <Label className="text-gray-300">Your Skills</Label>
             <div className="flex flex-wrap gap-2">
               {data.map((skill, index) => (
-                <Badge key={index} variant="secondary" className="pr-1">
+                <Badge key={index} variant="secondary" className="pr-1 bg-blue-600 text-white">
                   {skill}
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => removeSkill(skill)}
-                    className="ml-1 h-4 w-4 p-0 hover:bg-transparent"
+                    className="ml-1 h-4 w-4 p-0 hover:bg-transparent text-white hover:text-red-400"
                   >
                     <X className="h-3 w-3" />
                   </Button>
@@ -80,7 +81,7 @@ const SkillsSection = ({ data, onChange }: SkillsSectionProps) => {
         )}
         
         {data.length === 0 && (
-          <p className="text-sm text-gray-500">No skills added yet. Add your technical and soft skills above.</p>
+          <p className="text-sm text-gray-400">No skills added yet. Add your technical and soft skills above.</p>
         )}
       </CardContent>
     </Card>
