@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
@@ -278,11 +279,11 @@ const Profile = () => {
       };
 
       if (editingWorkExperience) {
-        // Update existing
+        // Update existing - convert number to string for the database query
         const { error } = await supabase
           .from('work_experiences')
           .update(dbData)
-          .eq('id', editingWorkExperience.id);
+          .eq('id', editingWorkExperience.id.toString());
 
         if (error) throw error;
 
@@ -325,10 +326,11 @@ const Profile = () => {
     if (!user) return;
 
     try {
+      // Convert number to string for the database query
       const { error } = await supabase
         .from('work_experiences')
         .delete()
-        .eq('id', id);
+        .eq('id', id.toString());
 
       if (error) throw error;
 
@@ -371,11 +373,11 @@ const Profile = () => {
       };
 
       if (editingEducation) {
-        // Update existing
+        // Update existing - convert number to string for the database query
         const { error } = await supabase
           .from('education')
           .update(dbData)
-          .eq('id', editingEducation.id);
+          .eq('id', editingEducation.id.toString());
 
         if (error) throw error;
 
@@ -418,10 +420,11 @@ const Profile = () => {
     if (!user) return;
 
     try {
+      // Convert number to string for the database query
       const { error } = await supabase
         .from('education')
         .delete()
-        .eq('id', id);
+        .eq('id', id.toString());
 
       if (error) throw error;
 
