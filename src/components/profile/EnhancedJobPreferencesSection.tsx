@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Slider } from '@/components/ui/slider';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -66,6 +66,7 @@ const EnhancedJobPreferencesSection = () => {
   });
   const [newRole, setNewRole] = useState('');
   const [newLocation, setNewLocation] = useState('');
+  const [salaryRange, setSalaryRange] = useState<[number, number]>([50000, 150000]);
 
   const experienceLevels = [
     'Entry Level (0-2 years)',
@@ -143,6 +144,12 @@ const EnhancedJobPreferencesSection = () => {
         skills_qualifications: parseJsonbArray(data.skills_qualifications),
         work_authorization_countries: parseJsonbArray(data.work_authorization_countries)
       });
+
+      // Set salary range from preferences
+      setSalaryRange([
+        data.salary_min || 50000,
+        data.salary_max || 150000
+      ]);
     }
   };
 
@@ -167,7 +174,9 @@ const EnhancedJobPreferencesSection = () => {
       .from('enhanced_job_preferences')
       .upsert({
         user_id: user.id,
-        ...preferences
+        ...preferences,
+        salary_min: salaryRange[0],
+        salary_max: salaryRange[1]
       });
 
     if (error) {
@@ -182,6 +191,23 @@ const EnhancedJobPreferencesSection = () => {
         description: "Job preferences saved successfully"
       });
     }
+  };
+
+  const handleSalaryRangeChange = (values: number[]) => {
+    setSalaryRange([values[0], values[1]]);
+    setPreferences({
+      ...preferences,
+      salary_min: values[0],
+      salary_max: values[1]
+    });
+  };
+
+  const formatSalary = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0,
+    }).format(value);
   };
 
   const addRole = () => {
@@ -385,29 +411,30 @@ const EnhancedJobPreferencesSection = () => {
             Compensation
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="salaryMin">Minimum Salary</Label>
-              <Input
-                id="salaryMin"
-                type="number"
-                value={preferences.salary_min || ''}
-                onChange={(e) => setPreferences({ ...preferences, salary_min: parseInt(e.target.value) || undefined })}
-                placeholder="50000"
-                className={`${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'}`}
-              />
-            </div>
-            <div>
-              <Label htmlFor="salaryMax">Maximum Salary</Label>
-              <Input
-                id="salaryMax"
-                type="number"
-                value={preferences.salary_max || ''}
-                onChange={(e) => setPreferences({ ...preferences, salary_max: parseInt(e.target.value) || undefined })}
-                placeholder="100000"
-                className={`${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'}`}
-              />
+        <CardContent className="space-y-6">
+          <div>
+            <Label className="text-base font-medium mb-4 block">Salary Range</Label>
+            <div className="space-y-4">
+              <div className="px-4">
+                <Slider
+                  value={salaryRange}
+                  onValueChange={handleSalaryRangeChange}
+                  max={300000}
+                  min={20000}
+                  step={5000}
+                  className="w-full"
+                />
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex flex-col items-start">
+                  <span className="text-gray-500 dark:text-gray-400">Minimum</span>
+                  <span className="font-semibold text-lg">{formatSalary(salaryRange[0])}</span>
+                </div>
+                <div className="flex flex-col items-end">
+                  <span className="text-gray-500 dark:text-gray-400">Maximum</span>
+                  <span className="font-semibold text-lg">{formatSalary(salaryRange[1])}</span>
+                </div>
+              </div>
             </div>
           </div>
 
