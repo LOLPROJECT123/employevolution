@@ -653,6 +653,39 @@ export type Database = {
         }
         Relationships: []
       }
+      email_preferences: {
+        Row: {
+          account_updates: boolean | null
+          created_at: string | null
+          id: string
+          job_alerts: boolean | null
+          marketing_emails: boolean | null
+          newsletters: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          account_updates?: boolean | null
+          created_at?: string | null
+          id?: string
+          job_alerts?: boolean | null
+          marketing_emails?: boolean | null
+          newsletters?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          account_updates?: boolean | null
+          created_at?: string | null
+          id?: string
+          job_alerts?: boolean | null
+          marketing_emails?: boolean | null
+          newsletters?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_templates: {
         Row: {
           body: string
@@ -716,6 +749,105 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           key_name?: string
+        }
+        Relationships: []
+      }
+      enhanced_job_preferences: {
+        Row: {
+          benefits: Json | null
+          company_sizes: Json | null
+          created_at: string | null
+          desired_roles: Json | null
+          experience_level: string | null
+          id: string
+          industries: Json | null
+          job_types: Json | null
+          preferred_locations: Json | null
+          salary_max: number | null
+          salary_min: number | null
+          skills_qualifications: Json | null
+          updated_at: string | null
+          user_id: string
+          work_authorization_countries: Json | null
+          work_models: Json | null
+        }
+        Insert: {
+          benefits?: Json | null
+          company_sizes?: Json | null
+          created_at?: string | null
+          desired_roles?: Json | null
+          experience_level?: string | null
+          id?: string
+          industries?: Json | null
+          job_types?: Json | null
+          preferred_locations?: Json | null
+          salary_max?: number | null
+          salary_min?: number | null
+          skills_qualifications?: Json | null
+          updated_at?: string | null
+          user_id: string
+          work_authorization_countries?: Json | null
+          work_models?: Json | null
+        }
+        Update: {
+          benefits?: Json | null
+          company_sizes?: Json | null
+          created_at?: string | null
+          desired_roles?: Json | null
+          experience_level?: string | null
+          id?: string
+          industries?: Json | null
+          job_types?: Json | null
+          preferred_locations?: Json | null
+          salary_max?: number | null
+          salary_min?: number | null
+          skills_qualifications?: Json | null
+          updated_at?: string | null
+          user_id?: string
+          work_authorization_countries?: Json | null
+          work_models?: Json | null
+        }
+        Relationships: []
+      }
+      equal_employment_data: {
+        Row: {
+          created_at: string | null
+          disability_status: string | null
+          ethnicity: string | null
+          gender: string | null
+          id: string
+          lgbtq_status: string | null
+          updated_at: string | null
+          user_id: string
+          veteran_status: string | null
+          voluntary_participation: boolean | null
+          work_authorization: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          disability_status?: string | null
+          ethnicity?: string | null
+          gender?: string | null
+          id?: string
+          lgbtq_status?: string | null
+          updated_at?: string | null
+          user_id: string
+          veteran_status?: string | null
+          voluntary_participation?: boolean | null
+          work_authorization?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          disability_status?: string | null
+          ethnicity?: string | null
+          gender?: string | null
+          id?: string
+          lgbtq_status?: string | null
+          updated_at?: string | null
+          user_id?: string
+          veteran_status?: string | null
+          voluntary_participation?: boolean | null
+          work_authorization?: Json | null
         }
         Relationships: []
       }
@@ -1409,6 +1541,48 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_strength: {
+        Row: {
+          contact_score: number | null
+          created_at: string | null
+          education_score: number | null
+          experience_score: number | null
+          id: string
+          last_calculated: string | null
+          overall_score: number | null
+          preferences_score: number | null
+          skills_score: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          contact_score?: number | null
+          created_at?: string | null
+          education_score?: number | null
+          experience_score?: number | null
+          id?: string
+          last_calculated?: string | null
+          overall_score?: number | null
+          preferences_score?: number | null
+          skills_score?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          contact_score?: number | null
+          created_at?: string | null
+          education_score?: number | null
+          experience_score?: number | null
+          id?: string
+          last_calculated?: string | null
+          overall_score?: number | null
+          preferences_score?: number | null
+          skills_score?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -1999,6 +2173,7 @@ export type Database = {
       user_profiles: {
         Row: {
           created_at: string | null
+          date_of_birth: string | null
           github_url: string | null
           id: string
           job_status: string | null
@@ -2017,6 +2192,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          date_of_birth?: string | null
           github_url?: string | null
           id?: string
           job_status?: string | null
@@ -2035,6 +2211,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          date_of_birth?: string | null
           github_url?: string | null
           id?: string
           job_status?: string | null

@@ -17,8 +17,9 @@ import SkillsSection from '@/components/profile/SkillsSection';
 import ProjectsSection from '@/components/profile/ProjectsSection';
 import MultiLanguageSelector from '@/components/profile/MultiLanguageSelector';
 import ResumeVersionManager from '@/components/resume/ResumeVersionManager';
-import EqualEmploymentSection from '@/components/profile/EqualEmploymentSection';
-import SettingsSection from '@/components/profile/SettingsSection';
+import EnhancedSettingsSection from '@/components/profile/EnhancedSettingsSection';
+import EnhancedEqualEmploymentSection from '@/components/profile/EnhancedEqualEmploymentSection';
+import EnhancedJobPreferencesSection from '@/components/profile/EnhancedJobPreferencesSection';
 
 interface Language {
   language: string;
@@ -31,6 +32,7 @@ interface UserProfile {
   name?: string;
   phone?: string;
   location?: string;
+  date_of_birth?: string;
   linkedin_url?: string;
   github_url?: string;
   portfolio_url?: string;
@@ -58,6 +60,7 @@ const Profile = () => {
     name: '',
     phone: '',
     location: '',
+    date_of_birth: '',
     linkedin_url: '',
     github_url: '',
     portfolio_url: '',
@@ -100,10 +103,10 @@ const Profile = () => {
         setProfile({
           ...data,
           languages,
-          primary_language: data.primary_language || 'English'
+          primary_language: data.primary_language || 'English',
+          date_of_birth: data.date_of_birth || ''
         });
       } else {
-        // Set default values if no profile exists
         setProfile(prev => ({
           ...prev,
           name: user.user_metadata?.full_name || user.email?.split('@')[0] || '',
@@ -157,14 +160,12 @@ const Profile = () => {
 
     setLoading(true);
     try {
-      // Prepare update data with proper JSON serialization for languages
       const updateData: any = {
         user_id: user.id,
         ...profile,
         ...updates,
       };
 
-      // Convert languages to proper JSON format for database storage
       if (updateData.languages) {
         updateData.languages = JSON.parse(JSON.stringify(updateData.languages));
       }
@@ -192,6 +193,14 @@ const Profile = () => {
     }
   };
 
+  const handleContactUpdate = (contactData: any) => {
+    handleProfileUpdate({
+      phone: contactData.phone,
+      location: contactData.location,
+      date_of_birth: contactData.dateOfBirth
+    });
+  };
+
   const handleLanguagesChange = (languages: Language[]) => {
     handleProfileUpdate({ languages });
   };
@@ -217,7 +226,6 @@ const Profile = () => {
       {isMobile && <MobileHeader />}
       
       <div className="container mx-auto px-4 py-8 max-w-6xl">
-        {/* Modern Profile Header */}
         <div className="mb-8">
           <ModernProfileHeader
             name={profile.name || ''}
@@ -231,7 +239,6 @@ const Profile = () => {
           />
         </div>
 
-        {/* Tab Navigation */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className={`${theme === 'dark' ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'} w-full justify-start p-1 border`}>
             <TabsTrigger value="contact" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
@@ -262,14 +269,10 @@ const Profile = () => {
               data={{
                 phone: profile.phone || '',
                 location: profile.location || '',
-                email: user.email || ''
+                email: user.email || '',
+                dateOfBirth: profile.date_of_birth || ''
               }}
-              onEdit={() => {
-                toast({
-                  title: "Edit Contact",
-                  description: "Contact editing modal would open here",
-                });
-              }}
+              onUpdate={handleContactUpdate}
             />
             
             <SocialLinksSection
@@ -352,18 +355,15 @@ const Profile = () => {
           </TabsContent>
 
           <TabsContent value="preferences" className="space-y-6">
-            <div className={`${theme === 'dark' ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-200 text-gray-900'} border rounded-lg p-8 text-center`}>
-              <h3 className="text-xl font-semibold mb-4">Job Preferences</h3>
-              <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Job preferences settings coming soon...</p>
-            </div>
+            <EnhancedJobPreferencesSection />
           </TabsContent>
 
           <TabsContent value="employment" className="space-y-6">
-            <EqualEmploymentSection />
+            <EnhancedEqualEmploymentSection />
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">
-            <SettingsSection />
+            <EnhancedSettingsSection />
           </TabsContent>
         </Tabs>
       </div>
