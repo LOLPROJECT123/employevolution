@@ -67,13 +67,20 @@ const EnhancedEqualEmploymentSection = () => {
       .maybeSingle();
 
     if (existingData) {
+      // Type-safe parsing of JSONB data
+      const workAuth = existingData.work_authorization;
+      const parsedWorkAuth: Record<string, boolean> = 
+        typeof workAuth === 'object' && workAuth !== null && !Array.isArray(workAuth) 
+          ? workAuth as Record<string, boolean>
+          : {};
+
       setData({
         ethnicity: existingData.ethnicity || '',
         gender: existingData.gender || '',
         lgbtq_status: existingData.lgbtq_status || '',
         disability_status: existingData.disability_status || '',
         veteran_status: existingData.veteran_status || '',
-        work_authorization: existingData.work_authorization || {},
+        work_authorization: parsedWorkAuth,
         voluntary_participation: existingData.voluntary_participation ?? true
       });
     }

@@ -115,19 +115,33 @@ const EnhancedJobPreferencesSection = () => {
       .maybeSingle();
 
     if (data) {
+      // Type-safe parsing of JSONB arrays
+      const parseJsonbArray = (value: any): string[] => {
+        if (Array.isArray(value)) return value as string[];
+        if (typeof value === 'string') {
+          try {
+            const parsed = JSON.parse(value);
+            return Array.isArray(parsed) ? parsed : [];
+          } catch {
+            return [];
+          }
+        }
+        return [];
+      };
+
       setPreferences({
-        desired_roles: data.desired_roles || [],
+        desired_roles: parseJsonbArray(data.desired_roles),
         experience_level: data.experience_level || '',
-        industries: data.industries || [],
-        company_sizes: data.company_sizes || [],
+        industries: parseJsonbArray(data.industries),
+        company_sizes: parseJsonbArray(data.company_sizes),
         salary_min: data.salary_min,
         salary_max: data.salary_max,
-        benefits: data.benefits || [],
-        preferred_locations: data.preferred_locations || [],
-        work_models: data.work_models || [],
-        job_types: data.job_types || [],
-        skills_qualifications: data.skills_qualifications || [],
-        work_authorization_countries: data.work_authorization_countries || []
+        benefits: parseJsonbArray(data.benefits),
+        preferred_locations: parseJsonbArray(data.preferred_locations),
+        work_models: parseJsonbArray(data.work_models),
+        job_types: parseJsonbArray(data.job_types),
+        skills_qualifications: parseJsonbArray(data.skills_qualifications),
+        work_authorization_countries: parseJsonbArray(data.work_authorization_countries)
       });
     }
   };
