@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
@@ -20,6 +19,8 @@ import ResumeVersionManager from '@/components/resume/ResumeVersionManager';
 import EnhancedSettingsSection from '@/components/profile/EnhancedSettingsSection';
 import EnhancedEqualEmploymentSection from '@/components/profile/EnhancedEqualEmploymentSection';
 import EnhancedJobPreferencesSection from '@/components/profile/EnhancedJobPreferencesSection';
+import EditWorkExperience from '@/components/profile/EditWorkExperience';
+import EditEducation from '@/components/profile/EditEducation';
 
 interface Language {
   language: string;
@@ -42,6 +43,24 @@ interface UserProfile {
   primary_language?: string;
 }
 
+interface WorkExperience {
+  id: number;
+  role: string;
+  company: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  description: string[];
+}
+
+interface Education {
+  id: number;
+  school: string;
+  degree: string;
+  startDate: string;
+  endDate: string;
+}
+
 const Profile = () => {
   const { user } = useAuth();
   const isMobile = useMobile();
@@ -54,6 +73,12 @@ const Profile = () => {
   const [education, setEducation] = useState([]);
   const [projects, setProjects] = useState([]);
   const [skills, setSkills] = useState([]);
+  
+  // Modal state management
+  const [isWorkExperienceModalOpen, setIsWorkExperienceModalOpen] = useState(false);
+  const [isEducationModalOpen, setIsEducationModalOpen] = useState(false);
+  const [editingWorkExperience, setEditingWorkExperience] = useState<WorkExperience | undefined>(undefined);
+  const [editingEducation, setEditingEducation] = useState<Education | undefined>(undefined);
   
   const [profile, setProfile] = useState<UserProfile>({
     user_id: user?.id || '',
@@ -133,8 +158,27 @@ const Profile = () => {
         supabase.from('user_skills').select('*').eq('user_id', user.id)
       ]);
 
-      setWorkExperiences(workExp.data || []);
-      setEducation(edu.data || []);
+      // Transform database data to match component interfaces
+      const transformedWorkExp = (workExp.data || []).map(exp => ({
+        id: parseInt(exp.id),
+        role: exp.role || '',
+        company: exp.company || '',
+        location: exp.location || '',
+        startDate: exp.start_date || '',
+        endDate: exp.end_date || '',
+        description: exp.description || []
+      }));
+
+      const transformedEducation = (edu.data || []).map(edu => ({
+        id: parseInt(edu.id),
+        school: edu.school || '',
+        degree: edu.degree || '',
+        startDate: edu.start_date || '',
+        endDate: edu.end_date || ''
+      }));
+
+      setWorkExperiences(transformedWorkExp);
+      setEducation(transformedEducation);
       setProjects(proj.data || []);
       setSkills((skillsData.data || []).map(s => s.skill));
     } catch (error) {
@@ -207,6 +251,194 @@ const Profile = () => {
 
   const handlePrimaryLanguageChange = (primaryLanguage: string) => {
     handleProfileUpdate({ primary_language: primaryLanguage });
+  };
+
+  const handleAddWorkExperience = () => {
+    setEditingWorkExperience(undefined);
+    setIsWorkExperienceModalOpen(true);
+  };
+
+  const handleEditWorkExperience = (index: number) => {
+    setEditingWorkExperience(workExperiences[index]);
+    setIsWorkExperienceModalOpen(true);
+  };
+
+  const handleSaveWorkExperience = async (experienceData: WorkExperience) => {
+    if (!user) return;
+
+    try {
+      const dbData = {
+        user_id: user.id,
+        role: experienceData.role,
+        company: experienceData.company,
+        location: experienceData.location,
+        start_date: experienceData.startDate,
+        end_date: experienceData.endDate,
+        description: experienceData.description
+      };
+
+      if (editingWorkExperience) {
+        // Update existing
+        const { error } = await supabase
+          .from('work_experiences')
+          .update(dbData)
+          .eq('id', editingWorkExperience.id);
+
+        if (error) throw error;
+
+        setWorkExperiences(prev => 
+          prev.map(exp => exp.id === editingWorkExperience.id ? experienceData : exp)
+        );
+      } else {
+        // Add new
+        const { data, error } = await supabase
+          .from('work_experiences')
+          .insert(dbData)
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        const newExperience = {
+          ...experienceData,
+          id: parseInt(data.id)
+        };
+
+        setWorkExperiences(prev => [...prev, newExperience]);
+      }
+
+      toast({
+        title: "Success",
+        description: "Work experience saved successfully",
+      });
+    } catch (error) {
+      console.error('Error saving work experience:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save work experience",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteWorkExperience = async (id: number) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('work_experiences')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setWorkExperiences(prev => prev.filter(exp => exp.id !== id));
+
+      toast({
+        title: "Success",
+        description: "Work experience deleted successfully",
+      });
+    } catch (error) {
+      console.error('Error deleting work experience:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete work experience",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddEducation = () => {
+    setEditingEducation(undefined);
+    setIsEducationModalOpen(true);
+  };
+
+  const handleEditEducation = (index: number) => {
+    setEditingEducation(education[index]);
+    setIsEducationModalOpen(true);
+  };
+
+  const handleSaveEducation = async (educationData: Education) => {
+    if (!user) return;
+
+    try {
+      const dbData = {
+        user_id: user.id,
+        school: educationData.school,
+        degree: educationData.degree,
+        start_date: educationData.startDate,
+        end_date: educationData.endDate
+      };
+
+      if (editingEducation) {
+        // Update existing
+        const { error } = await supabase
+          .from('education')
+          .update(dbData)
+          .eq('id', editingEducation.id);
+
+        if (error) throw error;
+
+        setEducation(prev => 
+          prev.map(edu => edu.id === editingEducation.id ? educationData : edu)
+        );
+      } else {
+        // Add new
+        const { data, error } = await supabase
+          .from('education')
+          .insert(dbData)
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        const newEducation = {
+          ...educationData,
+          id: parseInt(data.id)
+        };
+
+        setEducation(prev => [...prev, newEducation]);
+      }
+
+      toast({
+        title: "Success",
+        description: "Education saved successfully",
+      });
+    } catch (error) {
+      console.error('Error saving education:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save education",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteEducation = async (id: number) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('education')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setEducation(prev => prev.filter(edu => edu.id !== id));
+
+      toast({
+        title: "Success",
+        description: "Education deleted successfully",
+      });
+    } catch (error) {
+      console.error('Error deleting education:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete education",
+        variant: "destructive",
+      });
+    }
   };
 
   if (!user) {
@@ -300,34 +532,14 @@ const Profile = () => {
           <TabsContent value="experience" className="space-y-6">
             <ModernWorkExperienceSection
               data={workExperiences}
-              onAdd={() => {
-                toast({
-                  title: "Add Experience",
-                  description: "Work experience form would open here",
-                });
-              }}
-              onEdit={(index) => {
-                toast({
-                  title: "Edit Experience",
-                  description: `Edit experience ${index + 1}`,
-                });
-              }}
+              onAdd={handleAddWorkExperience}
+              onEdit={handleEditWorkExperience}
             />
             
             <ModernEducationSection
               data={education}
-              onAdd={() => {
-                toast({
-                  title: "Add Education",
-                  description: "Education form would open here",
-                });
-              }}
-              onEdit={(index) => {
-                toast({
-                  title: "Edit Education",
-                  description: `Edit education ${index + 1}`,
-                });
-              }}
+              onAdd={handleAddEducation}
+              onEdit={handleEditEducation}
             />
             
             <ProjectsSection
@@ -367,6 +579,24 @@ const Profile = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Work Experience Modal */}
+      <EditWorkExperience
+        open={isWorkExperienceModalOpen}
+        onClose={() => setIsWorkExperienceModalOpen(false)}
+        experience={editingWorkExperience}
+        onSave={handleSaveWorkExperience}
+        onDelete={handleDeleteWorkExperience}
+      />
+
+      {/* Education Modal */}
+      <EditEducation
+        open={isEducationModalOpen}
+        onClose={() => setIsEducationModalOpen(false)}
+        education={editingEducation}
+        onSave={handleSaveEducation}
+        onDelete={handleDeleteEducation}
+      />
     </div>
   );
 };
