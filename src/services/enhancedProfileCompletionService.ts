@@ -21,12 +21,11 @@ export class EnhancedProfileCompletionService {
   async getDetailedProfileCompletion(userId: string): Promise<ProfileCompletionProgress> {
     try {
       // Fetch all user data
-      const [profile, workExp, education, skills, languages, jobPrefs, equalEmployment, notificationPrefs] = await Promise.all([
+      const [profile, workExp, education, skills, jobPrefs, equalEmployment, notificationPrefs] = await Promise.all([
         supabase.from('user_profiles').select('*').eq('user_id', userId).maybeSingle(),
         supabase.from('work_experiences').select('*').eq('user_id', userId),
         supabase.from('education').select('*').eq('user_id', userId),
         supabase.from('user_skills').select('*').eq('user_id', userId),
-        supabase.from('user_languages').select('*').eq('user_id', userId),
         supabase.from('job_preferences').select('*').eq('user_id', userId).maybeSingle(),
         supabase.from('equal_employment_data').select('*').eq('user_id', userId).maybeSingle(),
         supabase.from('notification_preferences').select('*').eq('user_id', userId).maybeSingle()
@@ -51,9 +50,10 @@ export class EnhancedProfileCompletionService {
       if (!hasWorkExp) experienceMissing.push('At least 1 work experience');
       if (!hasEducation) experienceMissing.push('At least 1 education entry');
 
-      // Skills section requirements
+      // Skills section requirements - check languages from user_profiles.languages
       const hasSkills = (skills.data?.length || 0) >= 3;
-      const hasLanguages = (languages.data?.length || 0) >= 1;
+      const profileLanguages = profile.data?.languages;
+      const hasLanguages = Array.isArray(profileLanguages) && profileLanguages.length >= 1;
       const skillsComplete = hasSkills && hasLanguages;
       const skillsMissing = [];
       if (!hasSkills) skillsMissing.push('At least 3 skills');
