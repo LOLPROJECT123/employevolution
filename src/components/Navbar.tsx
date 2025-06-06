@@ -3,10 +3,10 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
-import { Menu, X, User, LogOut, AlertCircle, Lock, HelpCircle, Bug, ChevronDown } from 'lucide-react';
+import { Menu, User, LogOut, AlertCircle, Lock, HelpCircle, Bug } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { ModeToggle } from '@/components/ModeToggle';
 
 const Navbar = () => {
   const location = useLocation();
@@ -68,95 +68,12 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            {user && navItems.map((item) => {
-              const disabled = isItemDisabled(item);
-              return (
-                <button
-                  key={item.name}
-                  onClick={() => !disabled && handleNavigate(item.path)}
-                  disabled={disabled}
-                  className={`text-sm font-medium transition-colors duration-200 flex items-center gap-1 ${
-                    disabled
-                      ? 'text-gray-400 cursor-not-allowed'
-                      : isActive(item.path)
-                      ? 'text-blue-600'
-                      : theme === 'dark'
-                      ? 'text-gray-300 hover:text-white'
-                      : 'text-gray-700 hover:text-gray-900'
-                  }`}
-                >
-                  {disabled && <Lock className="h-3 w-3" />}
-                  {item.name}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Desktop User Menu */}
-          <div className="hidden md:flex items-center space-x-4">
-            {isProfileComplete === false && user && (
-              <div className="flex items-center gap-2 px-3 py-1 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
-                <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-                <span className="text-sm text-yellow-800 dark:text-yellow-200">
-                  Complete your profile
-                </span>
-              </div>
-            )}
-            
-            {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="flex items-center space-x-1">
-                    <User className="h-4 w-4" />
-                    <ChevronDown className="h-3 w-3" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-                  <DropdownMenuItem 
-                    onClick={() => window.open('mailto:support@streamline.com?subject=Issue Report', '_blank')}
-                    className="flex items-center space-x-2 cursor-pointer"
-                  >
-                    <Bug className="h-4 w-4" />
-                    <span>Report Issues</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => window.open('mailto:support@streamline.com?subject=Support Request', '_blank')}
-                    className="flex items-center space-x-2 cursor-pointer"
-                  >
-                    <HelpCircle className="h-4 w-4" />
-                    <span>Support</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    onClick={() => handleNavigate('/profile')}
-                    className="flex items-center space-x-2 cursor-pointer"
-                  >
-                    <User className="h-4 w-4" />
-                    <span>Profile</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={handleLogout}
-                    className="flex items-center space-x-2 cursor-pointer"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    <span>Logout</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Button onClick={() => navigate('/auth')}>
-                Sign In
-              </Button>
-            )}
-          </div>
-
-          {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center">
+          {/* Top Right Controls */}
+          <div className="flex items-center space-x-2">
+            <ModeToggle />
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="icon">
                   <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
