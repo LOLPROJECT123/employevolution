@@ -93,7 +93,6 @@ const Profile = () => {
   const [projects, setProjects] = useState([]);
   const [skills, setSkills] = useState([]);
   const [completionProgress, setCompletionProgress] = useState<ProgressType | null>(null);
-  const [completingProfile, setCompletingProfile] = useState(false);
   
   // Modal state management
   const [isWorkExperienceModalOpen, setIsWorkExperienceModalOpen] = useState(false);
@@ -251,33 +250,6 @@ const Profile = () => {
     return Math.round((completedSections / sections.length) * 100);
   };
 
-  const handleCompleteProfile = async () => {
-    if (!user || !completionProgress?.canCompleteProfile) return;
-    
-    setCompletingProfile(true);
-    try {
-      // Update profile completion status
-      await enhancedProfileCompletionService.updateProfileCompletionStatus(user.id);
-      
-      toast({
-        title: "Profile completed!",
-        description: "Welcome to Streamline! You can now access all features.",
-      });
-      
-      // Redirect to dashboard
-      navigate('/dashboard');
-    } catch (error) {
-      console.error('Error completing profile:', error);
-      toast({
-        title: "Error",
-        description: "Failed to complete profile. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setCompletingProfile(false);
-    }
-  };
-
   const handleProfileUpdate = async (updates: Partial<UserProfile>) => {
     if (!user) return;
 
@@ -353,7 +325,7 @@ const Profile = () => {
         location: experienceData.location,
         start_date: experienceData.startDate,
         end_date: experienceData.endDate,
-        description: experienceData.description
+        description: [experienceData.description] // Convert string to array
       };
 
       if (editingWorkExperience) {
@@ -543,7 +515,7 @@ const Profile = () => {
         start_date: projectData.startDate,
         end_date: projectData.endDate,
         technologies: projectData.technologies || [],
-        description: projectData.description
+        description: [projectData.description] // Convert string to array
       };
 
       if (editingProject) {
@@ -780,38 +752,6 @@ const Profile = () => {
             <EnhancedSettingsSection />
           </TabsContent>
         </Tabs>
-
-        {/* Complete Profile Button */}
-        {completionProgress && !completionProgress.canCompleteProfile && (
-          <div className="fixed bottom-6 right-6 z-50">
-            <Button
-              size="lg"
-              className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
-              disabled={true}
-            >
-              <Lock className="h-5 w-5 mr-2" />
-              Complete Required Sections First
-            </Button>
-          </div>
-        )}
-
-        {completionProgress && completionProgress.canCompleteProfile && (
-          <div className="fixed bottom-6 right-6 z-50">
-            <Button
-              size="lg"
-              className="bg-green-600 hover:bg-green-700 text-white shadow-lg"
-              onClick={handleCompleteProfile}
-              disabled={completingProfile}
-            >
-              {completingProfile ? (
-                <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full mr-2"></div>
-              ) : (
-                <CheckCircle className="h-5 w-5 mr-2" />
-              )}
-              Complete Profile & Access Features
-            </Button>
-          </div>
-        )}
       </div>
 
       {/* Work Experience Modal */}
