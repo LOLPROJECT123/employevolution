@@ -29,7 +29,7 @@ const NavigationBlocker = ({ isBlocked, allowedPaths = ['/profile', '/auth'] }: 
     }
   }, [location.pathname, isBlocked, allowedPaths, navigate]);
 
-  // Block browser back/forward navigation
+  // Block browser back/forward navigation only for non-allowed paths
   useEffect(() => {
     if (!isBlocked) return;
 
@@ -50,8 +50,11 @@ const NavigationBlocker = ({ isBlocked, allowedPaths = ['/profile', '/auth'] }: 
 
     window.addEventListener('popstate', handlePopState);
     
-    // Push current state to prevent back navigation
-    window.history.pushState(null, '', window.location.pathname);
+    // Only push state if not on an allowed path
+    const isCurrentlyAllowed = allowedPaths.some(path => window.location.pathname.startsWith(path));
+    if (!isCurrentlyAllowed) {
+      window.history.pushState(null, '', window.location.pathname);
+    }
 
     return () => {
       window.removeEventListener('popstate', handlePopState);

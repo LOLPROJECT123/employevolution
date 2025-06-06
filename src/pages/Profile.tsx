@@ -694,17 +694,17 @@ const Profile = () => {
             <TabsTrigger 
               value="employment" 
               className="data-[state=active]:bg-blue-600 data-[state=active]:text-white flex items-center gap-2"
-              disabled={isProfileIncomplete}
             >
-              {isProfileIncomplete && <Lock className="h-4 w-4" />}
+              {isProfileIncomplete && <Lock className="h-4 w-4 text-orange-500" />}
+              {completionProgress?.sections.equalEmployment.complete && <CheckCircle className="h-4 w-4" />}
               Equal Employment
             </TabsTrigger>
             <TabsTrigger 
               value="settings" 
               className="data-[state=active]:bg-blue-600 data-[state=active]:text-white flex items-center gap-2"
-              disabled={isProfileIncomplete}
             >
-              {isProfileIncomplete && <Lock className="h-4 w-4" />}
+              {isProfileIncomplete && <Lock className="h-4 w-4 text-orange-500" />}
+              {completionProgress?.sections.settings.complete && <CheckCircle className="h-4 w-4" />}
               Settings
             </TabsTrigger>
           </TabsList>
@@ -823,14 +823,44 @@ const Profile = () => {
 
           <TabsContent value="preferences" className="space-y-6">
             <EnhancedJobPreferencesSection />
+            {isProfileIncomplete && (
+              <div className="mt-4 p-4 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Lock className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                  <p className="text-sm font-medium text-orange-800 dark:text-orange-200">
+                    Complete other required sections to unlock full navigation
+                  </p>
+                </div>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="employment" className="space-y-6">
             <EnhancedEqualEmploymentSection />
+            {isProfileIncomplete && (
+              <div className="mt-4 p-4 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Lock className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                  <p className="text-sm font-medium text-orange-800 dark:text-orange-200">
+                    Complete other required sections to unlock full navigation
+                  </p>
+                </div>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">
             <EnhancedSettingsSection />
+            {isProfileIncomplete && (
+              <div className="mt-4 p-4 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Lock className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                  <p className="text-sm font-medium text-orange-800 dark:text-orange-200">
+                    Complete other required sections to unlock full navigation
+                  </p>
+                </div>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>

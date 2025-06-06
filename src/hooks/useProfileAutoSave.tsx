@@ -90,6 +90,45 @@ export function useProfileAutoSave<T>(
           if (langError) throw langError;
           break;
 
+        case 'jobPreferences':
+          const prefData = dataToSave as any;
+          const { error: prefError } = await supabase
+            .from('enhanced_job_preferences')
+            .upsert({
+              user_id: user.id,
+              ...prefData,
+              updated_at: new Date().toISOString()
+            });
+          
+          if (prefError) throw prefError;
+          break;
+
+        case 'equalEmployment':
+          const eeData = dataToSave as any;
+          const { error: eeError } = await supabase
+            .from('equal_employment_data')
+            .upsert({
+              user_id: user.id,
+              ...eeData,
+              updated_at: new Date().toISOString()
+            });
+          
+          if (eeError) throw eeError;
+          break;
+
+        case 'settings':
+          const settingsData = dataToSave as any;
+          const { error: settingsError } = await supabase
+            .from('email_preferences')
+            .upsert({
+              user_id: user.id,
+              ...settingsData,
+              updated_at: new Date().toISOString()
+            });
+          
+          if (settingsError) throw settingsError;
+          break;
+
         default:
           throw new Error(`Unknown section: ${options.section}`);
       }
