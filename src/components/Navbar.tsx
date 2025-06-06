@@ -1,9 +1,11 @@
+
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
-import { Menu, X, User, LogOut, AlertCircle, Lock } from 'lucide-react';
+import { Menu, X, User, LogOut, AlertCircle, Lock, HelpCircle, Bug, ChevronDown } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
 const Navbar = () => {
@@ -104,26 +106,45 @@ const Navbar = () => {
             )}
             
             {user ? (
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleNavigate('/profile')}
-                  className="flex items-center space-x-1"
-                >
-                  <User className="h-4 w-4" />
-                  <span>Profile</span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleLogout}
-                  className="flex items-center space-x-1"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>Logout</span>
-                </Button>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="flex items-center space-x-1">
+                    <User className="h-4 w-4" />
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                  <DropdownMenuItem 
+                    onClick={() => window.open('mailto:support@streamline.com?subject=Issue Report', '_blank')}
+                    className="flex items-center space-x-2 cursor-pointer"
+                  >
+                    <Bug className="h-4 w-4" />
+                    <span>Report Issues</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => window.open('mailto:support@streamline.com?subject=Support Request', '_blank')}
+                    className="flex items-center space-x-2 cursor-pointer"
+                  >
+                    <HelpCircle className="h-4 w-4" />
+                    <span>Support</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={() => handleNavigate('/profile')}
+                    className="flex items-center space-x-2 cursor-pointer"
+                  >
+                    <User className="h-4 w-4" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={handleLogout}
+                    className="flex items-center space-x-2 cursor-pointer"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Logout</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <Button onClick={() => navigate('/auth')}>
                 Sign In
@@ -185,24 +206,48 @@ const Navbar = () => {
                           variant="ghost"
                           className="w-full justify-start"
                           onClick={() => {
-                            handleNavigate('/profile');
+                            window.open('mailto:support@streamline.com?subject=Issue Report', '_blank');
                             setIsMobileMenuOpen(false);
                           }}
                         >
-                          <User className="h-4 w-4 mr-2" />
-                          Profile
+                          <Bug className="h-4 w-4 mr-2" />
+                          Report Issues
                         </Button>
                         <Button
                           variant="ghost"
                           className="w-full justify-start"
                           onClick={() => {
-                            handleLogout();
+                            window.open('mailto:support@streamline.com?subject=Support Request', '_blank');
                             setIsMobileMenuOpen(false);
                           }}
                         >
-                          <LogOut className="h-4 w-4 mr-2" />
-                          Logout
+                          <HelpCircle className="h-4 w-4 mr-2" />
+                          Support
                         </Button>
+                        <div className="border-t pt-2 mt-2">
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-start"
+                            onClick={() => {
+                              handleNavigate('/profile');
+                              setIsMobileMenuOpen(false);
+                            }}
+                          >
+                            <User className="h-4 w-4 mr-2" />
+                            Profile
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-start"
+                            onClick={() => {
+                              handleLogout();
+                              setIsMobileMenuOpen(false);
+                            }}
+                          >
+                            <LogOut className="h-4 w-4 mr-2" />
+                            Logout
+                          </Button>
+                        </div>
                       </div>
                     ) : (
                       <Button 
