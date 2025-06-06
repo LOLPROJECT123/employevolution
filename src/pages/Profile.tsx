@@ -23,6 +23,8 @@ import EnhancedEqualEmploymentSection from '@/components/profile/EnhancedEqualEm
 import EnhancedJobPreferencesSection from '@/components/profile/EnhancedJobPreferencesSection';
 import EditWorkExperience from '@/components/profile/EditWorkExperience';
 import EditEducation from '@/components/profile/EditEducation';
+import EditProject from '@/components/profile/EditProject';
+import ModernProjectsSection from '@/components/profile/ModernProjectsSection';
 import ProfileCompletionProgress from '@/components/profile/ProfileCompletionProgress';
 import NavigationBlocker from '@/components/profile/NavigationBlocker';
 import { enhancedProfileCompletionService, ProfileCompletionProgress as ProgressType } from '@/services/enhancedProfileCompletionService';
@@ -56,7 +58,7 @@ interface WorkExperience {
   location: string;
   startDate: string;
   endDate: string;
-  description: string[];
+  description: string;
 }
 
 interface Education {
@@ -65,6 +67,16 @@ interface Education {
   degree: string;
   startDate: string;
   endDate: string;
+}
+
+interface Project {
+  id: number;
+  name: string;
+  url?: string;
+  startDate: string;
+  endDate: string;
+  technologies?: string[];
+  description: string;
 }
 
 const Profile = () => {
@@ -86,8 +98,10 @@ const Profile = () => {
   // Modal state management
   const [isWorkExperienceModalOpen, setIsWorkExperienceModalOpen] = useState(false);
   const [isEducationModalOpen, setIsEducationModalOpen] = useState(false);
+  const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [editingWorkExperience, setEditingWorkExperience] = useState<WorkExperience | undefined>(undefined);
   const [editingEducation, setEditingEducation] = useState<Education | undefined>(undefined);
+  const [editingProject, setEditingProject] = useState<Project | undefined>(undefined);
   
   const [profile, setProfile] = useState<UserProfile>({
     user_id: user?.id || '',
@@ -194,7 +208,7 @@ const Profile = () => {
         location: exp.location || '',
         startDate: exp.start_date || '',
         endDate: exp.end_date || '',
-        description: exp.description || []
+        description: Array.isArray(exp.description) ? exp.description.join('\n') : (exp.description || '')
       }));
 
       const transformedEducation = (edu.data || []).map(edu => ({
@@ -205,9 +219,19 @@ const Profile = () => {
         endDate: edu.end_date || ''
       }));
 
+      const transformedProjects = (proj.data || []).map(project => ({
+        id: parseInt(project.id),
+        name: project.name || '',
+        url: project.url || undefined,
+        startDate: project.start_date || '',
+        endDate: project.end_date || '',
+        technologies: Array.isArray(project.technologies) ? project.technologies : [],
+        description: Array.isArray(project.description) ? project.description.join('\n') : (project.description || '')
+      }));
+
       setWorkExperiences(transformedWorkExp);
       setEducation(transformedEducation);
-      setProjects(proj.data || []);
+      setProjects(transformedProjects);
       setSkills((skillsData.data || []).map(s => s.skill));
     } catch (error) {
       console.error('Error loading user data:', error);
@@ -333,7 +357,7 @@ const Profile = () => {
       };
 
       if (editingWorkExperience) {
-        // Update existing - convert number to string for the database query
+        // Update existing
         const { error } = await supabase
           .from('work_experiences')
           .update(dbData)
@@ -498,6 +522,101 @@ const Profile = () => {
     }
   };
 
+  const handleAddProject = () => {
+    setEditingProject(undefined);
+    setIsProjectModalOpen(true);
+  };
+
+  const handleEditProject = (index: number) => {
+    setEditingProject(projects[index]);
+    setIsProjectModalOpen(true);
+  };
+
+  const handleSaveProject = async (projectData: Project) => {
+    if (!user) return;
+
+    try {
+      const dbData = {
+        user_id: user.id,
+        name: projectData.name,
+        url: projectData.url || null,
+        start_date: projectData.startDate,
+        end_date: projectData.endDate,
+        technologies: projectData.technologies || [],
+        description: projectData.description
+      };
+
+      if (editingProject) {
+        // Update existing
+        const { error } = await supabase
+          .from('projects')
+          .update(dbData)
+          .eq('id', editingProject.id.toString());
+
+        if (error) throw error;
+
+        setProjects(prev => 
+          prev.map(proj => proj.id === editingProject.id ? projectData : proj)
+        );
+      } else {
+        // Add new
+        const { data, error } = await supabase
+          .from('projects')
+          .insert(dbData)
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        const newProject = {
+          ...projectData,
+          id: parseInt(data.id)
+        };
+
+        setProjects(prev => [...prev, newProject]);
+      }
+
+      toast({
+        title: "Success",
+        description: "Project saved successfully",
+      });
+    } catch (error) {
+      console.error('Error saving project:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save project",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteProject = async (id: number) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', id.toString());
+
+      if (error) throw error;
+
+      setProjects(prev => prev.filter(proj => proj.id !== id));
+
+      toast({
+        title: "Success",
+        description: "Project deleted successfully",
+      });
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete project",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (!user) {
     return (
       <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-950' : 'bg-gray-50'} flex items-center justify-center`}>
@@ -626,11 +745,10 @@ const Profile = () => {
               onEdit={handleEditEducation}
             />
             
-            <ProjectsSection
+            <ModernProjectsSection
               data={projects}
-              onChange={(data) => {
-                setProjects(data);
-              }}
+              onAdd={handleAddProject}
+              onEdit={handleEditProject}
             />
           </TabsContent>
 
@@ -712,6 +830,15 @@ const Profile = () => {
         education={editingEducation}
         onSave={handleSaveEducation}
         onDelete={handleDeleteEducation}
+      />
+
+      {/* Project Modal */}
+      <EditProject
+        open={isProjectModalOpen}
+        onClose={() => setIsProjectModalOpen(false)}
+        project={editingProject}
+        onSave={handleSaveProject}
+        onDelete={handleDeleteProject}
       />
     </div>
   );
