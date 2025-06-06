@@ -288,7 +288,7 @@ const Index = () => {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-2 mb-4 md:mb-0 cursor-pointer" onClick={() => navigate('/')}>
               <img 
-                src="/lovable-uploads/85e847f6-190e-47d4-a91a-49ca8b6d8e13.png" 
+                src="/lovable-uploads/e143f174-8a9d-4972-8058-44990ccdb8f3.png" 
                 alt="Streamline Logo" 
                 className="w-6 h-6" 
               />

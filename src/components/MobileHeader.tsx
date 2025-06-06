@@ -16,7 +16,7 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({ title, showLogo = true }) =
       <div className="flex items-center gap-2">
         <Link to="/" className="flex items-center">
           <img 
-            src="/lovable-uploads/85e847f6-190e-47d4-a91a-49ca8b6d8e13.png" 
+            src="/lovable-uploads/e143f174-8a9d-4972-8058-44990ccdb8f3.png" 
             alt="Streamline" 
             className="h-8 w-8" 
           />
