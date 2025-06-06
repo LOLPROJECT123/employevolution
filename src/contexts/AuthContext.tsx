@@ -1,3 +1,4 @@
+
 import React, {
   createContext,
   useState,
@@ -42,6 +43,8 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  console.log('🔐 AuthProvider: Initializing...');
+  
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
