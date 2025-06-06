@@ -12,7 +12,7 @@ interface WorkExperience {
   location: string;
   startDate: string;
   endDate: string;
-  description: string[];
+  description: string; // Changed from string[] to string
 }
 
 interface ModernWorkExperienceSectionProps {
@@ -71,15 +71,10 @@ const ModernWorkExperienceSection = ({ data, onAdd, onEdit }: ModernWorkExperien
                       )}
                     </div>
 
-                    {experience.description && experience.description.length > 0 && (
-                      <ul className={`space-y-1 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'} text-sm`}>
-                        {experience.description.slice(0, 3).map((item, i) => (
-                          <li key={i} className="flex items-start">
-                            <span className="mr-2">•</span>
-                            <span>{item}</span>
-                          </li>
-                        ))}
-                      </ul>
+                    {experience.description && (
+                      <div className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'} text-sm`}>
+                        <p>{experience.description}</p>
+                      </div>
                     )}
                   </div>
                   
