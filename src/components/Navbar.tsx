@@ -59,9 +59,11 @@ const Navbar = () => {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">S</span>
-              </div>
+              <img 
+                src="/lovable-uploads/85e847f6-190e-47d4-a91a-49ca8b6d8e13.png" 
+                alt="Streamline Logo" 
+                className="w-8 h-8"
+              />
               <span className={`font-bold text-xl ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                 Streamline
               </span>
