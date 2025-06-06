@@ -58,8 +58,18 @@ export function useProfileAutoSave<T>(
 
         case 'skills':
           const skillsData = dataToSave as string[];
+          console.log(`💾 Saving skills for user ${user.id}:`, skillsData);
+          
           // Clear existing skills and insert new ones
-          await supabase.from('user_skills').delete().eq('user_id', user.id);
+          const { error: deleteError } = await supabase
+            .from('user_skills')
+            .delete()
+            .eq('user_id', user.id);
+          
+          if (deleteError) {
+            console.error('❌ Error deleting existing skills:', deleteError);
+            throw deleteError;
+          }
           
           if (skillsData.length > 0) {
             const skillsToInsert = skillsData.map(skill => ({
@@ -68,12 +78,19 @@ export function useProfileAutoSave<T>(
               category: 'general'
             }));
             
+            console.log('📝 Inserting skills:', skillsToInsert);
+            
             const { error: skillsError } = await supabase
               .from('user_skills')
               .insert(skillsToInsert);
             
-            if (skillsError) throw skillsError;
+            if (skillsError) {
+              console.error('❌ Error inserting skills:', skillsError);
+              throw skillsError;
+            }
           }
+          
+          console.log('✅ Skills saved successfully');
           break;
 
         case 'languages':
@@ -133,6 +150,7 @@ export function useProfileAutoSave<T>(
           throw new Error(`Unknown section: ${options.section}`);
       }
 
+      console.log(`✅ ${options.section} auto-saved successfully`);
       return { success: true };
     } catch (error) {
       console.error(`❌ Auto-save failed for ${options.section}:`, error);
@@ -151,6 +169,7 @@ export function useProfileAutoSave<T>(
       console.log(`✅ ${options.section} auto-saved successfully`);
     },
     onSaveError: (error) => {
+      console.error(`❌ Auto-save error for ${options.section}:`, error);
       toast({
         title: "Auto-save failed",
         description: `Failed to save ${options.section}: ${error}`,

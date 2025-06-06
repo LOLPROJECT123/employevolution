@@ -131,9 +131,19 @@ const Profile = () => {
     other: profile.other_url
   }, { section: 'socialLinks' });
 
-  const skillsAutoSave = useProfileAutoSave(skills, { section: 'skills' });
+  // Enhanced skills auto-save with debugging
+  const skillsAutoSave = useProfileAutoSave(skills, { 
+    section: 'skills',
+    interval: 1000 // Faster interval for testing
+  });
 
   const languagesAutoSave = useProfileAutoSave(profile.languages, { section: 'languages' });
+
+  // Debug logging for skills changes
+  useEffect(() => {
+    console.log('🔍 Skills state changed:', skills);
+    console.log('🔍 Skills auto-save status:', skillsAutoSave.saveStatus);
+  }, [skills, skillsAutoSave.saveStatus]);
 
   useEffect(() => {
     if (user) {
@@ -146,6 +156,7 @@ const Profile = () => {
   // Reload completion progress when data changes
   useEffect(() => {
     if (user) {
+      console.log('🔄 Reloading completion progress due to data change');
       loadCompletionProgress();
     }
   }, [user, profile, workExperiences, education, skills]);
@@ -154,7 +165,9 @@ const Profile = () => {
     if (!user) return;
     
     try {
+      console.log('📊 Loading completion progress for user:', user.id);
       const progress = await enhancedProfileCompletionService.getDetailedProfileCompletion(user.id);
+      console.log('📊 Completion progress loaded:', progress);
       setCompletionProgress(progress);
     } catch (error) {
       console.error('Error loading completion progress:', error);
@@ -337,7 +350,7 @@ const Profile = () => {
   };
 
   const handleSkillsChange = (newSkills: string[]) => {
-    // Update local state - auto-save will handle the database update
+    console.log('🎯 Skills changing from:', skills, 'to:', newSkills);
     setSkills(newSkills);
   };
 
@@ -626,6 +639,60 @@ const Profile = () => {
     }
   };
 
+  const handleManualSkillsSave = async () => {
+    if (!user) return;
+    
+    console.log('💾 Manual skills save triggered for skills:', skills);
+    try {
+      // Clear existing skills
+      const { error: deleteError } = await supabase
+        .from('user_skills')
+        .delete()
+        .eq('user_id', user.id);
+      
+      if (deleteError) {
+        console.error('❌ Error deleting existing skills:', deleteError);
+        throw deleteError;
+      }
+      
+      if (skills.length > 0) {
+        const skillsToInsert = skills.map(skill => ({
+          user_id: user.id,
+          skill: skill,
+          category: 'general'
+        }));
+        
+        console.log('📝 Inserting skills:', skillsToInsert);
+        
+        const { error: insertError } = await supabase
+          .from('user_skills')
+          .insert(skillsToInsert);
+        
+        if (insertError) {
+          console.error('❌ Error inserting skills:', insertError);
+          throw insertError;
+        }
+      }
+      
+      console.log('✅ Skills saved successfully');
+      toast({
+        title: "Skills saved",
+        description: "Your skills have been saved successfully.",
+      });
+      
+      // Reload completion progress
+      loadCompletionProgress();
+      
+    } catch (error) {
+      console.error('❌ Manual skills save failed:', error);
+      toast({
+        title: "Error saving skills",
+        description: "Failed to save your skills. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (!user) {
     return (
       <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-950' : 'bg-gray-50'} flex items-center justify-center`}>
@@ -785,6 +852,21 @@ const Profile = () => {
               primaryLanguage={profile.primary_language}
               onPrimaryLanguageChange={handlePrimaryLanguageChange}
             />
+
+            {/* Debug section for skills */}
+            <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
+              <h4 className="font-medium mb-2">Debug Info</h4>
+              <p className="text-sm">Skills in state: {skills.length} - {skills.join(', ')}</p>
+              <p className="text-sm">Auto-save status: {skillsAutoSave.saveStatus}</p>
+              <Button 
+                onClick={handleManualSkillsSave}
+                variant="outline"
+                size="sm"
+                className="mt-2"
+              >
+                Manual Save Skills
+              </Button>
+            </div>
 
             {/* Auto-save indicators */}
             <div className="flex gap-4 text-xs text-gray-500">
