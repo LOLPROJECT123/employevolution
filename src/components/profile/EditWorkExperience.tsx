@@ -11,6 +11,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { DatePicker } from "@/components/ui/date-picker";
 import { X, Plus } from "lucide-react";
 
 interface WorkExperience {
@@ -43,6 +46,7 @@ const EditWorkExperience: React.FC<EditWorkExperienceProps> = ({
   const [location, setLocation] = useState(experience?.location || "");
   const [startDate, setStartDate] = useState(experience?.startDate || "");
   const [endDate, setEndDate] = useState(experience?.endDate || "");
+  const [isPresent, setIsPresent] = useState(experience?.endDate === "Present" || false);
   const [descriptions, setDescriptions] = useState<string[]>(
     experience?.description || [""]
   );
@@ -63,6 +67,15 @@ const EditWorkExperience: React.FC<EditWorkExperienceProps> = ({
     setDescriptions(newDescriptions);
   };
 
+  const handlePresentChange = (checked: boolean) => {
+    setIsPresent(checked);
+    if (checked) {
+      setEndDate("Present");
+    } else {
+      setEndDate("");
+    }
+  };
+
   const handleSave = () => {
     const filteredDescriptions = descriptions.filter(desc => desc.trim() !== "");
     
@@ -72,7 +85,7 @@ const EditWorkExperience: React.FC<EditWorkExperienceProps> = ({
       company,
       location,
       startDate,
-      endDate,
+      endDate: isPresent ? "Present" : endDate,
       description: filteredDescriptions,
     });
     onClose();
@@ -95,9 +108,7 @@ const EditWorkExperience: React.FC<EditWorkExperienceProps> = ({
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <label htmlFor="role" className="text-sm font-medium">
-              Role/Title
-            </label>
+            <Label htmlFor="role">Role/Title</Label>
             <Input
               id="role"
               value={role}
@@ -106,9 +117,7 @@ const EditWorkExperience: React.FC<EditWorkExperienceProps> = ({
             />
           </div>
           <div className="grid gap-2">
-            <label htmlFor="company" className="text-sm font-medium">
-              Company
-            </label>
+            <Label htmlFor="company">Company</Label>
             <Input
               id="company"
               value={company}
@@ -117,9 +126,7 @@ const EditWorkExperience: React.FC<EditWorkExperienceProps> = ({
             />
           </div>
           <div className="grid gap-2">
-            <label htmlFor="location" className="text-sm font-medium">
-              Location
-            </label>
+            <Label htmlFor="location">Location</Label>
             <Input
               id="location"
               value={location}
@@ -129,31 +136,34 @@ const EditWorkExperience: React.FC<EditWorkExperienceProps> = ({
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
-              <label htmlFor="startDate" className="text-sm font-medium">
-                Start Date
-              </label>
-              <Input
-                id="startDate"
+              <Label>Start Date</Label>
+              <DatePicker
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                placeholder="MMM YYYY"
+                onChange={setStartDate}
+                placeholder="Select start date"
               />
             </div>
             <div className="grid gap-2">
-              <label htmlFor="endDate" className="text-sm font-medium">
-                End Date
-              </label>
-              <Input
-                id="endDate"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                placeholder="MMM YYYY or Present"
+              <Label>End Date</Label>
+              <DatePicker
+                value={isPresent ? "" : endDate}
+                onChange={setEndDate}
+                placeholder="Select end date"
+                disabled={isPresent}
               />
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="present"
+                  checked={isPresent}
+                  onCheckedChange={handlePresentChange}
+                />
+                <Label htmlFor="present" className="text-sm">I currently work here</Label>
+              </div>
             </div>
           </div>
           <div className="grid gap-2">
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium">Description</label>
+              <Label>Description</Label>
               <Button
                 type="button"
                 variant="outline"

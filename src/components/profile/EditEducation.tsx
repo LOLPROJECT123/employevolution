@@ -10,6 +10,9 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { DatePicker } from "@/components/ui/date-picker";
 
 interface Education {
   id: number;
@@ -38,6 +41,16 @@ const EditEducation: React.FC<EditEducationProps> = ({
   const [degree, setDegree] = useState(education?.degree || "");
   const [startDate, setStartDate] = useState(education?.startDate || "");
   const [endDate, setEndDate] = useState(education?.endDate || "");
+  const [isPresent, setIsPresent] = useState(education?.endDate === "Present" || false);
+
+  const handlePresentChange = (checked: boolean) => {
+    setIsPresent(checked);
+    if (checked) {
+      setEndDate("Present");
+    } else {
+      setEndDate("");
+    }
+  };
 
   const handleSave = () => {
     onSave({
@@ -45,7 +58,7 @@ const EditEducation: React.FC<EditEducationProps> = ({
       school,
       degree,
       startDate,
-      endDate,
+      endDate: isPresent ? "Present" : endDate,
     });
     onClose();
   };
@@ -67,9 +80,7 @@ const EditEducation: React.FC<EditEducationProps> = ({
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <label htmlFor="school" className="text-sm font-medium">
-              School/University
-            </label>
+            <Label htmlFor="school">School/University</Label>
             <Input
               id="school"
               value={school}
@@ -78,9 +89,7 @@ const EditEducation: React.FC<EditEducationProps> = ({
             />
           </div>
           <div className="grid gap-2">
-            <label htmlFor="degree" className="text-sm font-medium">
-              Degree
-            </label>
+            <Label htmlFor="degree">Degree</Label>
             <Input
               id="degree"
               value={degree}
@@ -90,26 +99,29 @@ const EditEducation: React.FC<EditEducationProps> = ({
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
-              <label htmlFor="startDate" className="text-sm font-medium">
-                Start Date
-              </label>
-              <Input
-                id="startDate"
+              <Label>Start Date</Label>
+              <DatePicker
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                placeholder="MMM YYYY"
+                onChange={setStartDate}
+                placeholder="Select start date"
               />
             </div>
             <div className="grid gap-2">
-              <label htmlFor="endDate" className="text-sm font-medium">
-                End Date
-              </label>
-              <Input
-                id="endDate"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                placeholder="MMM YYYY or Present"
+              <Label>End Date</Label>
+              <DatePicker
+                value={isPresent ? "" : endDate}
+                onChange={setEndDate}
+                placeholder="Select end date"
+                disabled={isPresent}
               />
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="present"
+                  checked={isPresent}
+                  onCheckedChange={handlePresentChange}
+                />
+                <Label htmlFor="present" className="text-sm">Currently enrolled</Label>
+              </div>
             </div>
           </div>
         </div>

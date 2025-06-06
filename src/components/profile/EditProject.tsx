@@ -11,6 +11,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { DatePicker } from "@/components/ui/date-picker";
 import { X, Plus } from "lucide-react";
 
 interface Project {
@@ -39,6 +42,7 @@ const EditProject: React.FC<EditProjectProps> = ({
   const [name, setName] = useState(project?.name || "");
   const [startDate, setStartDate] = useState(project?.startDate || "");
   const [endDate, setEndDate] = useState(project?.endDate || "");
+  const [isOngoing, setIsOngoing] = useState(project?.endDate === "Ongoing" || false);
   const [descriptions, setDescriptions] = useState<string[]>(
     project?.description || [""]
   );
@@ -59,6 +63,15 @@ const EditProject: React.FC<EditProjectProps> = ({
     setDescriptions(newDescriptions);
   };
 
+  const handleOngoingChange = (checked: boolean) => {
+    setIsOngoing(checked);
+    if (checked) {
+      setEndDate("Ongoing");
+    } else {
+      setEndDate("");
+    }
+  };
+
   const handleSave = () => {
     const filteredDescriptions = descriptions.filter(desc => desc.trim() !== "");
     
@@ -66,7 +79,7 @@ const EditProject: React.FC<EditProjectProps> = ({
       id: project?.id || Date.now(),
       name,
       startDate,
-      endDate,
+      endDate: isOngoing ? "Ongoing" : endDate,
       description: filteredDescriptions,
     });
     onClose();
@@ -89,9 +102,7 @@ const EditProject: React.FC<EditProjectProps> = ({
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <label htmlFor="name" className="text-sm font-medium">
-              Project Name
-            </label>
+            <Label htmlFor="name">Project Name</Label>
             <Input
               id="name"
               value={name}
@@ -101,31 +112,34 @@ const EditProject: React.FC<EditProjectProps> = ({
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
-              <label htmlFor="startDate" className="text-sm font-medium">
-                Start Date
-              </label>
-              <Input
-                id="startDate"
+              <Label>Start Date</Label>
+              <DatePicker
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                placeholder="MMM YYYY"
+                onChange={setStartDate}
+                placeholder="Select start date"
               />
             </div>
             <div className="grid gap-2">
-              <label htmlFor="endDate" className="text-sm font-medium">
-                End Date
-              </label>
-              <Input
-                id="endDate"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                placeholder="MMM YYYY or Present"
+              <Label>End Date</Label>
+              <DatePicker
+                value={isOngoing ? "" : endDate}
+                onChange={setEndDate}
+                placeholder="Select end date"
+                disabled={isOngoing}
               />
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="ongoing"
+                  checked={isOngoing}
+                  onCheckedChange={handleOngoingChange}
+                />
+                <Label htmlFor="ongoing" className="text-sm">This is an ongoing project</Label>
+              </div>
             </div>
           </div>
           <div className="grid gap-2">
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium">Description</label>
+              <Label>Description</Label>
               <Button
                 type="button"
                 variant="outline"
