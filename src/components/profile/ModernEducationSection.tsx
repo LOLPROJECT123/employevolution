@@ -40,9 +40,6 @@ const ModernEducationSection = ({ data, onAdd, onEdit }: ModernEducationSectionP
           <div className={`text-center py-8 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
             <Building className={`h-12 w-12 mx-auto mb-4 ${theme === 'dark' ? 'text-gray-600' : 'text-gray-400'}`} />
             <p>No education added yet</p>
-            <Button onClick={onAdd} variant="outline" className="mt-4">
-              Add Your Education
-            </Button>
           </div>
         ) : (
           data.map((education, index) => (
