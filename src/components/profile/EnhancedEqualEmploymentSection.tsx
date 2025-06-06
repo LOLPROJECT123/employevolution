@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -10,7 +9,8 @@ import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Shield, Users, Globe, Info, Save } from 'lucide-react';
+import { Shield, Users, Globe, Info } from 'lucide-react';
+import { useProfileAutoSave } from '@/hooks/useProfileAutoSave';
 
 interface EqualEmploymentData {
   ethnicity?: string;
@@ -22,7 +22,11 @@ interface EqualEmploymentData {
   voluntary_participation: boolean;
 }
 
-const EnhancedEqualEmploymentSection = () => {
+interface EnhancedEqualEmploymentSectionProps {
+  onDataChange?: (data: EqualEmploymentData) => void;
+}
+
+const EnhancedEqualEmploymentSection = ({ onDataChange }: EnhancedEqualEmploymentSectionProps) => {
   const { theme } = useTheme();
   const { user } = useAuth();
   const [data, setData] = useState<EqualEmploymentData>({
@@ -51,11 +55,19 @@ const EnhancedEqualEmploymentSection = () => {
     'Prefer not to answer'
   ];
 
+  // Auto-save hook
+  const equalEmploymentAutoSave = useProfileAutoSave(data, { section: 'equalEmployment' });
+
   useEffect(() => {
     if (user) {
       loadEqualEmploymentData();
     }
   }, [user]);
+
+  // Notify parent component when data changes
+  useEffect(() => {
+    onDataChange?.(data);
+  }, [data, onDataChange]);
 
   const loadEqualEmploymentData = async () => {
     if (!user) return;
@@ -86,38 +98,21 @@ const EnhancedEqualEmploymentSection = () => {
     }
   };
 
-  const handleSave = async () => {
-    if (!user) return;
-
-    const { error } = await supabase
-      .from('equal_employment_data')
-      .upsert({
-        user_id: user.id,
-        ...data
-      });
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save equal employment data",
-        variant: "destructive"
-      });
-    } else {
-      toast({
-        title: "Success",
-        description: "Equal employment data saved successfully"
-      });
-    }
-  };
-
   const handleWorkAuthorizationChange = (country: string, authorized: boolean) => {
-    setData({
-      ...data,
+    setData(prev => ({
+      ...prev,
       work_authorization: {
-        ...data.work_authorization,
+        ...prev.work_authorization,
         [country]: authorized
       }
-    });
+    }));
+  };
+
+  const handleFieldChange = (field: keyof EqualEmploymentData, value: any) => {
+    setData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   return (
@@ -139,7 +134,7 @@ const EnhancedEqualEmploymentSection = () => {
                 <Checkbox
                   id="voluntary"
                   checked={data.voluntary_participation}
-                  onCheckedChange={(checked) => setData({ ...data, voluntary_participation: checked as boolean })}
+                  onCheckedChange={(checked) => handleFieldChange('voluntary_participation', checked as boolean)}
                 />
                 <Label htmlFor="voluntary" className="text-blue-700 dark:text-blue-300">
                   I understand this information is voluntary
@@ -159,7 +154,7 @@ const EnhancedEqualEmploymentSection = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Select value={data.ethnicity} onValueChange={(value) => setData({ ...data, ethnicity: value })}>
+          <Select value={data.ethnicity} onValueChange={(value) => handleFieldChange('ethnicity', value)}>
             <SelectTrigger className={`${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'}`}>
               <SelectValue placeholder="Select your ethnicity" />
             </SelectTrigger>
@@ -213,7 +208,7 @@ const EnhancedEqualEmploymentSection = () => {
         <CardContent className="space-y-4">
           <div>
             <Label htmlFor="gender">Gender</Label>
-            <Select value={data.gender} onValueChange={(value) => setData({ ...data, gender: value })}>
+            <Select value={data.gender} onValueChange={(value) => handleFieldChange('gender', value)}>
               <SelectTrigger className={`${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'}`}>
                 <SelectValue placeholder="Select gender" />
               </SelectTrigger>
@@ -229,7 +224,7 @@ const EnhancedEqualEmploymentSection = () => {
 
           <div>
             <Label htmlFor="lgbtq">LGBTQ+ Status</Label>
-            <Select value={data.lgbtq_status} onValueChange={(value) => setData({ ...data, lgbtq_status: value })}>
+            <Select value={data.lgbtq_status} onValueChange={(value) => handleFieldChange('lgbtq_status', value)}>
               <SelectTrigger className={`${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'}`}>
                 <SelectValue placeholder="Select LGBTQ+ status" />
               </SelectTrigger>
@@ -243,7 +238,7 @@ const EnhancedEqualEmploymentSection = () => {
 
           <div>
             <Label htmlFor="disability">Disability Status</Label>
-            <Select value={data.disability_status} onValueChange={(value) => setData({ ...data, disability_status: value })}>
+            <Select value={data.disability_status} onValueChange={(value) => handleFieldChange('disability_status', value)}>
               <SelectTrigger className={`${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'}`}>
                 <SelectValue placeholder="Select disability status" />
               </SelectTrigger>
@@ -257,7 +252,7 @@ const EnhancedEqualEmploymentSection = () => {
 
           <div>
             <Label htmlFor="veteran">Veteran Status</Label>
-            <Select value={data.veteran_status} onValueChange={(value) => setData({ ...data, veteran_status: value })}>
+            <Select value={data.veteran_status} onValueChange={(value) => handleFieldChange('veteran_status', value)}>
               <SelectTrigger className={`${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'}`}>
                 <SelectValue placeholder="Select veteran status" />
               </SelectTrigger>
@@ -271,11 +266,17 @@ const EnhancedEqualEmploymentSection = () => {
         </CardContent>
       </Card>
 
-      <div className="flex justify-end">
-        <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
-          <Save className="h-4 w-4 mr-2" />
-          Save Changes
-        </Button>
+      {/* Auto-save status indicator */}
+      <div className="flex items-center gap-2 text-xs text-gray-500">
+        <div className={`w-2 h-2 rounded-full ${
+          equalEmploymentAutoSave.saveStatus === 'saved' ? 'bg-green-500' :
+          equalEmploymentAutoSave.saveStatus === 'saving' ? 'bg-yellow-500' :
+          equalEmploymentAutoSave.saveStatus === 'error' ? 'bg-red-500' :
+          'bg-gray-400'
+        }`} />
+        Equal Employment: {equalEmploymentAutoSave.saveStatus === 'saved' ? 'Saved' :
+                           equalEmploymentAutoSave.saveStatus === 'saving' ? 'Saving...' :
+                           equalEmploymentAutoSave.saveStatus === 'error' ? 'Error' : 'Ready'}
       </div>
     </div>
   );

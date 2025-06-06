@@ -823,44 +823,14 @@ const Profile = () => {
 
           <TabsContent value="preferences" className="space-y-6">
             <EnhancedJobPreferencesSection />
-            {isProfileIncomplete && (
-              <div className="mt-4 p-4 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Lock className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-                  <p className="text-sm font-medium text-orange-800 dark:text-orange-200">
-                    Complete other required sections to unlock full navigation
-                  </p>
-                </div>
-              </div>
-            )}
           </TabsContent>
 
           <TabsContent value="employment" className="space-y-6">
             <EnhancedEqualEmploymentSection />
-            {isProfileIncomplete && (
-              <div className="mt-4 p-4 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Lock className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-                  <p className="text-sm font-medium text-orange-800 dark:text-orange-200">
-                    Complete other required sections to unlock full navigation
-                  </p>
-                </div>
-              </div>
-            )}
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">
             <EnhancedSettingsSection />
-            {isProfileIncomplete && (
-              <div className="mt-4 p-4 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Lock className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-                  <p className="text-sm font-medium text-orange-800 dark:text-orange-200">
-                    Complete other required sections to unlock full navigation
-                  </p>
-                </div>
-              </div>
-            )}
           </TabsContent>
         </Tabs>
       </div>
