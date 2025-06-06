@@ -29,6 +29,7 @@ import ProfileCompletionProgress from '@/components/profile/ProfileCompletionPro
 import NavigationBlocker from '@/components/profile/NavigationBlocker';
 import { enhancedProfileCompletionService, ProfileCompletionProgress as ProgressType } from '@/services/enhancedProfileCompletionService';
 import { CheckCircle, Lock } from 'lucide-react';
+import { useProfileAutoSave } from '@/hooks/useProfileAutoSave';
 
 interface Language {
   language: string;
@@ -116,6 +117,24 @@ const Profile = () => {
     languages: [],
     primary_language: 'English'
   });
+
+  // Auto-save hooks for different sections
+  const contactAutoSave = useProfileAutoSave({
+    phone: profile.phone,
+    location: profile.location,
+    dateOfBirth: profile.date_of_birth
+  }, { section: 'contact' });
+
+  const socialLinksAutoSave = useProfileAutoSave({
+    linkedin: profile.linkedin_url,
+    github: profile.github_url,
+    portfolio: profile.portfolio_url,
+    other: profile.other_url
+  }, { section: 'socialLinks' });
+
+  const skillsAutoSave = useProfileAutoSave(skills, { section: 'skills' });
+
+  const languagesAutoSave = useProfileAutoSave(profile.languages, { section: 'languages' });
 
   useEffect(() => {
     if (user) {
@@ -289,19 +308,38 @@ const Profile = () => {
   };
 
   const handleContactUpdate = (contactData: any) => {
-    handleProfileUpdate({
+    // Update local state - auto-save will handle the database update
+    setProfile(prev => ({
+      ...prev,
       phone: contactData.phone,
       location: contactData.location,
       date_of_birth: contactData.dateOfBirth
-    });
+    }));
+  };
+
+  const handleSocialLinksUpdate = (socialData: any) => {
+    // Update local state - auto-save will handle the database update
+    setProfile(prev => ({
+      ...prev,
+      linkedin_url: socialData.linkedin,
+      github_url: socialData.github,
+      portfolio_url: socialData.portfolio,
+      other_url: socialData.other
+    }));
   };
 
   const handleLanguagesChange = (languages: Language[]) => {
-    handleProfileUpdate({ languages });
+    // Update local state - auto-save will handle the database update
+    setProfile(prev => ({ ...prev, languages }));
   };
 
   const handlePrimaryLanguageChange = (primaryLanguage: string) => {
     handleProfileUpdate({ primary_language: primaryLanguage });
+  };
+
+  const handleSkillsChange = (newSkills: string[]) => {
+    // Update local state - auto-save will handle the database update
+    setSkills(newSkills);
   };
 
   const handleAddWorkExperience = () => {
@@ -689,15 +727,34 @@ const Profile = () => {
                 portfolio: profile.portfolio_url || '',
                 other: profile.other_url || ''
               }}
-              onChange={(data) => {
-                handleProfileUpdate({
-                  linkedin_url: data.linkedin,
-                  github_url: data.github,
-                  portfolio_url: data.portfolio,
-                  other_url: data.other
-                });
-              }}
+              onChange={handleSocialLinksUpdate}
             />
+
+            {/* Auto-save indicators */}
+            <div className="flex gap-4 text-xs text-gray-500">
+              <div className="flex items-center gap-1">
+                <div className={`w-2 h-2 rounded-full ${
+                  contactAutoSave.saveStatus === 'saved' ? 'bg-green-500' :
+                  contactAutoSave.saveStatus === 'saving' ? 'bg-yellow-500' :
+                  contactAutoSave.saveStatus === 'error' ? 'bg-red-500' :
+                  'bg-gray-400'
+                }`} />
+                Contact: {contactAutoSave.saveStatus === 'saved' ? 'Saved' :
+                         contactAutoSave.saveStatus === 'saving' ? 'Saving...' :
+                         contactAutoSave.saveStatus === 'error' ? 'Error' : 'Ready'}
+              </div>
+              <div className="flex items-center gap-1">
+                <div className={`w-2 h-2 rounded-full ${
+                  socialLinksAutoSave.saveStatus === 'saved' ? 'bg-green-500' :
+                  socialLinksAutoSave.saveStatus === 'saving' ? 'bg-yellow-500' :
+                  socialLinksAutoSave.saveStatus === 'error' ? 'bg-red-500' :
+                  'bg-gray-400'
+                }`} />
+                Social Links: {socialLinksAutoSave.saveStatus === 'saved' ? 'Saved' :
+                             socialLinksAutoSave.saveStatus === 'saving' ? 'Saving...' :
+                             socialLinksAutoSave.saveStatus === 'error' ? 'Error' : 'Ready'}
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="resume" className="space-y-6">
@@ -727,9 +784,7 @@ const Profile = () => {
           <TabsContent value="skills" className="space-y-6">
             <SkillsSection
               data={skills}
-              onChange={(data) => {
-                setSkills(data);
-              }}
+              onChange={handleSkillsChange}
             />
             
             <MultiLanguageSelector
@@ -738,6 +793,32 @@ const Profile = () => {
               primaryLanguage={profile.primary_language}
               onPrimaryLanguageChange={handlePrimaryLanguageChange}
             />
+
+            {/* Auto-save indicators */}
+            <div className="flex gap-4 text-xs text-gray-500">
+              <div className="flex items-center gap-1">
+                <div className={`w-2 h-2 rounded-full ${
+                  skillsAutoSave.saveStatus === 'saved' ? 'bg-green-500' :
+                  skillsAutoSave.saveStatus === 'saving' ? 'bg-yellow-500' :
+                  skillsAutoSave.saveStatus === 'error' ? 'bg-red-500' :
+                  'bg-gray-400'
+                }`} />
+                Skills: {skillsAutoSave.saveStatus === 'saved' ? 'Saved' :
+                        skillsAutoSave.saveStatus === 'saving' ? 'Saving...' :
+                        skillsAutoSave.saveStatus === 'error' ? 'Error' : 'Ready'}
+              </div>
+              <div className="flex items-center gap-1">
+                <div className={`w-2 h-2 rounded-full ${
+                  languagesAutoSave.saveStatus === 'saved' ? 'bg-green-500' :
+                  languagesAutoSave.saveStatus === 'saving' ? 'bg-yellow-500' :
+                  languagesAutoSave.saveStatus === 'error' ? 'bg-red-500' :
+                  'bg-gray-400'
+                }`} />
+                Languages: {languagesAutoSave.saveStatus === 'saved' ? 'Saved' :
+                          languagesAutoSave.saveStatus === 'saving' ? 'Saving...' :
+                          languagesAutoSave.saveStatus === 'error' ? 'Error' : 'Ready'}
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="preferences" className="space-y-6">
