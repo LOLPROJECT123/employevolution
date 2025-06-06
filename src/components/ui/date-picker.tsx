@@ -51,7 +51,7 @@ export function DatePicker({
         <Button
           variant="outline"
           className={cn(
-            "justify-start text-left font-normal",
+            "justify-start text-left font-normal w-full",
             !displayValue && "text-muted-foreground",
             className
           )}
@@ -68,6 +68,10 @@ export function DatePicker({
           onSelect={handleSelect}
           disabled={(date) => date > new Date()}
           initialFocus
+          showOutsideDays={false}
+          captionLayout="dropdown-buttons"
+          fromYear={1950}
+          toYear={new Date().getFullYear()}
           className="p-3 pointer-events-auto"
         />
       </PopoverContent>

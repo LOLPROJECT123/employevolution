@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
-import { X, Plus } from "lucide-react";
+import { X } from "lucide-react";
 
 interface WorkExperience {
   id: number;
@@ -50,10 +50,6 @@ const EditWorkExperience: React.FC<EditWorkExperienceProps> = ({
   const [descriptions, setDescriptions] = useState<string[]>(
     experience?.description || [""]
   );
-
-  const handleAddDescription = () => {
-    setDescriptions([...descriptions, ""]);
-  };
 
   const handleRemoveDescription = (index: number) => {
     const newDescriptions = [...descriptions];
@@ -162,18 +158,7 @@ const EditWorkExperience: React.FC<EditWorkExperienceProps> = ({
             </div>
           </div>
           <div className="grid gap-2">
-            <div className="flex items-center justify-between">
-              <Label>Description</Label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleAddDescription}
-                className="h-8 px-2"
-              >
-                <Plus className="h-4 w-4 mr-1" /> Add Point
-              </Button>
-            </div>
+            <Label>Description</Label>
             {descriptions.map((desc, index) => (
               <div key={index} className="flex gap-2">
                 <Textarea
