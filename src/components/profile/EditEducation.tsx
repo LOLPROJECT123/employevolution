@@ -18,6 +18,7 @@ interface Education {
   id: number;
   school: string;
   degree: string;
+  major?: string;
   startDate: string;
   endDate: string;
 }
@@ -39,6 +40,7 @@ const EditEducation: React.FC<EditEducationProps> = ({
 }) => {
   const [school, setSchool] = useState(education?.school || "");
   const [degree, setDegree] = useState(education?.degree || "");
+  const [major, setMajor] = useState(education?.major || "");
   const [startDate, setStartDate] = useState(education?.startDate || "");
   const [endDate, setEndDate] = useState(education?.endDate || "");
   const [isPresent, setIsPresent] = useState(education?.endDate === "Present" || false);
@@ -57,6 +59,7 @@ const EditEducation: React.FC<EditEducationProps> = ({
       id: education?.id || Date.now(),
       school,
       degree,
+      major,
       startDate,
       endDate: isPresent ? "Present" : endDate,
     });
@@ -94,7 +97,16 @@ const EditEducation: React.FC<EditEducationProps> = ({
               id="degree"
               value={degree}
               onChange={(e) => setDegree(e.target.value)}
-              placeholder="Bachelor's, Computer Science"
+              placeholder="Bachelor's, Master's, PhD, etc."
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="major">Major</Label>
+            <Input
+              id="major"
+              value={major}
+              onChange={(e) => setMajor(e.target.value)}
+              placeholder="Computer Science, Business, etc."
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
