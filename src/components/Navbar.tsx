@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -35,7 +34,6 @@ const Navbar = () => {
     { name: 'Dashboard', path: '/dashboard', requiresCompletion: true },
     { name: 'Jobs', path: '/jobs', requiresCompletion: true },
     { name: 'Applications', path: '/applications', requiresCompletion: true },
-    { name: 'Profile', path: '/profile', requiresCompletion: false },
     { name: 'Interview Practice', path: '/interview-practice', requiresCompletion: true },
     { name: 'Resume Tools', path: '/resume-tools', requiresCompletion: true },
     { name: 'Networking', path: '/networking', requiresCompletion: true },
