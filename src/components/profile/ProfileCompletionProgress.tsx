@@ -111,11 +111,11 @@ const ProfileCompletionProgress = ({ progress, currentTab }: ProfileCompletionPr
           </div>
 
           {!progress.canCompleteProfile && (
-            <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+            <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
               <div className="flex items-center gap-2">
-                <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-                <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                  Complete all sections to access other features
+                <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                  Complete remaining sections to enhance your profile strength
                 </p>
               </div>
             </div>

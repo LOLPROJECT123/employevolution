@@ -26,9 +26,8 @@ import EditEducation from '@/components/profile/EditEducation';
 import EditProject from '@/components/profile/EditProject';
 import ModernProjectsSection from '@/components/profile/ModernProjectsSection';
 import ProfileCompletionProgress from '@/components/profile/ProfileCompletionProgress';
-import NavigationBlocker from '@/components/profile/NavigationBlocker';
 import { enhancedProfileCompletionService, ProfileCompletionProgress as ProgressType } from '@/services/enhancedProfileCompletionService';
-import { CheckCircle, Lock } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 import { useProfileAutoSave } from '@/hooks/useProfileAutoSave';
 
 interface Language {
@@ -621,7 +620,7 @@ const Profile = () => {
       console.error('Error deleting project:', error);
       toast({
         title: "Error",
-        description: "Failed to delete project",
+        description: "Failed to save project",
         variant: "destructive",
       });
     }
@@ -638,13 +637,8 @@ const Profile = () => {
     );
   }
 
-  const isProfileIncomplete = completionProgress && !completionProgress.canCompleteProfile;
-
   return (
     <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-950' : 'bg-gray-50'}`}>
-      {/* Navigation Blocker for incomplete profiles */}
-      <NavigationBlocker isBlocked={isProfileIncomplete || false} />
-      
       {!isMobile && <Navbar />}
       {isMobile && <MobileHeader />}
       
@@ -695,7 +689,6 @@ const Profile = () => {
               value="employment" 
               className="data-[state=active]:bg-blue-600 data-[state=active]:text-white flex items-center gap-2"
             >
-              {isProfileIncomplete && <Lock className="h-4 w-4 text-orange-500" />}
               {completionProgress?.sections.equalEmployment.complete && <CheckCircle className="h-4 w-4" />}
               Equal Employment
             </TabsTrigger>
@@ -703,7 +696,6 @@ const Profile = () => {
               value="settings" 
               className="data-[state=active]:bg-blue-600 data-[state=active]:text-white flex items-center gap-2"
             >
-              {isProfileIncomplete && <Lock className="h-4 w-4 text-orange-500" />}
               {completionProgress?.sections.settings.complete && <CheckCircle className="h-4 w-4" />}
               Settings
             </TabsTrigger>
