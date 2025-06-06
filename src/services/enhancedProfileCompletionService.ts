@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { profileCompletionService, ProfileCompletionItem } from '@/services/profileCompletionService';
 
@@ -50,13 +49,13 @@ export class EnhancedProfileCompletionService {
       if (!hasWorkExp) experienceMissing.push('At least 1 work experience');
       if (!hasEducation) experienceMissing.push('At least 1 education entry');
 
-      // Skills section requirements - check languages from user_profiles.languages
-      const hasSkills = (skills.data?.length || 0) >= 3;
+      // Skills section requirements - changed from 3 to 1 skill requirement
+      const hasSkills = (skills.data?.length || 0) >= 1;
       const profileLanguages = profile.data?.languages;
       const hasLanguages = Array.isArray(profileLanguages) && profileLanguages.length >= 1;
       const skillsComplete = hasSkills && hasLanguages;
       const skillsMissing = [];
-      if (!hasSkills) skillsMissing.push('At least 3 skills');
+      if (!hasSkills) skillsMissing.push('At least 1 skill');
       if (!hasLanguages) skillsMissing.push('At least 1 language');
 
       // Job preferences requirements
