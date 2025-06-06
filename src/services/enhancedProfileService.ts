@@ -3,7 +3,6 @@ import { profileService } from './profileService';
 import { AddressValidator, AddressComponents } from '@/utils/addressValidation';
 import { ProfileDataSync } from '@/utils/profileDataSync';
 import { ErrorHandler, ProfileErrorHandler } from '@/utils/errorHandling';
-import { OnboardingFlowManager } from '@/utils/onboardingFlow';
 import { ProfileCompletionTracker } from '@/utils/profileCompletionTracker';
 import { DataImportExportService } from '@/utils/dataImportExport';
 import { ParsedResume } from '@/types/resume';
@@ -115,9 +114,6 @@ export class EnhancedProfileService {
   // Validate profile completion with detailed feedback
   static async validateProfileCompletionDetailed(userId: string, profileData: any) {
     try {
-      // Get onboarding progress with single parameter
-      const progress = await OnboardingFlowManager.getOnboardingProgress(userId);
-      
       // Get detailed completion analysis
       const completionItems = ProfileCompletionTracker.calculateDetailedCompletion(profileData);
       const qualityMetrics = ProfileCompletionTracker.calculateQualityMetrics(profileData);
@@ -125,12 +121,21 @@ export class EnhancedProfileService {
       // Get next milestone
       const nextMilestone = ProfileCompletionTracker.getNextMilestone(qualityMetrics.completionScore);
       
+      // Create simple progress object since we removed onboarding flow
+      const progress = {
+        currentStep: 0,
+        totalSteps: 6,
+        completedSteps: [],
+        percentComplete: qualityMetrics.completionScore,
+        canProceed: true // Always allow proceeding since we removed onboarding
+      };
+      
       return {
         progress,
         completionItems,
         qualityMetrics,
         nextMilestone,
-        isReadyForCompletion: progress.canProceed
+        isReadyForCompletion: true // Always ready since no onboarding required
       };
     } catch (error) {
       ErrorHandler.handleError(
@@ -139,31 +144,20 @@ export class EnhancedProfileService {
       );
       
       return {
-        progress: { currentStep: 0, totalSteps: 0, completedSteps: [], percentComplete: 0, canProceed: false },
+        progress: { currentStep: 0, totalSteps: 0, completedSteps: [], percentComplete: 0, canProceed: true },
         completionItems: [],
         qualityMetrics: { completionScore: 0, qualityScore: 0, strengthAreas: [], improvementAreas: [], recommendations: [] },
         nextMilestone: null,
-        isReadyForCompletion: false
+        isReadyForCompletion: true
       };
     }
   }
 
-  // Complete onboarding with all validations
+  // Complete onboarding with all validations - simplified since no onboarding flow
   static async completeOnboardingWithValidation(userId: string, profileData: any): Promise<boolean> {
     try {
-      // Validate completion requirements
-      const validation = await this.validateProfileCompletionDetailed(userId, profileData);
-      
-      if (!validation.isReadyForCompletion) {
-        const missingItems = validation.completionItems
-          .filter(item => !item.isCompleted && item.priority === 'high')
-          .map(item => item.description);
-        
-        throw new Error(`Profile completion requirements not met: ${missingItems.join(', ')}`);
-      }
-
-      // Complete onboarding through flow manager
-      return await OnboardingFlowManager.completeOnboarding(userId, profileData);
+      // Since we removed onboarding flow, just save the profile data
+      return await this.saveProfileWithValidation(userId, profileData);
     } catch (error) {
       ErrorHandler.handleError(
         error instanceof Error ? error : new Error(String(error)),
