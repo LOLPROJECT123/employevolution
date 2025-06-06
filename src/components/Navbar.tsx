@@ -1,180 +1,230 @@
 
-import { Link, useLocation } from "react-router-dom";
-import { useMobile } from "@/hooks/use-mobile";
-import { ModeToggle } from "@/components/ModeToggle";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-  navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu";
-import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
-import { useAuth } from "@/hooks/useAuth";
-import { 
-  User, 
-  BookOpen, 
-  BriefcaseIcon, 
-  DollarSign, 
-  FileText,
-  Users,
-  Network,
-  Menu,
-  MessageSquare,
-  HelpCircle,
-  LogOut,
-  LogIn,
-  Home,
-  Briefcase,
-  FileText as FileTextIcon,
-  Users as UsersIcon,
-  Play,
-  UserPlus,
-  DollarSign as DollarSignIcon
-} from "lucide-react";
-
-const navigationItems = [
-  { name: 'Dashboard', href: '/dashboard', icon: Home },
-  { name: 'Jobs', href: '/jobs', icon: Briefcase },
-  { name: 'Resume Tools', href: '/resume-tools', icon: FileTextIcon },
-  { name: 'Networking', href: '/networking', icon: UsersIcon },
-  { name: 'Interview Practice', href: '/interview-practice', icon: Play },
-  { name: 'Referrals', href: '/referrals', icon: UserPlus },
-  { name: 'Salary Negotiations', href: '/salary-negotiations', icon: DollarSignIcon },
-];
+import React, { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { useAuth } from '@/hooks/useAuth';
+import { Menu, X, User, LogOut, AlertCircle, Lock } from 'lucide-react';
+import { useTheme } from 'next-themes';
 
 const Navbar = () => {
-  const isMobile = useMobile();
   const location = useLocation();
-  const { user, logout } = useAuth();
-  const [isScrolled, setIsScrolled] = useState(false);
+  const navigate = useNavigate();
+  const { user, logout, isProfileComplete } = useAuth();
+  const { theme } = useTheme();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Handle scroll effect for navbar
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
-    
-    window.addEventListener("scroll", handleScroll);
-    
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
-
-  // If on mobile, don't show the navbar (it's handled in the mobile views)
-  if (isMobile) {
-    return null;
-  }
-
-  // Check if the current path matches
-  const isActive = (path: string) => {
-    return location.pathname === path;
-  };
-
-  const handleSignOut = async () => {
+  const handleLogout = async () => {
     try {
       await logout();
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error('Logout error:', error);
     }
   };
 
-  const handleSignIn = () => {
-    window.location.href = '/auth';
+  const handleNavigate = (path: string) => {
+    if (isProfileComplete === false && path !== '/profile' && path !== '/auth') {
+      // Show warning and redirect to profile
+      navigate('/profile');
+      return;
+    }
+    navigate(path);
+  };
+
+  const navItems = [
+    { name: 'Dashboard', path: '/dashboard', requiresCompletion: true },
+    { name: 'Jobs', path: '/jobs', requiresCompletion: true },
+    { name: 'Applications', path: '/applications', requiresCompletion: true },
+    { name: 'Profile', path: '/profile', requiresCompletion: false },
+    { name: 'Interview Practice', path: '/interview-practice', requiresCompletion: true },
+    { name: 'Resume Tools', path: '/resume-tools', requiresCompletion: true },
+    { name: 'Networking', path: '/networking', requiresCompletion: true },
+    { name: 'Job Alerts', path: '/job-alerts', requiresCompletion: true },
+  ];
+
+  const isActive = (path: string) => {
+    if (path === '/resume-tools') {
+      return location.pathname.startsWith('/resume-tools');
+    }
+    return location.pathname === path;
+  };
+
+  const isItemDisabled = (item: any) => {
+    return item.requiresCompletion && isProfileComplete === false;
   };
 
   return (
-    <div className={cn(
-      "sticky top-0 z-50 w-full transition-all duration-200 bg-slate-50 dark:bg-slate-900 border-b",
-      isScrolled ? "shadow-sm" : ""
-    )}>
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-6">
-          <Link to="/">
-            <div className="flex items-center gap-2">
-              <img src="/lovable-uploads/47a5c183-6462-4482-85b2-320da7ad9a4e.png" alt="Streamline" className="h-8 w-8" />
-              <span className="font-bold text-lg">Streamline</span>
-            </div>
-          </Link>
-          
-          <NavigationMenu>
-            <NavigationMenuList className="flex space-x-1">
-              {navigationItems.map((item) => (
-                <NavigationMenuItem key={item.name}>
-                  <Link to={item.href}>
-                    <div className={cn(
-                      "flex items-center px-3 py-2 text-sm font-medium transition-colors",
-                      isActive(item.href) ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                    )}>
-                      <item.icon className="mr-2 h-4 w-4" />
-                      {item.name}
-                    </div>
-                  </Link>
-                </NavigationMenuItem>
-              ))}
-            </NavigationMenuList>
-          </NavigationMenu>
-        </div>
-        
-        <div className="flex items-center gap-4">
-          <ModeToggle />
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon">
-                <Menu className="h-4 w-4" />
-                <span className="sr-only">Open menu</span>
+    <nav className={`${theme === 'dark' ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'} border-b sticky top-0 z-50`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex items-center">
+            <Link to="/" className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-lg">S</span>
+              </div>
+              <span className={`font-bold text-xl ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                Streamline
+              </span>
+            </Link>
+          </div>
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-8">
+            {user && navItems.map((item) => {
+              const disabled = isItemDisabled(item);
+              return (
+                <button
+                  key={item.name}
+                  onClick={() => !disabled && handleNavigate(item.path)}
+                  disabled={disabled}
+                  className={`text-sm font-medium transition-colors duration-200 flex items-center gap-1 ${
+                    disabled
+                      ? 'text-gray-400 cursor-not-allowed'
+                      : isActive(item.path)
+                      ? 'text-blue-600'
+                      : theme === 'dark'
+                      ? 'text-gray-300 hover:text-white'
+                      : 'text-gray-700 hover:text-gray-900'
+                  }`}
+                >
+                  {disabled && <Lock className="h-3 w-3" />}
+                  {item.name}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Desktop User Menu */}
+          <div className="hidden md:flex items-center space-x-4">
+            {isProfileComplete === false && user && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
+                <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                <span className="text-sm text-yellow-800 dark:text-yellow-200">
+                  Complete your profile
+                </span>
+              </div>
+            )}
+            
+            {user ? (
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleNavigate('/profile')}
+                  className="flex items-center space-x-1"
+                >
+                  <User className="h-4 w-4" />
+                  <span>Profile</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleLogout}
+                  className="flex items-center space-x-1"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Logout</span>
+                </Button>
+              </div>
+            ) : (
+              <Button onClick={() => navigate('/auth')}>
+                Sign In
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 bg-background">
-              {user && (
-                <>
-                  <DropdownMenuItem asChild>
-                    <Link to="/profile" className="flex items-center">
-                      <User className="mr-2 h-4 w-4" />
-                      <span>Profile</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                </>
-              )}
-              <DropdownMenuItem>
-                <MessageSquare className="mr-2 h-4 w-4" />
-                <span>Report Issues</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <HelpCircle className="mr-2 h-4 w-4" />
-                <span>Support</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              {user ? (
-                <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Sign out</span>
-                </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem onClick={handleSignIn}>
-                  <LogIn className="mr-2 h-4 w-4" />
-                  <span>Sign in</span>
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            )}
+          </div>
+
+          {/* Mobile Menu Button */}
+          <div className="md:hidden flex items-center">
+            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <Menu className="h-6 w-6" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                <div className="flex flex-col space-y-4 mt-8">
+                  {isProfileComplete === false && user && (
+                    <div className="flex items-center gap-2 p-3 bg-yellow-100 dark:bg-yellow-900 rounded-lg mb-4">
+                      <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                      <span className="text-sm text-yellow-800 dark:text-yellow-200">
+                        Complete your profile to access all features
+                      </span>
+                    </div>
+                  )}
+                  
+                  {user && navItems.map((item) => {
+                    const disabled = isItemDisabled(item);
+                    return (
+                      <button
+                        key={item.name}
+                        onClick={() => {
+                          if (!disabled) {
+                            handleNavigate(item.path);
+                            setIsMobileMenuOpen(false);
+                          }
+                        }}
+                        disabled={disabled}
+                        className={`text-left p-3 rounded-lg transition-colors flex items-center gap-2 ${
+                          disabled
+                            ? 'text-gray-400 cursor-not-allowed bg-gray-100 dark:bg-gray-800'
+                            : isActive(item.path)
+                            ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
+                            : theme === 'dark'
+                            ? 'text-gray-300 hover:bg-gray-800'
+                            : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        {disabled && <Lock className="h-4 w-4" />}
+                        {item.name}
+                      </button>
+                    );
+                  })}
+                  
+                  <div className="border-t pt-4 mt-4">
+                    {user ? (
+                      <div className="space-y-2">
+                        <Button
+                          variant="ghost"
+                          className="w-full justify-start"
+                          onClick={() => {
+                            handleNavigate('/profile');
+                            setIsMobileMenuOpen(false);
+                          }}
+                        >
+                          <User className="h-4 w-4 mr-2" />
+                          Profile
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          className="w-full justify-start"
+                          onClick={() => {
+                            handleLogout();
+                            setIsMobileMenuOpen(false);
+                          }}
+                        >
+                          <LogOut className="h-4 w-4 mr-2" />
+                          Logout
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button 
+                        className="w-full" 
+                        onClick={() => {
+                          navigate('/auth');
+                          setIsMobileMenuOpen(false);
+                        }}
+                      >
+                        Sign In
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </div>
-    </div>
+    </nav>
   );
 };
 

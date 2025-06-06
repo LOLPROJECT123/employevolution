@@ -1,10 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useTheme } from 'next-themes';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import MobileHeader from '@/components/MobileHeader';
 import { useMobile } from '@/hooks/use-mobile';
@@ -22,6 +23,10 @@ import EnhancedEqualEmploymentSection from '@/components/profile/EnhancedEqualEm
 import EnhancedJobPreferencesSection from '@/components/profile/EnhancedJobPreferencesSection';
 import EditWorkExperience from '@/components/profile/EditWorkExperience';
 import EditEducation from '@/components/profile/EditEducation';
+import ProfileCompletionProgress from '@/components/profile/ProfileCompletionProgress';
+import NavigationBlocker from '@/components/profile/NavigationBlocker';
+import { enhancedProfileCompletionService, ProfileCompletionProgress as ProgressType } from '@/services/enhancedProfileCompletionService';
+import { CheckCircle, Lock } from 'lucide-react';
 
 interface Language {
   language: string;
@@ -64,6 +69,7 @@ interface Education {
 
 const Profile = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const isMobile = useMobile();
   const { theme } = useTheme();
   const [loading, setLoading] = useState(false);
@@ -74,6 +80,8 @@ const Profile = () => {
   const [education, setEducation] = useState([]);
   const [projects, setProjects] = useState([]);
   const [skills, setSkills] = useState([]);
+  const [completionProgress, setCompletionProgress] = useState<ProgressType | null>(null);
+  const [completingProfile, setCompletingProfile] = useState(false);
   
   // Modal state management
   const [isWorkExperienceModalOpen, setIsWorkExperienceModalOpen] = useState(false);
@@ -100,8 +108,27 @@ const Profile = () => {
     if (user) {
       loadProfile();
       loadUserData();
+      loadCompletionProgress();
     }
   }, [user]);
+
+  // Reload completion progress when data changes
+  useEffect(() => {
+    if (user) {
+      loadCompletionProgress();
+    }
+  }, [user, profile, workExperiences, education, skills]);
+
+  const loadCompletionProgress = async () => {
+    if (!user) return;
+    
+    try {
+      const progress = await enhancedProfileCompletionService.getDetailedProfileCompletion(user.id);
+      setCompletionProgress(progress);
+    } catch (error) {
+      console.error('Error loading completion progress:', error);
+    }
+  };
 
   const loadProfile = async () => {
     if (!user) return;
@@ -198,6 +225,33 @@ const Profile = () => {
     
     const completedSections = sections.filter(Boolean).length;
     return Math.round((completedSections / sections.length) * 100);
+  };
+
+  const handleCompleteProfile = async () => {
+    if (!user || !completionProgress?.canCompleteProfile) return;
+    
+    setCompletingProfile(true);
+    try {
+      // Update profile completion status
+      await enhancedProfileCompletionService.updateProfileCompletionStatus(user.id);
+      
+      toast({
+        title: "Profile completed!",
+        description: "Welcome to Streamline! You can now access all features.",
+      });
+      
+      // Redirect to dashboard
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Error completing profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to complete profile. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setCompletingProfile(false);
+    }
   };
 
   const handleProfileUpdate = async (updates: Partial<UserProfile>) => {
@@ -455,12 +509,25 @@ const Profile = () => {
     );
   }
 
+  const isProfileIncomplete = completionProgress && !completionProgress.canCompleteProfile;
+
   return (
     <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-950' : 'bg-gray-50'}`}>
+      {/* Navigation Blocker for incomplete profiles */}
+      <NavigationBlocker isBlocked={isProfileIncomplete || false} />
+      
       {!isMobile && <Navbar />}
       {isMobile && <MobileHeader />}
       
       <div className="container mx-auto px-4 py-8 max-w-6xl">
+        {/* Profile Completion Progress */}
+        {completionProgress && (
+          <ProfileCompletionProgress 
+            progress={completionProgress} 
+            currentTab={activeTab}
+          />
+        )}
+
         <div className="mb-8">
           <ModernProfileHeader
             name={profile.name || ''}
@@ -476,25 +543,39 @@ const Profile = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className={`${theme === 'dark' ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'} w-full justify-start p-1 border`}>
-            <TabsTrigger value="contact" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="contact" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white flex items-center gap-2">
+              {completionProgress?.sections.contact.complete && <CheckCircle className="h-4 w-4" />}
               Contact
             </TabsTrigger>
             <TabsTrigger value="resume" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               Resume
             </TabsTrigger>
-            <TabsTrigger value="experience" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="experience" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white flex items-center gap-2">
+              {completionProgress?.sections.experience.complete && <CheckCircle className="h-4 w-4" />}
               Experience
             </TabsTrigger>
-            <TabsTrigger value="skills" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="skills" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white flex items-center gap-2">
+              {completionProgress?.sections.skills.complete && <CheckCircle className="h-4 w-4" />}
               Skills & Languages
             </TabsTrigger>
-            <TabsTrigger value="preferences" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="preferences" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white flex items-center gap-2">
+              {completionProgress?.sections.preferences.complete && <CheckCircle className="h-4 w-4" />}
               Job Preferences
             </TabsTrigger>
-            <TabsTrigger value="employment" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger 
+              value="employment" 
+              className="data-[state=active]:bg-blue-600 data-[state=active]:text-white flex items-center gap-2"
+              disabled={isProfileIncomplete}
+            >
+              {isProfileIncomplete && <Lock className="h-4 w-4" />}
               Equal Employment
             </TabsTrigger>
-            <TabsTrigger value="settings" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger 
+              value="settings" 
+              className="data-[state=active]:bg-blue-600 data-[state=active]:text-white flex items-center gap-2"
+              disabled={isProfileIncomplete}
+            >
+              {isProfileIncomplete && <Lock className="h-4 w-4" />}
               Settings
             </TabsTrigger>
           </TabsList>
@@ -581,6 +662,38 @@ const Profile = () => {
             <EnhancedSettingsSection />
           </TabsContent>
         </Tabs>
+
+        {/* Complete Profile Button */}
+        {completionProgress && !completionProgress.canCompleteProfile && (
+          <div className="fixed bottom-6 right-6 z-50">
+            <Button
+              size="lg"
+              className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
+              disabled={true}
+            >
+              <Lock className="h-5 w-5 mr-2" />
+              Complete Required Sections First
+            </Button>
+          </div>
+        )}
+
+        {completionProgress && completionProgress.canCompleteProfile && (
+          <div className="fixed bottom-6 right-6 z-50">
+            <Button
+              size="lg"
+              className="bg-green-600 hover:bg-green-700 text-white shadow-lg"
+              onClick={handleCompleteProfile}
+              disabled={completingProfile}
+            >
+              {completingProfile ? (
+                <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+              ) : (
+                <CheckCircle className="h-5 w-5 mr-2" />
+              )}
+              Complete Profile & Access Features
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Work Experience Modal */}

@@ -7,6 +7,7 @@ import React, {
 } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { profileCompletionService } from '@/services/profileCompletionService';
 
 interface UserProfile {
   id: string;
@@ -20,12 +21,14 @@ interface AuthContextType {
   userProfile: UserProfile | null;
   loading: boolean;
   isLoggingOut: boolean;
+  isProfileComplete: boolean | null;
   signIn: (email: string, password: string) => Promise<any>;
   signUp: (email: string, password: string, fullName?: string) => Promise<any>;
   signOut: () => Promise<void>;
   login: (email: string, password: string) => Promise<any>;
   register: (email: string, password: string, data?: { full_name?: string }) => Promise<any>;
   logout: () => Promise<void>;
+  checkProfileCompletion: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -44,8 +47,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isProfileComplete, setIsProfileComplete] = useState<boolean | null>(null);
   const [authListenerReady, setAuthListenerReady] = useState(false);
   const [initialSessionChecked, setInitialSessionChecked] = useState(false);
+
+  const checkProfileCompletion = async () => {
+    if (!user) {
+      setIsProfileComplete(null);
+      return;
+    }
+
+    try {
+      const completionItems = await profileCompletionService.calculateProfileCompletion(user.id);
+      
+      // Define required fields for completion
+      const requiredFields = ['basic_info', 'work_experience', 'education', 'skills'];
+      
+      // Check if all required fields are completed
+      const isComplete = requiredFields.every(field => 
+        completionItems.some(item => item.field === field && item.completed)
+      );
+      
+      setIsProfileComplete(isComplete);
+    } catch (error) {
+      console.error('Error checking profile completion:', error);
+      setIsProfileComplete(false);
+    }
+  };
 
   const ensureUserProfile = async (userId: string, userEmail: string, fullName?: string) => {
     try {
@@ -167,6 +195,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setSession(null);
           setUser(null);
           setUserProfile(null);
+          setIsProfileComplete(null);
           setIsLoggingOut(false);
           return;
         }
@@ -191,12 +220,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               
               console.log('👤 User profile loaded:', profile);
               setUserProfile(profile);
+              
+              // Check profile completion and redirect if needed
+              await checkProfileCompletion();
+              
             } catch (error) {
               console.error('Error loading user profile:', error);
             }
           }, 0);
         } else if (!session?.user) {
           setUserProfile(null);
+          setIsProfileComplete(null);
         }
         
         if (!authListenerReady) {
@@ -270,6 +304,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(null);
       setSession(null);
       setUserProfile(null);
+      setIsProfileComplete(null);
       
       // Sign out from Supabase
       const { error } = await supabase.auth.signOut();
@@ -292,6 +327,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(null);
       setSession(null);
       setUserProfile(null);
+      setIsProfileComplete(null);
       setIsLoggingOut(false);
       window.location.href = '/auth';
     }
@@ -309,15 +345,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     userProfile,
     loading,
     isLoggingOut,
+    isProfileComplete,
     signIn,
     signUp,
     signOut,
     login,
     register,
     logout,
+    checkProfileCompletion,
   };
 
-  console.log('🔐 AuthContext render - loading:', loading, 'user:', user?.id, 'session:', session?.user?.id, 'isLoggingOut:', isLoggingOut);
+  console.log('🔐 AuthContext render - loading:', loading, 'user:', user?.id, 'session:', session?.user?.id, 'isLoggingOut:', isLoggingOut, 'isProfileComplete:', isProfileComplete);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

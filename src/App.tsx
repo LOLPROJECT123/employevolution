@@ -8,7 +8,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { JobApplicationProvider } from "./contexts/JobApplicationContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
-import OnboardingGuard from "./components/auth/OnboardingGuard";
+import ProfileCompletionGuard from "./components/auth/ProfileCompletionGuard";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Jobs from "./pages/Jobs";
@@ -22,7 +22,6 @@ import Referrals from "./pages/Referrals";
 import SalaryNegotiations from "./pages/SalaryNegotiations";
 import JobAlerts from "./pages/JobAlerts";
 import Auth from "./pages/Auth";
-import EnhancedCompleteProfile from "./pages/EnhancedCompleteProfile";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
 
 // Create QueryClient instance outside of component to prevent recreation
@@ -49,94 +48,96 @@ const App = () => {
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
                 
-                {/* Redirect old profile completion route to new profile page */}
-                <Route path="/complete-profile" element={
-                  <ProtectedRoute>
-                    <Navigate to="/profile" replace />
-                  </ProtectedRoute>
-                } />
-                
-                {/* Protected routes - require authentication */}
-                <Route path="/dashboard" element={
-                  <ProtectedRoute>
-                    <OnboardingGuard>
-                      <Dashboard />
-                    </OnboardingGuard>
-                  </ProtectedRoute>
-                } />
-                <Route path="/jobs" element={
-                  <ProtectedRoute>
-                    <OnboardingGuard>
-                      <Jobs />
-                    </OnboardingGuard>
-                  </ProtectedRoute>
-                } />
-                <Route path="/applications" element={
-                  <ProtectedRoute>
-                    <OnboardingGuard>
-                      <Applications />
-                    </OnboardingGuard>
-                  </ProtectedRoute>
-                } />
+                {/* Profile route - protected but not requiring profile completion */}
                 <Route path="/profile" element={
                   <ProtectedRoute>
                     <Profile />
                   </ProtectedRoute>
                 } />
+                
+                {/* Protected routes - require authentication AND profile completion */}
+                <Route path="/dashboard" element={
+                  <ProtectedRoute>
+                    <ProfileCompletionGuard>
+                      <Dashboard />
+                    </ProfileCompletionGuard>
+                  </ProtectedRoute>
+                } />
+                <Route path="/jobs" element={
+                  <ProtectedRoute>
+                    <ProfileCompletionGuard>
+                      <Jobs />
+                    </ProfileCompletionGuard>
+                  </ProtectedRoute>
+                } />
+                <Route path="/applications" element={
+                  <ProtectedRoute>
+                    <ProfileCompletionGuard>
+                      <Applications />
+                    </ProfileCompletionGuard>
+                  </ProtectedRoute>
+                } />
                 <Route path="/interview-practice" element={
                   <ProtectedRoute>
-                    <OnboardingGuard>
+                    <ProfileCompletionGuard>
                       <InterviewPractice />
-                    </OnboardingGuard>
+                    </ProfileCompletionGuard>
                   </ProtectedRoute>
                 } />
                 <Route path="/resume-tools" element={
                   <ProtectedRoute>
-                    <OnboardingGuard>
+                    <ProfileCompletionGuard>
                       <ResumeTools />
-                    </OnboardingGuard>
+                    </ProfileCompletionGuard>
                   </ProtectedRoute>
                 } />
                 <Route path="/resume-tools/:tab" element={
                   <ProtectedRoute>
-                    <OnboardingGuard>
+                    <ProfileCompletionGuard>
                       <ResumeTools />
-                    </OnboardingGuard>
+                    </ProfileCompletionGuard>
                   </ProtectedRoute>
                 } />
                 <Route path="/networking" element={
                   <ProtectedRoute>
-                    <OnboardingGuard>
+                    <ProfileCompletionGuard>
                       <Networking />
-                    </OnboardingGuard>
+                    </ProfileCompletionGuard>
                   </ProtectedRoute>
                 } />
                 <Route path="/networking-tools" element={
                   <ProtectedRoute>
-                    <OnboardingGuard>
+                    <ProfileCompletionGuard>
                       <NetworkingTools />
-                    </OnboardingGuard>
+                    </ProfileCompletionGuard>
                   </ProtectedRoute>
                 } />
                 <Route path="/referrals" element={
                   <ProtectedRoute>
-                    <OnboardingGuard>
+                    <ProfileCompletionGuard>
                       <Referrals />
-                    </OnboardingGuard>
+                    </ProfileCompletionGuard>
                   </ProtectedRoute>
                 } />
                 <Route path="/salary-negotiations" element={
                   <ProtectedRoute>
-                    <OnboardingGuard>
+                    <ProfileCompletionGuard>
                       <SalaryNegotiations />
-                    </OnboardingGuard>
+                    </ProfileCompletionGuard>
                   </ProtectedRoute>
                 } />
                 <Route path="/job-alerts" element={
                   <ProtectedRoute>
-                    <OnboardingGuard>
+                    <ProfileCompletionGuard>
                       <JobAlerts />
-                    </OnboardingGuard>
+                    </ProfileCompletionGuard>
+                  </ProtectedRoute>
+                } />
+                
+                {/* Redirect old profile completion route to new profile page */}
+                <Route path="/complete-profile" element={
+                  <ProtectedRoute>
+                    <Navigate to="/profile" replace />
                   </ProtectedRoute>
                 } />
               </Routes>
