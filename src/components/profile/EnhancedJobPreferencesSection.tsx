@@ -69,6 +69,7 @@ const EnhancedJobPreferencesSection = () => {
   const [salaryRange, setSalaryRange] = useState<[number, number]>([50000, 150000]);
 
   const experienceLevels = [
+    'Internship',
     'Entry Level (0-2 years)',
     'Mid Level (3-5 years)',
     'Senior Level (6-10 years)',
