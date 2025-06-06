@@ -14,7 +14,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
-import { X } from "lucide-react";
 
 interface WorkExperience {
   id: number;
@@ -23,7 +22,7 @@ interface WorkExperience {
   location: string;
   startDate: string;
   endDate: string;
-  description: string[];
+  description: string;
 }
 
 interface EditWorkExperienceProps {
@@ -47,21 +46,7 @@ const EditWorkExperience: React.FC<EditWorkExperienceProps> = ({
   const [startDate, setStartDate] = useState(experience?.startDate || "");
   const [endDate, setEndDate] = useState(experience?.endDate || "");
   const [isPresent, setIsPresent] = useState(experience?.endDate === "Present" || false);
-  const [descriptions, setDescriptions] = useState<string[]>(
-    experience?.description || [""]
-  );
-
-  const handleRemoveDescription = (index: number) => {
-    const newDescriptions = [...descriptions];
-    newDescriptions.splice(index, 1);
-    setDescriptions(newDescriptions);
-  };
-
-  const handleUpdateDescription = (index: number, value: string) => {
-    const newDescriptions = [...descriptions];
-    newDescriptions[index] = value;
-    setDescriptions(newDescriptions);
-  };
+  const [description, setDescription] = useState(experience?.description || "");
 
   const handlePresentChange = (checked: boolean) => {
     setIsPresent(checked);
@@ -73,8 +58,6 @@ const EditWorkExperience: React.FC<EditWorkExperienceProps> = ({
   };
 
   const handleSave = () => {
-    const filteredDescriptions = descriptions.filter(desc => desc.trim() !== "");
-    
     onSave({
       id: experience?.id || Date.now(),
       role,
@@ -82,7 +65,7 @@ const EditWorkExperience: React.FC<EditWorkExperienceProps> = ({
       location,
       startDate,
       endDate: isPresent ? "Present" : endDate,
-      description: filteredDescriptions,
+      description: description.trim(),
     });
     onClose();
   };
@@ -158,27 +141,14 @@ const EditWorkExperience: React.FC<EditWorkExperienceProps> = ({
             </div>
           </div>
           <div className="grid gap-2">
-            <Label>Description</Label>
-            {descriptions.map((desc, index) => (
-              <div key={index} className="flex gap-2">
-                <Textarea
-                  value={desc}
-                  onChange={(e) => handleUpdateDescription(index, e.target.value)}
-                  placeholder="Describe your responsibilities and achievements"
-                  className="flex-1"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleRemoveDescription(index)}
-                  disabled={descriptions.length === 1}
-                  className="h-10 w-10 shrink-0"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Describe your responsibilities and achievements"
+              className="min-h-[100px]"
+            />
           </div>
         </div>
         <DialogFooter className="flex flex-row justify-between sm:justify-between">

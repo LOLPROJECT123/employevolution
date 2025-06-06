@@ -14,14 +14,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
-import { X } from "lucide-react";
 
 interface Project {
   id: number;
   name: string;
   startDate: string;
   endDate: string;
-  description: string[];
+  description: string;
 }
 
 interface EditProjectProps {
@@ -43,21 +42,7 @@ const EditProject: React.FC<EditProjectProps> = ({
   const [startDate, setStartDate] = useState(project?.startDate || "");
   const [endDate, setEndDate] = useState(project?.endDate || "");
   const [isOngoing, setIsOngoing] = useState(project?.endDate === "Ongoing" || false);
-  const [descriptions, setDescriptions] = useState<string[]>(
-    project?.description || [""]
-  );
-
-  const handleRemoveDescription = (index: number) => {
-    const newDescriptions = [...descriptions];
-    newDescriptions.splice(index, 1);
-    setDescriptions(newDescriptions);
-  };
-
-  const handleUpdateDescription = (index: number, value: string) => {
-    const newDescriptions = [...descriptions];
-    newDescriptions[index] = value;
-    setDescriptions(newDescriptions);
-  };
+  const [description, setDescription] = useState(project?.description || "");
 
   const handleOngoingChange = (checked: boolean) => {
     setIsOngoing(checked);
@@ -69,14 +54,12 @@ const EditProject: React.FC<EditProjectProps> = ({
   };
 
   const handleSave = () => {
-    const filteredDescriptions = descriptions.filter(desc => desc.trim() !== "");
-    
     onSave({
       id: project?.id || Date.now(),
       name,
       startDate,
       endDate: isOngoing ? "Ongoing" : endDate,
-      description: filteredDescriptions,
+      description: description.trim(),
     });
     onClose();
   };
@@ -134,27 +117,14 @@ const EditProject: React.FC<EditProjectProps> = ({
             </div>
           </div>
           <div className="grid gap-2">
-            <Label>Description</Label>
-            {descriptions.map((desc, index) => (
-              <div key={index} className="flex gap-2">
-                <Textarea
-                  value={desc}
-                  onChange={(e) => handleUpdateDescription(index, e.target.value)}
-                  placeholder="Describe your project"
-                  className="flex-1"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleRemoveDescription(index)}
-                  disabled={descriptions.length === 1}
-                  className="h-10 w-10 shrink-0"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Describe your project"
+              className="min-h-[100px]"
+            />
           </div>
         </div>
         <DialogFooter className="flex flex-row justify-between sm:justify-between">
