@@ -16,7 +16,7 @@ export interface ProfileCompletionProgress {
 }
 
 export class EnhancedProfileCompletionService {
-  static async getDetailedProfileCompletion(userId: string): Promise<ProfileCompletionProgress> {
+  async getDetailedProfileCompletion(userId: string): Promise<ProfileCompletionProgress> {
     try {
       // Fetch all user data
       const [profile, workExp, education, skills, languages, jobPrefs] = await Promise.all([
@@ -102,7 +102,7 @@ export class EnhancedProfileCompletionService {
     }
   }
 
-  static async updateProfileCompletionStatus(userId: string): Promise<void> {
+  async updateProfileCompletionStatus(userId: string): Promise<void> {
     try {
       const progress = await this.getDetailedProfileCompletion(userId);
       
