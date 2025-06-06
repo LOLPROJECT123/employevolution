@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { JobApplicationProvider } from "./contexts/JobApplicationContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -49,10 +49,10 @@ const App = () => {
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
                 
-                {/* Profile completion route - protected but bypasses onboarding guard */}
+                {/* Redirect old profile completion route to new profile page */}
                 <Route path="/complete-profile" element={
                   <ProtectedRoute>
-                    <EnhancedCompleteProfile />
+                    <Navigate to="/profile" replace />
                   </ProtectedRoute>
                 } />
                 
