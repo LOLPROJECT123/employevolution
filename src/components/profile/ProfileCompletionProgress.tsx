@@ -2,7 +2,7 @@
 import React from 'react';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent } from '@/components/ui/card';
-import { CheckCircle, Circle, AlertCircle } from 'lucide-react';
+import { CheckCircle, Circle, AlertCircle, Shield, Settings } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { ProfileCompletionProgress as ProgressType } from '@/services/enhancedProfileCompletionService';
 
@@ -38,6 +38,18 @@ const ProfileCompletionProgress = ({ progress, currentTab }: ProfileCompletionPr
       label: 'Job Preferences', 
       data: progress.sections.preferences,
       tabValue: 'preferences'
+    },
+    { 
+      key: 'equalEmployment', 
+      label: 'Equal Employment', 
+      data: progress.sections.equalEmployment,
+      tabValue: 'employment'
+    },
+    { 
+      key: 'settings', 
+      label: 'Settings', 
+      data: progress.sections.settings,
+      tabValue: 'settings'
     }
   ];
 
@@ -59,7 +71,7 @@ const ProfileCompletionProgress = ({ progress, currentTab }: ProfileCompletionPr
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
             {sections.map((section) => (
               <div
                 key={section.key}
@@ -79,6 +91,8 @@ const ProfileCompletionProgress = ({ progress, currentTab }: ProfileCompletionPr
                   ) : (
                     <Circle className="h-5 w-5 text-gray-400" />
                   )}
+                  {section.key === 'equalEmployment' && <Shield className="h-4 w-4 text-blue-400" />}
+                  {section.key === 'settings' && <Settings className="h-4 w-4 text-blue-400" />}
                   <span className="font-medium text-sm">{section.label}</span>
                 </div>
                 
