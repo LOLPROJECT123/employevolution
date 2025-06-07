@@ -54,7 +54,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className={`${theme === 'dark' ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'} border-b sticky top-0 z-50`}>
+    <nav className="bg-background border-border border-b sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
@@ -64,7 +64,7 @@ const Navbar = () => {
                 alt="Streamline Logo" 
                 className="w-8 h-8"
               />
-              <span className={`font-bold text-xl ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+              <span className="font-bold text-xl text-foreground">
                 Streamline
               </span>
             </Link>
@@ -82,7 +82,7 @@ const Navbar = () => {
               <SheetContent side="right" className="w-[300px] sm:w-[400px]">
                 <div className="flex flex-col space-y-4 mt-8">
                   {isProfileComplete === false && user && (
-                    <div className="flex items-center gap-2 p-3 bg-yellow-100 dark:bg-yellow-900 rounded-lg mb-4">
+                    <div className="flex items-center gap-2 p-3 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg mb-4">
                       <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
                       <span className="text-sm text-yellow-800 dark:text-yellow-200">
                         Complete your profile to access all features
@@ -104,12 +104,10 @@ const Navbar = () => {
                         disabled={disabled}
                         className={`text-left p-3 rounded-lg transition-colors flex items-center gap-2 ${
                           disabled
-                            ? 'text-gray-400 cursor-not-allowed bg-gray-100 dark:bg-gray-800'
+                            ? 'text-muted-foreground cursor-not-allowed bg-muted'
                             : isActive(item.path)
-                            ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
-                            : theme === 'dark'
-                            ? 'text-gray-300 hover:bg-gray-800'
-                            : 'text-gray-700 hover:bg-gray-100'
+                            ? 'bg-accent text-accent-foreground'
+                            : 'text-foreground hover:bg-accent'
                         }`}
                       >
                         {disabled && <Lock className="h-4 w-4" />}

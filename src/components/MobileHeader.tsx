@@ -62,6 +62,16 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({ title, showLogo = true }) =
                     </Link>
                   </li>
                   <li>
+                    <Link to="/job-alerts" className="flex items-center gap-3 p-2 rounded-md hover:bg-accent text-foreground">
+                      <span className="text-sm">Job Alerts</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/applications" className="flex items-center gap-3 p-2 rounded-md hover:bg-accent text-foreground">
+                      <span className="text-sm">Applications</span>
+                    </Link>
+                  </li>
+                  <li>
                     <Link to="/resume-tools" className="flex items-center gap-3 p-2 rounded-md hover:bg-accent text-foreground">
                       <span className="text-sm">Resume</span>
                     </Link>

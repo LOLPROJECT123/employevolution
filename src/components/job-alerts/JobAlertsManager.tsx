@@ -49,13 +49,17 @@ export const JobAlertsManager: React.FC = () => {
         </CardHeader>
         <CardContent>
           {alerts.length === 0 ? (
-            <div className="text-center py-8">
-              <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <div className="text-center py-12">
+              <div className="flex justify-center mb-4">
+                <div className="p-3 bg-muted rounded-full">
+                  <Bell className="h-8 w-8 text-muted-foreground" />
+                </div>
+              </div>
               <h3 className="text-lg font-semibold mb-2">No job alerts yet</h3>
-              <p className="text-muted-foreground mb-4">
-                Create your first job alert to get notified about relevant opportunities.
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                Create your first job alert to get notified about relevant opportunities that match your preferences.
               </p>
-              <Button onClick={() => setShowForm(true)}>
+              <Button onClick={() => setShowForm(true)} size="lg">
                 <Plus className="h-4 w-4 mr-2" />
                 Create Your First Alert
               </Button>
@@ -63,11 +67,11 @@ export const JobAlertsManager: React.FC = () => {
           ) : (
             <div className="space-y-4">
               {alerts.map((alert) => (
-                <div key={alert.id} className="border rounded-lg p-4">
+                <div key={alert.id} className="border border-border rounded-lg p-4 bg-card">
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex-1">
-                      <h4 className="font-semibold mb-1">{alert.name}</h4>
-                      <div className="flex items-center gap-2 mb-2">
+                      <h4 className="font-semibold mb-2 text-card-foreground">{alert.name}</h4>
+                      <div className="flex items-center gap-2 mb-3">
                         <Badge variant={alert.is_active ? "default" : "secondary"}>
                           {alert.is_active ? "Active" : "Paused"}
                         </Badge>
@@ -97,32 +101,32 @@ export const JobAlertsManager: React.FC = () => {
                   </div>
                   
                   <div className="text-sm text-muted-foreground">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {alert.criteria.keywords && (
                         <div>
-                          <span className="font-medium">Keywords:</span> {alert.criteria.keywords}
+                          <span className="font-medium text-foreground">Keywords:</span> {alert.criteria.keywords}
                         </div>
                       )}
                       {alert.criteria.location && (
                         <div>
-                          <span className="font-medium">Location:</span> {alert.criteria.location}
+                          <span className="font-medium text-foreground">Location:</span> {alert.criteria.location}
                         </div>
                       )}
                       {alert.criteria.jobType && (
                         <div>
-                          <span className="font-medium">Job Type:</span> {alert.criteria.jobType}
+                          <span className="font-medium text-foreground">Job Type:</span> {alert.criteria.jobType}
                         </div>
                       )}
                       {alert.criteria.experience && (
                         <div>
-                          <span className="font-medium">Experience:</span> {alert.criteria.experience}
+                          <span className="font-medium text-foreground">Experience:</span> {alert.criteria.experience}
                         </div>
                       )}
                     </div>
                   </div>
                   
                   {alert.last_triggered && (
-                    <div className="text-xs text-muted-foreground mt-2">
+                    <div className="text-xs text-muted-foreground mt-3 pt-3 border-t border-border">
                       Last triggered: {new Date(alert.last_triggered).toLocaleDateString()}
                     </div>
                   )}
