@@ -131,19 +131,12 @@ const Profile = () => {
     other: profile.other_url
   }, { section: 'socialLinks' });
 
-  // Enhanced skills auto-save with debugging
   const skillsAutoSave = useProfileAutoSave(skills, { 
     section: 'skills',
-    interval: 1000 // Faster interval for testing
+    interval: 1000
   });
 
   const languagesAutoSave = useProfileAutoSave(profile.languages, { section: 'languages' });
-
-  // Debug logging for skills changes
-  useEffect(() => {
-    console.log('🔍 Skills state changed:', skills);
-    console.log('🔍 Skills auto-save status:', skillsAutoSave.saveStatus);
-  }, [skills, skillsAutoSave.saveStatus]);
 
   useEffect(() => {
     if (user) {
@@ -350,7 +343,6 @@ const Profile = () => {
   };
 
   const handleSkillsChange = (newSkills: string[]) => {
-    console.log('🎯 Skills changing from:', skills, 'to:', newSkills);
     setSkills(newSkills);
   };
 
@@ -639,60 +631,6 @@ const Profile = () => {
     }
   };
 
-  const handleManualSkillsSave = async () => {
-    if (!user) return;
-    
-    console.log('💾 Manual skills save triggered for skills:', skills);
-    try {
-      // Clear existing skills
-      const { error: deleteError } = await supabase
-        .from('user_skills')
-        .delete()
-        .eq('user_id', user.id);
-      
-      if (deleteError) {
-        console.error('❌ Error deleting existing skills:', deleteError);
-        throw deleteError;
-      }
-      
-      if (skills.length > 0) {
-        const skillsToInsert = skills.map(skill => ({
-          user_id: user.id,
-          skill: skill,
-          category: 'general'
-        }));
-        
-        console.log('📝 Inserting skills:', skillsToInsert);
-        
-        const { error: insertError } = await supabase
-          .from('user_skills')
-          .insert(skillsToInsert);
-        
-        if (insertError) {
-          console.error('❌ Error inserting skills:', insertError);
-          throw insertError;
-        }
-      }
-      
-      console.log('✅ Skills saved successfully');
-      toast({
-        title: "Skills saved",
-        description: "Your skills have been saved successfully.",
-      });
-      
-      // Reload completion progress
-      loadCompletionProgress();
-      
-    } catch (error) {
-      console.error('❌ Manual skills save failed:', error);
-      toast({
-        title: "Error saving skills",
-        description: "Failed to save your skills. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
   if (!user) {
     return (
       <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-950' : 'bg-gray-50'} flex items-center justify-center`}>
@@ -788,32 +726,6 @@ const Profile = () => {
               }}
               onChange={handleSocialLinksUpdate}
             />
-
-            {/* Auto-save indicators */}
-            <div className="flex gap-4 text-xs text-gray-500">
-              <div className="flex items-center gap-1">
-                <div className={`w-2 h-2 rounded-full ${
-                  contactAutoSave.saveStatus === 'saved' ? 'bg-green-500' :
-                  contactAutoSave.saveStatus === 'saving' ? 'bg-yellow-500' :
-                  contactAutoSave.saveStatus === 'error' ? 'bg-red-500' :
-                  'bg-gray-400'
-                }`} />
-                Contact: {contactAutoSave.saveStatus === 'saved' ? 'Saved' :
-                         contactAutoSave.saveStatus === 'saving' ? 'Saving...' :
-                         contactAutoSave.saveStatus === 'error' ? 'Error' : 'Ready'}
-              </div>
-              <div className="flex items-center gap-1">
-                <div className={`w-2 h-2 rounded-full ${
-                  socialLinksAutoSave.saveStatus === 'saved' ? 'bg-green-500' :
-                  socialLinksAutoSave.saveStatus === 'saving' ? 'bg-yellow-500' :
-                  socialLinksAutoSave.saveStatus === 'error' ? 'bg-red-500' :
-                  'bg-gray-400'
-                }`} />
-                Social Links: {socialLinksAutoSave.saveStatus === 'saved' ? 'Saved' :
-                             socialLinksAutoSave.saveStatus === 'saving' ? 'Saving...' :
-                             socialLinksAutoSave.saveStatus === 'error' ? 'Error' : 'Ready'}
-              </div>
-            </div>
           </TabsContent>
 
           <TabsContent value="resume" className="space-y-6">
@@ -852,47 +764,6 @@ const Profile = () => {
               primaryLanguage={profile.primary_language}
               onPrimaryLanguageChange={handlePrimaryLanguageChange}
             />
-
-            {/* Debug section for skills */}
-            <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
-              <h4 className="font-medium mb-2">Debug Info</h4>
-              <p className="text-sm">Skills in state: {skills.length} - {skills.join(', ')}</p>
-              <p className="text-sm">Auto-save status: {skillsAutoSave.saveStatus}</p>
-              <Button 
-                onClick={handleManualSkillsSave}
-                variant="outline"
-                size="sm"
-                className="mt-2"
-              >
-                Manual Save Skills
-              </Button>
-            </div>
-
-            {/* Auto-save indicators */}
-            <div className="flex gap-4 text-xs text-gray-500">
-              <div className="flex items-center gap-1">
-                <div className={`w-2 h-2 rounded-full ${
-                  skillsAutoSave.saveStatus === 'saved' ? 'bg-green-500' :
-                  skillsAutoSave.saveStatus === 'saving' ? 'bg-yellow-500' :
-                  skillsAutoSave.saveStatus === 'error' ? 'bg-red-500' :
-                  'bg-gray-400'
-                }`} />
-                Skills: {skillsAutoSave.saveStatus === 'saved' ? 'Saved' :
-                        skillsAutoSave.saveStatus === 'saving' ? 'Saving...' :
-                        skillsAutoSave.saveStatus === 'error' ? 'Error' : 'Ready'}
-              </div>
-              <div className="flex items-center gap-1">
-                <div className={`w-2 h-2 rounded-full ${
-                  languagesAutoSave.saveStatus === 'saved' ? 'bg-green-500' :
-                  languagesAutoSave.saveStatus === 'saving' ? 'bg-yellow-500' :
-                  languagesAutoSave.saveStatus === 'error' ? 'bg-red-500' :
-                  'bg-gray-400'
-                }`} />
-                Languages: {languagesAutoSave.saveStatus === 'saved' ? 'Saved' :
-                          languagesAutoSave.saveStatus === 'saving' ? 'Saving...' :
-                          languagesAutoSave.saveStatus === 'error' ? 'Error' : 'Ready'}
-              </div>
-            </div>
           </TabsContent>
 
           <TabsContent value="preferences" className="space-y-6">

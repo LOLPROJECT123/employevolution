@@ -28,18 +28,26 @@ export function DatePicker({
 }: DatePickerProps) {
   const [open, setOpen] = useState(false);
 
-  // Convert string date to Date object for calendar
-  const dateValue = value ? new Date(value + "-01") : undefined;
+  // Convert string date to Date object for calendar using UTC to avoid timezone shifts
+  const dateValue = value ? new Date(Date.UTC(
+    parseInt(value.split('-')[0]), // year
+    parseInt(value.split('-')[1]) - 1, // month (0-indexed)
+    15 // mid-month to avoid timezone issues
+  )) : undefined;
 
   // Format display value as "MMM YYYY"
   const displayValue = value 
-    ? format(new Date(value + "-01"), "MMM yyyy")
+    ? format(dateValue!, "MMM yyyy")
     : undefined;
 
   const handleSelect = (date: Date | undefined) => {
     if (date) {
+      // Extract year and month using UTC methods to avoid timezone shifts
+      const year = date.getUTCFullYear();
+      const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+      
       // Format as YYYY-MM for database storage
-      const formattedDate = format(date, "yyyy-MM");
+      const formattedDate = `${year}-${month}`;
       onChange(formattedDate);
     }
     setOpen(false);
