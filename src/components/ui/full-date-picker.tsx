@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { format } from "date-fns";
+import { format, isValid, parseISO } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -28,20 +28,36 @@ export function FullDatePicker({
 }: FullDatePickerProps) {
   const [open, setOpen] = useState(false);
 
-  // Convert string date to Date object for calendar using UTC to avoid timezone shifts
-  const dateValue = value ? new Date(Date.UTC(
-    parseInt(value.split('-')[0]), // year
-    parseInt(value.split('-')[1]) - 1, // month (0-indexed)
-    parseInt(value.split('-')[2]) // day
-  )) : undefined;
+  // Safely parse the date value with better error handling
+  const parseDate = (dateString: string | undefined): Date | undefined => {
+    if (!dateString || dateString.trim() === '') return undefined;
+    
+    // Handle different date formats
+    let parsedDate: Date;
+    
+    // Try ISO format first (YYYY-MM-DD)
+    if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      parsedDate = parseISO(dateString);
+    } else if (dateString.match(/^\d{4}-\d{2}$/)) {
+      // Handle YYYY-MM format by adding day
+      parsedDate = parseISO(`${dateString}-01`);
+    } else {
+      // Try standard Date constructor as fallback
+      parsedDate = new Date(dateString);
+    }
+    
+    return isValid(parsedDate) ? parsedDate : undefined;
+  };
 
-  // Format display value as "MMM DD, YYYY"
-  const displayValue = value 
-    ? format(dateValue!, "MMM dd, yyyy")
+  const dateValue = parseDate(value);
+
+  // Format display value safely
+  const displayValue = dateValue && isValid(dateValue)
+    ? format(dateValue, "MMM dd, yyyy")
     : undefined;
 
   const handleSelect = (date: Date | undefined) => {
-    if (date) {
+    if (date && isValid(date)) {
       // Extract year, month, and day using UTC methods to avoid timezone shifts
       const year = date.getUTCFullYear();
       const month = String(date.getUTCMonth() + 1).padStart(2, '0');
