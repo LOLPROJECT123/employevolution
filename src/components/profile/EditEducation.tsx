@@ -68,6 +68,7 @@ const EditEducation: React.FC<EditEducationProps> = ({
 
   const handleDelete = () => {
     if (education && onDelete) {
+      console.log('Deleting education with ID:', education.id);
       onDelete(education.id);
       onClose();
     }

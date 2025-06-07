@@ -72,6 +72,7 @@ const EditWorkExperience: React.FC<EditWorkExperienceProps> = ({
 
   const handleDelete = () => {
     if (experience && onDelete) {
+      console.log('Deleting work experience with ID:', experience.id);
       onDelete(experience.id);
       onClose();
     }

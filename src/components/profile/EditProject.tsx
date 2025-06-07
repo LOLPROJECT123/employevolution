@@ -72,6 +72,7 @@ const EditProject: React.FC<EditProjectProps> = ({
 
   const handleDelete = () => {
     if (project && onDelete) {
+      console.log('Deleting project with ID:', project.id);
       onDelete(project.id);
       onClose();
     }

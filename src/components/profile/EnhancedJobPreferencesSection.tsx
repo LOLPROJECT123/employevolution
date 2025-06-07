@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -11,10 +10,11 @@ import { Slider } from '@/components/ui/slider';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { useProfileAutoSave } from '@/hooks/useProfileAutoSave';
 import { toast } from '@/hooks/use-toast';
 import { 
   Target, Briefcase, Building, DollarSign, MapPin, 
-  Clock, CheckSquare, Zap, Globe, Plus, X, Save 
+  Clock, CheckSquare, Zap, Globe, Plus, X 
 } from 'lucide-react';
 
 interface JobPreferences {
@@ -67,6 +67,12 @@ const EnhancedJobPreferencesSection = () => {
   const [newRole, setNewRole] = useState('');
   const [newLocation, setNewLocation] = useState('');
   const [salaryRange, setSalaryRange] = useState<[number, number]>([50000, 150000]);
+
+  // Auto-save hook for job preferences
+  const jobPreferencesAutoSave = useProfileAutoSave(preferences, { 
+    section: 'jobPreferences',
+    interval: 2000
+  });
 
   const experienceLevels = [
     'Internship',
@@ -131,7 +137,7 @@ const EnhancedJobPreferencesSection = () => {
         return [];
       };
 
-      setPreferences({
+      const loadedPreferences = {
         desired_roles: parseJsonbArray(data.desired_roles),
         experience_level: data.experience_level || '',
         industries: parseJsonbArray(data.industries),
@@ -144,7 +150,9 @@ const EnhancedJobPreferencesSection = () => {
         job_types: parseJsonbArray(data.job_types),
         skills_qualifications: parseJsonbArray(data.skills_qualifications),
         work_authorization_countries: parseJsonbArray(data.work_authorization_countries)
-      });
+      };
+
+      setPreferences(loadedPreferences);
 
       // Set salary range from preferences
       setSalaryRange([
@@ -165,32 +173,6 @@ const EnhancedJobPreferencesSection = () => {
 
     if (data) {
       setProfileStrength(data);
-    }
-  };
-
-  const handleSave = async () => {
-    if (!user) return;
-
-    const { error } = await supabase
-      .from('enhanced_job_preferences')
-      .upsert({
-        user_id: user.id,
-        ...preferences,
-        salary_min: salaryRange[0],
-        salary_max: salaryRange[1]
-      });
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save job preferences",
-        variant: "destructive"
-      });
-    } else {
-      toast({
-        title: "Success",
-        description: "Job preferences saved successfully"
-      });
     }
   };
 
@@ -318,22 +300,23 @@ const EnhancedJobPreferencesSection = () => {
                 onKeyPress={(e) => e.key === 'Enter' && addRole()}
                 className={`${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'} flex-1`}
               />
-              <Button onClick={addRole} className="bg-blue-600 hover:bg-blue-700">
+              <button
+                onClick={addRole}
+                className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center"
+              >
                 <Plus className="h-4 w-4" />
-              </Button>
+              </button>
             </div>
             <div className="flex flex-wrap gap-2 mt-3">
               {preferences.desired_roles.map((role, index) => (
                 <Badge key={index} variant="secondary" className="pr-1 bg-blue-600 text-white">
                   {role}
-                  <Button
-                    variant="ghost"
-                    size="sm"
+                  <button
                     onClick={() => removeRole(role)}
                     className="ml-1 h-4 w-4 p-0 hover:bg-transparent text-white hover:text-red-400"
                   >
                     <X className="h-3 w-3" />
-                  </Button>
+                  </button>
                 </Badge>
               ))}
             </div>
@@ -478,22 +461,23 @@ const EnhancedJobPreferencesSection = () => {
                 onKeyPress={(e) => e.key === 'Enter' && addLocation()}
                 className={`${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'} flex-1`}
               />
-              <Button onClick={addLocation} className="bg-blue-600 hover:bg-blue-700">
+              <button
+                onClick={addLocation}
+                className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center"
+              >
                 <Plus className="h-4 w-4" />
-              </Button>
+              </button>
             </div>
             <div className="flex flex-wrap gap-2 mt-3">
               {preferences.preferred_locations.map((location, index) => (
                 <Badge key={index} variant="secondary" className="pr-1 bg-green-600 text-white">
                   {location}
-                  <Button
-                    variant="ghost"
-                    size="sm"
+                  <button
                     onClick={() => removeLocation(location)}
                     className="ml-1 h-4 w-4 p-0 hover:bg-transparent text-white hover:text-red-400"
                   >
                     <X className="h-3 w-3" />
-                  </Button>
+                  </button>
                 </Badge>
               ))}
             </div>
@@ -544,13 +528,6 @@ const EnhancedJobPreferencesSection = () => {
           </div>
         </CardContent>
       </Card>
-
-      <div className="flex justify-end">
-        <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
-          <Save className="h-4 w-4 mr-2" />
-          Save Preferences
-        </Button>
-      </div>
     </div>
   );
 };

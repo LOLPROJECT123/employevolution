@@ -347,6 +347,7 @@ const Profile = () => {
 
       if (editingWorkExperience) {
         // Update existing
+        console.log('Updating work experience with ID:', editingWorkExperience.id);
         const { error } = await supabase
           .from('work_experiences')
           .update(dbData)
@@ -393,13 +394,17 @@ const Profile = () => {
     if (!user) return;
 
     try {
+      console.log('Deleting work experience with ID:', id);
       // Convert number to string for the database query
       const { error } = await supabase
         .from('work_experiences')
         .delete()
         .eq('id', id.toString());
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
+      }
 
       setWorkExperiences(prev => prev.filter(exp => exp.id !== id));
 
@@ -441,6 +446,7 @@ const Profile = () => {
 
       if (editingEducation) {
         // Update existing - convert number to string for the database query
+        console.log('Updating education with ID:', editingEducation.id);
         const { error } = await supabase
           .from('education')
           .update(dbData)
@@ -487,13 +493,17 @@ const Profile = () => {
     if (!user) return;
 
     try {
+      console.log('Deleting education with ID:', id);
       // Convert number to string for the database query
       const { error } = await supabase
         .from('education')
         .delete()
         .eq('id', id.toString());
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
+      }
 
       setEducation(prev => prev.filter(edu => edu.id !== id));
 
@@ -537,6 +547,7 @@ const Profile = () => {
 
       if (editingProject) {
         // Update existing
+        console.log('Updating project with ID:', editingProject.id);
         const { error } = await supabase
           .from('projects')
           .update(dbData)
@@ -583,12 +594,16 @@ const Profile = () => {
     if (!user) return;
 
     try {
+      console.log('Deleting project with ID:', id);
       const { error } = await supabase
         .from('projects')
         .delete()
         .eq('id', id.toString());
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
+      }
 
       setProjects(prev => prev.filter(proj => proj.id !== id));
 
@@ -600,7 +615,7 @@ const Profile = () => {
       console.error('Error deleting project:', error);
       toast({
         title: "Error",
-        description: "Failed to save project",
+        description: "Failed to delete project",
         variant: "destructive",
       });
     }
