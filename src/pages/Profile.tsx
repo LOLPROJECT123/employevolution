@@ -25,8 +25,6 @@ import EditWorkExperience from '@/components/profile/EditWorkExperience';
 import EditEducation from '@/components/profile/EditEducation';
 import EditProject from '@/components/profile/EditProject';
 import ModernProjectsSection from '@/components/profile/ModernProjectsSection';
-import ProfileCompletionProgress from '@/components/profile/ProfileCompletionProgress';
-import { enhancedProfileCompletionService, ProfileCompletionProgress as ProgressType } from '@/services/enhancedProfileCompletionService';
 import { CheckCircle } from 'lucide-react';
 import { useProfileAutoSave } from '@/hooks/useProfileAutoSave';
 
@@ -92,7 +90,6 @@ const Profile = () => {
   const [education, setEducation] = useState([]);
   const [projects, setProjects] = useState([]);
   const [skills, setSkills] = useState([]);
-  const [completionProgress, setCompletionProgress] = useState<ProgressType | null>(null);
   
   // Modal state management
   const [isWorkExperienceModalOpen, setIsWorkExperienceModalOpen] = useState(false);
@@ -142,30 +139,8 @@ const Profile = () => {
     if (user) {
       loadProfile();
       loadUserData();
-      loadCompletionProgress();
     }
   }, [user]);
-
-  // Reload completion progress when data changes
-  useEffect(() => {
-    if (user) {
-      console.log('🔄 Reloading completion progress due to data change');
-      loadCompletionProgress();
-    }
-  }, [user, profile, workExperiences, education, skills]);
-
-  const loadCompletionProgress = async () => {
-    if (!user) return;
-    
-    try {
-      console.log('📊 Loading completion progress for user:', user.id);
-      const progress = await enhancedProfileCompletionService.getDetailedProfileCompletion(user.id);
-      console.log('📊 Completion progress loaded:', progress);
-      setCompletionProgress(progress);
-    } catch (error) {
-      console.error('Error loading completion progress:', error);
-    }
-  };
 
   const loadProfile = async () => {
     if (!user) return;
@@ -648,14 +623,6 @@ const Profile = () => {
       {isMobile && <MobileHeader />}
       
       <div className="container mx-auto px-4 py-8 max-w-6xl">
-        {/* Profile Completion Progress */}
-        {completionProgress && (
-          <ProfileCompletionProgress 
-            progress={completionProgress} 
-            currentTab={activeTab}
-          />
-        )}
-
         <div className="mb-8">
           <ModernProfileHeader
             name={profile.name || ''}
@@ -671,37 +638,31 @@ const Profile = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className={`${theme === 'dark' ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'} w-full justify-start p-1 border`}>
-            <TabsTrigger value="contact" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white flex items-center gap-2">
-              {completionProgress?.sections.contact.complete && <CheckCircle className="h-4 w-4" />}
+            <TabsTrigger value="contact" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               Contact
             </TabsTrigger>
             <TabsTrigger value="resume" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               Resume
             </TabsTrigger>
-            <TabsTrigger value="experience" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white flex items-center gap-2">
-              {completionProgress?.sections.experience.complete && <CheckCircle className="h-4 w-4" />}
+            <TabsTrigger value="experience" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               Experience
             </TabsTrigger>
-            <TabsTrigger value="skills" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white flex items-center gap-2">
-              {completionProgress?.sections.skills.complete && <CheckCircle className="h-4 w-4" />}
+            <TabsTrigger value="skills" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               Skills & Languages
             </TabsTrigger>
-            <TabsTrigger value="preferences" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white flex items-center gap-2">
-              {completionProgress?.sections.preferences.complete && <CheckCircle className="h-4 w-4" />}
+            <TabsTrigger value="preferences" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               Job Preferences
             </TabsTrigger>
             <TabsTrigger 
               value="employment" 
-              className="data-[state=active]:bg-blue-600 data-[state=active]:text-white flex items-center gap-2"
+              className="data-[state=active]:bg-blue-600 data-[state=active]:text-white"
             >
-              {completionProgress?.sections.equalEmployment.complete && <CheckCircle className="h-4 w-4" />}
               Equal Employment
             </TabsTrigger>
             <TabsTrigger 
               value="settings" 
-              className="data-[state=active]:bg-blue-600 data-[state=active]:text-white flex items-center gap-2"
+              className="data-[state=active]:bg-blue-600 data-[state=active]:text-white"
             >
-              {completionProgress?.sections.settings.complete && <CheckCircle className="h-4 w-4" />}
               Settings
             </TabsTrigger>
           </TabsList>
