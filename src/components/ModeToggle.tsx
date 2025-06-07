@@ -14,9 +14,9 @@ export function ModeToggle() {
   }, []);
 
   const toggleTheme = () => {
-    // Use resolvedTheme for more reliable theme detection
-    const currentTheme = resolvedTheme || theme;
-    console.log('Current theme:', currentTheme);
+    // Get current theme, defaulting to 'light' if undefined
+    const currentTheme = resolvedTheme || theme || 'light';
+    console.log('Current theme before toggle:', currentTheme);
     
     if (currentTheme === "dark") {
       setTheme("light");
@@ -37,8 +37,11 @@ export function ModeToggle() {
     );
   }
 
-  const currentTheme = resolvedTheme || theme;
+  // Determine current theme with fallback
+  const currentTheme = resolvedTheme || theme || 'light';
   const isDark = currentTheme === "dark";
+
+  console.log('Rendering ModeToggle - current theme:', currentTheme, 'isDark:', isDark);
 
   return (
     <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-8 w-8">
