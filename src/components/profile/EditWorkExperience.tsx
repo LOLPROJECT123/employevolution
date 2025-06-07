@@ -130,7 +130,7 @@ const EditWorkExperience: React.FC<EditWorkExperienceProps> = ({
                 placeholder="Select end date"
                 disabled={isPresent}
               />
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 mt-2">
                 <Checkbox
                   id="present"
                   checked={isPresent}

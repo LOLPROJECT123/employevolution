@@ -121,7 +121,7 @@ const EditProject: React.FC<EditProjectProps> = ({
                 placeholder="Select end date"
                 disabled={isOngoing}
               />
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 mt-2">
                 <Checkbox
                   id="ongoing"
                   checked={isOngoing}

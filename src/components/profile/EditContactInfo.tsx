@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { FullDatePicker } from "@/components/ui/full-date-picker";
 
 interface EditContactInfoProps {
   open: boolean;
@@ -81,10 +82,10 @@ const EditContactInfo: React.FC<EditContactInfoProps> = ({
             <label htmlFor="dob" className="text-sm font-medium">
               Date of Birth
             </label>
-            <Input
-              id="dob"
+            <FullDatePicker
               value={dateOfBirth}
-              onChange={(e) => setDateOfBirth(e.target.value)}
+              onChange={setDateOfBirth}
+              placeholder="Select your date of birth"
             />
           </div>
           <div className="grid gap-2">
