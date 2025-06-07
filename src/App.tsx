@@ -40,9 +40,9 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider
         attribute="class"
-        defaultTheme="system"
-        enableSystem
-        disableTransitionOnChange
+        defaultTheme="light"
+        enableSystem={false}
+        storageKey="job-finder-theme"
       >
         <TooltipProvider>
           <AuthProvider>
