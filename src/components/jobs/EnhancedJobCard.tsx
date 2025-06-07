@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -106,15 +107,15 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
   };
 
   const cardClassName = `hover:shadow-lg transition-shadow duration-200 cursor-pointer ${
-    isSelected ? 'ring-2 ring-blue-500 bg-blue-50/50' : ''
-  } ${variant === 'list' ? 'border-l-4 border-l-transparent hover:border-l-blue-500' : ''}`;
+    isSelected ? 'ring-2 ring-primary bg-accent/50' : ''
+  } ${variant === 'list' ? 'border-l-4 border-l-transparent hover:border-l-primary' : ''}`;
 
   return (
     <Card className={cardClassName} onClick={handleCardClick}>
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <CardTitle className="text-xl mb-2 hover:text-blue-600 cursor-pointer">
+            <CardTitle className="text-xl mb-2 hover:text-primary cursor-pointer">
               {job.title}
             </CardTitle>
             <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
@@ -135,7 +136,7 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
           </div>
           
           {/* Match Score */}
-          <div className={`px-3 py-2 rounded-lg text-center bg-gray-50 ${getMatchColor(skillMatchPercentage).replace('text-', 'text-')}`}>
+          <div className={`px-3 py-2 rounded-lg text-center bg-muted ${getMatchColor(skillMatchPercentage).replace('text-', 'text-')}`}>
             <div className="text-2xl font-bold">{skillMatchPercentage}%</div>
             <div className="text-xs font-medium">{getMatchLabel(skillMatchPercentage)}</div>
           </div>
@@ -149,8 +150,8 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
           </span>
           <Badge variant="outline">{job.type}</Badge>
           <Badge variant="outline">{job.level}</Badge>
-          {isSaved && <Badge className="bg-red-100 text-red-800">Saved</Badge>}
-          {isApplied && <Badge className="bg-green-100 text-green-800">Applied</Badge>}
+          {isSaved && <Badge className="bg-destructive/10 text-destructive">Saved</Badge>}
+          {isApplied && <Badge className="bg-green-500/10 text-green-600 dark:text-green-400">Applied</Badge>}
         </div>
       </CardHeader>
 
@@ -170,13 +171,13 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
             {/* Quick Skills Preview */}
             <div className="flex flex-wrap gap-2">
               {skillsMatch.matchingSkills.slice(0, 3).map((skill, index) => (
-                <Badge key={index} className="bg-green-100 text-green-800">
+                <Badge key={index} className="bg-green-500/10 text-green-600 dark:text-green-400">
                   <CheckCircle className="h-3 w-3 mr-1" />
                   {skill}
                 </Badge>
               ))}
               {skillsMatch.missingSkills.slice(0, 2).map((skill, index) => (
-                <Badge key={index} variant="outline" className="text-orange-600">
+                <Badge key={index} variant="outline" className="text-amber-600 dark:text-amber-400">
                   <AlertCircle className="h-3 w-3 mr-1" />
                   {skill}
                 </Badge>
@@ -208,13 +209,13 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
                 <h4 className="font-medium mb-2">Required Skills Analysis</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm font-medium text-green-700 mb-2">
+                    <p className="text-sm font-medium text-green-600 dark:text-green-400 mb-2">
                       ✓ Skills You Have ({skillsMatch.matchingSkills.length})
                     </p>
                     <div className="space-y-1">
                       {skillsMatch.matchingSkills.map((skill, index) => (
                         <div key={index} className="flex items-center gap-2 text-sm">
-                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
                           <span>{skill}</span>
                         </div>
                       ))}
@@ -222,13 +223,13 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
                   </div>
                   
                   <div>
-                    <p className="text-sm font-medium text-orange-700 mb-2">
+                    <p className="text-sm font-medium text-amber-600 dark:text-amber-400 mb-2">
                       ⚠ Skills to Develop ({skillsMatch.missingSkills.length})
                     </p>
                     <div className="space-y-1">
                       {skillsMatch.missingSkills.map((skill, index) => (
                         <div key={index} className="flex items-center gap-2 text-sm">
-                          <XCircle className="h-4 w-4 text-orange-600" />
+                          <XCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                           <span>{skill}</span>
                         </div>
                       ))}
@@ -240,12 +241,12 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
 
             {/* Learning Recommendations */}
             {skillsMatch.missingSkills.length > 0 && (
-              <div className="bg-blue-50 p-3 rounded-lg">
-                <h4 className="font-medium text-blue-800 mb-2">
+              <div className="bg-accent p-3 rounded-lg">
+                <h4 className="font-medium text-accent-foreground mb-2">
                   <TrendingUp className="h-4 w-4 inline mr-1" />
                   Skill Development Recommendations
                 </h4>
-                <ul className="text-sm text-blue-700 space-y-1">
+                <ul className="text-sm text-muted-foreground space-y-1">
                   {skillsMatch.missingSkills.slice(0, 3).map((skill, index) => (
                     <li key={index}>
                       • Consider taking an online course in {skill}
@@ -305,7 +306,7 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
               onSave(job);
             }} 
             variant="outline"
-            className={isSaved ? 'bg-red-50 text-red-600' : ''}
+            className={isSaved ? 'bg-destructive/10 text-destructive' : ''}
           >
             <Heart className={`h-4 w-4 ${isSaved ? 'fill-current' : ''}`} />
           </Button>

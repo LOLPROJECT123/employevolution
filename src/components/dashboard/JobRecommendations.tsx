@@ -78,9 +78,9 @@ const JobRecommendations = () => {
   };
 
   const getMatchColor = (percentage: number) => {
-    if (percentage >= 85) return 'text-green-600';
-    if (percentage >= 70) return 'text-blue-600';
-    return 'text-yellow-600';
+    if (percentage >= 85) return 'text-green-600 dark:text-green-400';
+    if (percentage >= 70) return 'text-primary';
+    return 'text-amber-600 dark:text-amber-400';
   };
 
   if (loading) {
@@ -93,8 +93,8 @@ const JobRecommendations = () => {
           <div className="animate-pulse space-y-4">
             {[1, 2, 3].map((i) => (
               <div key={i} className="space-y-2">
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-4 bg-muted rounded w-3/4"></div>
+                <div className="h-3 bg-muted rounded w-1/2"></div>
               </div>
             ))}
           </div>
@@ -113,10 +113,10 @@ const JobRecommendations = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         {recommendations.map((job) => (
-          <div key={job.id} className="border rounded-lg p-3 space-y-2 hover:bg-gray-50 transition-colors">
+          <div key={job.id} className="border border-border rounded-lg p-3 space-y-2 hover:bg-accent transition-colors">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <h4 className="font-medium text-sm hover:text-blue-600 cursor-pointer">
+                <h4 className="font-medium text-sm hover:text-primary cursor-pointer">
                   {job.title}
                 </h4>
                 <p className="text-xs text-muted-foreground">{job.company}</p>
