@@ -198,9 +198,9 @@ const Profile = () => {
         supabase.from('user_skills').select('*').eq('user_id', user.id)
       ]);
 
-      // Transform database data to match component interfaces
+      // Transform database data to match component interfaces with proper ID handling
       const transformedWorkExp = (workExp.data || []).map(exp => ({
-        id: parseInt(exp.id),
+        id: parseInt(exp.id) || 0, // Ensure we have a valid number
         role: exp.role || '',
         company: exp.company || '',
         location: exp.location || '',
@@ -210,7 +210,7 @@ const Profile = () => {
       }));
 
       const transformedEducation = (edu.data || []).map(edu => ({
-        id: parseInt(edu.id),
+        id: parseInt(edu.id) || 0, // Ensure we have a valid number
         school: edu.school || '',
         degree: edu.degree || '',
         startDate: edu.start_date || '',
@@ -218,7 +218,7 @@ const Profile = () => {
       }));
 
       const transformedProjects = (proj.data || []).map(project => ({
-        id: parseInt(project.id),
+        id: parseInt(project.id) || 0, // Ensure we have a valid number
         name: project.name || '',
         url: project.url || undefined,
         startDate: project.start_date || '',
@@ -226,6 +226,10 @@ const Profile = () => {
         technologies: Array.isArray(project.technologies) ? project.technologies : [],
         description: Array.isArray(project.description) ? project.description.join('\n') : (project.description || '')
       }));
+
+      console.log('Transformed work experiences:', transformedWorkExp);
+      console.log('Transformed education:', transformedEducation);
+      console.log('Transformed projects:', transformedProjects);
 
       setWorkExperiences(transformedWorkExp);
       setEducation(transformedEducation);
@@ -394,12 +398,27 @@ const Profile = () => {
     if (!user) return;
 
     try {
-      console.log('Deleting work experience with ID:', id);
-      // Convert number to string for the database query
+      console.log('Deleting work experience with ID:', id, 'Type:', typeof id);
+      
+      // Ensure we have a valid ID
+      if (!id || isNaN(id)) {
+        console.error('Invalid ID provided:', id);
+        toast({
+          title: "Error",
+          description: "Invalid work experience ID",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Convert to string for database query
+      const idString = id.toString();
+      console.log('Converting to string ID:', idString);
+      
       const { error } = await supabase
         .from('work_experiences')
         .delete()
-        .eq('id', id.toString());
+        .eq('id', idString);
 
       if (error) {
         console.error('Database error:', error);
@@ -493,12 +512,27 @@ const Profile = () => {
     if (!user) return;
 
     try {
-      console.log('Deleting education with ID:', id);
-      // Convert number to string for the database query
+      console.log('Deleting education with ID:', id, 'Type:', typeof id);
+      
+      // Ensure we have a valid ID
+      if (!id || isNaN(id)) {
+        console.error('Invalid ID provided:', id);
+        toast({
+          title: "Error",
+          description: "Invalid education ID",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Convert to string for database query
+      const idString = id.toString();
+      console.log('Converting to string ID:', idString);
+      
       const { error } = await supabase
         .from('education')
         .delete()
-        .eq('id', id.toString());
+        .eq('id', idString);
 
       if (error) {
         console.error('Database error:', error);
@@ -594,11 +628,27 @@ const Profile = () => {
     if (!user) return;
 
     try {
-      console.log('Deleting project with ID:', id);
+      console.log('Deleting project with ID:', id, 'Type:', typeof id);
+      
+      // Ensure we have a valid ID
+      if (!id || isNaN(id)) {
+        console.error('Invalid ID provided:', id);
+        toast({
+          title: "Error",
+          description: "Invalid project ID",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Convert to string for database query
+      const idString = id.toString();
+      console.log('Converting to string ID:', idString);
+      
       const { error } = await supabase
         .from('projects')
         .delete()
-        .eq('id', id.toString());
+        .eq('id', idString);
 
       if (error) {
         console.error('Database error:', error);
