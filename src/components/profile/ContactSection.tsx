@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { FullDatePicker } from '@/components/ui/full-date-picker';
 import { useTheme } from 'next-themes';
 import { MapPin, Phone, Mail, Edit, Calendar, Save, X } from 'lucide-react';
 
@@ -79,11 +80,10 @@ const ContactSection = ({ data, onUpdate }: ContactSectionProps) => {
               </div>
               <div>
                 <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                <Input
-                  id="dateOfBirth"
-                  type="date"
+                <FullDatePicker
                   value={editData.dateOfBirth || ''}
-                  onChange={(e) => setEditData({ ...editData, dateOfBirth: e.target.value })}
+                  onChange={(value) => setEditData({ ...editData, dateOfBirth: value })}
+                  placeholder="Select your date of birth"
                   className={`${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'}`}
                 />
               </div>
