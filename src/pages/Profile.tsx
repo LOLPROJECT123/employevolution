@@ -50,7 +50,7 @@ interface UserProfile {
 }
 
 interface WorkExperience {
-  id: number;
+  id: string;
   role: string;
   company: string;
   location: string;
@@ -60,7 +60,7 @@ interface WorkExperience {
 }
 
 interface Education {
-  id: number;
+  id: string;
   school: string;
   degree: string;
   startDate: string;
@@ -68,7 +68,7 @@ interface Education {
 }
 
 interface Project {
-  id: number;
+  id: string;
   name: string;
   url?: string;
   startDate: string;
@@ -198,9 +198,9 @@ const Profile = () => {
         supabase.from('user_skills').select('*').eq('user_id', user.id)
       ]);
 
-      // Transform database data to match component interfaces with proper ID handling
+      // Transform database data to match component interfaces - keep IDs as strings
       const transformedWorkExp = (workExp.data || []).map(exp => ({
-        id: parseInt(exp.id) || 0, // Ensure we have a valid number
+        id: exp.id, // Keep as string UUID
         role: exp.role || '',
         company: exp.company || '',
         location: exp.location || '',
@@ -210,7 +210,7 @@ const Profile = () => {
       }));
 
       const transformedEducation = (edu.data || []).map(edu => ({
-        id: parseInt(edu.id) || 0, // Ensure we have a valid number
+        id: edu.id, // Keep as string UUID
         school: edu.school || '',
         degree: edu.degree || '',
         startDate: edu.start_date || '',
@@ -218,7 +218,7 @@ const Profile = () => {
       }));
 
       const transformedProjects = (proj.data || []).map(project => ({
-        id: parseInt(project.id) || 0, // Ensure we have a valid number
+        id: project.id, // Keep as string UUID
         name: project.name || '',
         url: project.url || undefined,
         startDate: project.start_date || '',
@@ -350,12 +350,12 @@ const Profile = () => {
       };
 
       if (editingWorkExperience) {
-        // Update existing
+        // Update existing - use string ID directly
         console.log('Updating work experience with ID:', editingWorkExperience.id);
         const { error } = await supabase
           .from('work_experiences')
           .update(dbData)
-          .eq('id', editingWorkExperience.id.toString());
+          .eq('id', editingWorkExperience.id);
 
         if (error) throw error;
 
@@ -374,7 +374,7 @@ const Profile = () => {
 
         const newExperience = {
           ...experienceData,
-          id: parseInt(data.id)
+          id: data.id // Use the UUID string from database
         };
 
         setWorkExperiences(prev => [...prev, newExperience]);
@@ -394,14 +394,14 @@ const Profile = () => {
     }
   };
 
-  const handleDeleteWorkExperience = async (id: number) => {
+  const handleDeleteWorkExperience = async (id: string) => {
     if (!user) return;
 
     try {
       console.log('Deleting work experience with ID:', id, 'Type:', typeof id);
       
-      // Ensure we have a valid ID
-      if (!id || isNaN(id)) {
+      // Validate ID
+      if (!id || typeof id !== 'string') {
         console.error('Invalid ID provided:', id);
         toast({
           title: "Error",
@@ -410,15 +410,11 @@ const Profile = () => {
         });
         return;
       }
-
-      // Convert to string for database query
-      const idString = id.toString();
-      console.log('Converting to string ID:', idString);
       
       const { error } = await supabase
         .from('work_experiences')
         .delete()
-        .eq('id', idString);
+        .eq('id', id);
 
       if (error) {
         console.error('Database error:', error);
@@ -464,12 +460,12 @@ const Profile = () => {
       };
 
       if (editingEducation) {
-        // Update existing - convert number to string for the database query
+        // Update existing - use string ID directly
         console.log('Updating education with ID:', editingEducation.id);
         const { error } = await supabase
           .from('education')
           .update(dbData)
-          .eq('id', editingEducation.id.toString());
+          .eq('id', editingEducation.id);
 
         if (error) throw error;
 
@@ -488,7 +484,7 @@ const Profile = () => {
 
         const newEducation = {
           ...educationData,
-          id: parseInt(data.id)
+          id: data.id // Use the UUID string from database
         };
 
         setEducation(prev => [...prev, newEducation]);
@@ -508,14 +504,14 @@ const Profile = () => {
     }
   };
 
-  const handleDeleteEducation = async (id: number) => {
+  const handleDeleteEducation = async (id: string) => {
     if (!user) return;
 
     try {
       console.log('Deleting education with ID:', id, 'Type:', typeof id);
       
-      // Ensure we have a valid ID
-      if (!id || isNaN(id)) {
+      // Validate ID
+      if (!id || typeof id !== 'string') {
         console.error('Invalid ID provided:', id);
         toast({
           title: "Error",
@@ -524,15 +520,11 @@ const Profile = () => {
         });
         return;
       }
-
-      // Convert to string for database query
-      const idString = id.toString();
-      console.log('Converting to string ID:', idString);
       
       const { error } = await supabase
         .from('education')
         .delete()
-        .eq('id', idString);
+        .eq('id', id);
 
       if (error) {
         console.error('Database error:', error);
@@ -580,12 +572,12 @@ const Profile = () => {
       };
 
       if (editingProject) {
-        // Update existing
+        // Update existing - use string ID directly
         console.log('Updating project with ID:', editingProject.id);
         const { error } = await supabase
           .from('projects')
           .update(dbData)
-          .eq('id', editingProject.id.toString());
+          .eq('id', editingProject.id);
 
         if (error) throw error;
 
@@ -604,7 +596,7 @@ const Profile = () => {
 
         const newProject = {
           ...projectData,
-          id: parseInt(data.id)
+          id: data.id // Use the UUID string from database
         };
 
         setProjects(prev => [...prev, newProject]);
@@ -624,14 +616,14 @@ const Profile = () => {
     }
   };
 
-  const handleDeleteProject = async (id: number) => {
+  const handleDeleteProject = async (id: string) => {
     if (!user) return;
 
     try {
       console.log('Deleting project with ID:', id, 'Type:', typeof id);
       
-      // Ensure we have a valid ID
-      if (!id || isNaN(id)) {
+      // Validate ID
+      if (!id || typeof id !== 'string') {
         console.error('Invalid ID provided:', id);
         toast({
           title: "Error",
@@ -640,15 +632,11 @@ const Profile = () => {
         });
         return;
       }
-
-      // Convert to string for database query
-      const idString = id.toString();
-      console.log('Converting to string ID:', idString);
       
       const { error } = await supabase
         .from('projects')
         .delete()
-        .eq('id', idString);
+        .eq('id', id);
 
       if (error) {
         console.error('Database error:', error);

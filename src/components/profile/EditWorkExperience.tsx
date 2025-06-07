@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { FullDatePicker } from "@/components/ui/full-date-picker";
 
 interface WorkExperience {
-  id: number;
+  id: string;
   role: string;
   company: string;
   location: string;
@@ -30,7 +30,7 @@ interface EditWorkExperienceProps {
   onClose: () => void;
   experience?: WorkExperience;
   onSave: (experience: WorkExperience) => void;
-  onDelete?: (id: number) => void;
+  onDelete?: (id: string) => void;
 }
 
 const EditWorkExperience: React.FC<EditWorkExperienceProps> = ({
@@ -59,7 +59,7 @@ const EditWorkExperience: React.FC<EditWorkExperienceProps> = ({
 
   const handleSave = () => {
     onSave({
-      id: experience?.id || Date.now(),
+      id: experience?.id || crypto.randomUUID(),
       role,
       company,
       location,

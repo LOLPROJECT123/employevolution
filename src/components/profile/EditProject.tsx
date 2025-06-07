@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { FullDatePicker } from "@/components/ui/full-date-picker";
 
 interface Project {
-  id: number;
+  id: string;
   name: string;
   url?: string;
   startDate: string;
@@ -30,7 +30,7 @@ interface EditProjectProps {
   onClose: () => void;
   project?: Project;
   onSave: (project: Project) => void;
-  onDelete?: (id: number) => void;
+  onDelete?: (id: string) => void;
 }
 
 const EditProject: React.FC<EditProjectProps> = ({
@@ -59,7 +59,7 @@ const EditProject: React.FC<EditProjectProps> = ({
 
   const handleSave = () => {
     onSave({
-      id: project?.id || Date.now(),
+      id: project?.id || crypto.randomUUID(),
       name,
       url: url.trim() || undefined,
       startDate,

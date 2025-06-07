@@ -5,7 +5,7 @@ import { Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export function ModeToggle() {
-  const { setTheme, theme, resolvedTheme } = useTheme();
+  const { setTheme, theme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   // Ensure component is mounted before rendering to avoid hydration issues
@@ -14,10 +14,15 @@ export function ModeToggle() {
   }, []);
 
   const toggleTheme = () => {
-    console.log('Current theme:', theme, 'Resolved theme:', resolvedTheme);
-    const newTheme = theme === "dark" ? "light" : "dark";
-    console.log('Setting theme to:', newTheme);
-    setTheme(newTheme);
+    console.log('Current theme:', theme);
+    // Handle theme switching with proper fallbacks
+    if (theme === "dark") {
+      setTheme("light");
+      console.log('Switching to light theme');
+    } else {
+      setTheme("dark");
+      console.log('Switching to dark theme');
+    }
   };
 
   // Prevent rendering until mounted to avoid hydration mismatch

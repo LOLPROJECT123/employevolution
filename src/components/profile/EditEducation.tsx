@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { FullDatePicker } from "@/components/ui/full-date-picker";
 
 interface Education {
-  id: number;
+  id: string;
   school: string;
   degree: string;
   major?: string;
@@ -28,7 +28,7 @@ interface EditEducationProps {
   onClose: () => void;
   education?: Education;
   onSave: (education: Education) => void;
-  onDelete?: (id: number) => void;
+  onDelete?: (id: string) => void;
 }
 
 const EditEducation: React.FC<EditEducationProps> = ({
@@ -56,7 +56,7 @@ const EditEducation: React.FC<EditEducationProps> = ({
 
   const handleSave = () => {
     onSave({
-      id: education?.id || Date.now(),
+      id: education?.id || crypto.randomUUID(),
       school,
       degree,
       major,
