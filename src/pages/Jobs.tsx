@@ -448,13 +448,13 @@ const Jobs = () => {
 
   if (initialLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900/30">
+      <div className="min-h-screen flex flex-col bg-background">
         {!isMobile && <Navbar />}
         {isMobile && <MobileHeader />}
         <main className={`flex-1 ${isMobile ? 'pt-16' : 'pt-20'} flex items-center justify-center`}>
           <div className="text-center">
             <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">Loading jobs and starting automatic job discovery...</p>
+            <p className="text-muted-foreground">Loading jobs and starting automatic job discovery...</p>
           </div>
         </main>
       </div>
@@ -462,7 +462,7 @@ const Jobs = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900/30">
+    <div className="min-h-screen flex flex-col bg-background">
       {!isMobile && <Navbar />}
       {isMobile && <MobileHeader />}
       
@@ -483,20 +483,20 @@ const Jobs = () => {
 
           {/* Auto-scraping status */}
           <div className="mb-6">
-            <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
+            <Card className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 border-green-200 dark:border-green-800">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     {autoScrapingActive ? (
-                      <Loader2 className="h-5 w-5 animate-spin text-green-600" />
+                      <Loader2 className="h-5 w-5 animate-spin text-green-600 dark:text-green-400" />
                     ) : (
-                      <Zap className="h-5 w-5 text-green-600" />
+                      <Zap className="h-5 w-5 text-green-600 dark:text-green-400" />
                     )}
                     <div>
-                      <h3 className="font-semibold text-green-800">
+                      <h3 className="font-semibold text-green-800 dark:text-green-200">
                         {autoScrapingActive ? '🚀 Discovering Fresh Jobs...' : '✅ Automatic Job Discovery Complete'}
                       </h3>
-                      <p className="text-sm text-green-600">
+                      <p className="text-sm text-green-600 dark:text-green-300">
                         {autoScrapingActive 
                           ? 'Searching LinkedIn, Indeed, ATS systems (Greenhouse, Lever, iCims), and more...'
                           : `Found ${jobs.length} total jobs${scrapedJobsCount > 0 ? ` (${scrapedJobsCount} newly discovered)` : ''} from multiple platforms`
@@ -509,7 +509,7 @@ const Jobs = () => {
                     size="sm" 
                     onClick={handleRefreshJobs}
                     disabled={autoScrapingActive}
-                    className="border-green-300 text-green-700 hover:bg-green-50"
+                    className="border-green-300 dark:border-green-700 text-green-700 dark:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/20"
                   >
                     <RefreshCw className="w-4 h-4 mr-2" />
                     {autoScrapingActive ? 'Searching...' : 'Find More Jobs'}
@@ -525,10 +525,10 @@ const Jobs = () => {
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center space-x-2">
-                    <TrendingUp className="h-4 w-4 text-blue-600" />
+                    <TrendingUp className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                     <div>
-                      <p className="text-sm text-gray-600">Total Applied</p>
-                      <p className="text-2xl font-bold">{applicationMetrics.totalApplications}</p>
+                      <p className="text-sm text-muted-foreground">Total Applied</p>
+                      <p className="text-2xl font-bold text-foreground">{applicationMetrics.totalApplications}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -536,24 +536,24 @@ const Jobs = () => {
               <Card>
                 <CardContent className="p-4">
                   <div>
-                    <p className="text-sm text-gray-600">Response Rate</p>
-                    <p className="text-2xl font-bold text-green-600">{applicationMetrics.responseRate.toFixed(1)}%</p>
+                    <p className="text-sm text-muted-foreground">Response Rate</p>
+                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">{applicationMetrics.responseRate.toFixed(1)}%</p>
                   </div>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="p-4">
                   <div>
-                    <p className="text-sm text-gray-600">Interview Rate</p>
-                    <p className="text-2xl font-bold text-purple-600">{applicationMetrics.interviewRate.toFixed(1)}%</p>
+                    <p className="text-sm text-muted-foreground">Interview Rate</p>
+                    <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{applicationMetrics.interviewRate.toFixed(1)}%</p>
                   </div>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="p-4">
                   <div>
-                    <p className="text-sm text-gray-600">Offer Rate</p>
-                    <p className="text-2xl font-bold text-orange-600">{applicationMetrics.offerRate.toFixed(1)}%</p>
+                    <p className="text-sm text-muted-foreground">Offer Rate</p>
+                    <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{applicationMetrics.offerRate.toFixed(1)}%</p>
                   </div>
                 </CardContent>
               </Card>
@@ -561,12 +561,12 @@ const Jobs = () => {
           )}
 
           <div className="space-y-6">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+            <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
+              <div className="p-4 border-b border-border">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h2 className="font-semibold text-lg">Filter Jobs</h2>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Find jobs that match your preferences</p>
+                    <h2 className="font-semibold text-lg text-card-foreground">Filter Jobs</h2>
+                    <p className="text-sm text-muted-foreground">Find jobs that match your preferences</p>
                   </div>
                   {user && (
                     <Button variant="outline" size="sm" onClick={handleSaveSearch}>
@@ -582,10 +582,10 @@ const Jobs = () => {
             </div>
 
             {user && (
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                  <h2 className="font-semibold text-lg">My Jobs</h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Saved and Applied Positions</p>
+              <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
+                <div className="p-4 border-b border-border">
+                  <h2 className="font-semibold text-lg text-card-foreground">My Jobs</h2>
+                  <p className="text-sm text-muted-foreground">Saved and Applied Positions</p>
                 </div>
                 <div className="p-4">
                   <SavedAndAppliedJobs
@@ -608,19 +608,19 @@ const Jobs = () => {
                       <CardTitle className="text-base font-medium">
                         🎯 Browse Jobs 
                         {scrapedJobsCount > 0 && (
-                          <Badge variant="secondary" className="ml-2 bg-green-100 text-green-800">
+                          <Badge variant="secondary" className="ml-2 bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200">
                             {scrapedJobsCount} New
                           </Badge>
                         )}
                       </CardTitle>
                       <p className="text-xs text-muted-foreground">
                         Showing {filteredJobs.length} jobs from multiple platforms
-                        {(loading || autoScrapingActive) && <span className="ml-2 text-blue-600 animate-pulse">• Finding more...</span>}
+                        {(loading || autoScrapingActive) && <span className="ml-2 text-blue-600 dark:text-blue-400 animate-pulse">• Finding more...</span>}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
                       <Select defaultValue={sortOption} onValueChange={handleSortChange}>
-                        <SelectTrigger className="w-[180px] bg-white dark:bg-gray-800 h-8 text-sm">
+                        <SelectTrigger className="w-[180px] bg-background h-8 text-sm">
                           <SelectValue placeholder="Sort By: Relevance" />
                         </SelectTrigger>
                         <SelectContent>
@@ -634,10 +634,10 @@ const Jobs = () => {
                     </div>
                   </CardHeader>
                   
-                  <CardContent className="p-0 divide-y overflow-y-auto max-h-[calc(100vh-300px)]">
+                  <CardContent className="p-0 divide-y divide-border overflow-y-auto max-h-[calc(100vh-300px)]">
                     {filteredJobs.length === 0 && !loading && !autoScrapingActive ? (
                       <div className="p-6 text-center">
-                        <p className="text-gray-500 mb-4">No jobs found. Let's discover some opportunities!</p>
+                        <p className="text-muted-foreground mb-4">No jobs found. Let's discover some opportunities!</p>
                         <Button onClick={handleRefreshJobs} className="bg-green-600 hover:bg-green-700">
                           <Zap className="w-4 h-4 mr-2" />
                           Start Job Discovery
