@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { DatePicker } from "@/components/ui/date-picker";
+import { FullDatePicker } from "@/components/ui/full-date-picker";
 
 interface WorkExperience {
   id: number;
@@ -116,7 +116,7 @@ const EditWorkExperience: React.FC<EditWorkExperienceProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label>Start Date</Label>
-              <DatePicker
+              <FullDatePicker
                 value={startDate}
                 onChange={setStartDate}
                 placeholder="Select start date"
@@ -124,7 +124,7 @@ const EditWorkExperience: React.FC<EditWorkExperienceProps> = ({
             </div>
             <div className="grid gap-2">
               <Label>End Date</Label>
-              <DatePicker
+              <FullDatePicker
                 value={isPresent ? "" : endDate}
                 onChange={setEndDate}
                 placeholder="Select end date"
