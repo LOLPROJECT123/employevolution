@@ -19,7 +19,7 @@ export const JobAlertsManager: React.FC = () => {
         <CardContent className="pt-6">
           <div className="animate-pulse space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-20 bg-gray-200 rounded"></div>
+              <div key={i} className="h-20 bg-muted rounded"></div>
             ))}
           </div>
         </CardContent>
@@ -50,9 +50,9 @@ export const JobAlertsManager: React.FC = () => {
         <CardContent>
           {alerts.length === 0 ? (
             <div className="text-center py-8">
-              <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">No job alerts yet</h3>
-              <p className="text-gray-600 mb-4">
+              <p className="text-muted-foreground mb-4">
                 Create your first job alert to get notified about relevant opportunities.
               </p>
               <Button onClick={() => setShowForm(true)}>
@@ -96,7 +96,7 @@ export const JobAlertsManager: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-muted-foreground">
                     <div className="grid grid-cols-2 gap-4">
                       {alert.criteria.keywords && (
                         <div>
@@ -122,7 +122,7 @@ export const JobAlertsManager: React.FC = () => {
                   </div>
                   
                   {alert.last_triggered && (
-                    <div className="text-xs text-gray-500 mt-2">
+                    <div className="text-xs text-muted-foreground mt-2">
                       Last triggered: {new Date(alert.last_triggered).toLocaleDateString()}
                     </div>
                   )}

@@ -20,35 +20,35 @@ export function MobileJobCard({
   const getInitialBadgeColor = () => {
     const companyInitial = job.company.charAt(0).toUpperCase();
     const colors: Record<string, string> = {
-      'A': 'bg-green-100 text-green-600',
-      'B': 'bg-blue-100 text-blue-600',
-      'C': 'bg-yellow-100 text-yellow-600',
-      'D': 'bg-orange-100 text-orange-600',
-      'E': 'bg-purple-100 text-purple-600',
-      'F': 'bg-indigo-100 text-indigo-600',
-      'G': 'bg-red-100 text-red-600',
-      'H': 'bg-emerald-100 text-emerald-600',
-      'I': 'bg-cyan-100 text-cyan-600',
-      'J': 'bg-violet-100 text-violet-600',
-      'K': 'bg-fuchsia-100 text-fuchsia-600',
-      'L': 'bg-rose-100 text-rose-600',
-      'M': 'bg-pink-100 text-pink-600',
-      'N': 'bg-amber-100 text-amber-600',
-      'O': 'bg-lime-100 text-lime-600',
-      'P': 'bg-teal-100 text-teal-600',
-      'Q': 'bg-sky-100 text-sky-600',
-      'R': 'bg-emerald-100 text-emerald-600',
-      'S': 'bg-blue-100 text-blue-600',
-      'T': 'bg-pink-100 text-pink-600',
-      'U': 'bg-purple-100 text-purple-600',
-      'V': 'bg-yellow-100 text-yellow-600',
-      'W': 'bg-green-100 text-green-600',
-      'X': 'bg-red-100 text-red-600',
-      'Y': 'bg-orange-100 text-orange-600',
-      'Z': 'bg-indigo-100 text-indigo-600',
+      'A': 'bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400',
+      'B': 'bg-primary/10 text-primary',
+      'C': 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400',
+      'D': 'bg-orange-100 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400',
+      'E': 'bg-purple-100 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400',
+      'F': 'bg-indigo-100 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400',
+      'G': 'bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400',
+      'H': 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400',
+      'I': 'bg-cyan-100 dark:bg-cyan-900/20 text-cyan-600 dark:text-cyan-400',
+      'J': 'bg-violet-100 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400',
+      'K': 'bg-fuchsia-100 dark:bg-fuchsia-900/20 text-fuchsia-600 dark:text-fuchsia-400',
+      'L': 'bg-rose-100 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400',
+      'M': 'bg-pink-100 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400',
+      'N': 'bg-amber-100 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400',
+      'O': 'bg-lime-100 dark:bg-lime-900/20 text-lime-600 dark:text-lime-400',
+      'P': 'bg-teal-100 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400',
+      'Q': 'bg-sky-100 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400',
+      'R': 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400',
+      'S': 'bg-primary/10 text-primary',
+      'T': 'bg-pink-100 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400',
+      'U': 'bg-purple-100 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400',
+      'V': 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400',
+      'W': 'bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400',
+      'X': 'bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400',
+      'Y': 'bg-orange-100 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400',
+      'Z': 'bg-indigo-100 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400',
     };
     
-    return colors[companyInitial] || 'bg-gray-100 text-gray-600';
+    return colors[companyInitial] || 'bg-muted text-muted-foreground';
   };
   
   const formattedSalary = job.level === 'intern' 
@@ -58,21 +58,21 @@ export function MobileJobCard({
   // Get match color based on percentage
   const getMatchColor = (percentage?: number) => {
     if (!percentage) return "";
-    if (percentage >= 80) return "text-green-500";
-    if (percentage >= 60) return "text-amber-500";
-    return "text-red-500";
+    if (percentage >= 80) return "text-green-500 dark:text-green-400";
+    if (percentage >= 60) return "text-amber-500 dark:text-amber-400";
+    return "text-red-500 dark:text-red-400";
   };
 
   const getMatchBgColor = (percentage?: number) => {
-    if (!percentage) return "bg-gray-100 dark:bg-gray-800";
-    if (percentage >= 80) return "bg-green-50 dark:bg-green-900/30";
-    if (percentage >= 60) return "bg-amber-50 dark:bg-amber-900/30";
-    return "bg-red-50 dark:bg-red-900/30";
+    if (!percentage) return "bg-muted";
+    if (percentage >= 80) return "bg-green-50 dark:bg-green-900/20";
+    if (percentage >= 60) return "bg-amber-50 dark:bg-amber-900/20";
+    return "bg-red-50 dark:bg-red-900/20";
   };
   
   return (
     <div 
-      className="py-3 px-3 border-b border-gray-100 dark:border-gray-800 active:bg-gray-50 dark:active:bg-gray-800/60"
+      className="py-3 px-3 border-b border-border active:bg-muted/50"
       onClick={onClick}
     >
       <div className="flex items-start gap-3 min-w-0">
@@ -93,15 +93,15 @@ export function MobileJobCard({
           </div>
           
           <div className="flex flex-col gap-0.5">
-            <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400 truncate">
+            <div className="flex items-center gap-1 text-sm text-muted-foreground truncate">
               <span className="truncate">{job.company}</span>
             </div>
             
-            <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400 truncate">
+            <div className="flex items-center gap-1 text-sm text-muted-foreground truncate">
               <span className="truncate">{formattedSalary}</span>
             </div>
             
-            <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400 truncate">
+            <div className="flex items-center gap-1 text-sm text-muted-foreground truncate">
               <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
               <span className="truncate">{job.location}</span>
             </div>
@@ -109,14 +109,14 @@ export function MobileJobCard({
         </div>
         
         <button 
-          className="flex-shrink-0 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          className="flex-shrink-0 p-1 rounded-full hover:bg-muted transition-colors"
           onClick={(e) => {
             e.stopPropagation();
             onSave?.();
           }}
           aria-label={isSaved ? "Unsave job" : "Save job"}
         >
-          <BookmarkIcon className={`h-5 w-5 ${isSaved ? "fill-primary text-primary" : "text-gray-400"}`} />
+          <BookmarkIcon className={`h-5 w-5 ${isSaved ? "fill-primary text-primary" : "text-muted-foreground"}`} />
         </button>
       </div>
     </div>

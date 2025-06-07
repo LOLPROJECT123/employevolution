@@ -30,16 +30,16 @@ export function JobCard({
   
   const getMatchColor = (percentage?: number) => {
     if (!percentage) return "";
-    if (percentage >= 70) return "text-green-500";
-    if (percentage >= 50) return "text-amber-500";
-    return "text-red-500";
+    if (percentage >= 70) return "text-green-600 dark:text-green-400";
+    if (percentage >= 50) return "text-amber-600 dark:text-amber-400";
+    return "text-red-600 dark:text-red-400";
   };
 
   const getMatchBgColor = (percentage?: number) => {
-    if (!percentage) return "bg-gray-100 dark:bg-gray-800";
-    if (percentage >= 70) return "bg-green-50 dark:bg-green-900/30";
-    if (percentage >= 50) return "bg-amber-50 dark:bg-amber-900/30";
-    return "bg-red-50 dark:bg-red-900/30";
+    if (!percentage) return "bg-muted";
+    if (percentage >= 70) return "bg-green-50 dark:bg-green-900/20";
+    if (percentage >= 50) return "bg-amber-50 dark:bg-amber-900/20";
+    return "bg-red-50 dark:bg-red-900/20";
   };
   
   const formattedSalary = `${job.salary.currency}${job.salary.min.toLocaleString()} - ${job.salary.max.toLocaleString()}`;
@@ -50,14 +50,14 @@ export function JobCard({
   
   const getCompanyColor = () => {
     const colors = [
-      'bg-blue-100 text-blue-600',
-      'bg-green-100 text-green-600',
-      'bg-purple-100 text-purple-600',
-      'bg-yellow-100 text-yellow-600',
-      'bg-red-100 text-red-600',
-      'bg-indigo-100 text-indigo-600',
-      'bg-pink-100 text-pink-600',
-      'bg-orange-100 text-orange-600',
+      'bg-primary/10 text-primary',
+      'bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400',
+      'bg-purple-100 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400',
+      'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400',
+      'bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400',
+      'bg-indigo-100 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400',
+      'bg-pink-100 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400',
+      'bg-orange-100 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400',
     ];
     
     const charSum = job.company
@@ -71,7 +71,7 @@ export function JobCard({
     return (
       <div
         onClick={onClick}
-        className={`px-4 py-3 cursor-pointer transition-colors relative ${isSelected ? 'bg-primary/5 dark:bg-primary/10' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'}`}
+        className={`px-4 py-3 cursor-pointer transition-colors relative ${isSelected ? 'bg-primary/5 dark:bg-primary/10' : 'hover:bg-muted/50'}`}
       >
         <div className="flex items-center space-x-3">
           <div className={`w-10 h-10 flex-shrink-0 rounded-md flex items-center justify-center ${getCompanyColor()}`}>
@@ -92,7 +92,7 @@ export function JobCard({
                 <MapPin className="w-3 h-3" /> {job.location}
               </p>
               
-              <p className="text-xs text-blue-600 dark:text-blue-400">{formattedSalary}</p>
+              <p className="text-xs text-primary">{formattedSalary}</p>
               
               <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                 <Clock className="w-3 h-3" /> {timeAgo}
@@ -108,7 +108,7 @@ export function JobCard({
             )}
           
             {isApplied ? (
-              <Badge className="bg-green-100 hover:bg-green-100 text-green-700 border-green-200">
+              <Badge className="bg-green-100 dark:bg-green-900/20 hover:bg-green-100 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800">
                 <CheckCircle className="mr-1 h-3 w-3" /> Applied
               </Badge>
             ) : isSaved ? (
@@ -142,7 +142,7 @@ export function JobCard({
         <div className="mt-2">
           <Button 
             size="sm" 
-            className="w-full justify-between text-xs bg-blue-600 hover:bg-blue-700"
+            className="w-full justify-between text-xs bg-primary hover:bg-primary/90"
             onClick={(e) => {
               e.stopPropagation();
               onApply?.(job);
@@ -183,7 +183,7 @@ export function JobCard({
           <MapPin className="w-3 h-3" /> {job.location}
         </p>
         
-        <p className="text-xs text-blue-600 dark:text-blue-400">{formattedSalary}</p>
+        <p className="text-xs text-primary">{formattedSalary}</p>
         
         <p className="text-xs text-muted-foreground flex items-center gap-1.5">
           <Clock className="w-3 h-3" /> {timeAgo}
@@ -193,7 +193,7 @@ export function JobCard({
       <div className="flex items-center justify-between mt-4">
         <Button
           size="sm"
-          className={isApplied ? "text-green-600 border-green-200 bg-green-50 w-full" : "bg-blue-600 hover:bg-blue-700 w-full"}
+          className={isApplied ? "text-green-600 dark:text-green-400 border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 w-full" : "bg-primary hover:bg-primary/90 w-full"}
           onClick={(e) => {
             e.stopPropagation();
             onApply?.(job);
