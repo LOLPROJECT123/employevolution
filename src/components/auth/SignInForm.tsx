@@ -1,8 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -16,7 +17,29 @@ interface SignInFormProps {
 export const SignInForm = ({ email, onBack, onSuccess }: SignInFormProps) => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
+
+  // Load saved preference on component mount
+  useEffect(() => {
+    const savedPreference = localStorage.getItem('rememberMe');
+    if (savedPreference !== null) {
+      setRememberMe(savedPreference === 'true');
+    }
+  }, []);
+
+  // Save preference and configure storage
+  const updateRememberMe = (checked: boolean) => {
+    setRememberMe(checked);
+    localStorage.setItem('rememberMe', checked.toString());
+    
+    // Reconfigure Supabase storage
+    const storage = checked ? localStorage : sessionStorage;
+    supabase.auth.updateSession = supabase.auth.updateSession.bind({
+      ...supabase.auth,
+      storage
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,6 +158,25 @@ export const SignInForm = ({ email, onBack, onSuccess }: SignInFormProps) => {
           </Button>
         </div>
       </div>
+
+      {/* Remember Me Checkbox */}
+      <div className="flex items-center space-x-2">
+        <Checkbox
+          id="rememberMe"
+          checked={rememberMe}
+          onCheckedChange={updateRememberMe}
+          disabled={loading}
+        />
+        <Label 
+          htmlFor="rememberMe" 
+          className="text-sm font-normal cursor-pointer"
+        >
+          Stay signed in
+        </Label>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        Keep me signed in on this device. Uncheck if using a shared computer.
+      </p>
 
       <Button type="submit" className="w-full" disabled={loading || !password}>
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

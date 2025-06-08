@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -16,6 +17,7 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(true);
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
@@ -25,6 +27,27 @@ const Auth = () => {
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Load saved preference on component mount
+  useEffect(() => {
+    const savedPreference = localStorage.getItem('rememberMe');
+    if (savedPreference !== null) {
+      setRememberMe(savedPreference === 'true');
+    }
+  }, []);
+
+  // Save preference and configure storage
+  const updateRememberMe = (checked: boolean) => {
+    setRememberMe(checked);
+    localStorage.setItem('rememberMe', checked.toString());
+    
+    // Reconfigure Supabase storage
+    const storage = checked ? localStorage : sessionStorage;
+    supabase.auth.updateSession = supabase.auth.updateSession.bind({
+      ...supabase.auth,
+      storage
+    });
+  };
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -339,6 +362,25 @@ const Auth = () => {
                     </div>
                   </div>
                 )}
+
+                {/* Remember Me Checkbox */}
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="rememberMe"
+                    checked={rememberMe}
+                    onCheckedChange={updateRememberMe}
+                    disabled={loading || socialLoading !== null}
+                  />
+                  <Label 
+                    htmlFor="rememberMe" 
+                    className="text-sm font-normal cursor-pointer"
+                  >
+                    Stay signed in
+                  </Label>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Keep me signed in on this device. Uncheck if using a shared computer.
+                </p>
                 
                 <Button type="submit" className="w-full" disabled={loading || socialLoading !== null}>
                   {loading ? (
