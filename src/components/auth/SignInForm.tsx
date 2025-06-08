@@ -28,17 +28,13 @@ export const SignInForm = ({ email, onBack, onSuccess }: SignInFormProps) => {
     }
   }, []);
 
-  // Save preference and configure storage
+  // Save preference
   const updateRememberMe = (checked: boolean) => {
     setRememberMe(checked);
     localStorage.setItem('rememberMe', checked.toString());
     
-    // Reconfigure Supabase storage
-    const storage = checked ? localStorage : sessionStorage;
-    supabase.auth.updateSession = supabase.auth.updateSession.bind({
-      ...supabase.auth,
-      storage
-    });
+    // Note: The storage configuration will be applied on the next page reload
+    // This is the recommended approach for Supabase client configuration
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
