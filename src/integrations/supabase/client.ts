@@ -6,20 +6,22 @@ import type { Database } from './types';
 const SUPABASE_URL = "https://pmcuyiwuobhqexbpkgnd.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBtY3V5aXd1b2JocWV4YnBrZ25kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyMjQ0NjIsImV4cCI6MjA2MzgwMDQ2Mn0.1HF6NS5FOMNcj8YmzFn_V3l6HJNczjbN8zVvTPM1iDc";
 
-// Get user preference for session storage
-const getStorageType = () => {
-  const rememberMe = localStorage.getItem('rememberMe');
-  // Default to localStorage (remember me) for better UX
-  return rememberMe === 'false' ? sessionStorage : localStorage;
-};
-
-// Import the supabase client like this:
-// import { supabase } from "@/integrations/supabase/client";
-
+// Create a stable Supabase client instance
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
-    storage: getStorageType(),
+    storage: localStorage, // Use localStorage by default for better UX
     persistSession: true,
     autoRefreshToken: true,
   }
 });
+
+// Function to create a client with different storage if needed
+export const createSupabaseClientWithStorage = (useSessionStorage: boolean = false) => {
+  return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    auth: {
+      storage: useSessionStorage ? sessionStorage : localStorage,
+      persistSession: true,
+      autoRefreshToken: true,
+    }
+  });
+};
