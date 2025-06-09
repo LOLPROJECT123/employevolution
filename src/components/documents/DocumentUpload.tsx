@@ -8,8 +8,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Upload, X, FileText } from 'lucide-react';
+import { Upload, X, FileText, FileImage, Image } from 'lucide-react';
 import { documentService, UserDocument } from '@/services/documentService';
+import { canProcessFile, willUseOCR, getProcessingMethod } from '@/utils/enhancedResumeParser';
 import { toast } from '@/hooks/use-toast';
 
 interface DocumentUploadProps {
@@ -29,9 +30,39 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onSuccess, onCancel }) 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (selectedFile: File) => {
+    if (!canProcessFile(selectedFile)) {
+      toast({
+        title: "Unsupported file type",
+        description: "Please select a PDF, DOC, DOCX, TXT, or image file (JPG, PNG, etc.)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (15MB max for OCR processing)
+    if (selectedFile.size > 15 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "File size must be less than 15MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setFile(selectedFile);
     if (!name) {
-      setName(selectedFile.name.replace(/\.[^/.]+$/, "")); // Remove extension
+      setName(selectedFile.name.replace(/\.[^/.]+$/, ""));
+    }
+
+    // Show processing method info
+    const method = getProcessingMethod(selectedFile);
+    const isOCR = willUseOCR(selectedFile);
+    
+    if (isOCR) {
+      toast({
+        title: "OCR Processing",
+        description: `This ${selectedFile.type.includes('image') ? 'image' : 'PDF'} will be processed using OCR technology for text extraction.`,
+      });
     }
   };
 
@@ -83,16 +114,11 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onSuccess, onCancel }) 
     }
   };
 
-  const isValidFile = (file: File) => {
-    const validTypes = [
-      'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'text/plain',
-      'image/jpeg',
-      'image/png'
-    ];
-    return validTypes.includes(file.type);
+  const getFileIcon = (file: File) => {
+    if (file.type.startsWith('image/')) {
+      return <FileImage className="h-12 w-12 text-blue-600 mx-auto" />;
+    }
+    return <FileText className="h-12 w-12 text-green-600 mx-auto" />;
   };
 
   return (
@@ -118,37 +144,45 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onSuccess, onCancel }) 
                 ref={fileInputRef}
                 type="file"
                 className="hidden"
-                accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.webp,.bmp,.tiff"
                 onChange={(e) => {
                   const selectedFile = e.target.files?.[0];
                   if (selectedFile) {
-                    if (isValidFile(selectedFile)) {
-                      handleFileSelect(selectedFile);
-                    } else {
-                      toast({
-                        title: "Invalid file type",
-                        description: "Please select a PDF, DOC, DOCX, TXT, JPG, or PNG file.",
-                        variant: "destructive",
-                      });
-                    }
+                    handleFileSelect(selectedFile);
                   }
                 }}
               />
               {file ? (
                 <div className="space-y-2">
-                  <FileText className="h-12 w-12 text-green-600 mx-auto" />
+                  {getFileIcon(file)}
                   <p className="font-medium">{file.name}</p>
                   <p className="text-sm text-muted-foreground">
                     {(file.size / 1024 / 1024).toFixed(2)} MB
                   </p>
+                  {willUseOCR(file) && (
+                    <div className="flex items-center justify-center gap-1 text-blue-600">
+                      <Image className="h-3 w-3" />
+                      <span className="text-xs">OCR Processing Available</span>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-2">
                   <Upload className="h-12 w-12 text-gray-400 mx-auto" />
                   <p className="font-medium">Drop your file here or click to browse</p>
                   <p className="text-sm text-muted-foreground">
-                    Supports PDF, DOC, DOCX, TXT, JPG, PNG
+                    Supports PDF, DOC, DOCX, TXT, and image files (JPG, PNG, etc.)
                   </p>
+                  <div className="flex items-center justify-center gap-4 mt-3 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <FileText className="h-3 w-3" />
+                      <span>Text Documents</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <FileImage className="h-3 w-3" />
+                      <span>Scanned Images</span>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

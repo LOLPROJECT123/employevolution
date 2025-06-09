@@ -4,11 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Upload, FileText, X } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Upload, FileText, X, Image, FileImage } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { resumeVersionService, ResumeVersion } from '@/services/resumeVersionService';
-import { extractTextFromPDF } from '@/utils/pdfParser';
+import { parseResumeEnhanced, canProcessFile, willUseOCR, getProcessingMethod } from '@/utils/enhancedResumeParser';
+import { OCRProgress } from '@/services/ocrService';
 import { toast } from 'sonner';
 
 interface ResumeUploadProps {
@@ -22,31 +23,36 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onSuccess, onCancel }) => {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [processingProgress, setProcessingProgress] = useState<OCRProgress | null>(null);
 
   const handleFileSelect = (selectedFile: File) => {
     if (!selectedFile) return;
 
-    // Validate file type
-    const allowedTypes = [
-      'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    ];
-
-    if (!allowedTypes.includes(selectedFile.type)) {
-      toast.error('Please upload a PDF, DOC, or DOCX file');
+    // Check if file can be processed
+    if (!canProcessFile(selectedFile)) {
+      toast.error('Unsupported file type. Please upload PDF, DOC, DOCX, or image files (JPG, PNG, etc.)');
       return;
     }
 
-    // Validate file size (10MB max)
-    if (selectedFile.size > 10 * 1024 * 1024) {
-      toast.error('File size must be less than 10MB');
+    // Validate file size (15MB max - increased for image files)
+    if (selectedFile.size > 15 * 1024 * 1024) {
+      toast.error('File size must be less than 15MB');
       return;
     }
 
     setFile(selectedFile);
     if (!name) {
       setName(selectedFile.name.replace(/\.[^/.]+$/, ''));
+    }
+
+    // Show user what processing method will be used
+    const method = getProcessingMethod(selectedFile);
+    const isOCR = willUseOCR(selectedFile);
+    
+    if (isOCR) {
+      toast.info(`File will be processed using: ${method}. This may take 30-60 seconds for OCR processing.`);
+    } else {
+      toast.info(`File will be processed using: ${method}`);
     }
   };
 
@@ -70,35 +76,6 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onSuccess, onCancel }) => {
     setDragActive(false);
   };
 
-  const parseResumeContent = async (file: File) => {
-    try {
-      if (file.type === 'application/pdf') {
-        const text = await extractTextFromPDF(file);
-        return {
-          extractedText: text,
-          personalInfo: { name: '', email: '', phone: '' },
-          workExperiences: [],
-          education: [],
-          skills: [],
-          projects: []
-        };
-      }
-      
-      // For DOC/DOCX files, return basic structure
-      return {
-        extractedText: 'Content parsing available for PDF files only',
-        personalInfo: { name: '', email: '', phone: '' },
-        workExperiences: [],
-        education: [],
-        skills: [],
-        projects: []
-      };
-    } catch (error) {
-      console.error('Error parsing resume:', error);
-      return null;
-    }
-  };
-
   const handleUpload = async () => {
     if (!file || !user || !name.trim()) {
       toast.error('Please select a file and provide a name');
@@ -106,9 +83,19 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onSuccess, onCancel }) => {
     }
 
     setLoading(true);
+    setProcessingProgress({ status: 'starting', progress: 0, message: 'Starting file processing...' });
+
     try {
-      // Parse resume content
-      const parsedData = await parseResumeContent(file);
+      // Parse resume content with progress tracking
+      const parsedData = await parseResumeEnhanced(file, {
+        showToast: false, // We'll handle our own toasts
+        onProgress: (progress) => {
+          setProcessingProgress(progress);
+        },
+        useOCR: true
+      });
+
+      setProcessingProgress({ status: 'uploading', progress: 95, message: 'Saving resume...' });
 
       // Convert file to base64
       const fileContent = await new Promise<string>((resolve, reject) => {
@@ -128,7 +115,8 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onSuccess, onCancel }) => {
       const newResume = await resumeVersionService.createResumeVersion(user.id, resumeData);
       
       if (newResume) {
-        toast.success('Resume uploaded successfully!');
+        setProcessingProgress({ status: 'complete', progress: 100, message: 'Resume uploaded successfully!' });
+        toast.success('Resume uploaded and parsed successfully!');
         onSuccess(newResume);
       } else {
         toast.error('Failed to upload resume');
@@ -138,7 +126,15 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onSuccess, onCancel }) => {
       toast.error('Failed to upload resume. Please try again.');
     } finally {
       setLoading(false);
+      setProcessingProgress(null);
     }
+  };
+
+  const getFileIcon = (file: File) => {
+    if (file.type.startsWith('image/')) {
+      return <FileImage className="h-8 w-8 mx-auto text-blue-600" />;
+    }
+    return <FileText className="h-8 w-8 mx-auto text-green-600" />;
   };
 
   return (
@@ -173,17 +169,20 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onSuccess, onCancel }) => {
             <input
               id="resume-file-input"
               type="file"
-              accept=".pdf,.doc,.docx"
+              accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.webp,.bmp,.tiff"
               onChange={(e) => handleFileSelect(e.target.files?.[0]!)}
               className="hidden"
             />
             
             {file ? (
               <div className="space-y-2">
-                <FileText className="h-8 w-8 mx-auto text-green-600" />
+                {getFileIcon(file)}
                 <p className="font-medium">{file.name}</p>
                 <p className="text-sm text-gray-500">
                   {(file.size / 1024 / 1024).toFixed(2)} MB
+                </p>
+                <p className="text-xs text-blue-600">
+                  {getProcessingMethod(file)}
                 </p>
               </div>
             ) : (
@@ -193,8 +192,15 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onSuccess, onCancel }) => {
                   Drop your resume here or click to browse
                 </p>
                 <p className="text-xs text-gray-500">
-                  Supports PDF, DOC, DOCX files up to 10MB
+                  Supports PDF, DOC, DOCX, and image files (JPG, PNG, etc.) up to 15MB
                 </p>
+                <div className="flex items-center justify-center gap-2 mt-2">
+                  <FileText className="h-4 w-4 text-gray-400" />
+                  <span className="text-xs text-gray-500">Text documents</span>
+                  <span className="text-gray-300">•</span>
+                  <Image className="h-4 w-4 text-gray-400" />
+                  <span className="text-xs text-gray-500">Scanned images</span>
+                </div>
               </div>
             )}
           </div>
@@ -208,12 +214,24 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onSuccess, onCancel }) => {
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Software Engineer Resume"
               className="mt-1"
+              disabled={loading}
             />
           </div>
 
+          {/* Processing Progress */}
+          {processingProgress && (
+            <div className="space-y-2">
+              <Label>Processing Progress</Label>
+              <Progress value={processingProgress.progress} className="w-full" />
+              <p className="text-sm text-muted-foreground">
+                {processingProgress.message}
+              </p>
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className="flex gap-2 pt-4">
-            <Button variant="outline" onClick={onCancel} className="flex-1">
+            <Button variant="outline" onClick={onCancel} className="flex-1" disabled={loading}>
               Cancel
             </Button>
             <Button 
@@ -221,7 +239,7 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onSuccess, onCancel }) => {
               disabled={!file || !name.trim() || loading}
               className="flex-1"
             >
-              {loading ? 'Uploading...' : 'Upload Resume'}
+              {loading ? 'Processing...' : 'Upload Resume'}
             </Button>
           </div>
         </CardContent>
