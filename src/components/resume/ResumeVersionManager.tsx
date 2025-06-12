@@ -9,6 +9,7 @@ import { resumeVersionService, ResumeVersion } from '@/services/resumeVersionSer
 import { resumeProfileImportService } from '@/services/resumeProfileImportService';
 import { toast } from 'sonner';
 import ResumeUpload from './ResumeUpload';
+import ResumePreview from './ResumePreview';
 
 interface ResumeVersionManagerProps {
   onDataImported?: () => void;
@@ -20,6 +21,7 @@ const ResumeVersionManager: React.FC<ResumeVersionManagerProps> = ({ onDataImpor
   const [loading, setLoading] = useState(true);
   const [showUpload, setShowUpload] = useState(false);
   const [importingId, setImportingId] = useState<string | null>(null);
+  const [previewResume, setPreviewResume] = useState<ResumeVersion | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -283,6 +285,7 @@ const ResumeVersionManager: React.FC<ResumeVersionManagerProps> = ({ onDataImpor
                     <Button
                       variant="ghost"
                       size="sm"
+                      onClick={() => setPreviewResume(resume)}
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
@@ -357,6 +360,13 @@ const ResumeVersionManager: React.FC<ResumeVersionManagerProps> = ({ onDataImpor
           onCancel={() => setShowUpload(false)}
         />
       )}
+
+      {/* Preview Modal */}
+      <ResumePreview
+        resume={previewResume}
+        isOpen={!!previewResume}
+        onClose={() => setPreviewResume(null)}
+      />
     </>
   );
 };

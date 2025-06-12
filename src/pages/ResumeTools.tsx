@@ -9,6 +9,7 @@ import AIResumeCreator from "@/components/resume/AIResumeCreator";
 import AICVCreator from "@/components/resume/AICVCreator";
 import ResumeForum from "@/components/resume/ResumeForum";
 import ATSOptimizer from "@/components/ATSOptimizer";
+import CoverLetterManager from "@/components/resume/CoverLetterManager";
 import { useParams, useNavigate } from "react-router-dom";
 
 const ResumeTools = () => {
@@ -34,23 +35,24 @@ const ResumeTools = () => {
   return (
     <div className="min-h-screen bg-background">
       {!isMobile && <Navbar />}
-      {isMobile && <MobileHeader title="Resume Tools" />}
+      {isMobile && <MobileHeader title="Resume and CV" />}
       
       <main className="container px-4 py-8 pt-20">
         <div className="flex flex-col gap-8">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Resume Tools</h1>
+            <h1 className="text-3xl font-bold mb-2">Resume and CV</h1>
             <p className="text-muted-foreground">
-              Create, optimize, and manage your resume to stand out to employers.
+              Create, optimize, and manage your resume and cover letters to stand out to employers.
             </p>
           </div>
           
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-            <TabsList className="grid grid-cols-5 mb-6 w-full">
+            <TabsList className="grid grid-cols-6 mb-6 w-full">
               <TabsTrigger value="ats-optimizer" className="text-xs md:text-sm px-2 py-1">ATS Optimizer</TabsTrigger>
               <TabsTrigger value="ai-creator" className="text-xs md:text-sm px-2 py-1">AI Resume</TabsTrigger>
               <TabsTrigger value="ai-cv" className="text-xs md:text-sm px-2 py-1">AI CV</TabsTrigger>
-              <TabsTrigger value="forum" className="text-xs md:text-sm px-2 py-1">Resume Forum</TabsTrigger>
+              <TabsTrigger value="cover-letters" className="text-xs md:text-sm px-2 py-1">Cover Letters</TabsTrigger>
+              <TabsTrigger value="forum" className="text-xs md:text-sm px-2 py-1">Forum</TabsTrigger>
               <TabsTrigger value="templates" className="text-xs md:text-sm px-2 py-1">Templates</TabsTrigger>
             </TabsList>
             
@@ -64,6 +66,10 @@ const ResumeTools = () => {
             
             <TabsContent value="ai-cv" className="mt-0">
               <AICVCreator />
+            </TabsContent>
+
+            <TabsContent value="cover-letters" className="mt-0">
+              <CoverLetterManager />
             </TabsContent>
             
             <TabsContent value="templates" className="mt-0">
