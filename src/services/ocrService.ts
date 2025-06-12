@@ -66,19 +66,27 @@ class OCRService {
 
       console.log('Starting OCR processing...');
       
-      const { data } = await this.worker.recognize(processedImageData, {
-        logger: (m: any) => {
-          if (onProgress && m.status && m.progress !== undefined) {
-            onProgress({
-              status: m.status,
-              progress: Math.round(m.progress * 100),
-              message: this.getProgressMessage(m.status, m.progress)
-            });
-          }
-        }
-      });
+      // Simulate progress updates since we can't use logger in recognize options
+      if (onProgress) {
+        onProgress({
+          status: 'recognizing text',
+          progress: 25,
+          message: 'Starting text recognition...'
+        });
+      }
+
+      const { data } = await this.worker.recognize(processedImageData);
 
       console.log('OCR processing completed');
+
+      // Final progress update
+      if (onProgress) {
+        onProgress({
+          status: 'recognizing text',
+          progress: 100,
+          message: 'Text recognition completed!'
+        });
+      }
 
       return {
         text: data.text.trim(),
