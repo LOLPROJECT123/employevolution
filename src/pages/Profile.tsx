@@ -18,6 +18,7 @@ import SkillsSection from '@/components/profile/SkillsSection';
 import ProjectsSection from '@/components/profile/ProjectsSection';
 import MultiLanguageSelector from '@/components/profile/MultiLanguageSelector';
 import ResumeVersionManager from '@/components/resume/ResumeVersionManager';
+import CoverLetterManager from '@/components/resume/CoverLetterManager';
 import EnhancedSettingsSection from '@/components/profile/EnhancedSettingsSection';
 import EnhancedEqualEmploymentSection from '@/components/profile/EnhancedEqualEmploymentSection';
 import EnhancedJobPreferencesSection from '@/components/profile/EnhancedJobPreferencesSection';
@@ -706,7 +707,7 @@ const Profile = () => {
               Contact
             </TabsTrigger>
             <TabsTrigger value="resume" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              Resume
+              Resume and CV
             </TabsTrigger>
             <TabsTrigger value="experience" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               Experience
@@ -755,6 +756,7 @@ const Profile = () => {
 
           <TabsContent value="resume" className="space-y-6">
             <ResumeVersionManager onDataImported={handleResumeDataImported} />
+            <CoverLetterManager />
           </TabsContent>
 
           <TabsContent value="experience" className="space-y-6">
