@@ -23,9 +23,9 @@ import LeetcodePatterns from './pages/LeetcodePatterns';
 import MobileJobs from './pages/MobileJobs';
 import NotFound from './pages/NotFound';
 import ResumePost from './pages/ResumePost';
-import { ProfileCompletionGuard } from './components/auth/ProfileCompletionGuard';
-import { OnboardingGuard } from './components/auth/OnboardingGuard';
-import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import ProfileCompletionGuard from './components/auth/ProfileCompletionGuard';
+import OnboardingGuard from './components/auth/OnboardingGuard';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 import { useMobile } from './hooks/use-mobile';
 
 function App() {
