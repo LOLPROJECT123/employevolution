@@ -1,3 +1,4 @@
+
 import Tesseract from 'tesseract.js';
 
 export interface OCRProgress {
@@ -65,7 +66,7 @@ class OCRService {
 
       console.log('Starting OCR processing...');
       
-      const { data } = await this.worker.recognize(processedImageData, {}, {
+      const { data } = await this.worker.recognize(processedImageData, {
         logger: (m: any) => {
           if (onProgress && m.status && m.progress !== undefined) {
             onProgress({
