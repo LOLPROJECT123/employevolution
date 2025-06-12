@@ -1,4 +1,3 @@
-
 export interface PersonalInfo {
   name?: string;
   email?: string;
@@ -9,6 +8,7 @@ export interface PersonalInfo {
   state?: string;
   county?: string;
   zipCode?: string;
+  dateOfBirth?: string;
 }
 
 export interface SocialLinks {

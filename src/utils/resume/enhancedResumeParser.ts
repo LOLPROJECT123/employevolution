@@ -1,4 +1,3 @@
-
 import { ParsedResume } from "@/types/resume";
 
 export const parseResumeContent = (text: string): ParsedResume => {
@@ -43,7 +42,7 @@ export const parseResumeContent = (text: string): ParsedResume => {
     skills: skillsAndLanguages.skills,
     languages: skillsAndLanguages.languages,
     socialLinks,
-    activities // Add activities to the parsed data
+    activities
   };
 };
 
@@ -105,13 +104,68 @@ function extractPersonalInfo(topLines: string[]) {
   // Extract location (City, State format)
   const locationMatch = text.match(/([A-Z][a-zA-Z\s]+,\s*[A-Z]{2})/);
 
+  // Extract date of birth
+  const dobMatch = extractDateOfBirth(text);
+
   return {
     name: nameMatch || "",
     email: emailMatch ? emailMatch[0] : "",
     phone: phoneMatch ? phoneMatch[0] : "",
-    location: locationMatch ? locationMatch[0] : ""
+    location: locationMatch ? locationMatch[0] : "",
+    dateOfBirth: dobMatch || ""
   };
 }
+
+const extractDateOfBirth = (text: string): string => {
+  // Common DOB prefixes
+  const dobPrefixes = [
+    'date of birth:?\\s*',
+    'dob:?\\s*',
+    'born:?\\s*',
+    'birth date:?\\s*',
+    'd\\.o\\.b\\.?:?\\s*',
+    'birthdate:?\\s*'
+  ];
+
+  // Date patterns
+  const datePatterns = [
+    // MM/DD/YYYY or MM-DD-YYYY
+    '(0?[1-9]|1[0-2])[/\\-](0?[1-9]|[12][0-9]|3[01])[/\\-](19|20)\\d{2}',
+    // DD/MM/YYYY or DD-MM-YYYY
+    '(0?[1-9]|[12][0-9]|3[01])[/\\-](0?[1-9]|1[0-2])[/\\-](19|20)\\d{2}',
+    // Month DD, YYYY
+    '(january|february|march|april|may|june|july|august|september|october|november|december)\\s+(0?[1-9]|[12][0-9]|3[01]),?\\s+(19|20)\\d{2}',
+    // DD Month YYYY
+    '(0?[1-9]|[12][0-9]|3[01])\\s+(january|february|march|april|may|june|july|august|september|october|november|december)\\s+(19|20)\\d{2}'
+  ];
+
+  const normalizedText = text.toLowerCase();
+
+  // Try to find date with prefixes first
+  for (const prefix of dobPrefixes) {
+    for (const pattern of datePatterns) {
+      const regex = new RegExp(`${prefix}(${pattern})`, 'i');
+      const match = normalizedText.match(regex);
+      if (match) {
+        return validateAndFormatDate(match[1]);
+      }
+    }
+  }
+
+  return '';
+};
+
+const validateAndFormatDate = (dateStr: string): string => {
+  try {
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) {
+      return '';
+    }
+    return date.toISOString().split('T')[0];
+  } catch {
+    return '';
+  }
+};
 
 function parseExperienceSection(lines: string[]) {
   const experiences = [];

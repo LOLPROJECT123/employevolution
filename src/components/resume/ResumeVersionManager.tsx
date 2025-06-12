@@ -4,9 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { FileText, Star, Trash2, Upload, Eye } from 'lucide-react';
+import { FileText, Star, Trash2, Upload, Eye, Download, User } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { resumeVersionService, ResumeVersion } from '@/services/resumeVersionService';
+import { resumeProfileImportService } from '@/services/resumeProfileImportService';
 import { toast } from 'sonner';
 import ResumeUpload from './ResumeUpload';
 
@@ -15,6 +16,7 @@ const ResumeVersionManager: React.FC = () => {
   const [resumeVersions, setResumeVersions] = useState<ResumeVersion[]>([]);
   const [loading, setLoading] = useState(true);
   const [showUpload, setShowUpload] = useState(false);
+  const [importingId, setImportingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -68,6 +70,45 @@ const ResumeVersionManager: React.FC = () => {
     } catch (error) {
       console.error('Error deleting resume version:', error);
       toast.error('Failed to delete resume version');
+    }
+  };
+
+  const handleImportToProfile = async (resume: ResumeVersion) => {
+    if (!user || !resume.parsed_data) {
+      toast.error('No parsed data available for import');
+      return;
+    }
+
+    setImportingId(resume.id);
+    try {
+      const importResult = await resumeProfileImportService.importResumeToProfile(
+        user.id, 
+        resume.parsed_data, 
+        { replaceExisting: false, mergeData: true }
+      );
+
+      if (importResult.success) {
+        const importedItems = [];
+        if (importResult.imported.personalInfo) importedItems.push('personal info');
+        if (importResult.imported.workExperiences > 0) importedItems.push(`${importResult.imported.workExperiences} work experiences`);
+        if (importResult.imported.education > 0) importedItems.push(`${importResult.imported.education} education entries`);
+        if (importResult.imported.projects > 0) importedItems.push(`${importResult.imported.projects} projects`);
+        if (importResult.imported.skills > 0) importedItems.push(`${importResult.imported.skills} skills`);
+        if (importResult.imported.languages > 0) importedItems.push(`${importResult.imported.languages} languages`);
+        
+        if (importedItems.length > 0) {
+          toast.success(`Imported to profile: ${importedItems.join(', ')}`);
+        } else {
+          toast.info('No new data to import - your profile is already up to date');
+        }
+      } else {
+        toast.error(`Import failed: ${importResult.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error importing to profile:', error);
+      toast.error('Failed to import resume data to profile');
+    } finally {
+      setImportingId(null);
     }
   };
 
@@ -158,6 +199,22 @@ const ResumeVersionManager: React.FC = () => {
                         'Set Active'
                       )}
                     </Button>
+
+                    {resume.parsed_data && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleImportToProfile(resume)}
+                        disabled={importingId === resume.id}
+                        title="Import data to profile"
+                      >
+                        {importingId === resume.id ? (
+                          <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full" />
+                        ) : (
+                          <User className="h-4 w-4" />
+                        )}
+                      </Button>
+                    )}
                     
                     <Button
                       variant="ghost"

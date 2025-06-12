@@ -1,14 +1,15 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { Upload, FileText, X, Image, FileImage } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Upload, FileText, X, Image, FileImage, User } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { resumeVersionService, ResumeVersion } from '@/services/resumeVersionService';
 import { parseResumeEnhanced, canProcessFile, willUseOCR, getProcessingMethod } from '@/utils/enhancedResumeParser';
+import { resumeProfileImportService } from '@/services/resumeProfileImportService';
 import { OCRProgress } from '@/services/ocrService';
 import { toast } from 'sonner';
 
@@ -24,6 +25,8 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onSuccess, onCancel }) => {
   const [loading, setLoading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [processingProgress, setProcessingProgress] = useState<OCRProgress | null>(null);
+  const [importToProfile, setImportToProfile] = useState(true);
+  const [replaceExistingData, setReplaceExistingData] = useState(false);
 
   const handleFileSelect = (selectedFile: File) => {
     if (!selectedFile) return;
@@ -115,8 +118,38 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onSuccess, onCancel }) => {
       const newResume = await resumeVersionService.createResumeVersion(user.id, resumeData);
       
       if (newResume) {
-        setProcessingProgress({ status: 'complete', progress: 100, message: 'Resume uploaded successfully!' });
-        toast.success('Resume uploaded and parsed successfully!');
+        // Import to profile if requested
+        if (importToProfile) {
+          setProcessingProgress({ status: 'importing', progress: 98, message: 'Importing data to profile...' });
+          
+          const importResult = await resumeProfileImportService.importResumeToProfile(
+            user.id, 
+            parsedData, 
+            { replaceExisting: replaceExistingData, mergeData: !replaceExistingData }
+          );
+
+          if (importResult.success) {
+            const importedItems = [];
+            if (importResult.imported.personalInfo) importedItems.push('personal info');
+            if (importResult.imported.workExperiences > 0) importedItems.push(`${importResult.imported.workExperiences} work experiences`);
+            if (importResult.imported.education > 0) importedItems.push(`${importResult.imported.education} education entries`);
+            if (importResult.imported.projects > 0) importedItems.push(`${importResult.imported.projects} projects`);
+            if (importResult.imported.skills > 0) importedItems.push(`${importResult.imported.skills} skills`);
+            if (importResult.imported.languages > 0) importedItems.push(`${importResult.imported.languages} languages`);
+            
+            if (importedItems.length > 0) {
+              toast.success(`Resume uploaded and imported: ${importedItems.join(', ')}`);
+            } else {
+              toast.success('Resume uploaded successfully! No new data to import.');
+            }
+          } else {
+            toast.warning('Resume uploaded but profile import failed. You can import manually later.');
+          }
+        } else {
+          toast.success('Resume uploaded and parsed successfully!');
+        }
+        
+        setProcessingProgress({ status: 'complete', progress: 100, message: 'Upload completed!' });
         onSuccess(newResume);
       } else {
         toast.error('Failed to upload resume');
@@ -217,6 +250,49 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onSuccess, onCancel }) => {
               disabled={loading}
             />
           </div>
+
+          {/* Profile Import Options */}
+          {file && (
+            <div className="space-y-3 p-4 bg-blue-50 rounded-lg border">
+              <div className="flex items-center space-x-2">
+                <User className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-medium text-blue-900">Profile Import Options</span>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="import-to-profile" 
+                  checked={importToProfile}
+                  onCheckedChange={(checked) => setImportToProfile(checked as boolean)}
+                />
+                <Label htmlFor="import-to-profile" className="text-sm">
+                  Import extracted data to my profile
+                </Label>
+              </div>
+              
+              {importToProfile && (
+                <div className="flex items-center space-x-2 ml-6">
+                  <Checkbox 
+                    id="replace-existing" 
+                    checked={replaceExistingData}
+                    onCheckedChange={(checked) => setReplaceExistingData(checked as boolean)}
+                  />
+                  <Label htmlFor="replace-existing" className="text-sm">
+                    Replace existing profile data
+                  </Label>
+                </div>
+              )}
+              
+              <p className="text-xs text-blue-700">
+                {importToProfile 
+                  ? replaceExistingData 
+                    ? "Will replace your current profile data with extracted information"
+                    : "Will merge extracted data with your existing profile"
+                  : "Resume will be saved but your profile won't be updated"
+                }
+              </p>
+            </div>
+          )}
 
           {/* Processing Progress */}
           {processingProgress && (
