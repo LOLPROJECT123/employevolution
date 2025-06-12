@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { FileText, Star, Trash2, Upload, Eye, Download, User } from 'lucide-react';
+import { FileText, Star, Trash2, Upload, Eye, Download, User, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { resumeVersionService, ResumeVersion } from '@/services/resumeVersionService';
 import { resumeProfileImportService } from '@/services/resumeProfileImportService';
@@ -82,13 +82,17 @@ const ResumeVersionManager: React.FC<ResumeVersionManagerProps> = ({ onDataImpor
       return;
     }
 
+    console.log('🔄 Importing resume data to profile:', resume.parsed_data);
     setImportingId(resume.id);
+    
     try {
       const importResult = await resumeProfileImportService.importResumeToProfile(
         user.id, 
         resume.parsed_data, 
         { replaceExisting: false, mergeData: true }
       );
+
+      console.log('📊 Import result:', importResult);
 
       if (importResult.success) {
         const importedItems = [];
@@ -100,7 +104,7 @@ const ResumeVersionManager: React.FC<ResumeVersionManagerProps> = ({ onDataImpor
         if (importResult.imported.languages > 0) importedItems.push(`${importResult.imported.languages} languages`);
         
         if (importedItems.length > 0) {
-          toast.success(`Imported to profile: ${importedItems.join(', ')}`);
+          toast.success(`Successfully imported: ${importedItems.join(', ')}`);
           // Notify parent component that data was imported
           if (onDataImported) {
             onDataImported();
@@ -112,7 +116,7 @@ const ResumeVersionManager: React.FC<ResumeVersionManagerProps> = ({ onDataImpor
         toast.error(`Import failed: ${importResult.error || 'Unknown error'}`);
       }
     } catch (error) {
-      console.error('Error importing to profile:', error);
+      console.error('❌ Error importing to profile:', error);
       toast.error('Failed to import resume data to profile');
     } finally {
       setImportingId(null);
@@ -136,6 +140,53 @@ const ResumeVersionManager: React.FC<ResumeVersionManagerProps> = ({ onDataImpor
       month: 'short',
       day: 'numeric'
     });
+  };
+
+  const getDataQualityBadge = (resume: ResumeVersion) => {
+    if (!resume.parsed_data) {
+      return <Badge variant="outline" className="text-gray-500">No data parsed</Badge>;
+    }
+
+    const data = resume.parsed_data;
+    let score = 0;
+    let total = 7;
+
+    // Check each data category
+    if (data.personalInfo?.name) score++;
+    if (data.personalInfo?.email) score++;
+    if (data.personalInfo?.phone) score++;
+    if (data.workExperiences?.length > 0) score++;
+    if (data.education?.length > 0) score++;
+    if (data.skills?.length > 0) score++;
+    if (data.socialLinks?.linkedin || data.socialLinks?.github) score++;
+
+    const percentage = Math.round((score / total) * 100);
+    
+    if (percentage >= 70) {
+      return <Badge className="bg-green-100 text-green-800"><CheckCircle className="h-3 w-3 mr-1" />Good ({percentage}%)</Badge>;
+    } else if (percentage >= 40) {
+      return <Badge className="bg-yellow-100 text-yellow-800"><AlertCircle className="h-3 w-3 mr-1" />Fair ({percentage}%)</Badge>;
+    } else {
+      return <Badge variant="outline" className="text-red-600"><AlertCircle className="h-3 w-3 mr-1" />Limited ({percentage}%)</Badge>;
+    }
+  };
+
+  const getExtractedDataSummary = (resume: ResumeVersion) => {
+    if (!resume.parsed_data) return "No data extracted";
+
+    const data = resume.parsed_data;
+    const items = [];
+    
+    if (data.personalInfo?.name) items.push("Contact info");
+    if (data.workExperiences?.length) items.push(`${data.workExperiences.length} work exp.`);
+    if (data.education?.length) items.push(`${data.education.length} education`);
+    if (data.projects?.length) items.push(`${data.projects.length} projects`);
+    if (data.skills?.length) items.push(`${data.skills.length} skills`);
+    if (data.languages?.length) items.push(`${data.languages.length} languages`);
+    if (data.socialLinks?.linkedin) items.push("LinkedIn");
+    if (data.socialLinks?.github) items.push("GitHub");
+
+    return items.length > 0 ? items.join(" • ") : "Limited data extracted";
   };
 
   if (loading) {
@@ -187,13 +238,14 @@ const ResumeVersionManager: React.FC<ResumeVersionManagerProps> = ({ onDataImpor
                       <Badge variant="outline">
                         v{resume.version_number}
                       </Badge>
+                      {getDataQualityBadge(resume)}
                     </div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground mb-1">
                       Created: {formatDate(resume.created_at)}
                     </p>
-                    {resume.updated_at !== resume.created_at && (
-                      <p className="text-sm text-muted-foreground">
-                        Updated: {formatDate(resume.updated_at)}
+                    {resume.parsed_data && (
+                      <p className="text-xs text-muted-foreground">
+                        {getExtractedDataSummary(resume)}
                       </p>
                     )}
                   </div>

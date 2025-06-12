@@ -1,4 +1,3 @@
-
 import { ParsedResume } from "@/types/resume";
 import { parseResumeContent } from "./resume/enhancedResumeParser";
 import { ocrService, OCRProgress } from "@/services/ocrService";
@@ -40,14 +39,14 @@ export const parseResumeEnhanced = async (
   const { showToast = false, onProgress, useOCR = true } = options;
   
   try {
-    console.log('Starting enhanced resume parsing for file:', file.name, 'Type:', file.type);
+    console.log('🚀 Starting enhanced resume parsing for file:', file.name, 'Type:', file.type);
     
     let extractedText = '';
     let processingMethod = 'unknown';
     
     // Determine processing strategy based on file type
     if (PDF_TYPE === file.type) {
-      console.log('Processing PDF file...');
+      console.log('📄 Processing PDF file...');
       processingMethod = 'pdf';
       
       const pdfResult = await enhancedPdfService.processPDF(file, {
@@ -67,7 +66,7 @@ export const parseResumeEnhanced = async (
       }
       
     } else if (IMAGE_TYPES.includes(file.type) && useOCR) {
-      console.log('Processing image file with OCR...');
+      console.log('🖼️ Processing image file with OCR...');
       processingMethod = 'ocr';
       
       onProgress?.({
@@ -92,7 +91,7 @@ export const parseResumeEnhanced = async (
       }
       
     } else if (TEXT_BASED_TYPES.includes(file.type)) {
-      console.log('Processing text-based file...');
+      console.log('📝 Processing text-based file...');
       processingMethod = 'text';
       
       onProgress?.({
@@ -104,7 +103,7 @@ export const parseResumeEnhanced = async (
       extractedText = await readFileAsText(file);
       
     } else {
-      console.log('Unsupported file type, attempting OCR fallback...');
+      console.log('❓ Unsupported file type, attempting OCR fallback...');
       
       if (useOCR) {
         processingMethod = 'ocr-fallback';
@@ -124,7 +123,8 @@ export const parseResumeEnhanced = async (
       }
     }
 
-    console.log(`Text extraction complete. Method: ${processingMethod}, Length: ${extractedText.length}`);
+    console.log(`✅ Text extraction complete. Method: ${processingMethod}, Length: ${extractedText.length}`);
+    console.log('📄 Sample extracted text:', extractedText.substring(0, 500));
 
     // Progress update for parsing phase
     onProgress?.({
@@ -135,29 +135,10 @@ export const parseResumeEnhanced = async (
 
     // Use the enhanced parser to extract structured data
     const parsedData = parseResumeContent(extractedText);
-    console.log('Enhanced parsing complete:', parsedData);
+    console.log('✅ Enhanced parsing complete:', parsedData);
 
-    // Validate and ensure we have a proper structure
-    const validatedData: ParsedResume = {
-      personalInfo: {
-        name: parsedData.personalInfo?.name || "",
-        email: parsedData.personalInfo?.email || "",
-        phone: parsedData.personalInfo?.phone || "",
-        location: parsedData.personalInfo?.location || ""
-      },
-      workExperiences: parsedData.workExperiences || [],
-      education: parsedData.education || [],
-      projects: parsedData.projects || [],
-      skills: parsedData.skills || [],
-      languages: parsedData.languages || [],
-      socialLinks: parsedData.socialLinks || {
-        linkedin: "",
-        github: "",
-        portfolio: "",
-        other: ""
-      },
-      activities: parsedData.activities || []
-    };
+    // Enhanced validation and data quality checks
+    const validatedData: ParsedResume = validateAndEnhanceData(parsedData);
 
     // Final progress update
     onProgress?.({
@@ -166,18 +147,29 @@ export const parseResumeEnhanced = async (
       message: 'Resume parsing completed!'
     });
 
+    // Enhanced feedback with specific data found
     if (showToast) {
-      if (validatedData.personalInfo.name || validatedData.workExperiences.length > 0) {
-        toast.success(`Resume parsed successfully! Extracted ${validatedData.workExperiences.length} work experiences and ${validatedData.skills.length} skills.`);
+      const foundItems = [];
+      if (validatedData.personalInfo?.name) foundItems.push('personal info');
+      if (validatedData.workExperiences?.length) foundItems.push(`${validatedData.workExperiences.length} work experiences`);
+      if (validatedData.education?.length) foundItems.push(`${validatedData.education.length} education entries`);
+      if (validatedData.projects?.length) foundItems.push(`${validatedData.projects.length} projects`);
+      if (validatedData.skills?.length) foundItems.push(`${validatedData.skills.length} skills`);
+      if (validatedData.languages?.length) foundItems.push(`${validatedData.languages.length} languages`);
+      if (validatedData.socialLinks?.linkedin) foundItems.push('LinkedIn profile');
+      if (validatedData.socialLinks?.github) foundItems.push('GitHub profile');
+
+      if (foundItems.length > 0) {
+        toast.success(`Resume parsed successfully! Found: ${foundItems.join(', ')}`);
       } else {
-        toast.success("Resume uploaded! Please complete your profile information manually.");
+        toast.warning("Resume uploaded but limited data was extracted. Please review and complete your profile manually.");
       }
     }
 
     return validatedData;
 
   } catch (error) {
-    console.error("Enhanced resume parsing error:", error);
+    console.error("❌ Enhanced resume parsing error:", error);
     
     if (showToast) {
       if (error instanceof Error) {
@@ -188,28 +180,82 @@ export const parseResumeEnhanced = async (
     }
     
     // Return a default structure that allows the user to proceed
-    return {
-      personalInfo: {
-        name: "",
-        email: "",
-        phone: "",
-        location: ""
-      },
-      workExperiences: [],
-      education: [],
-      projects: [],
-      skills: [],
-      languages: [],
-      socialLinks: {
-        linkedin: "",
-        github: "",
-        portfolio: "",
-        other: ""
-      },
-      activities: []
-    };
+    return getDefaultResumeStructure();
   }
 };
+
+function validateAndEnhanceData(parsedData: ParsedResume): ParsedResume {
+  console.log('🔍 Validating and enhancing parsed data...');
+  
+  // Ensure we have proper structure and clean data
+  const validatedData: ParsedResume = {
+    personalInfo: {
+      name: parsedData.personalInfo?.name || "",
+      email: parsedData.personalInfo?.email || "",
+      phone: parsedData.personalInfo?.phone || "",
+      location: parsedData.personalInfo?.location || "",
+      dateOfBirth: parsedData.personalInfo?.dateOfBirth || ""
+    },
+    workExperiences: (parsedData.workExperiences || []).filter(exp => 
+      exp.role && exp.role.length > 0 && exp.company && exp.company.length > 0
+    ),
+    education: (parsedData.education || []).filter(edu => 
+      edu.school && edu.school.length > 0
+    ),
+    projects: (parsedData.projects || []).filter(proj => 
+      proj.name && proj.name.length > 0
+    ),
+    skills: (parsedData.skills || []).filter(skill => 
+      skill && skill.length > 1 && skill.length < 50
+    ),
+    languages: (parsedData.languages || []).filter(lang => 
+      lang && lang.length > 1 && lang.length < 30
+    ),
+    socialLinks: {
+      linkedin: parsedData.socialLinks?.linkedin || "",
+      github: parsedData.socialLinks?.github || "",
+      portfolio: parsedData.socialLinks?.portfolio || "",
+      other: parsedData.socialLinks?.other || ""
+    },
+    activities: parsedData.activities || []
+  };
+
+  console.log('✅ Data validation complete:', {
+    personalInfoComplete: !!(validatedData.personalInfo.name && validatedData.personalInfo.email),
+    workExperiences: validatedData.workExperiences.length,
+    education: validatedData.education.length,
+    projects: validatedData.projects.length,
+    skills: validatedData.skills.length,
+    languages: validatedData.languages.length,
+    socialLinks: Object.values(validatedData.socialLinks).filter(Boolean).length
+  });
+
+  return validatedData;
+}
+
+function getDefaultResumeStructure(): ParsedResume {
+  return {
+    personalInfo: {
+      name: "",
+      email: "",
+      phone: "",
+      location: "",
+      dateOfBirth: ""
+    },
+    workExperiences: [],
+    education: [],
+    projects: [],
+    skills: [],
+    languages: [],
+    socialLinks: {
+      linkedin: "",
+      github: "",
+      portfolio: "",
+      other: ""
+    },
+    activities: []
+  };
+}
 
 // Helper function to check if a file can be processed
 export const canProcessFile = (file: File): boolean => {
