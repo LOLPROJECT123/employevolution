@@ -659,6 +659,17 @@ const Profile = () => {
     }
   };
 
+  // Add handler for when resume data is imported to profile
+  const handleResumeDataImported = () => {
+    // Reload user data to reflect the imported information
+    loadProfile();
+    loadUserData();
+    toast({
+      title: "Profile updated",
+      description: "Resume data has been imported to your profile successfully.",
+    });
+  };
+
   if (!user) {
     return (
       <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-950' : 'bg-gray-50'} flex items-center justify-center`}>
@@ -743,7 +754,7 @@ const Profile = () => {
           </TabsContent>
 
           <TabsContent value="resume" className="space-y-6">
-            <ResumeVersionManager />
+            <ResumeVersionManager onDataImported={handleResumeDataImported} />
           </TabsContent>
 
           <TabsContent value="experience" className="space-y-6">

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,7 +10,11 @@ import { resumeProfileImportService } from '@/services/resumeProfileImportServic
 import { toast } from 'sonner';
 import ResumeUpload from './ResumeUpload';
 
-const ResumeVersionManager: React.FC = () => {
+interface ResumeVersionManagerProps {
+  onDataImported?: () => void;
+}
+
+const ResumeVersionManager: React.FC<ResumeVersionManagerProps> = ({ onDataImported }) => {
   const { user } = useAuth();
   const [resumeVersions, setResumeVersions] = useState<ResumeVersion[]>([]);
   const [loading, setLoading] = useState(true);
@@ -98,6 +101,10 @@ const ResumeVersionManager: React.FC = () => {
         
         if (importedItems.length > 0) {
           toast.success(`Imported to profile: ${importedItems.join(', ')}`);
+          // Notify parent component that data was imported
+          if (onDataImported) {
+            onDataImported();
+          }
         } else {
           toast.info('No new data to import - your profile is already up to date');
         }
@@ -116,6 +123,11 @@ const ResumeVersionManager: React.FC = () => {
     setResumeVersions(prev => [newResume, ...prev]);
     setShowUpload(false);
     toast.success('Resume uploaded successfully!');
+    
+    // Notify parent component that data might have been imported
+    if (onDataImported) {
+      onDataImported();
+    }
   };
 
   const formatDate = (dateString: string) => {
