@@ -53,10 +53,15 @@ class ResumeProfileImportService {
         }
       };
 
-      // Import personal information
+      // Import personal information to user_profiles table (not profiles)
       if (parsedResume.personalInfo) {
         const personalSuccess = await this.importPersonalInfo(userId, parsedResume.personalInfo, replaceExisting);
         result.imported.personalInfo = personalSuccess;
+      }
+
+      // Import social links to user_profiles table
+      if (parsedResume.socialLinks) {
+        await this.importSocialLinks(userId, parsedResume.socialLinks, replaceExisting);
       }
 
       // Import work experiences
@@ -112,34 +117,51 @@ class ResumeProfileImportService {
 
   private async importPersonalInfo(userId: string, personalInfo: any, replaceExisting: boolean): Promise<boolean> {
     try {
-      // Check if profile exists
+      // Check if user_profiles exists
       const { data: existingProfile } = await supabase
-        .from('profiles')
+        .from('user_profiles')
         .select('*')
-        .eq('id', userId)
+        .eq('user_id', userId)
         .maybeSingle();
 
-      const profileData = {
-        id: userId,
-        full_name: personalInfo.name || null,
-        email: personalInfo.email || null,
+      const profileData: any = {
+        user_id: userId,
         updated_at: new Date().toISOString()
       };
 
+      // Add personal info fields if they exist
+      if (personalInfo.name) profileData.name = personalInfo.name;
+      if (personalInfo.phone) profileData.phone = personalInfo.phone;
+      if (personalInfo.location) profileData.location = personalInfo.location;
+      if (personalInfo.dateOfBirth) profileData.date_of_birth = personalInfo.dateOfBirth;
+
       if (existingProfile) {
-        // Update existing profile
-        if (replaceExisting || !existingProfile.full_name) {
-          const { error } = await supabase
-            .from('profiles')
-            .update(profileData)
-            .eq('id', userId);
-          
-          if (error) throw error;
+        // Update existing profile - only update fields that are provided
+        const updateData: any = { updated_at: new Date().toISOString() };
+        
+        if (replaceExisting || !existingProfile.name) {
+          if (personalInfo.name) updateData.name = personalInfo.name;
         }
+        if (replaceExisting || !existingProfile.phone) {
+          if (personalInfo.phone) updateData.phone = personalInfo.phone;
+        }
+        if (replaceExisting || !existingProfile.location) {
+          if (personalInfo.location) updateData.location = personalInfo.location;
+        }
+        if (replaceExisting || !existingProfile.date_of_birth) {
+          if (personalInfo.dateOfBirth) updateData.date_of_birth = personalInfo.dateOfBirth;
+        }
+
+        const { error } = await supabase
+          .from('user_profiles')
+          .update(updateData)
+          .eq('user_id', userId);
+        
+        if (error) throw error;
       } else {
         // Create new profile
         const { error } = await supabase
-          .from('profiles')
+          .from('user_profiles')
           .insert(profileData);
         
         if (error) throw error;
@@ -148,6 +170,58 @@ class ResumeProfileImportService {
       return true;
     } catch (error) {
       console.error('Failed to import personal info:', error);
+      return false;
+    }
+  }
+
+  private async importSocialLinks(userId: string, socialLinks: any, replaceExisting: boolean): Promise<boolean> {
+    try {
+      // Check if user_profiles exists
+      const { data: existingProfile } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      const updateData: any = { updated_at: new Date().toISOString() };
+
+      // Add social links if they exist
+      if (replaceExisting || !existingProfile?.linkedin_url) {
+        if (socialLinks.linkedin) updateData.linkedin_url = socialLinks.linkedin;
+      }
+      if (replaceExisting || !existingProfile?.github_url) {
+        if (socialLinks.github) updateData.github_url = socialLinks.github;
+      }
+      if (replaceExisting || !existingProfile?.portfolio_url) {
+        if (socialLinks.portfolio) updateData.portfolio_url = socialLinks.portfolio;
+      }
+      if (replaceExisting || !existingProfile?.other_url) {
+        if (socialLinks.other) updateData.other_url = socialLinks.other;
+      }
+
+      if (existingProfile) {
+        const { error } = await supabase
+          .from('user_profiles')
+          .update(updateData)
+          .eq('user_id', userId);
+        
+        if (error) throw error;
+      } else {
+        // Create new profile with social links
+        const { error } = await supabase
+          .from('user_profiles')
+          .insert({
+            user_id: userId,
+            ...updateData,
+            created_at: new Date().toISOString()
+          });
+        
+        if (error) throw error;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Failed to import social links:', error);
       return false;
     }
   }

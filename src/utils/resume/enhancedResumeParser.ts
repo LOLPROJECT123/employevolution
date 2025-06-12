@@ -104,7 +104,7 @@ function extractPersonalInfo(topLines: string[]) {
   // Extract location (City, State format)
   const locationMatch = text.match(/([A-Z][a-zA-Z\s]+,\s*[A-Z]{2})/);
 
-  // Extract date of birth
+  // Extract date of birth with enhanced patterns
   const dobMatch = extractDateOfBirth(text);
 
   return {
@@ -127,7 +127,7 @@ const extractDateOfBirth = (text: string): string => {
     'birthdate:?\\s*'
   ];
 
-  // Date patterns
+  // Enhanced date patterns
   const datePatterns = [
     // MM/DD/YYYY or MM-DD-YYYY
     '(0?[1-9]|1[0-2])[/\\-](0?[1-9]|[12][0-9]|3[01])[/\\-](19|20)\\d{2}',
@@ -136,7 +136,11 @@ const extractDateOfBirth = (text: string): string => {
     // Month DD, YYYY
     '(january|february|march|april|may|june|july|august|september|october|november|december)\\s+(0?[1-9]|[12][0-9]|3[01]),?\\s+(19|20)\\d{2}',
     // DD Month YYYY
-    '(0?[1-9]|[12][0-9]|3[01])\\s+(january|february|march|april|may|june|july|august|september|october|november|december)\\s+(19|20)\\d{2}'
+    '(0?[1-9]|[12][0-9]|3[01])\\s+(january|february|march|april|may|june|july|august|september|october|november|december)\\s+(19|20)\\d{2}',
+    // Mon DD, YYYY (abbreviated)
+    '(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\\.?\\s+(0?[1-9]|[12][0-9]|3[01]),?\\s+(19|20)\\d{2}',
+    // YYYY-MM-DD
+    '(19|20)\\d{2}[/\\-](0?[1-9]|1[0-2])[/\\-](0?[1-9]|[12][0-9]|3[01])'
   ];
 
   const normalizedText = text.toLowerCase();
@@ -148,6 +152,20 @@ const extractDateOfBirth = (text: string): string => {
       const match = normalizedText.match(regex);
       if (match) {
         return validateAndFormatDate(match[1]);
+      }
+    }
+  }
+
+  // If no prefixed date found, look for standalone dates in reasonable birth year range
+  for (const pattern of datePatterns) {
+    const regex = new RegExp(pattern, 'gi');
+    const matches = normalizedText.match(regex);
+    if (matches) {
+      for (const match of matches) {
+        const formatted = validateAndFormatDate(match);
+        if (formatted && isReasonableBirthYear(formatted)) {
+          return formatted;
+        }
       }
     }
   }
@@ -164,6 +182,17 @@ const validateAndFormatDate = (dateStr: string): string => {
     return date.toISOString().split('T')[0];
   } catch {
     return '';
+  }
+};
+
+const isReasonableBirthYear = (dateStr: string): boolean => {
+  try {
+    const year = new Date(dateStr).getFullYear();
+    const currentYear = new Date().getFullYear();
+    // Reasonable birth year range: 18-80 years old
+    return year >= (currentYear - 80) && year <= (currentYear - 18);
+  } catch {
+    return false;
   }
 };
 
@@ -385,13 +414,13 @@ function extractSocialLinks(text: string) {
     other: ""
   };
 
-  // LinkedIn URL patterns
+  // Enhanced LinkedIn URL patterns
   const linkedinMatch = text.match(/(https?:\/\/)?(www\.)?(linkedin\.com\/in\/[a-zA-Z0-9-]+)/i);
   if (linkedinMatch) {
     socialLinks.linkedin = linkedinMatch[0].startsWith('http') ? linkedinMatch[0] : `https://${linkedinMatch[0]}`;
   }
 
-  // GitHub URL patterns
+  // Enhanced GitHub URL patterns
   const githubMatch = text.match(/(https?:\/\/)?(www\.)?(github\.com\/[a-zA-Z0-9-]+)/i);
   if (githubMatch) {
     socialLinks.github = githubMatch[0].startsWith('http') ? githubMatch[0] : `https://${githubMatch[0]}`;
