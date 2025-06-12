@@ -1,161 +1,200 @@
 
-import React from "react";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { ThemeProvider } from "next-themes";
-import { AuthProvider } from "./contexts/AuthContext";
-import { JobApplicationProvider } from "./contexts/JobApplicationContext";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
-import ProfileCompletionGuard from "./components/auth/ProfileCompletionGuard";
-import Index from "./pages/Index";
-import Dashboard from "./pages/Dashboard";
-import Jobs from "./pages/Jobs";
-import Applications from "./pages/Applications";
-import Profile from "./pages/Profile";
-import InterviewPractice from "./pages/InterviewPractice";
-import ResumeTools from "./pages/ResumeTools";
-import Networking from "./pages/Networking";
-import NetworkingTools from "./pages/NetworkingTools";
-import Referrals from "./pages/Referrals";
-import SalaryNegotiations from "./pages/SalaryNegotiations";
-import JobAlerts from "./pages/JobAlerts";
-import Auth from "./pages/Auth";
-import PWAInstallPrompt from "./components/PWAInstallPrompt";
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { Toaster } from '@/components/ui/toaster';
+import Index from './pages/Index';
+import Profile from './pages/Profile';
+import Jobs from './pages/Jobs';
+import Applications from './pages/Applications';
+import Auth from './pages/Auth';
+import Dashboard from './pages/Dashboard';
+import CompleteProfile from './pages/CompleteProfile';
+import EnhancedCompleteProfile from './pages/EnhancedCompleteProfile';
+import ResumeTools from './pages/ResumeTools';
+import InterviewPractice from './pages/InterviewPractice';
+import SalaryNegotiations from './pages/SalaryNegotiations';
+import Networking from './pages/Networking';
+import NetworkingTools from './pages/NetworkingTools';
+import JobAlerts from './pages/JobAlerts';
+import Calendar from './pages/Calendar';
+import Communications from './pages/Communications';
+import Referrals from './pages/Referrals';
+import LeetcodePatterns from './pages/LeetcodePatterns';
+import MobileJobs from './pages/MobileJobs';
+import NotFound from './pages/NotFound';
+import ResumePost from './pages/ResumePost';
+import { ProfileCompletionGuard } from './components/auth/ProfileCompletionGuard';
+import { OnboardingGuard } from './components/auth/OnboardingGuard';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { useMobile } from './hooks/use-mobile';
 
-// Create QueryClient instance outside of component to prevent recreation
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+function App() {
+  const isMobile = useMobile();
 
-const App = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="light"
-        enableSystem={false}
-        storageKey="job-finder-theme"
-      >
-        <TooltipProvider>
-          <AuthProvider>
-            <JobApplicationProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <Routes>
-                  {/* Public routes - accessible without authentication */}
-                  <Route path="/" element={<Index />} />
-                  <Route path="/auth" element={<Auth />} />
-                  
-                  {/* Profile route - protected but not requiring profile completion */}
-                  <Route path="/profile" element={
-                    <ProtectedRoute>
-                      <Profile />
-                    </ProtectedRoute>
-                  } />
-                  
-                  {/* Protected routes - require authentication AND profile completion */}
-                  <Route path="/dashboard" element={
-                    <ProtectedRoute>
-                      <ProfileCompletionGuard>
-                        <Dashboard />
-                      </ProfileCompletionGuard>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/jobs" element={
-                    <ProtectedRoute>
-                      <ProfileCompletionGuard>
-                        <Jobs />
-                      </ProfileCompletionGuard>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/applications" element={
-                    <ProtectedRoute>
-                      <ProfileCompletionGuard>
-                        <Applications />
-                      </ProfileCompletionGuard>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/interview-practice" element={
-                    <ProtectedRoute>
-                      <ProfileCompletionGuard>
-                        <InterviewPractice />
-                      </ProfileCompletionGuard>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/resume-tools" element={
-                    <ProtectedRoute>
-                      <ProfileCompletionGuard>
-                        <ResumeTools />
-                      </ProfileCompletionGuard>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/resume-tools/:tab" element={
-                    <ProtectedRoute>
-                      <ProfileCompletionGuard>
-                        <ResumeTools />
-                      </ProfileCompletionGuard>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/networking" element={
-                    <ProtectedRoute>
-                      <ProfileCompletionGuard>
-                        <Networking />
-                      </ProfileCompletionGuard>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/networking-tools" element={
-                    <ProtectedRoute>
-                      <ProfileCompletionGuard>
-                        <NetworkingTools />
-                      </ProfileCompletionGuard>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/referrals" element={
-                    <ProtectedRoute>
-                      <ProfileCompletionGuard>
-                        <Referrals />
-                      </ProfileCompletionGuard>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/salary-negotiations" element={
-                    <ProtectedRoute>
-                      <ProfileCompletionGuard>
-                        <SalaryNegotiations />
-                      </ProfileCompletionGuard>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/job-alerts" element={
-                    <ProtectedRoute>
-                      <ProfileCompletionGuard>
-                        <JobAlerts />
-                      </ProfileCompletionGuard>
-                    </ProtectedRoute>
-                  } />
-                  
-                  {/* Redirect old profile completion route to new profile page */}
-                  <Route path="/complete-profile" element={
-                    <ProtectedRoute>
-                      <Navigate to="/profile" replace />
-                    </ProtectedRoute>
-                  } />
-                </Routes>
-                <PWAInstallPrompt />
-              </BrowserRouter>
-            </JobApplicationProvider>
-          </AuthProvider>
-        </TooltipProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <div className="App">
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/complete-profile" element={
+          <ProtectedRoute>
+            <CompleteProfile />
+          </ProtectedRoute>
+        } />
+        <Route path="/enhanced-complete-profile" element={
+          <ProtectedRoute>
+            <EnhancedCompleteProfile />
+          </ProtectedRoute>
+        } />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <OnboardingGuard>
+              <ProfileCompletionGuard>
+                <Profile />
+              </ProfileCompletionGuard>
+            </OnboardingGuard>
+          </ProtectedRoute>
+        } />
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <OnboardingGuard>
+              <ProfileCompletionGuard>
+                <Dashboard />
+              </ProfileCompletionGuard>
+            </OnboardingGuard>
+          </ProtectedRoute>
+        } />
+        <Route path="/jobs" element={
+          <ProtectedRoute>
+            <OnboardingGuard>
+              <ProfileCompletionGuard>
+                {isMobile ? <MobileJobs /> : <Jobs />}
+              </ProfileCompletionGuard>
+            </OnboardingGuard>
+          </ProtectedRoute>
+        } />
+        <Route path="/applications" element={
+          <ProtectedRoute>
+            <OnboardingGuard>
+              <ProfileCompletionGuard>
+                <Applications />
+              </ProfileCompletionGuard>
+            </OnboardingGuard>
+          </ProtectedRoute>
+        } />
+        <Route path="/resume-tools" element={
+          <ProtectedRoute>
+            <OnboardingGuard>
+              <ProfileCompletionGuard>
+                <ResumeTools />
+              </ProfileCompletionGuard>
+            </OnboardingGuard>
+          </ProtectedRoute>
+        } />
+        <Route path="/resume-tools/:tab" element={
+          <ProtectedRoute>
+            <OnboardingGuard>
+              <ProfileCompletionGuard>
+                <ResumeTools />
+              </ProfileCompletionGuard>
+            </OnboardingGuard>
+          </ProtectedRoute>
+        } />
+        <Route path="/interview-practice" element={
+          <ProtectedRoute>
+            <OnboardingGuard>
+              <ProfileCompletionGuard>
+                <InterviewPractice />
+              </ProfileCompletionGuard>
+            </OnboardingGuard>
+          </ProtectedRoute>
+        } />
+        <Route path="/salary-negotiations" element={
+          <ProtectedRoute>
+            <OnboardingGuard>
+              <ProfileCompletionGuard>
+                <SalaryNegotiations />
+              </ProfileCompletionGuard>
+            </OnboardingGuard>
+          </ProtectedRoute>
+        } />
+        <Route path="/networking" element={
+          <ProtectedRoute>
+            <OnboardingGuard>
+              <ProfileCompletionGuard>
+                <Networking />
+              </ProfileCompletionGuard>
+            </OnboardingGuard>
+          </ProtectedRoute>
+        } />
+        <Route path="/networking-tools" element={
+          <ProtectedRoute>
+            <OnboardingGuard>
+              <ProfileCompletionGuard>
+                <NetworkingTools />
+              </ProfileCompletionGuard>
+            </OnboardingGuard>
+          </ProtectedRoute>
+        } />
+        <Route path="/job-alerts" element={
+          <ProtectedRoute>
+            <OnboardingGuard>
+              <ProfileCompletionGuard>
+                <JobAlerts />
+              </ProfileCompletionGuard>
+            </OnboardingGuard>
+          </ProtectedRoute>
+        } />
+        <Route path="/calendar" element={
+          <ProtectedRoute>
+            <OnboardingGuard>
+              <ProfileCompletionGuard>
+                <Calendar />
+              </ProfileCompletionGuard>
+            </OnboardingGuard>
+          </ProtectedRoute>
+        } />
+        <Route path="/communications" element={
+          <ProtectedRoute>
+            <OnboardingGuard>
+              <ProfileCompletionGuard>
+                <Communications />
+              </ProfileCompletionGuard>
+            </OnboardingGuard>
+          </ProtectedRoute>
+        } />
+        <Route path="/referrals" element={
+          <ProtectedRoute>
+            <OnboardingGuard>
+              <ProfileCompletionGuard>
+                <Referrals />
+              </ProfileCompletionGuard>
+            </OnboardingGuard>
+          </ProtectedRoute>
+        } />
+        <Route path="/leetcode-patterns" element={
+          <ProtectedRoute>
+            <OnboardingGuard>
+              <ProfileCompletionGuard>
+                <LeetcodePatterns />
+              </ProfileCompletionGuard>
+            </OnboardingGuard>
+          </ProtectedRoute>
+        } />
+        <Route path="/resume-post" element={
+          <ProtectedRoute>
+            <OnboardingGuard>
+              <ProfileCompletionGuard>
+                <ResumePost />
+              </ProfileCompletionGuard>
+            </OnboardingGuard>
+          </ProtectedRoute>
+        } />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <Toaster />
+    </div>
   );
-};
+}
 
 export default App;
