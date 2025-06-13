@@ -1,5 +1,17 @@
 /**
- * Enhanced job scraper implementation
+ * Enhanced Job Scraper (Client-Side Utilities / Mock Data)
+ *
+ * This module provides utility functions related to job scraping, primarily focused on:
+ * 1. Generating mock job data for UI development, testing, and demonstration purposes
+ *    (see `generateMockJobListings`).
+ * 2. Offering a structured interface (`createEnhancedJobScraper`) that could be
+ *    adapted for actual client-side scraping tasks or for wrapping API calls to a
+ *    backend scraping service.
+ *
+ * Note: Direct client-side scraping from this module has limitations due to browser
+ * security restrictions (CORS, etc.) and the sophistication of anti-scraping measures
+ * on many job platforms. For robust, comprehensive scraping, the server-side
+ * JobScraper (`src/server/jobScraper.ts`) is recommended.
  */
 import { ScrapedJob } from '../../components/resume/job-application/types';
 import { ScrapeOptions, ScraperConfig, ScraperResult } from './scraperTypes';
@@ -39,6 +51,20 @@ export function createEnhancedJobScraper(config?: Partial<ScraperConfig>): JobSc
       console.log('Using platforms:', platforms);
       
       try {
+        // TODO: In a production scenario, this might call a backend API:
+        // try {
+        //   const response = await fetch(`/api/search-jobs?query=${encodeURIComponent(query)}&location=${encodeURIComponent(location)}&platforms=${platforms.join(',')}`);
+        //   if (!response.ok) {
+        //     throw new Error(`API error: ${response.statusText}`);
+        //   }
+        //   const jobs = await response.json();
+        //   return jobs;
+        // } catch (error) {
+        //   console.error('Error fetching jobs from API:', error);
+        //   toast.error("Error searching for jobs via API", { description: (error as Error).message });
+        //   return [];
+        // }
+
         // Simulate the real API calls and processing time
         await delay(1500);
         
@@ -201,7 +227,17 @@ function generateMockJobListings(query: string, location: string, platforms: str
     'CoreLogic',
     'Quantum Solutions',
     'PrimeSoft',
-    'Nexus Technologies'
+    'Nexus Technologies',
+    // Adding more generic and ATS-specific company names
+    'GlobalCorp',
+    'Innovate Solutions Ltd.',
+    'Alpha Beta Inc.',
+    'Lever Demo Company',
+    'Greenhouse Test Org',
+    'Workday Example Firm',
+    'ICIMS Client Services',
+    'Ashby Startup Co',
+    'Rippling Tech Systems'
   ];
   
   // If we're targeting finance platforms
@@ -244,13 +280,26 @@ function generateMockJobListings(query: string, location: string, platforms: str
     });
   }
   
-  // Detect if we're scraping ATS platforms
-  const isAts = platforms.some(p => 
-    p.includes('greenhouse.io') || 
-    p.includes('lever.co') || 
-    p.includes('workday') || 
-    p.includes('icims.com')
-  );
+  // Detect if we're scraping ATS platforms and identify them
+  const getAtsPlatform = (platformUrl: string): string | null => {
+    if (platformUrl.includes('greenhouse.io')) return 'Greenhouse';
+    if (platformUrl.includes('lever.co')) return 'Lever';
+    if (platformUrl.includes('workdayjobs.com')) return 'Workday'; // More specific for Workday
+    if (platformUrl.includes('icims.com')) return 'ICIMS';
+    if (platformUrl.includes('ashbyhq.com')) return 'Ashby';
+    if (platformUrl.includes('rippling-ats.com')) return 'Rippling'; // Assuming a pattern
+    return null;
+  };
+
+  const atsPlatformsInQuery = platforms.map(getAtsPlatform).filter(Boolean) as string[];
+  const isAtsQuery = atsPlatformsInQuery.length > 0;
+
+  // All possible platforms for random selection if not specified
+  const allMockPlatforms = [
+    'LinkedIn', 'Indeed', 'Glassdoor', 'Monster', 'GitHub', // Existing
+    'Lever', 'ICIMS', 'Workday', 'Greenhouse', 'ZipRecruiter',
+    'Dice', 'Simply Hired', 'Ashby', 'Rippling' // New
+  ];
   
   // Generate the jobs
   for (let i = 0; i < jobCount; i++) {
@@ -261,19 +310,26 @@ function generateMockJobListings(query: string, location: string, platforms: str
     const companyName = companies[Math.min(companyIndex, companies.length - 1)];
     
     // Determine platform for this job
-    let platform = '';
+    const jobTitleIndex = Math.floor(Math.random() * jobTitles.length);
+    const companyIndex = Math.floor(Math.random() * companies.length);
     
-    if (isAts) {
-      // Use the ATS platform
-      if (platforms.find(p => p.includes('greenhouse.io'))) platform = 'Greenhouse';
-      else if (platforms.find(p => p.includes('lever.co'))) platform = 'Lever';
-      else if (platforms.find(p => p.includes('workday'))) platform = 'Workday';
-      else if (platforms.find(p => p.includes('icims.com'))) platform = 'iCims';
-      else platform = 'LinkedIn'; // Default
+    const jobTitle = jobTitles[jobTitleIndex];
+    // Ensure companyName is valid, falling back if necessary
+    const companyName = companies[Math.min(companyIndex, companies.length - 1)] || "Generic Company";
+    const safeCompanyName = companyName.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9-]/g, '');
+
+
+    // Determine platform for this job
+    let platform: string;
+    if (isAtsQuery && atsPlatformsInQuery.length > 0) {
+      // If the query specified ATS platforms, pick one of them
+      platform = atsPlatformsInQuery[Math.floor(Math.random() * atsPlatformsInQuery.length)];
+    } else if (platforms.length > 0 && !platforms.some(p => p.includes('.'))) {
+      // If platforms are specified by name (not URL), pick one
+      platform = platforms[Math.floor(Math.random() * platforms.length)];
     } else {
-      // Use a random platform
-      const platformOptions = ['LinkedIn', 'Indeed', 'Glassdoor', 'ZipRecruiter'];
-      platform = platformOptions[Math.floor(Math.random() * platformOptions.length)];
+      // Otherwise, pick a random platform from all available mock platforms
+      platform = allMockPlatforms[Math.floor(Math.random() * allMockPlatforms.length)];
     }
     
     // Generate a random ID
@@ -281,26 +337,62 @@ function generateMockJobListings(query: string, location: string, platforms: str
     
     // Generate a URL based on platform
     let applyUrl = '';
-    let atsSystem = null;
+    let atsSystem: string | null = null; // Ensure atsSystem is string or null
     
-    if (platform === 'Greenhouse') {
-      applyUrl = `https://boards.greenhouse.io/${companyName.toLowerCase().replace(/\s+/g, '')}/jobs/123456`;
-      atsSystem = 'Greenhouse';
-    } else if (platform === 'Lever') {
-      applyUrl = `https://jobs.lever.co/${companyName.toLowerCase().replace(/\s+/g, '')}/abcdef-123456`;
-      atsSystem = 'Lever';
-    } else if (platform === 'Workday') {
-      applyUrl = `https://${companyName.toLowerCase().replace(/\s+/g, '')}.wd5.myworkdayjobs.com/en-US/External/job/Location/${jobTitle.replace(/\s+/g, '-')}_JR-12345`;
-      atsSystem = 'Workday';
-    } else if (platform === 'iCims') {
-      applyUrl = `https://careers-${companyName.toLowerCase().replace(/\s+/g, '')}.icims.com/jobs/12345/job`;
-      atsSystem = 'iCims';
-    } else if (platform === 'LinkedIn') {
-      applyUrl = `https://www.linkedin.com/jobs/view/123456789`;
-    } else if (platform === 'Indeed') {
-      applyUrl = `https://www.indeed.com/viewjob?jk=abcdef123456`;
-    } else {
-      applyUrl = `https://example.com/jobs/${id}`;
+    // Standardize company name for URL generation
+    const urlCompanyName = safeCompanyName || 'examplecompany';
+
+    switch (platform) {
+      case 'Greenhouse':
+        applyUrl = `https://boards.greenhouse.io/${urlCompanyName}/jobs/${Math.floor(Math.random() * 900000) + 100000}`;
+        atsSystem = 'Greenhouse';
+        break;
+      case 'Lever':
+        applyUrl = `https://jobs.lever.co/${urlCompanyName}/${Math.random().toString(36).substring(2, 10)}`;
+        atsSystem = 'Lever';
+        break;
+      case 'Workday':
+        applyUrl = `https://${urlCompanyName}.wd1.myworkdayjobs.com/en-US/ExternalSite/${jobTitle.replace(/\s+/g, '-')}_${urlCompanyName}_${Math.floor(Math.random() * 100) + 1}`;
+        atsSystem = 'Workday';
+        break;
+      case 'ICIMS':
+        applyUrl = `https://careers-${urlCompanyName}.icims.com/jobs/${Math.floor(Math.random() * 9000) + 1000}/job`;
+        atsSystem = 'ICIMS';
+        break;
+      case 'Ashby':
+        applyUrl = `https://jobs.ashbyhq.com/${urlCompanyName}/${Math.random().toString(36).substring(2, 12)}`;
+        atsSystem = 'Ashby';
+        break;
+      case 'Rippling':
+        applyUrl = `https://${urlCompanyName}.rippling-ats.com/job/${Math.random().toString(36).substring(2, 15)}`;
+        atsSystem = 'Rippling';
+        break;
+      case 'LinkedIn':
+        applyUrl = `https://www.linkedin.com/jobs/view/${Math.floor(Math.random() * 900000000) + 100000000}`;
+        break;
+      case 'Indeed':
+        applyUrl = `https://www.indeed.com/viewjob?jk=${Math.random().toString(36).substring(2, 18)}`;
+        break;
+      case 'Glassdoor':
+        applyUrl = `https://www.glassdoor.com/Job/${urlCompanyName}-jobs-SRCH_KO0,${urlCompanyName.length}_IP${i}.htm`;
+        break;
+      case 'ZipRecruiter':
+        applyUrl = `https://www.ziprecruiter.com/c/${urlCompanyName}/Job/${jobTitle.replace(/\s+/g, '-')}/${id}`;
+        break;
+      case 'Dice':
+        applyUrl = `https://www.dice.com/job-detail/${id}_${jobTitle.replace(/\s+/g, '-')}_${urlCompanyName}`;
+        break;
+      case 'Simply Hired':
+        applyUrl = `https://www.simplyhired.com/job/${id}?q=${query}`;
+        break;
+      case 'Monster':
+        applyUrl = `https://job-openings.monster.com/${jobTitle.replace(/\s+/g, '-')}-job-${randomLocation.split(',')[0].replace(/\s+/g, '-')}-${id}`;
+        break;
+      case 'GitHub': // Assuming GitHub jobs are issue-based or link to external ATS
+        applyUrl = `https://github.com/${urlCompanyName}/careers/issues/${Math.floor(Math.random() * 1000) + 1}`;
+        break;
+      default:
+        applyUrl = `https://example.com/jobs/${id}`;
     }
     
     // Generate random salary
@@ -423,3 +515,76 @@ function extractCompanyFromUrl(url: string): string | null {
     return null;
   }
 }
+
+// =====================================================================================
+// TESTING STRATEGY FOR EnhancedJobScraper UTILITIES (Client-Side)
+// =====================================================================================
+//
+// This file primarily contains utility functions for client-side operations,
+// especially mock data generation.
+//
+// 1. Unit Testing - `generateMockJobListings`:
+//    - Purpose: Ensure the function generates varied and correctly structured mock data
+//      according to the requirements and input parameters.
+//    - Strategy:
+//      - Test with different inputs for `query`, `location`, and `platforms`.
+//      - Verify that the generated `ScrapedJob[]` array and its elements adhere to the
+//        `ScrapedJob` interface.
+//      - Check for variety:
+//        - Ensure different job titles, companies, locations are generated.
+//        - If `query` influences job titles (e.g., "quant"), verify this behavior.
+//        - If `platforms` influences company names or ATS systems, test this.
+//      - URL Generation Logic:
+//        - For each platform (especially ATS like Lever, Greenhouse, Workday, ICIMS,
+//          Ashby, Rippling and aggregators like ZipRecruiter, Dice), verify that the
+//          `applyUrl` follows the expected pattern.
+//        - Check that `atsSystem` is correctly set for ATS platforms.
+//      - Randomness: While hard to test exact random outputs, test that the number of
+//        jobs is within the expected range, salaries are within expected ranges, and
+//        `postedAt` dates are reasonable.
+//      - Edge Cases: Test with empty `platforms` array, empty `query`, etc.
+//
+// 2. Unit Testing - `extractCompanyFromUrl`:
+//    - Purpose: Ensure correct extraction of company names from various URL patterns.
+//    - Strategy:
+//      - Test with a diverse set of URLs, including:
+//        - Standard domains: `https://www.example.com`
+//        - Domains with subdomains: `https://careers.example.com`, `https://jobs.example.org`
+//        - ATS specific patterns: `https://company.greenhouse.io`, `https://jobs.lever.co/company`
+//          (though the current implementation might simplify these to "company").
+//        - URLs with paths, query parameters.
+//      - Test edge cases:
+//        - Invalid URLs (should return null or handle gracefully).
+//        - URLs without typical company patterns.
+//        - IP addresses instead of hostnames.
+//    - Assertions:
+//      - Verify the extracted company name is as expected.
+//
+// 3. Unit Testing - `browserUtils.ts` (if applicable):
+//    - If `src/utils/jobScraper/browserUtils.ts` contains significant, testable,
+//      client-side utility functions (beyond simple wrappers for browser APIs that are
+//      hard to unit test without a browser environment), they should have their own
+//      dedicated test file (e.g., `browserUtils.test.ts`).
+//    - Functions like `delay` are simple utilities; testing might be skipped or be
+//      very basic (e.g., ensuring it resolves after a certain time, though this can
+//      make tests slow).
+//    - `extractDomain` (if different from server-side or re-implemented here) should
+//      be tested similar to `extractCompanyFromUrl`.
+//    - `simulateHumanInteraction` is likely too complex and environment-dependent for
+//      simple unit tests and might be better tested as part of integration/E2E tests
+//      if it were used for actual scraping.
+//
+// 4. `createEnhancedJobScraper` - Integration/Behavioral Testing:
+//    - Since `searchJobs`, `verifyJobs`, and `getJobDetails` in the current version
+//      primarily rely on `generateMockJobListings` and simple logic (like `Math.random`),
+//      their testing would largely overlap with testing `generateMockJobListings`.
+//    - If these methods were to involve actual client-side fetching or complex state
+//      management, they would require more involved integration tests, potentially
+//      mocking `fetch` or other browser APIs.
+//    - The placeholder for API calls in `searchJobs` would be tested by ensuring
+//      `fetch` is called with the correct parameters if that path were active.
+//
+// All tests should ideally be located in a `__tests__` directory or similar,
+// colocated with the source files.
+//
+// =====================================================================================

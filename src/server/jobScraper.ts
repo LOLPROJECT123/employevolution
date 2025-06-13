@@ -7,6 +7,9 @@
  * randomization, rate limiting, and fallback to headless browsing.
  */
 
+import axios, { AxiosRequestConfig } from 'axios';
+import puppeteer, { Browser, Page } from 'puppeteer';
+
 // Configuration types
 export interface ScraperConfig {
   proxyList: string[];
@@ -106,6 +109,59 @@ export const SEARCH_CONFIG = {
     urlTemplate: 'https://github.com/search?q={query}&type=issues&p={page}',
     maxPages: 3,
     resultsPerPage: 10
+  },
+  'lever': {
+    // ATS platform: requires specific company job board URL
+    urlTemplate: 'https://jobs.lever.co/{company}?query={query}&location={location}',
+    maxPages: 1, // Typically, ATS sites are per-company, so less pagination needed
+    resultsPerPage: 20
+  },
+  'icims': {
+    // ATS platform: requires specific company job board URL
+    urlTemplate: 'https://careers.icims.com/jobs/search?ss=1&searchKeyword={query}&searchLocation={location}&page={page}',
+    maxPages: 3,
+    resultsPerPage: 20
+  },
+  'workday': {
+    // ATS platform: requires specific company job board URL
+    // Workday URLs are often company-specific like: https://{company}.wd5.myworkdayjobs.com/{jobboardname}
+    urlTemplate: 'https://examplecompany.myworkdayjobs.com/en-US/exampleboard/jobs?query={query}&location={location}&page={page}',
+    maxPages: 3,
+    resultsPerPage: 20
+  },
+  'greenhouse': {
+    // ATS platform: requires specific company job board URL
+    urlTemplate: 'https://boards.greenhouse.io/{company}?q={query}&location={location}',
+    maxPages: 1, // Typically, ATS sites are per-company
+    resultsPerPage: 20
+  },
+  'ziprecruiter': {
+    urlTemplate: 'https://www.ziprecruiter.com/jobs-search?search={query}&location={location}&page={page}',
+    maxPages: 5,
+    resultsPerPage: 20
+  },
+  'dice': {
+    urlTemplate: 'https://www.dice.com/jobs?q={query}&location={location}&page={page}',
+    maxPages: 5,
+    resultsPerPage: 20
+  },
+  'simplyhired': {
+    urlTemplate: 'https://www.simplyhired.com/search?q={query}&l={location}&pn={page}',
+    maxPages: 5,
+    resultsPerPage: 20
+  },
+  'ashby': {
+    // ATS platform: requires specific company job board URL
+    urlTemplate: 'https://jobs.ashbyhq.com/{company}?query={query}&location={location}',
+    maxPages: 1, // Typically, ATS sites are per-company
+    resultsPerPage: 20
+  },
+  'rippling': {
+    // ATS platform: requires specific company job board URL
+    // Rippling job boards might be part of a company's main site or a subdomain.
+    urlTemplate: 'https://examplecompany.rippling-ats.com/jobs?query={query}&location={location}&page={page}',
+    maxPages: 3,
+    resultsPerPage: 20
   }
 };
 
@@ -139,28 +195,30 @@ export class JobScraper {
       return [];
     }
     
-    console.log(`Starting job search for query "${query}" in location "${location || 'any'}" on platforms: ${validPlatforms.join(', ')}`);
+    console.log(`[JobScraper] Starting job search for query: "${query}" in location: "${location || 'any'}" on platforms: ${validPlatforms.join(', ')}`);
     
     // Process each platform sequentially to respect rate limits
     for (const platform of validPlatforms) {
+      console.log(`[JobScraper] Processing platform: ${platform}`);
       try {
         const platformConfig = this.searchConfig[platform as keyof typeof SEARCH_CONFIG];
         const platformJobs = await this.scrapePlatform(platform, query, location, platformConfig);
         
         if (platformJobs.length > 0) {
-          console.log(`Found ${platformJobs.length} jobs on ${platform}`);
+          console.log(`[JobScraper] Successfully processed platform: ${platform}. Found ${platformJobs.length} jobs.`);
           allJobs.push(...platformJobs);
         } else {
-          console.log(`No jobs found on ${platform} for the given criteria`);
+          console.log(`[JobScraper] No jobs found on ${platform} for the given criteria.`);
         }
         
         // Add a delay between platforms
         await this.delay(this.config.rateLimitDelay * 2000);
       } catch (error) {
-        console.error(`Error scraping jobs from ${platform}:`, error);
+        console.error(`[JobScraper] Error scraping jobs from ${platform}: ${(error as Error).message}. Skipping this platform.`);
       }
     }
     
+    console.log(`[JobScraper] Finished job search. Total jobs found: ${allJobs.length}`);
     return allJobs;
   }
   
@@ -180,7 +238,7 @@ export class JobScraper {
           offset: (page - 1) * platformConfig.resultsPerPage
         });
         
-        console.log(`Scraping ${platform} page ${page} at: ${url}`);
+        console.log(`[JobScraper] Scraping ${platform} page ${page} at: ${url}`);
         
         // Apply domain-specific rate limiting
         const domain = this.extractDomain(url);
@@ -191,9 +249,9 @@ export class JobScraper {
         
         if (pageJobs.length > 0) {
           jobs.push(...pageJobs);
-          console.log(`Found ${pageJobs.length} jobs on page ${page} of ${platform}`);
+          // console.log(`[JobScraper] Found ${pageJobs.length} jobs on page ${page} of ${platform}`); // Covered by scrapeJobsFromUrl logs
         } else {
-          console.log(`No jobs found on page ${page} of ${platform} - may have reached the end of results`);
+          console.log(`[JobScraper] No jobs found on page ${page} of ${platform}. May have reached the end or page is empty.`);
           // Break out of the loop if we don't find any more jobs
           break;
         }
@@ -207,8 +265,7 @@ export class JobScraper {
           await this.delay(delayTime * 1000);
         }
       } catch (error) {
-        console.error(`Error scraping page ${page} from ${platform}:`, error);
-        // Continue to the next page despite errors
+        console.error(`[JobScraper] Error scraping page ${page} from ${platform} at ${url}: ${(error as Error).message}. Continuing to next page/platform.`);
       }
     }
     
@@ -219,6 +276,7 @@ export class JobScraper {
    * Main method to scrape job data from a URL
    */
   async scrapeJobsFromUrl(targetUrl: string, sourcePlatform: string): Promise<ScrapedJobData[]> {
+    console.log(`[JobScraper] Scraping URL: ${targetUrl} for platform: ${sourcePlatform}`);
     // Extract domain for rate limiting
     const domain = this.extractDomain(targetUrl);
     
@@ -235,21 +293,26 @@ export class JobScraper {
     
     for (let attempt = 0; attempt < this.config.maxRetries; attempt++) {
       try {
-        console.log(`Attempting to scrape ${targetUrl} (attempt ${attempt + 1})`);
+        console.log(`[JobScraper] Attempting to fetch ${targetUrl} (attempt ${attempt + 1}/${this.config.maxRetries}) using direct request.`);
+        if (currentProxy) {
+          console.log(`[JobScraper] Using proxy: ${currentProxy ? currentProxy.split('@')[0] : 'N/A'} for attempt ${attempt + 1}`);
+        }
         
-        // Simulate HTTP request for this example
-        htmlContent = await this.simulateHttpRequest(targetUrl, currentUserAgent, currentProxy);
+        htmlContent = await this.fetchHtmlContent(targetUrl, currentUserAgent, currentProxy);
         
-        // Check if we're blocked
+        // Check if we're blocked.
+        // Note: This basic check might need to be more sophisticated
+        // depending on how different sites indicate blocking.
         if (this.isBlocked(htmlContent)) {
-          console.warn(`Blocked on attempt ${attempt + 1} with proxy ${currentProxy}`);
+          console.warn(`[JobScraper] Direct request blocked on attempt ${attempt + 1} for ${targetUrl}`);
+          htmlContent = null; // Ensure htmlContent is null if blocked
           continue; // Try next attempt
         }
         
         break; // Success, exit retry loop
       } catch (e) {
         error = e as Error;
-        console.error(`Request failed on attempt ${attempt + 1}: ${error.message}`);
+        console.error(`[JobScraper] Direct request failed on attempt ${attempt + 1} for ${targetUrl}: ${error.message}`);
         
         // Get a new proxy for the next attempt
         if (attempt < this.config.maxRetries - 1) {
@@ -257,10 +320,29 @@ export class JobScraper {
         }
       }
     }
+
+    // If direct fetching failed and headless browsing is enabled, try with headless browser
+    if (!htmlContent && this.config.headlessBrowserEnabled) {
+      console.log(`[JobScraper] Falling back to headless browser for ${targetUrl}`);
+      try {
+        console.log(`[JobScraper] Attempting to fetch ${targetUrl} using headless browser.`);
+        if (currentProxy) {
+           console.log(`[JobScraper] Using proxy: ${currentProxy ? currentProxy.split('@')[0] : 'N/A'} for headless attempt.`);
+        }
+        htmlContent = await this.fetchHtmlWithHeadlessBrowser(targetUrl, currentUserAgent, currentProxy);
+        if (this.isBlocked(htmlContent)) { // Check if headless attempt was also blocked
+          console.warn(`[JobScraper] Headless browser attempt also blocked for ${targetUrl}`);
+          htmlContent = null; // Ensure it's null if blocked
+        }
+      } catch (headlessError) {
+        console.error(`[JobScraper] Headless browser attempt failed for ${targetUrl}: ${(headlessError as Error).message}`);
+        htmlContent = null; // Ensure it's null on error
+      }
+    }
     
-    // If all attempts failed
+    // If all attempts failed (direct and headless)
     if (!htmlContent) {
-      console.error(`Failed to retrieve page after ${this.config.maxRetries} attempts: ${error?.message}`);
+      console.error(`[JobScraper] Failed to retrieve page after all attempts (including headless if enabled): ${targetUrl}`);
       return [];
     }
     
@@ -277,48 +359,65 @@ export class JobScraper {
    * Parse job listings from HTML content based on the source platform
    */
   private parseJobListings(html: string, platform: string, sourceUrl: string): ScrapedJobData[] {
-    const jobs: ScrapedJobData[] = [];
-    
+    console.log(`[JobScraper] Parsing job listings for platform: ${platform} from URL: ${sourceUrl}`);
     try {
-      console.log(`Parsing ${platform} job listings...`);
-      
       // In a real implementation, we would use a library like Cheerio to parse HTML
       // Here we're simulating with platform-specific parsing logic
-      
       switch(platform.toLowerCase()) {
         case 'linkedin':
-          // LinkedIn specific parsing logic would go here
-          return this.simulateLinkedInParsing(sourceUrl);
-          
+          return this.simulateLinkedInParsing(html, sourceUrl, platform);
         case 'indeed':
-          // Indeed specific parsing logic would go here
-          return this.simulateIndeedParsing(sourceUrl);
-          
+          return this.simulateIndeedParsing(html, sourceUrl, platform);
         case 'glassdoor':
-          // Glassdoor specific parsing logic would go here
-          return this.simulateGlassdoorParsing(sourceUrl);
-          
+          return this.simulateGlassdoorParsing(html, sourceUrl, platform);
+        case 'monster':
+          return this.simulateMonsterParsing(html, sourceUrl, platform);
         case 'github':
-          // GitHub specific parsing logic would go here
-          return this.simulateGithubParsing(sourceUrl);
-          
+          return this.simulateGithubParsing(html, sourceUrl, platform);
+        case 'lever':
+          return this.parseLeverJobs(html, sourceUrl); // Placeholder, will log TODO
+        case 'icims':
+          return this.parseIcimsJobs(html, sourceUrl); // Placeholder
+        case 'workday':
+          return this.parseWorkdayJobs(html, sourceUrl); // Placeholder
+        case 'greenhouse':
+          return this.parseGreenhouseJobs(html, sourceUrl); // Placeholder
+        case 'ziprecruiter':
+          return this.parseZipRecruiterJobs(html, sourceUrl); // Placeholder
+        case 'dice':
+          return this.parseDiceJobs(html, sourceUrl); // Placeholder
+        case 'simplyhired':
+          return this.parseSimplyHiredJobs(html, sourceUrl); // Placeholder
+        case 'ashby':
+          return this.parseAshbyJobs(html, sourceUrl); // Placeholder
+        case 'rippling':
+          return this.parseRipplingJobs(html, sourceUrl); // Placeholder
         default:
-          console.warn(`No specific parsing logic implemented for platform: ${platform}`);
+          console.warn(`[JobScraper] No specific parsing logic implemented for platform: ${platform}`);
           return [];
       }
-    } catch (error) {
-      console.error(`Error parsing job listings from ${platform}:`, error);
-      return [];
+    } catch (parseError) {
+      console.error(`[JobScraper] Error parsing ${platform} job listings from ${sourceUrl}: ${(parseError as Error).message}`);
+      return []; // Return empty on parsing error
     }
   }
   
   /**
    * Simulate LinkedIn parsing (for demo purposes)
    */
-  private simulateLinkedInParsing(sourceUrl: string): ScrapedJobData[] {
+  private simulateLinkedInParsing(html: string, sourceUrl: string, platform: string = 'LinkedIn'): ScrapedJobData[] {
+    console.log(`[JobScraper] Simulating parsing for ${platform} from HTML content of ${sourceUrl}. NOTE: This is using mock data generation.`);
+    // TODO: Implement actual HTML parsing using Cheerio or similar.
+    // const jobPostingSelector = ".job-item"; // Example
+    // const titleSelector = ".job-title"; // Example
+    // const companySelector = ".company-name"; // Example
+    // const locationSelector = ".location"; // Example
+    // const descriptionSelector = ".description"; // Example
+    // const salarySelector = ".salary"; // Example
+    // const applyUrlSelector = "a.apply-button"; // Example
+    // const postedAtSelector = ".date-posted"; // Example
+    // const remoteSelector = ".remote-tag"; // Example
     const jobs: ScrapedJobData[] = [];
-    
-    // In a real implementation, we would extract job data from the HTML
     // For demo purposes, we'll create some sample job data
     for (let i = 0; i < 5; i++) {
       const jobId = `linkedin-${Date.now()}-${i}`;
@@ -353,9 +452,19 @@ export class JobScraper {
   /**
    * Simulate Indeed parsing (for demo purposes)
    */
-  private simulateIndeedParsing(sourceUrl: string): ScrapedJobData[] {
+  private simulateIndeedParsing(html: string, sourceUrl: string, platform: string = 'Indeed'): ScrapedJobData[] {
+    console.log(`[JobScraper] Simulating parsing for ${platform} from HTML content of ${sourceUrl}. NOTE: This is using mock data generation.`);
+    // TODO: Implement actual HTML parsing using Cheerio or similar.
+    // const jobPostingSelector = ".job-item"; // Example
+    // const titleSelector = ".job-title"; // Example
+    // const companySelector = ".company-name"; // Example
+    // const locationSelector = ".location"; // Example
+    // const descriptionSelector = ".description"; // Example
+    // const salarySelector = ".salary"; // Example
+    // const applyUrlSelector = "a.apply-button"; // Example
+    // const postedAtSelector = ".date-posted"; // Example
+    // const remoteSelector = ".remote-tag"; // Example
     const jobs: ScrapedJobData[] = [];
-    
     for (let i = 0; i < 5; i++) {
       const jobId = `indeed-${Date.now()}-${i}`;
       jobs.push({
@@ -389,9 +498,19 @@ export class JobScraper {
   /**
    * Simulate Glassdoor parsing (for demo purposes)
    */
-  private simulateGlassdoorParsing(sourceUrl: string): ScrapedJobData[] {
+  private simulateGlassdoorParsing(html: string, sourceUrl: string, platform: string = 'Glassdoor'): ScrapedJobData[] {
+    console.log(`[JobScraper] Simulating parsing for ${platform} from HTML content of ${sourceUrl}. NOTE: This is using mock data generation.`);
+    // TODO: Implement actual HTML parsing using Cheerio or similar.
+    // const jobPostingSelector = ".job-item"; // Example
+    // const titleSelector = ".job-title"; // Example
+    // const companySelector = ".company-name"; // Example
+    // const locationSelector = ".location"; // Example
+    // const descriptionSelector = ".description"; // Example
+    // const salarySelector = ".salary"; // Example
+    // const applyUrlSelector = "a.apply-button"; // Example
+    // const postedAtSelector = ".date-posted"; // Example
+    // const remoteSelector = ".remote-tag"; // Example
     const jobs: ScrapedJobData[] = [];
-    
     for (let i = 0; i < 5; i++) {
       const jobId = `glassdoor-${Date.now()}-${i}`;
       jobs.push({
@@ -425,9 +544,19 @@ export class JobScraper {
   /**
    * Simulate GitHub parsing (for demo purposes)
    */
-  private simulateGithubParsing(sourceUrl: string): ScrapedJobData[] {
+  private simulateGithubParsing(html: string, sourceUrl: string, platform: string = 'GitHub'): ScrapedJobData[] {
+    console.log(`[JobScraper] Simulating parsing for ${platform} from HTML content of ${sourceUrl}. NOTE: This is using mock data generation.`);
+    // TODO: Implement actual HTML parsing using Cheerio or similar.
+    // const jobPostingSelector = ".issue-item"; // Example for GitHub issues
+    // const titleSelector = ".issue-title"; // Example
+    // const companySelector = ".repository-name"; // Example, company might be repo owner
+    // const locationSelector = ".location-label"; // Example
+    // const descriptionSelector = ".issue-body"; // Example
+    // const salarySelector = null; // Typically not applicable for GitHub issues
+    // const applyUrlSelector = "a.issue-link"; // Example
+    // const postedAtSelector = "time-ago"; // Example
+    // const remoteSelector = ".remote-label"; // Example
     const jobs: ScrapedJobData[] = [];
-    
     for (let i = 0; i < 5; i++) {
       const jobId = `github-${Date.now()}-${i}`;
       jobs.push({
@@ -457,7 +586,181 @@ export class JobScraper {
     
     return jobs;
   }
-  
+
+  /**
+   * Simulate Monster parsing (for demo purposes)
+   */
+  private simulateMonsterParsing(html: string, sourceUrl: string, platform: string = 'Monster'): ScrapedJobData[] {
+    console.log(`[JobScraper] Simulating parsing for ${platform} from HTML content of ${sourceUrl}. NOTE: This is using mock data generation.`);
+    // TODO: Implement actual HTML parsing using Cheerio or similar.
+    // const jobPostingSelector = ".job-item"; // Example
+    // const titleSelector = ".job-title"; // Example
+    // const companySelector = ".company-name"; // Example
+    // const locationSelector = ".location"; // Example
+    // const descriptionSelector = ".description"; // Example
+    // const salarySelector = ".salary"; // Example
+    // const applyUrlSelector = "a.apply-button"; // Example
+    // const postedAtSelector = ".date-posted"; // Example
+    // const remoteSelector = ".remote-tag"; // Example
+    const jobs: ScrapedJobData[] = [];
+    // For demo purposes, we'll create some sample job data
+    for (let i = 0; i < 3; i++) { // Example: 3 mock jobs for Monster
+      const jobId = `monster-${Date.now()}-${i}`;
+      jobs.push({
+        id: jobId,
+        title: `Marketing Manager ${i+1}`,
+        company: `Marketing Agency ${String.fromCharCode(70 + i)}`,
+        location: 'Chicago, IL',
+        description: 'Seeking an experienced Marketing Manager.',
+        salary: { min: 70000, max: 90000, currency: '$' },
+        requirements: ['5+ years in marketing', 'Strong communication skills'],
+        skills: ['SEO', 'SEM', 'Content Marketing'],
+        postedAt: new Date(Date.now() - (i+5) * 86400000).toISOString(),
+        applyUrl: `https://www.monster.com/job/${jobId}`,
+        remote: Math.random() > 0.8,
+        source: 'Monster',
+        url: sourceUrl
+      });
+    }
+    return jobs;
+  }
+
+  // Placeholder parsing methods for new platforms
+  private parseLeverJobs(html: string, sourceUrl: string): ScrapedJobData[] {
+    // TODO: Add extensive unit tests for this parser with sample HTML once implemented.
+    // TODO: Implement actual HTML parsing using Cheerio or similar.
+    // const jobPostingSelector = ".job-item"; // Example
+    // const titleSelector = ".job-title"; // Example
+    // const companySelector = ".company-name"; // Example
+    // const locationSelector = ".location"; // Example
+    // const descriptionSelector = ".description"; // Example
+    // const salarySelector = ".salary"; // Example
+    // const applyUrlSelector = "a.apply-button"; // Example
+    // const postedAtSelector = ".date-posted"; // Example
+    // const remoteSelector = ".remote-tag"; // Example
+    return [];
+  }
+
+  private parseIcimsJobs(html: string, sourceUrl: string): ScrapedJobData[] {
+    // TODO: Add extensive unit tests for this parser with sample HTML once implemented.
+    // TODO: Implement actual HTML parsing using Cheerio or similar.
+    // const jobPostingSelector = ".job-item"; // Example
+    // const titleSelector = ".job-title"; // Example
+    // const companySelector = ".company-name"; // Example
+    // const locationSelector = ".location"; // Example
+    // const descriptionSelector = ".description"; // Example
+    // const salarySelector = ".salary"; // Example
+    // const applyUrlSelector = "a.apply-button"; // Example
+    // const postedAtSelector = ".date-posted"; // Example
+    // const remoteSelector = ".remote-tag"; // Example
+    return [];
+  }
+
+  private parseWorkdayJobs(html: string, sourceUrl: string): ScrapedJobData[] {
+    // TODO: Add extensive unit tests for this parser with sample HTML once implemented.
+    // TODO: Implement actual HTML parsing using Cheerio or similar.
+    // const jobPostingSelector = ".job-item"; // Example
+    // const titleSelector = ".job-title"; // Example
+    // const companySelector = ".company-name"; // Example
+    // const locationSelector = ".location"; // Example
+    // const descriptionSelector = ".description"; // Example
+    // const salarySelector = ".salary"; // Example
+    // const applyUrlSelector = "a.apply-button"; // Example
+    // const postedAtSelector = ".date-posted"; // Example
+    // const remoteSelector = ".remote-tag"; // Example
+    return [];
+  }
+
+  private parseGreenhouseJobs(html: string, sourceUrl: string): ScrapedJobData[] {
+    // TODO: Add extensive unit tests for this parser with sample HTML once implemented.
+    // TODO: Implement actual HTML parsing using Cheerio or similar.
+    // const jobPostingSelector = ".job-item"; // Example
+    // const titleSelector = ".job-title"; // Example
+    // const companySelector = ".company-name"; // Example
+    // const locationSelector = ".location"; // Example
+    // const descriptionSelector = ".description"; // Example
+    // const salarySelector = ".salary"; // Example
+    // const applyUrlSelector = "a.apply-button"; // Example
+    // const postedAtSelector = ".date-posted"; // Example
+    // const remoteSelector = ".remote-tag"; // Example
+    return [];
+  }
+
+  private parseZipRecruiterJobs(html: string, sourceUrl: string): ScrapedJobData[] {
+    // TODO: Add extensive unit tests for this parser with sample HTML once implemented.
+    // TODO: Implement actual HTML parsing using Cheerio or similar.
+    // const jobPostingSelector = ".job-item"; // Example
+    // const titleSelector = ".job-title"; // Example
+    // const companySelector = ".company-name"; // Example
+    // const locationSelector = ".location"; // Example
+    // const descriptionSelector = ".description"; // Example
+    // const salarySelector = ".salary"; // Example
+    // const applyUrlSelector = "a.apply-button"; // Example
+    // const postedAtSelector = ".date-posted"; // Example
+    // const remoteSelector = ".remote-tag"; // Example
+    return [];
+  }
+
+  private parseDiceJobs(html: string, sourceUrl: string): ScrapedJobData[] {
+    // TODO: Add extensive unit tests for this parser with sample HTML once implemented.
+    // TODO: Implement actual HTML parsing using Cheerio or similar.
+    // const jobPostingSelector = ".job-item"; // Example
+    // const titleSelector = ".job-title"; // Example
+    // const companySelector = ".company-name"; // Example
+    // const locationSelector = ".location"; // Example
+    // const descriptionSelector = ".description"; // Example
+    // const salarySelector = ".salary"; // Example
+    // const applyUrlSelector = "a.apply-button"; // Example
+    // const postedAtSelector = ".date-posted"; // Example
+    // const remoteSelector = ".remote-tag"; // Example
+    return [];
+  }
+
+  private parseSimplyHiredJobs(html: string, sourceUrl: string): ScrapedJobData[] {
+    // TODO: Add extensive unit tests for this parser with sample HTML once implemented.
+    // TODO: Implement actual HTML parsing using Cheerio or similar.
+    // const jobPostingSelector = ".job-item"; // Example
+    // const titleSelector = ".job-title"; // Example
+    // const companySelector = ".company-name"; // Example
+    // const locationSelector = ".location"; // Example
+    // const descriptionSelector = ".description"; // Example
+    // const salarySelector = ".salary"; // Example
+    // const applyUrlSelector = "a.apply-button"; // Example
+    // const postedAtSelector = ".date-posted"; // Example
+    // const remoteSelector = ".remote-tag"; // Example
+    return [];
+  }
+
+  private parseAshbyJobs(html: string, sourceUrl: string): ScrapedJobData[] {
+    // TODO: Add extensive unit tests for this parser with sample HTML once implemented.
+    // TODO: Implement actual HTML parsing using Cheerio or similar.
+    // const jobPostingSelector = ".job-item"; // Example
+    // const titleSelector = ".job-title"; // Example
+    // const companySelector = ".company-name"; // Example
+    // const locationSelector = ".location"; // Example
+    // const descriptionSelector = ".description"; // Example
+    // const salarySelector = ".salary"; // Example
+    // const applyUrlSelector = "a.apply-button"; // Example
+    // const postedAtSelector = ".date-posted"; // Example
+    // const remoteSelector = ".remote-tag"; // Example
+    return [];
+  }
+
+  private parseRipplingJobs(html: string, sourceUrl: string): ScrapedJobData[] {
+    // TODO: Add extensive unit tests for this parser with sample HTML once implemented.
+    // TODO: Implement actual HTML parsing using Cheerio or similar.
+    // const jobPostingSelector = ".job-item"; // Example
+    // const titleSelector = ".job-title"; // Example
+    // const companySelector = ".company-name"; // Example
+    // const locationSelector = ".location"; // Example
+    // const descriptionSelector = ".description"; // Example
+    // const salarySelector = ".salary"; // Example
+    // const applyUrlSelector = "a.apply-button"; // Example
+    // const postedAtSelector = ".date-posted"; // Example
+    // const remoteSelector = ".remote-tag"; // Example
+    return [];
+  }
+
   /**
    * Construct a URL from a template and parameters
    */
@@ -481,96 +784,93 @@ export class JobScraper {
   }
   
   /**
-   * Simulate an HTTP request (would be a real HTTP request in production)
+   * Fetches HTML content from a given URL using axios.
    */
-  private async simulateHttpRequest(
-    url: string, 
-    userAgent: string, 
-    proxy?: string
+  private async fetchHtmlContent(
+    targetUrl: string,
+    currentUserAgent: string,
+    currentProxy?: string
   ): Promise<string> {
-    // In a real implementation, this would make an actual HTTP request
-    // For this example, we'll simulate a response
-    await this.delay(500); // Simulate network delay
-    
-    if (url.includes('blocked')) {
-      return '<html><body>Access denied. Please solve this CAPTCHA.</body></html>';
+    console.log(`[JobScraper] Fetching HTML from: ${targetUrl}`);
+    const options: AxiosRequestConfig = {
+      headers: { 'User-Agent': currentUserAgent },
+      timeout: 15000, // 15 seconds timeout
+    };
+
+    if (currentProxy) {
+      try {
+        const proxyUrl = new URL(currentProxy.startsWith('http') ? currentProxy : `http://${currentProxy}`);
+        options.proxy = {
+          host: proxyUrl.hostname,
+          port: parseInt(proxyUrl.port),
+          // protocol: proxyUrl.protocol.replace(':', ''), // Useful if your proxy URL includes the protocol
+        };
+        console.log(`[JobScraper] Axios request for ${targetUrl} configured with proxy: ${options.proxy.host}`);
+        // If your proxy requires authentication, you would add it here:
+        // options.proxy.auth = { username: 'proxyuser', password: 'proxypassword' };
+      } catch (e) {
+        console.warn(`[JobScraper] Invalid proxy URL format: ${currentProxy}. Proceeding without proxy. Error: ${(e as Error).message}`);
+      }
     }
-    
-    // Simulate job HTML based on URL
-    return `
-      <html>
-        <body>
-          <h1 class="job-title">Software Engineer</h1>
-          <div class="company-name">Example Corp</div>
-          <div class="location">San Francisco, CA</div>
-          <div class="salary">$100,000 - $150,000 per year</div>
-          <div class="description">
-            We are looking for a talented software engineer to join our team.
-          </div>
-          <div class="requirements">
-            <ul>
-              <li>5+ years of experience</li>
-              <li>Bachelor's degree in Computer Science</li>
-            </ul>
-          </div>
-          <div class="skills">
-            <span>JavaScript</span>
-            <span>React</span>
-            <span>TypeScript</span>
-          </div>
-          <div class="posted-date">Posted 3 days ago</div>
-          <a href="https://example.com/apply" class="apply-button">Apply Now</a>
-        </body>
-      </html>
-    `;
+
+    try {
+      const response = await axios.get(targetUrl, options);
+      // Check for non-success status codes that axios might not throw an error for by default
+      if (response.status >= 400) {
+        throw new Error(`[JobScraper] Request failed with status code ${response.status}`);
+      }
+      return response.data;
+    } catch (error) {
+      const axiosError = error as any; // Keep it as any to access response easily
+      if (axios.isAxiosError(axiosError)) {
+        console.error(`[JobScraper] Axios error fetching ${targetUrl}: ${axiosError.message}. Status: ${axiosError.response?.status}`);
+        // Re-throw a generic error or a more specific one to be caught by retry logic
+        throw new Error(`[JobScraper] Failed to fetch HTML from ${targetUrl} due to: ${axiosError.message}`);
+      } else {
+        console.error(`[JobScraper] Unexpected error fetching ${targetUrl}: ${(error as Error).message}`);
+        throw error; // Re-throw the original error if it's not an Axios error
+      }
+    }
   }
-  
+
   /**
-   * Simulate headless browsing (would use Playwright/Puppeteer in production)
+   * Fetches HTML content using a headless browser (Puppeteer).
+   * This is a placeholder and needs full implementation and environment setup.
    */
-  private async simulateHeadlessBrowsing(
-    url: string, 
-    userAgent: string, 
-    proxy?: string
+  private async fetchHtmlWithHeadlessBrowser(
+    targetUrl: string,
+    currentUserAgent: string,
+    currentProxy?: string
   ): Promise<string> {
-    // In a real implementation, this would use a headless browser
+    console.log(`[JobScraper] Attempting to fetch HTML with headless browser from: ${targetUrl}`);
+    console.warn(
+      `[JobScraper] Headless browsing with Puppeteer is not fully implemented for ${targetUrl}. ` +
+      'This is a placeholder. Returning simulated content.'
+    );
+
+    // TODO: Full Puppeteer implementation needs a proper environment.
+    // const browser: Browser = await puppeteer.launch({
+    //   headless: true,
+    //   args: currentProxy ? [`--proxy-server=${currentProxy.startsWith('http') ? currentProxy : `http://${currentProxy}`}`] : [],
+    // });
+    // const page: Page = await browser.newPage();
+    // await page.setUserAgent(currentUserAgent);
+    // try {
+    //   await page.goto(targetUrl, { waitUntil: 'networkidle2', timeout: 30000 }); // 30 seconds timeout
+    //   const htmlContent = await page.content();
+    //   return htmlContent;
+    // } catch (e) {
+    //   console.error(`Puppeteer error navigating to ${targetUrl}: ${(e as Error).message}`);
+    //   throw e; // Re-throw to be caught by the caller
+    // } finally {
+    //   await browser.close();
+    // }
+
+    // Simulate a delay and return placeholder content for now
     await this.delay(1000); // Simulate browser rendering time
-    
-    // Return a more complete HTML that might include JavaScript-rendered content
-    return `
-      <html>
-        <body>
-          <h1 class="job-title">Software Engineer</h1>
-          <div class="company-name">Example Corp</div>
-          <div class="location">San Francisco, CA</div>
-          <div class="salary">$100,000 - $150,000 per year</div>
-          <div class="description">
-            We are looking for a talented software engineer to join our team.
-            This position requires strong problem-solving skills and experience with modern web technologies.
-          </div>
-          <div class="requirements">
-            <ul>
-              <li>5+ years of experience in web development</li>
-              <li>Bachelor's degree in Computer Science or related field</li>
-              <li>Experience with React and TypeScript</li>
-              <li>Knowledge of backend technologies</li>
-            </ul>
-          </div>
-          <div class="skills">
-            <span>JavaScript</span>
-            <span>React</span>
-            <span>TypeScript</span>
-            <span>Node.js</span>
-            <span>GraphQL</span>
-          </div>
-          <div class="posted-date">Posted 3 days ago</div>
-          <div class="remote-badge">Remote</div>
-          <a href="https://example.com/apply" class="apply-button">Apply Now</a>
-        </body>
-      </html>
-    `;
+    return `<html><body>Headless browser content for ${targetUrl} (simulated)</body></html>`;
   }
-  
+
   /**
    * Check if the response indicates we've been blocked
    */
@@ -676,3 +976,81 @@ export async function searchJobs(query: string, location: string = '', platforms
     return [];
   }
 }
+
+// =====================================================================================
+// TESTING STRATEGY FOR JobScraper
+// =====================================================================================
+//
+// The JobScraper class and its associated functions require a multi-faceted testing approach.
+//
+// 1. Unit Testing - Individual Platform Parsers:
+//    - Each platform-specific parsing function (e.g., `simulateLinkedInParsing`,
+//      `parseLeverJobs`, `parseIcimsJobs`, etc., once implemented) is a critical
+//      candidate for unit tests. These are currently placeholders or simulations.
+//    - Strategy:
+//      - Create a dedicated test file (e.g., `jobScraper.parsers.test.ts` or separate
+//        files per parser if they become complex).
+//      - For each parser, use sample static HTML content saved in `.html` files
+//        within a test fixtures directory (e.g., `__tests__/fixtures/linkedin_job_page.html`).
+//      - The unit test would read this static HTML, pass it to the parsing function,
+//        and assert the output.
+//    - Key Assertions:
+//      - Correct extraction of all fields defined in `ScrapedJobData` (title, company,
+//        location, description, salary, applyUrl, postedAt, etc.).
+//      - Proper handling of missing optional fields (e.g., if salary is not present,
+//        the `salary` field in `ScrapedJobData` should be null or undefined as expected).
+//      - Robustness to minor variations in HTML structure (if possible to anticipate).
+//      - Graceful failure or return of empty/partial data for significantly malformed
+//        or unexpected HTML structures.
+//      - Correct identification of remote status if applicable.
+//
+// 2. Unit Testing - Utility Functions:
+//    - Helper functions like `extractDomain`, `constructUrl`, `isBlocked`,
+//      `getRandomProxy`, `getRandomUserAgent` should have their own unit tests.
+//    - Strategy:
+//      - Test with various inputs, including edge cases and invalid inputs.
+//    - Key Assertions:
+//      - `extractDomain`: Correctly extracts domain from various URL formats.
+//      - `constructUrl`: Correctly replaces placeholders and encodes parameters.
+//      - `isBlocked`: Accurately identifies blocking keywords in HTML content.
+//
+// 3. Integration Testing - Core Scraping Workflow:
+//    - `scrapeJobsFromUrl`:
+//      - Mock `fetchHtmlContent` and `fetchHtmlWithHeadlessBrowser` to return controlled
+//        HTML content (or simulate errors).
+//      - Mock `parseJobListings` to verify it's called with the correct HTML and parameters.
+//      - Test retry logic, proxy rotation (if state can be inspected or mocked), and
+//        fallback to headless browser.
+//    - `scrapePlatform`:
+//      - Mock `scrapeJobsFromUrl` to control the jobs returned per page.
+//      - Verify correct URL construction for pagination.
+//      - Test `maxPages` and `resultsPerPage` logic.
+//      - Test handling of errors from `scrapeJobsFromUrl`.
+//    - `scrapeJobs`:
+//      - Mock `scrapePlatform` to control jobs returned per platform.
+//      - Verify aggregation of results from multiple platforms.
+//      - Test handling of errors from `scrapePlatform`.
+//
+// 4. E2E (End-to-End) Testing Considerations:
+//    - True E2E tests would involve running the scraper against live job sites.
+//    - Challenges:
+//      - Flakiness: Live site structures change frequently, breaking tests.
+//      - IP Blocking: Running E2E tests too often can lead to IP blocks.
+//      - Resource Intensive: Requires network access, actual browser (for headless).
+//      - Ethical Concerns: Avoid overwhelming job sites with requests.
+//    - Strategy (if pursued):
+//      - Run sparingly, perhaps against a small, controlled set of URLs or a dedicated
+//        testing/staging version of a job site if available.
+//      - Focus on testing the overall flow for a one or two key platforms rather than
+//        comprehensive coverage.
+//      - Consider using a library like Nock or MSW (Mock Service Worker) to create
+//        mock HTTP servers that simulate real job platforms for more controlled E2E-like tests.
+//
+// 5. Configuration Testing:
+//    - Test behavior with different `ScraperConfig` options (e.g., `headlessBrowserEnabled` true/false,
+//      different `maxRetries`, `rateLimitDelay`).
+//
+// All tests should ideally be located in `__tests__` directory or similar, colocated with
+// the source files or in a dedicated test directory structure.
+//
+//=====================================================================================
