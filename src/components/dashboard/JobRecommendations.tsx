@@ -26,7 +26,10 @@ const JobRecommendations = () => {
         postedAt: '2024-01-10T10:00:00Z',
         skills: ['React', 'TypeScript', 'JavaScript', 'CSS'],
         matchPercentage: 92,
-        remote: true
+        remote: true,
+        applyUrl: 'https://example.com/apply/1',
+        source: 'linkedin.com',
+        workModel: 'remote'
       },
       {
         id: '2',
@@ -41,7 +44,10 @@ const JobRecommendations = () => {
         postedAt: '2024-01-12T14:30:00Z',
         skills: ['React', 'Python', 'PostgreSQL', 'AWS'],
         matchPercentage: 85,
-        remote: false
+        remote: false,
+        applyUrl: 'https://example.com/apply/2',
+        source: 'indeed.com',
+        workModel: 'onsite'
       },
       {
         id: '3',
@@ -56,7 +62,10 @@ const JobRecommendations = () => {
         postedAt: '2024-01-15T09:15:00Z',
         skills: ['React', 'JavaScript', 'CSS', 'HTML'],
         matchPercentage: 78,
-        remote: true
+        remote: true,
+        applyUrl: 'https://example.com/apply/3',
+        source: 'glassdoor.com',
+        workModel: 'remote'
       }
     ];
 

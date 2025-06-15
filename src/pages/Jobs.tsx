@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
@@ -74,7 +75,13 @@ const Jobs = () => {
     skills: [],
     companyTypes: [],
     companySize: [],
-    benefits: []
+    benefits: [],
+    seasons: [],
+    leadership: 'no-preference',
+    securityClearance: 'allow',
+    sponsorH1B: false,
+    simpleApplications: false,
+    hideAppliedJobs: false
   });
 
   // Prevent multiple simultaneous API calls

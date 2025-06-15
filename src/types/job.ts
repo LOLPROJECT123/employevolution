@@ -61,9 +61,12 @@ export interface JobFilters {
   sponsorH1B: boolean;
   simpleApplications: boolean;
   hideAppliedJobs: boolean;
+  // Additional filters used in components
+  jobFunction?: string;
+  companies?: string[];
+  title?: string;
 }
 
-// Add missing SavedSearch export
 export interface SavedSearch {
   id: string;
   name: string;
@@ -88,3 +91,6 @@ export interface SavedJob {
   savedAt: string;
   notes?: string;
 }
+
+// Export JobApplicationStatus as an alias for JobStatus for backwards compatibility
+export type JobApplicationStatus = JobStatus;
