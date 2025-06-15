@@ -20,6 +20,20 @@ export interface Job {
   remote: boolean;
   workModel: 'onsite' | 'remote' | 'hybrid';
   matchPercentage?: number;
+  // Properties used in existing components
+  benefits?: string[];
+  responsibilities?: string[];
+  applicantCount?: number;
+  companySize?: string;
+  companyType?: string;
+  category?: string;
+  jobFunction?: string;
+  matchCriteria?: {
+    degree: boolean;
+    experience: boolean;
+    skills: boolean;
+    location: boolean;
+  };
   // New properties for advanced filtering
   season?: string;
   isLeadershipRole?: boolean;
@@ -47,6 +61,15 @@ export interface JobFilters {
   sponsorH1B: boolean;
   simpleApplications: boolean;
   hideAppliedJobs: boolean;
+}
+
+// Add missing SavedSearch export
+export interface SavedSearch {
+  id: string;
+  name: string;
+  filters: JobFilters;
+  createdAt: string;
+  lastUsed?: string;
 }
 
 export type JobStatus = 'applied' | 'interviewing' | 'offered' | 'rejected' | 'accepted';

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { JobFilters } from '@/types/job';
 import { Button } from '@/components/ui/button';
@@ -29,7 +28,13 @@ export const AdvancedJobFilters = ({ onApplyFilters, initialFilters }: AdvancedJ
     skills: [],
     companyTypes: [],
     companySize: [],
-    benefits: []
+    benefits: [],
+    seasons: [],
+    leadership: 'no-preference',
+    securityClearance: 'allow',
+    sponsorH1B: false,
+    simpleApplications: false,
+    hideAppliedJobs: false
   });
 
   const [advancedSearch, setAdvancedSearch] = useState('');
@@ -72,7 +77,13 @@ export const AdvancedJobFilters = ({ onApplyFilters, initialFilters }: AdvancedJ
       skills: [],
       companyTypes: [],
       companySize: [],
-      benefits: []
+      benefits: [],
+      seasons: [],
+      leadership: 'no-preference',
+      securityClearance: 'allow',
+      sponsorH1B: false,
+      simpleApplications: false,
+      hideAppliedJobs: false
     };
     setFilters(clearedFilters);
     setAdvancedSearch('');
@@ -88,8 +99,7 @@ export const AdvancedJobFilters = ({ onApplyFilters, initialFilters }: AdvancedJ
     
     const finalFilters = {
       ...filters,
-      search: processedSearch,
-      excludedSkills: excludeKeywords.split(',').map(k => k.trim()).filter(k => k)
+      search: processedSearch
     };
     
     onApplyFilters(finalFilters);

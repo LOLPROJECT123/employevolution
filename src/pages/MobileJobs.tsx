@@ -40,7 +40,13 @@ export default function MobileJobs() {
     skills: [],
     companyTypes: [],
     companySize: [],
-    benefits: []
+    benefits: [],
+    seasons: [],
+    leadership: 'no-preference',
+    securityClearance: 'allow',
+    sponsorH1B: false,
+    simpleApplications: false,
+    hideAppliedJobs: false
   });
 
   // Use ref to track if the toast was already shown for the current search
@@ -49,11 +55,11 @@ export default function MobileJobs() {
   useEffect(() => {
     const fetchJobs = async () => {
       const generateSampleJobs = (count: number): Job[] => {
-        const jobTypes: Array<'full-time' | 'part-time' | 'contract' | 'internship' | 'temporary' | 'volunteer' | 'other'> = 
-          ['full-time', 'part-time', 'contract', 'internship', 'temporary', 'volunteer', 'other'];
+        const jobTypes: Array<'full-time' | 'part-time' | 'contract' | 'internship'> = 
+          ['full-time', 'part-time', 'contract', 'internship'];
         
-        const levels: Array<'intern' | 'entry' | 'mid' | 'senior' | 'lead' | 'executive' | 'manager' | 'director'> = 
-          ['intern', 'entry', 'mid', 'senior', 'lead', 'executive', 'manager', 'director'];
+        const levels: Array<'intern' | 'entry' | 'mid' | 'senior' | 'executive'> = 
+          ['intern', 'entry', 'mid', 'senior', 'executive'];
         
         const companies = [
           'TechCorp', 'InnovateCo', 'Google', 'Amazon', 'Microsoft', 'Facebook', 'Apple', 
@@ -124,8 +130,7 @@ export default function MobileJobs() {
           const randomType = jobTypes[Math.floor(Math.random() * jobTypes.length)];
           const randomLevel = levels[Math.floor(Math.random() * levels.length)];
           const randomPrefix = randomLevel === 'senior' ? 'Senior ' : 
-                              randomLevel === 'lead' ? 'Lead ' : 
-                              randomLevel === 'manager' ? 'Manager, ' : '';
+                              randomLevel === 'executive' ? 'Lead ' : '';
           const randomRemote = Math.random() > 0.5;
           const randomWorkModel = randomRemote ? 'remote' : Math.random() > 0.5 ? 'hybrid' : 'onsite';
           const randomCompany = companies[Math.floor(Math.random() * companies.length)];
@@ -149,6 +154,7 @@ export default function MobileJobs() {
             postedAt: new Date(Date.now() - Math.floor(Math.random() * 30) * 86400000).toISOString(),
             skills: randomSkills,
             applyUrl: `https://${platforms[Math.floor(Math.random() * platforms.length)]}/jobs/example${i + 1}`,
+            source: platforms[Math.floor(Math.random() * platforms.length)],
             remote: randomRemote,
             workModel: randomWorkModel,
             responsibilities: randomResponsibilities,
@@ -162,6 +168,9 @@ export default function MobileJobs() {
             },
             companyType: Math.random() > 0.5 ? 'public' : 'private',
             companySize: Math.random() > 0.5 ? 'enterprise' : 'mid-size',
+            applicantCount: Math.floor(Math.random() * 200) + 50,
+            category: Math.random() > 0.5 ? 'Technology' : 'Engineering',
+            jobFunction: Math.random() > 0.5 ? 'Engineering' : 'Product',
           };
         });
       };
@@ -307,7 +316,13 @@ export default function MobileJobs() {
       skills: [],
       companyTypes: [],
       companySize: [],
-      benefits: []
+      benefits: [],
+      seasons: [],
+      leadership: 'no-preference',
+      securityClearance: 'allow',
+      sponsorH1B: false,
+      simpleApplications: false,
+      hideAppliedJobs: false
     });
     
     // Toast is now handled by the useEffect

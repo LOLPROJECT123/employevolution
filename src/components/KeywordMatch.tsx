@@ -2,11 +2,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, AlertCircle, HelpCircle, X, Info, LightbulbIcon } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 interface KeywordMatchProps {
   jobDescription: string;
@@ -215,16 +215,14 @@ const KeywordMatch = ({ jobDescription, resumeText, onAddKeywords }: KeywordMatc
               <div className="flex justify-between mb-2">
                 <div className="flex items-center gap-1">
                   <h4 className="font-medium">High Priority Keywords</h4>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <HelpCircle className="h-4 w-4 text-muted-foreground" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="w-[200px] text-xs">These keywords appear frequently in the job description and are likely crucial for passing ATS filters.</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="w-[200px] text-xs">These keywords appear frequently in the job description and are likely crucial for passing ATS filters.</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
                 <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
                   {keywordData.highPriority.found}/{keywordData.highPriority.total}
@@ -252,16 +250,14 @@ const KeywordMatch = ({ jobDescription, resumeText, onAddKeywords }: KeywordMatc
               <div className="flex justify-between mb-2">
                 <div className="flex items-center gap-1">
                   <h4 className="font-medium">Low Priority Keywords</h4>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <HelpCircle className="h-4 w-4 text-muted-foreground" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="w-[200px] text-xs">These keywords appear less frequently but still relevant to the job description.</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="w-[200px] text-xs">These keywords appear less frequently but still relevant to the job description.</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
                 <Badge variant="secondary" className="bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
                   {keywordData.lowPriority.found}/{keywordData.lowPriority.total}
