@@ -54,9 +54,15 @@ class ApplicationQuestionService {
 
   async saveQuestionAnswer(question: ApplicationQuestion, answer: string): Promise<void> {
     try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
+        throw new Error('User not authenticated');
+      }
+
       const { error } = await supabase
         .from('application_questions')
         .upsert({
+          user_id: userData.user.id,
           question_hash: question.questionHash,
           question: question.question,
           answer,
@@ -78,13 +84,20 @@ class ApplicationQuestionService {
 
   async getAnswerForQuestion(questionHash: string): Promise<string | null> {
     try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
+        return null;
+      }
+
       const { data, error } = await supabase
         .from('application_questions')
         .select('answer')
+        .eq('user_id', userData.user.id)
         .eq('question_hash', questionHash)
-        .single();
+        .maybeSingle();
 
       if (error) {
+        console.error('Error getting answer for question:', error);
         return null;
       }
 
@@ -97,9 +110,15 @@ class ApplicationQuestionService {
 
   async getAllAnswers(): Promise<Record<string, string>> {
     try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
+        return {};
+      }
+
       const { data, error } = await supabase
         .from('application_questions')
-        .select('question_hash, answer');
+        .select('question_hash, answer')
+        .eq('user_id', userData.user.id);
 
       if (error) {
         throw new Error(`Failed to get all answers: ${error.message}`);
@@ -119,11 +138,18 @@ class ApplicationQuestionService {
 
   private async getExistingQuestions(): Promise<ApplicationQuestion[]> {
     try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
+        return [];
+      }
+
       const { data, error } = await supabase
         .from('application_questions')
-        .select('*');
+        .select('*')
+        .eq('user_id', userData.user.id);
 
       if (error) {
+        console.error('Error getting existing questions:', error);
         return [];
       }
 

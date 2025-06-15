@@ -165,6 +165,51 @@ export type Database = {
         }
         Relationships: []
       }
+      application_questions: {
+        Row: {
+          answer: string
+          category: string
+          created_at: string | null
+          frequency: number | null
+          id: string
+          is_standard: boolean | null
+          last_used: string | null
+          platforms: string[] | null
+          question: string
+          question_hash: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          answer: string
+          category?: string
+          created_at?: string | null
+          frequency?: number | null
+          id?: string
+          is_standard?: boolean | null
+          last_used?: string | null
+          platforms?: string[] | null
+          question: string
+          question_hash: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          answer?: string
+          category?: string
+          created_at?: string | null
+          frequency?: number | null
+          id?: string
+          is_standard?: boolean | null
+          last_used?: string | null
+          platforms?: string[] | null
+          question?: string
+          question_hash?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       ats_integrations: {
         Row: {
           api_endpoint: string | null
@@ -1298,6 +1343,54 @@ export type Database = {
           session_id?: string
           to_route?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      networking_contacts: {
+        Row: {
+          company: string
+          connection_type: string
+          created_at: string | null
+          email: string | null
+          id: string
+          last_contacted: string | null
+          linkedin_url: string | null
+          mutual_connections: number | null
+          name: string
+          school_match: string | null
+          title: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          company: string
+          connection_type?: string
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          last_contacted?: string | null
+          linkedin_url?: string | null
+          mutual_connections?: number | null
+          name: string
+          school_match?: string | null
+          title?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          company?: string
+          connection_type?: string
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          last_contacted?: string | null
+          linkedin_url?: string | null
+          mutual_connections?: number | null
+          name?: string
+          school_match?: string | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
