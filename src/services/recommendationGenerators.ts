@@ -1,5 +1,6 @@
 
 import { Job } from '@/types/job';
+import { User } from '@/types/auth';
 
 export interface RecommendationCriteria {
   skills: string[];
@@ -15,6 +16,16 @@ export interface JobRecommendation {
   matchScore: number;
   reasons: string[];
   missingSkills: string[];
+}
+
+export interface MatchScoreBreakdown {
+  skillsMatch: number;
+  experienceMatch: number;
+  locationMatch: number;
+  salaryMatch: number;
+  culturalFit: number;
+  careerGrowth: number;
+  workLifeBalance: number;
 }
 
 export class RecommendationGenerators {
@@ -125,5 +136,114 @@ export class RecommendationGenerators {
     .filter(rec => rec.matchScore > 30) // Only return recommendations with >30% match
     .sort((a, b) => b.matchScore - a.matchScore)
     .slice(0, 20); // Top 20 recommendations
+  }
+
+  static generateAdvancedReasoning(
+    job: Job, 
+    userProfile: User, 
+    matchBreakdown: MatchScoreBreakdown
+  ): string {
+    const reasons = [];
+    
+    if (matchBreakdown.skillsMatch > 80) {
+      reasons.push(`Excellent skills match (${Math.round(matchBreakdown.skillsMatch)}%)`);
+    } else if (matchBreakdown.skillsMatch > 60) {
+      reasons.push(`Good skills alignment (${Math.round(matchBreakdown.skillsMatch)}%)`);
+    }
+    
+    if (matchBreakdown.experienceMatch > 80) {
+      reasons.push('Experience level perfectly aligned');
+    }
+    
+    if (matchBreakdown.locationMatch > 80) {
+      reasons.push('Location preferences met');
+    }
+    
+    if (matchBreakdown.salaryMatch > 80) {
+      reasons.push('Salary expectations aligned');
+    }
+    
+    return reasons.join('. ') || 'This position has potential based on your profile.';
+  }
+
+  static generatePersonalizedRecommendations(
+    job: Job, 
+    userProfile: User, 
+    overallScore: number
+  ): string[] {
+    const recommendations = [];
+    
+    if (overallScore > 80) {
+      recommendations.push('This is an excellent match - consider applying immediately');
+      recommendations.push('Tailor your resume to highlight relevant experience');
+    } else if (overallScore > 60) {
+      recommendations.push('Good potential match - review requirements carefully');
+      recommendations.push('Consider reaching out to current employees for insights');
+    } else {
+      recommendations.push('Moderate match - focus on skill development');
+      recommendations.push('Use this as a learning opportunity');
+    }
+    
+    return recommendations;
+  }
+
+  static generateResumeOptimizations(job: Job, userProfile: User): string[] {
+    const optimizations = [];
+    
+    if (job.skills && job.skills.length > 0) {
+      optimizations.push(`Highlight these key skills: ${job.skills.slice(0, 3).join(', ')}`);
+    }
+    
+    optimizations.push('Use action verbs to describe your achievements');
+    optimizations.push('Quantify your accomplishments with specific metrics');
+    
+    return optimizations;
+  }
+
+  static generateInterviewTips(job: Job, userProfile: User): string[] {
+    const tips = [];
+    
+    tips.push(`Research ${job.company}'s recent developments and culture`);
+    tips.push('Prepare specific examples using the STAR method');
+    tips.push('Practice explaining your experience with relevant technologies');
+    
+    if (job.level === 'senior' || job.level === 'executive') {
+      tips.push('Prepare to discuss leadership and strategic thinking');
+    }
+    
+    return tips;
+  }
+
+  static generateWhyRecommended(job: Job, matchScore: any): string {
+    if (matchScore.overallScore > 80) {
+      return 'This position aligns excellently with your profile and career goals.';
+    } else if (matchScore.overallScore > 60) {
+      return 'This role offers good growth potential and matches several of your key qualifications.';
+    } else {
+      return 'This position could help you develop new skills and expand your experience.';
+    }
+  }
+
+  static generateActionItems(job: Job, matchScore: any): string[] {
+    const items = [];
+    
+    items.push('Review the full job description thoroughly');
+    items.push('Update your resume to match key requirements');
+    items.push('Research the company and hiring manager');
+    
+    if (matchScore.overallScore > 70) {
+      items.push('Apply within the next 48 hours');
+    } else {
+      items.push('Consider applying after skill development');
+    }
+    
+    return items;
+  }
+
+  static calculateApplicationDeadline(job: Job): string {
+    // Calculate a reasonable deadline based on when the job was posted
+    const postedDate = new Date(job.postedAt);
+    const deadline = new Date(postedDate.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 days from posting
+    return deadline.toISOString();
   }
 }
