@@ -1,7 +1,7 @@
 
 import { Job } from '@/types/job';
 import { ScrapedJob } from '@/components/resume/job-application/types';
-import { jobAPIService } from '@/services/jobApiService';
+import { jobApiService } from '@/services/jobApiService';
 import { realJobApiService } from '@/services/realJobApiService';
 import { convertScrapedJobToJob } from '@/utils/jobApplicationUtils';
 import { supabase } from '@/integrations/supabase/client';

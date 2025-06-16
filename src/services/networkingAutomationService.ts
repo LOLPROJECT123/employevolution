@@ -121,8 +121,8 @@ class NetworkingAutomationService {
         name: template.name,
         subject: template.subject,
         content: template.body,
-        category: template.category,
-        variables: template.variables || []
+        category: template.category as OutreachTemplate['category'],
+        variables: Array.isArray(template.variables) ? template.variables as string[] : []
       })) || [];
     } catch (error) {
       console.error('Error getting outreach templates:', error);
@@ -154,9 +154,13 @@ class NetworkingAutomationService {
 
   private async logOutreachAttempt(contactId: string, subject: string, content: string): Promise<void> {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
       await supabase
         .from('communications')
         .insert({
+          user_id: user.id,
           contact_id: contactId,
           communication_type: 'email',
           direction: 'outbound',

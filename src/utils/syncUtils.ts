@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Job, JobApplicationStatus } from '@/types/job';
+import { Job, JobStatus } from '@/types/job';
 
 export interface SyncedData {
   jobs: Job[];
@@ -17,7 +17,7 @@ export class SyncUtils {
       ]);
 
       return {
-        jobs: jobsResult.data?.map(job => job.job_data as Job) || [],
+        jobs: jobsResult.data?.map(job => job.job_data as unknown as Job) || [],
         applications: applicationsResult.data || [],
         lastSync: new Date().toISOString()
       };
@@ -30,7 +30,7 @@ export class SyncUtils {
   static async updateApplicationStatus(
     userId: string, 
     jobId: string, 
-    status: JobApplicationStatus
+    status: JobStatus
   ): Promise<boolean> {
     try {
       const { error } = await supabase

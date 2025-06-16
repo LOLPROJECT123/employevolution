@@ -1,256 +1,349 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { parseResumeEnhanced } from '@/utils/enhancedResumeParser';
+import { enhancedResumeParser } from '@/utils/resume/enhancedResumeParser';
 
-interface ExtractedProfileData {
-  personal: {
+interface EnhancedParsingOptions {
+  extractSkills: boolean;
+  extractExperience: boolean;
+  extractEducation: boolean;
+  extractProjects: boolean;
+  detectKeywords: boolean;
+  enhancedParsing: boolean;
+}
+
+interface ImportedResumeData {
+  personalInfo: {
     name?: string;
-    phone?: string;
     email?: string;
+    phone?: string;
     location?: string;
-    linkedinUrl?: string;
-    githubUrl?: string;
-    portfolioUrl?: string;
+    linkedin?: string;
+    github?: string;
+    portfolio?: string;
   };
-  workExperiences: any[];
-  education: any[];
-  projects: any[];
-  skills: string[];
-  languages: any[];
+  workExperience: Array<{
+    company: string;
+    role: string;
+    startDate: string;
+    endDate: string;
+    location?: string;
+    description: string[];
+  }>;
+  education: Array<{
+    school: string;
+    degree?: string;
+    fieldOfStudy?: string;
+    startDate?: string;
+    endDate?: string;
+    gpa?: string;
+  }>;
+  skills: Array<{
+    skill: string;
+    category: string;
+  }>;
+  projects: Array<{
+    name: string;
+    description: string;
+    technologies: string[];
+    url?: string;
+    github?: string;
+  }>;
 }
 
 class ResumeAutoImportService {
-  async parseAndImportResume(file: File, userId: string): Promise<ExtractedProfileData> {
-    try {
-      console.log('Starting enhanced resume parsing and import...');
-      
-      // Parse resume with enhanced extraction
-      const parsedData = await parseResumeEnhanced(file, {
-        showToast: false,
-        useOCR: true,
-        extractContacts: true,
-        extractSkills: true,
-        extractLanguages: true
-      });
-
-      // Extract structured data
-      const extractedData = this.extractStructuredData(parsedData);
-      
-      // Import to profile automatically
-      await this.importToProfile(extractedData, userId);
-      
-      return extractedData;
-    } catch (error) {
-      console.error('Resume auto-import failed:', error);
-      throw new Error(`Failed to parse and import resume: ${(error as Error).message}`);
-    }
-  }
-
-  private extractStructuredData(parsedData: any): ExtractedProfileData {
-    const data: ExtractedProfileData = {
-      personal: {},
-      workExperiences: [],
-      education: [],
-      projects: [],
-      skills: [],
-      languages: []
+  async importFromFile(file: File): Promise<ImportedResumeData> {
+    console.log('Starting resume import from file:', file.name);
+    
+    const options: EnhancedParsingOptions = {
+      extractSkills: true,
+      extractExperience: true,
+      extractEducation: true,
+      extractProjects: true,
+      detectKeywords: true,
+      enhancedParsing: true
     };
 
-    // Extract personal information
-    if (parsedData.personalInfo) {
-      data.personal = {
-        name: parsedData.personalInfo.name,
-        phone: this.extractPhone(parsedData.text),
-        email: this.extractEmail(parsedData.text),
-        location: parsedData.personalInfo.location,
-        linkedinUrl: this.extractLinkedInUrl(parsedData.text),
-        githubUrl: this.extractGitHubUrl(parsedData.text),
-        portfolioUrl: this.extractPortfolioUrl(parsedData.text)
+    try {
+      const parsedData = await enhancedResumeParser.parseResumeFile(file, options);
+      
+      const importedData: ImportedResumeData = {
+        personalInfo: {
+          name: parsedData.personalInfo?.name || '',
+          email: parsedData.personalInfo?.email || '',
+          phone: parsedData.personalInfo?.phone || '',
+          location: parsedData.personalInfo?.location || '',
+          linkedin: parsedData.personalInfo?.linkedin || '',
+          github: parsedData.personalInfo?.github || '',
+          portfolio: parsedData.personalInfo?.portfolio || ''
+        },
+        workExperience: parsedData.workExperience?.map(exp => ({
+          company: exp.company || '',
+          role: exp.position || exp.role || '',
+          startDate: exp.startDate || '',
+          endDate: exp.endDate || 'Present',
+          location: exp.location || '',
+          description: Array.isArray(exp.description) ? exp.description : [exp.description || '']
+        })) || [],
+        education: parsedData.education?.map(edu => ({
+          school: edu.institution || edu.school || '',
+          degree: edu.degree || '',
+          fieldOfStudy: edu.fieldOfStudy || edu.major || '',
+          startDate: edu.startDate || '',
+          endDate: edu.endDate || '',
+          gpa: edu.gpa || ''
+        })) || [],
+        skills: parsedData.skills?.map(skill => ({
+          skill: typeof skill === 'string' ? skill : skill.name || '',
+          category: typeof skill === 'object' && skill.category ? skill.category : 'general'
+        })) || [],
+        projects: parsedData.projects?.map(project => ({
+          name: project.name || '',
+          description: project.description || '',
+          technologies: project.technologies || [],
+          url: project.url || '',
+          github: project.github || project.repository || ''
+        })) || []
       };
-    }
 
-    // Extract work experiences
-    if (parsedData.workExperience) {
-      data.workExperiences = parsedData.workExperience.map((exp: any) => ({
-        role: exp.position || exp.title,
-        company: exp.company,
-        location: exp.location,
-        startDate: exp.startDate,
-        endDate: exp.endDate,
-        description: Array.isArray(exp.description) ? exp.description.join('\n') : exp.description
-      }));
+      console.log('Resume import completed successfully');
+      return importedData;
+    } catch (error) {
+      console.error('Error importing resume:', error);
+      throw new Error('Failed to import resume data');
     }
-
-    // Extract education
-    if (parsedData.education) {
-      data.education = parsedData.education.map((edu: any) => ({
-        school: edu.institution || edu.school,
-        degree: edu.degree,
-        fieldOfStudy: edu.fieldOfStudy,
-        startDate: edu.startDate,
-        endDate: edu.endDate,
-        gpa: edu.gpa
-      }));
-    }
-
-    // Extract projects
-    if (parsedData.projects) {
-      data.projects = parsedData.projects.map((proj: any) => ({
-        name: proj.name || proj.title,
-        url: proj.url || proj.link,
-        startDate: proj.startDate,
-        endDate: proj.endDate,
-        technologies: proj.technologies || [],
-        description: proj.description
-      }));
-    }
-
-    // Extract skills
-    if (parsedData.skills) {
-      data.skills = Array.isArray(parsedData.skills) ? parsedData.skills : [];
-    }
-
-    // Extract languages
-    if (parsedData.languages) {
-      data.languages = parsedData.languages.map((lang: any) => ({
-        language: typeof lang === 'string' ? lang : lang.language || lang.name,
-        proficiency: lang.proficiency || 'Conversational'
-      }));
-    }
-
-    return data;
   }
 
-  private async importToProfile(data: ExtractedProfileData, userId: string): Promise<void> {
+  async saveToProfile(userId: string, importedData: ImportedResumeData): Promise<void> {
     try {
-      // Update user profile
-      if (data.personal && Object.keys(data.personal).length > 0) {
+      console.log('Saving imported resume data to profile for user:', userId);
+
+      // Save personal info
+      if (importedData.personalInfo) {
         await supabase
           .from('user_profiles')
           .upsert({
             user_id: userId,
-            name: data.personal.name,
-            phone: data.personal.phone,
-            location: data.personal.location,
-            linkedin_url: data.personal.linkedinUrl,
-            github_url: data.personal.githubUrl,
-            portfolio_url: data.personal.portfolioUrl,
+            name: importedData.personalInfo.name,
+            phone: importedData.personalInfo.phone,
+            location: importedData.personalInfo.location,
+            linkedin_url: importedData.personalInfo.linkedin,
+            github_url: importedData.personalInfo.github,
+            portfolio_url: importedData.personalInfo.portfolio,
             updated_at: new Date().toISOString()
           });
       }
 
-      // Import work experiences
-      for (const exp of data.workExperiences) {
+      // Save work experience
+      if (importedData.workExperience?.length > 0) {
+        // First, delete existing work experience
         await supabase
           .from('work_experiences')
-          .insert({
-            user_id: userId,
-            role: exp.role,
-            company: exp.company,
-            location: exp.location,
-            start_date: exp.startDate,
-            end_date: exp.endDate,
-            description: [exp.description]
-          });
+          .delete()
+          .eq('user_id', userId);
+
+        // Insert new work experience
+        const workExperienceData = importedData.workExperience.map(exp => ({
+          user_id: userId,
+          company: exp.company,
+          role: exp.role,
+          location: exp.location,
+          start_date: exp.startDate,
+          end_date: exp.endDate,
+          description: exp.description
+        }));
+
+        await supabase
+          .from('work_experiences')
+          .insert(workExperienceData);
       }
 
-      // Import education
-      for (const edu of data.education) {
+      // Save education
+      if (importedData.education?.length > 0) {
+        // First, delete existing education
         await supabase
           .from('education')
-          .insert({
-            user_id: userId,
-            school: edu.school,
-            degree: edu.degree,
-            field_of_study: edu.fieldOfStudy,
-            start_date: edu.startDate,
-            end_date: edu.endDate,
-            gpa: edu.gpa
-          });
-      }
+          .delete()
+          .eq('user_id', userId);
 
-      // Import projects
-      for (const proj of data.projects) {
+        // Insert new education
+        const educationData = importedData.education.map(edu => ({
+          user_id: userId,
+          school: edu.school,
+          degree: edu.degree,
+          field_of_study: edu.fieldOfStudy,
+          start_date: edu.startDate,
+          end_date: edu.endDate,
+          gpa: edu.gpa
+        }));
+
         await supabase
-          .from('projects')
-          .insert({
-            user_id: userId,
-            name: proj.name,
-            url: proj.url,
-            start_date: proj.startDate,
-            end_date: proj.endDate,
-            technologies: proj.technologies,
-            description: [proj.description]
-          });
+          .from('education')
+          .insert(educationData);
       }
 
-      // Import skills
-      for (const skill of data.skills) {
+      // Save skills
+      if (importedData.skills?.length > 0) {
+        // First, delete existing skills
         await supabase
           .from('user_skills')
-          .upsert({
-            user_id: userId,
-            skill: skill,
-            category: 'general'
-          });
-      }
+          .delete()
+          .eq('user_id', userId);
 
-      // Import languages
-      for (const lang of data.languages) {
+        // Insert new skills
+        const skillsData = importedData.skills.map(skill => ({
+          user_id: userId,
+          skill: skill.skill,
+          category: skill.category
+        }));
+
         await supabase
-          .from('user_languages')
-          .upsert({
-            user_id: userId,
-            language: lang.language,
-            proficiency: lang.proficiency
-          });
+          .from('user_skills')
+          .insert(skillsData);
       }
 
-      console.log('Successfully imported resume data to profile');
+      console.log('Resume data saved to profile successfully');
     } catch (error) {
-      console.error('Error importing to profile:', error);
-      throw error;
+      console.error('Error saving imported resume data:', error);
+      throw new Error('Failed to save resume data to profile');
     }
   }
 
-  private extractPhone(text: string): string | undefined {
-    const phoneRegex = /(\+?1[-.\s]?)?\(?[0-9]{3}\)?[-.\s]?[0-9]{3}[-.\s]?[0-9]{4}/g;
-    const match = text.match(phoneRegex);
-    return match ? match[0] : undefined;
+  detectFileType(file: File): 'pdf' | 'docx' | 'txt' | 'unsupported' {
+    const fileType = file.type.toLowerCase();
+    const fileName = file.name.toLowerCase();
+
+    if (fileType.includes('pdf') || fileName.endsWith('.pdf')) {
+      return 'pdf';
+    } else if (
+      fileType.includes('wordprocessingml') || 
+      fileType.includes('msword') ||
+      fileName.endsWith('.docx') ||
+      fileName.endsWith('.doc')
+    ) {
+      return 'docx';
+    } else if (fileType.includes('text') || fileName.endsWith('.txt')) {
+      return 'txt';
+    }
+
+    return 'unsupported';
   }
 
-  private extractEmail(text: string): string | undefined {
-    const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
-    const match = text.match(emailRegex);
-    return match ? match[0] : undefined;
+  extractKeywords(text: string): string[] {
+    const commonSkills = [
+      'javascript', 'typescript', 'python', 'java', 'react', 'angular', 'vue',
+      'node.js', 'express', 'mongodb', 'postgresql', 'mysql', 'redis',
+      'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'git', 'github',
+      'html', 'css', 'sass', 'less', 'bootstrap', 'tailwind',
+      'agile', 'scrum', 'kanban', 'jira', 'confluence'
+    ];
+
+    const textLower = text.toLowerCase();
+    const foundSkills = commonSkills.filter(skill => {
+      const variations = [skill, skill.replace('.', ''), skill.replace(' ', '')];
+      return variations.some(variation => textLower.includes(variation));
+    });
+
+    return [...new Set(foundSkills)];
   }
 
-  private extractLinkedInUrl(text: string): string | undefined {
-    const linkedinRegex = /https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9-]+/g;
-    const match = text.match(linkedinRegex);
-    return match ? match[0] : undefined;
+  async processLinkedInProfile(profileData: any): Promise<ImportedResumeData> {
+    try {
+      const importedData: ImportedResumeData = {
+        personalInfo: {
+          name: profileData.firstName && profileData.lastName ? 
+            `${profileData.firstName} ${profileData.lastName}` : '',
+          email: profileData.emailAddress || '',
+          location: profileData.location?.name || '',
+          linkedin: profileData.publicProfileUrl || ''
+        },
+        workExperience: profileData.positions?.values?.map((position: any) => ({
+          company: position.company?.name || '',
+          role: position.title || '',
+          startDate: this.formatLinkedInDate(position.startDate),
+          endDate: position.isCurrent ? 'Present' : this.formatLinkedInDate(position.endDate),
+          location: position.location?.name || '',
+          description: position.summary ? [position.summary] : []
+        })) || [],
+        education: profileData.educations?.values?.map((education: any) => ({
+          school: education.schoolName || '',
+          degree: education.degree || '',
+          fieldOfStudy: education.fieldOfStudy || '',
+          startDate: this.formatLinkedInDate(education.startDate),
+          endDate: this.formatLinkedInDate(education.endDate)
+        })) || [],
+        skills: profileData.skills?.values?.map((skill: any) => ({
+          skill: skill.skill?.name || '',
+          category: 'general'
+        })) || [],
+        projects: []
+      };
+
+      return importedData;
+    } catch (error) {
+      console.error('Error processing LinkedIn profile:', error);
+      throw new Error('Failed to process LinkedIn profile data');
+    }
   }
 
-  private extractGitHubUrl(text: string): string | undefined {
-    const githubRegex = /https?:\/\/(www\.)?github\.com\/[a-zA-Z0-9-]+/g;
-    const match = text.match(githubRegex);
-    return match ? match[0] : undefined;
-  }
-
-  private extractPortfolioUrl(text: string): string | undefined {
-    const urlRegex = /https?:\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}[/a-zA-Z0-9._~:/?#[\]@!$&'()*+,;=-]*/g;
-    const urls = text.match(urlRegex) || [];
+  private formatLinkedInDate(dateObj: any): string {
+    if (!dateObj) return '';
     
-    // Filter out LinkedIn, GitHub, and common social media URLs
-    const portfolioUrls = urls.filter(url => 
-      !url.includes('linkedin.com') && 
-      !url.includes('github.com') &&
-      !url.includes('twitter.com') &&
-      !url.includes('facebook.com') &&
-      !url.includes('instagram.com')
-    );
+    const year = dateObj.year || '';
+    const month = dateObj.month ? String(dateObj.month).padStart(2, '0') : '01';
     
-    return portfolioUrls.length > 0 ? portfolioUrls[0] : undefined;
+    return year ? `${year}-${month}` : '';
+  }
+
+  async generateResumeInsights(importedData: ImportedResumeData): Promise<{
+    completeness: number;
+    suggestions: string[];
+    strengths: string[];
+    improvements: string[];
+  }> {
+    let completeness = 0;
+    const suggestions: string[] = [];
+    const strengths: string[] = [];
+    const improvements: string[] = [];
+
+    // Check completeness
+    if (importedData.personalInfo.name) completeness += 10;
+    if (importedData.personalInfo.email) completeness += 10;
+    if (importedData.personalInfo.phone) completeness += 5;
+    if (importedData.personalInfo.location) completeness += 5;
+    if (importedData.personalInfo.linkedin) completeness += 5;
+    if (importedData.workExperience.length > 0) completeness += 25;
+    if (importedData.education.length > 0) completeness += 15;
+    if (importedData.skills.length > 0) completeness += 15;
+    if (importedData.projects.length > 0) completeness += 10;
+
+    // Generate suggestions
+    if (!importedData.personalInfo.name) suggestions.push('Add your full name');
+    if (!importedData.personalInfo.email) suggestions.push('Add your email address');
+    if (!importedData.personalInfo.linkedin) suggestions.push('Add your LinkedIn profile URL');
+    if (importedData.workExperience.length === 0) suggestions.push('Add work experience');
+    if (importedData.skills.length < 5) suggestions.push('Add more relevant skills');
+    if (importedData.projects.length === 0) suggestions.push('Add portfolio projects');
+
+    // Identify strengths
+    if (importedData.workExperience.length > 2) strengths.push('Strong work experience');
+    if (importedData.skills.length > 10) strengths.push('Diverse skill set');
+    if (importedData.education.length > 0) strengths.push('Educational background included');
+    if (importedData.projects.length > 0) strengths.push('Portfolio projects showcased');
+
+    // Suggest improvements
+    if (importedData.workExperience.some(exp => !exp.description || exp.description.length === 0)) {
+      improvements.push('Add descriptions to work experience entries');
+    }
+    if (importedData.skills.length < 10) {
+      improvements.push('Consider adding more technical skills');
+    }
+
+    return {
+      completeness: Math.min(100, completeness),
+      suggestions,
+      strengths,
+      improvements
+    };
   }
 }
 

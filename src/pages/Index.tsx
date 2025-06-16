@@ -1,4 +1,3 @@
-
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import Navbar from "@/components/Navbar";
@@ -28,14 +27,18 @@ const sampleJobs = [
     salary: {
       min: 150000,
       max: 220000,
-      currency: '$'
+      currency: 'USD'
     },
     type: 'full-time' as const,
     level: 'senior' as const,
     description: 'We are looking for a Senior Software Engineer...',
     requirements: ['5+ years experience', 'React', 'Node.js'],
     postedAt: new Date().toISOString(),
-    skills: ['React', 'TypeScript', 'Node.js', 'AWS', 'Docker']
+    skills: ['React', 'TypeScript', 'Node.js', 'AWS', 'Docker'],
+    applyUrl: 'https://example.com/apply/1',
+    source: 'linkedin.com',
+    remote: true,
+    workModel: 'remote' as const
   },
   {
     id: '2',
@@ -45,14 +48,18 @@ const sampleJobs = [
     salary: {
       min: 130000,
       max: 180000,
-      currency: '$'
+      currency: 'USD'
     },
     type: 'full-time' as const,
     level: 'mid' as const,
     description: 'Seeking an experienced Product Manager...',
     requirements: ['3+ years experience', 'Agile', 'Technical background'],
     postedAt: new Date(Date.now() - 86400000).toISOString(),
-    skills: ['Product Strategy', 'Agile', 'User Research', 'Data Analysis']
+    skills: ['Product Strategy', 'Agile', 'User Research', 'Data Analysis'],
+    applyUrl: 'https://example.com/apply/2',
+    source: 'indeed.com',
+    remote: false,
+    workModel: 'onsite' as const
   }
 ];
 
