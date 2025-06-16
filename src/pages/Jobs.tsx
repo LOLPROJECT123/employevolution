@@ -1,10 +1,9 @@
-
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
 import { Job, JobFilters } from "@/types/job";
 import { JobDetailView } from "@/components/JobDetailView";
-import { JobFiltersSection } from "@/components/JobFilters";
+import { UnifiedJobFilters } from "@/components/UnifiedJobFilters";
 import { useIsMobile } from "@/hooks/use-mobile";
 import SwipeJobsInterface from "@/components/SwipeJobsInterface";
 import { SavedAndAppliedJobs } from "@/components/SavedAndAppliedJobs";
@@ -584,7 +583,7 @@ const Jobs = () => {
                 </div>
               </div>
               <div className="p-4">
-                <JobFiltersSection onApplyFilters={applyFilters} />
+                <UnifiedJobFilters onApplyFilters={applyFilters} initialFilters={activeFilters} />
               </div>
             </div>
 
