@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { parseResumeEnhanced } from '@/utils/enhancedResumeParser';
 
@@ -94,8 +93,7 @@ class ResumeAutoImportService {
           name: project.name || '',
           description: Array.isArray(project.description) ? project.description.join(' ') : (project.description || ''),
           technologies: project.technologies || [],
-          url: project.url || '',
-          github: project.github || ''
+          url: project.url || ''
         })) || []
       };
 

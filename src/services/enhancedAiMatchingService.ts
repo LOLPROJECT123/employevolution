@@ -1,3 +1,4 @@
+
 import { Job } from '@/types/job';
 import { User } from '@/types/auth';
 import { AIJobMatchScore, PersonalizedRecommendation } from '@/types/aiMatching';
@@ -44,7 +45,7 @@ class EnhancedAiMatchingService {
       culturalFit,
       careerGrowth,
       workLifeBalance,
-      reasoning,
+      reasoning: [reasoning], // Convert string to string array
       recommendations,
       resumeOptimizations,
       interviewTips
