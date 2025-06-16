@@ -192,8 +192,7 @@ class AutomaticJobScraperService {
       matchPercentage: Math.floor(Math.random() * 25) + 75, // 75-100% for realistic matches
       companyType: company.industry,
       companySize: this.getCompanySize(company.name),
-      applicantCount: Math.floor(Math.random() * 150) + 25,
-      atsSystem: company.ats
+      applicantCount: Math.floor(Math.random() * 150) + 25
     };
   }
 
