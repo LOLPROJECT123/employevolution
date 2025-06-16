@@ -1,10 +1,9 @@
-
 import { Job } from '@/types/job';
 import { User } from '@/types/auth';
 import { AIJobMatchScore, PersonalizedRecommendation } from '@/types/aiMatching';
 import { skillsMatchingService } from './skillsMatchingService';
 import { jobMatchingCalculators } from './jobMatchingCalculators';
-import { recommendationGenerators } from './recommendationGenerators';
+import { RecommendationGenerators } from './recommendationGenerators';
 
 class EnhancedAiMatchingService {
   async calculateAdvancedMatch(job: Job, userProfile: User): Promise<AIJobMatchScore> {
@@ -27,14 +26,14 @@ class EnhancedAiMatchingService {
       (workLifeBalance * 0.05)
     );
 
-    const reasoning = recommendationGenerators.generateAdvancedReasoning(job, userProfile, {
+    const reasoning = RecommendationGenerators.generateAdvancedReasoning(job, userProfile, {
       skillsMatch, experienceMatch, locationMatch, salaryMatch, 
       culturalFit, careerGrowth, workLifeBalance
     });
 
-    const recommendations = recommendationGenerators.generatePersonalizedRecommendations(job, userProfile, overallScore);
-    const resumeOptimizations = recommendationGenerators.generateResumeOptimizations(job, userProfile);
-    const interviewTips = recommendationGenerators.generateInterviewTips(job, userProfile);
+    const recommendations = RecommendationGenerators.generatePersonalizedRecommendations(job, userProfile, overallScore);
+    const resumeOptimizations = RecommendationGenerators.generateResumeOptimizations(job, userProfile);
+    const interviewTips = RecommendationGenerators.generateInterviewTips(job, userProfile);
 
     return {
       overallScore,
@@ -63,9 +62,9 @@ class EnhancedAiMatchingService {
       const matchScore = await this.calculateAdvancedMatch(job, userProfile);
       
       if (matchScore.overallScore >= 50) {
-        const reasonWhy = recommendationGenerators.generateWhyRecommended(job, matchScore);
-        const actionItems = recommendationGenerators.generateActionItems(job, matchScore);
-        const deadline = recommendationGenerators.calculateApplicationDeadline(job);
+        const reasonWhy = RecommendationGenerators.generateWhyRecommended(job, matchScore);
+        const actionItems = RecommendationGenerators.generateActionItems(job, matchScore);
+        const deadline = RecommendationGenerators.calculateApplicationDeadline(job);
         
         recommendations.push({
           job,

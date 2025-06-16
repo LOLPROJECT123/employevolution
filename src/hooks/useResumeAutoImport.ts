@@ -30,7 +30,11 @@ export const useResumeAutoImport = () => {
 
       setImportProgress(25);
 
-      const extractedData = await resumeAutoImportService.parseAndImportResume(file, user.id);
+      const extractedData = await resumeAutoImportService.importFromFile(file);
+
+      setImportProgress(50);
+
+      await resumeAutoImportService.saveToProfile(user.id, extractedData);
 
       setImportProgress(75);
 

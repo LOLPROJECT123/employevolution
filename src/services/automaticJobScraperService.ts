@@ -1,4 +1,3 @@
-
 import { Job } from '@/types/job';
 import { ScrapedJob } from '@/components/resume/job-application/types';
 import { jobApiService } from '@/services/jobApiService';
@@ -72,12 +71,10 @@ class AutomaticJobScraperService {
   private async searchWithJobAPI(): Promise<Job[]> {
     try {
       console.log('Searching with job API service...');
-      const response = await jobAPIService.searchJobs({
-        query: this.config.query,
-        location: this.config.location,
-        page: 1,
-        limit: 20
-      });
+      const response = await jobApiService.searchJobs(
+        this.config.query,
+        this.config.location
+      );
       return response.jobs;
     } catch (error) {
       console.error('Job API search failed:', error);

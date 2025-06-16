@@ -1,6 +1,5 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { enhancedResumeParser } from '@/utils/resume/enhancedResumeParser';
+import { parseResumeEnhanced } from '@/utils/enhancedResumeParser';
 
 interface EnhancedParsingOptions {
   extractSkills: boolean;
@@ -54,17 +53,11 @@ class ResumeAutoImportService {
   async importFromFile(file: File): Promise<ImportedResumeData> {
     console.log('Starting resume import from file:', file.name);
     
-    const options: EnhancedParsingOptions = {
-      extractSkills: true,
-      extractExperience: true,
-      extractEducation: true,
-      extractProjects: true,
-      detectKeywords: true,
-      enhancedParsing: true
-    };
-
     try {
-      const parsedData = await enhancedResumeParser.parseResumeFile(file, options);
+      const parsedData = await parseResumeEnhanced(file, {
+        showToast: false,
+        useOCR: true
+      });
       
       const importedData: ImportedResumeData = {
         personalInfo: {
@@ -72,36 +65,36 @@ class ResumeAutoImportService {
           email: parsedData.personalInfo?.email || '',
           phone: parsedData.personalInfo?.phone || '',
           location: parsedData.personalInfo?.location || '',
-          linkedin: parsedData.personalInfo?.linkedin || '',
-          github: parsedData.personalInfo?.github || '',
-          portfolio: parsedData.personalInfo?.portfolio || ''
+          linkedin: parsedData.socialLinks?.linkedin || '',
+          github: parsedData.socialLinks?.github || '',
+          portfolio: parsedData.socialLinks?.portfolio || ''
         },
-        workExperience: parsedData.workExperience?.map(exp => ({
+        workExperience: parsedData.workExperiences?.map(exp => ({
           company: exp.company || '',
-          role: exp.position || exp.role || '',
+          role: exp.role || '',
           startDate: exp.startDate || '',
           endDate: exp.endDate || 'Present',
           location: exp.location || '',
           description: Array.isArray(exp.description) ? exp.description : [exp.description || '']
         })) || [],
         education: parsedData.education?.map(edu => ({
-          school: edu.institution || edu.school || '',
+          school: edu.school || '',
           degree: edu.degree || '',
-          fieldOfStudy: edu.fieldOfStudy || edu.major || '',
+          fieldOfStudy: edu.fieldOfStudy || '',
           startDate: edu.startDate || '',
           endDate: edu.endDate || '',
           gpa: edu.gpa || ''
         })) || [],
         skills: parsedData.skills?.map(skill => ({
-          skill: typeof skill === 'string' ? skill : skill.name || '',
-          category: typeof skill === 'object' && skill.category ? skill.category : 'general'
+          skill: skill,
+          category: 'general'
         })) || [],
         projects: parsedData.projects?.map(project => ({
           name: project.name || '',
           description: project.description || '',
           technologies: project.technologies || [],
           url: project.url || '',
-          github: project.github || project.repository || ''
+          github: project.github || ''
         })) || []
       };
 
