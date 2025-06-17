@@ -18,6 +18,30 @@ interface AutomationTask {
   completedAt?: string;
 }
 
+interface JobScrapingCriteria {
+  query: string;
+  location: string;
+  remote?: boolean;
+  salaryMin?: number;
+  experienceLevel?: string;
+  searchTerms?: string[];
+  locations?: string[];
+  filters?: {
+    remote: boolean;
+    salaryMin: number;
+    salaryMax: number;
+    experienceLevel: string[];
+    companySize: string[];
+    jobType: string[];
+  };
+  aiSettings?: {
+    smartFiltering: boolean;
+    duplicateDetection: boolean;
+    qualityScoring: boolean;
+    autoApply: boolean;
+  };
+}
+
 interface JobScrapingResult {
   jobsFound: number;
   applicationsSubmitted: number;
@@ -54,13 +78,7 @@ class BrowserUseService {
   async startJobScrapingSession(
     sessionId: string,
     platforms: string[],
-    searchCriteria: {
-      query: string;
-      location: string;
-      remote?: boolean;
-      salaryMin?: number;
-      experienceLevel?: string;
-    }
+    searchCriteria: JobScrapingCriteria
   ): Promise<AutomationTask> {
     const task: AutomationTask = {
       id: `scraping-${Date.now()}`,

@@ -123,16 +123,24 @@ const EnhancedJobScraper = () => {
         setSessionId(newSessionId);
       }
 
+      // Prepare search criteria with proper structure
+      const searchCriteria = {
+        query: config.searchTerms[0] || 'Software Engineer',
+        location: config.locations[0] || 'San Francisco, CA',
+        remote: config.filters.remote,
+        salaryMin: config.filters.salaryMin,
+        experienceLevel: config.filters.experienceLevel[0],
+        searchTerms: config.searchTerms,
+        locations: config.locations,
+        filters: config.filters,
+        aiSettings: config.aiSettings
+      };
+
       // Start scraping with AI enhancements
       const task = await browserUseService.startJobScrapingSession(
         sessionId!,
         config.platforms,
-        {
-          searchTerms: config.searchTerms,
-          locations: config.locations,
-          filters: config.filters,
-          aiSettings: config.aiSettings
-        }
+        searchCriteria
       );
 
       // Simulate progress updates
