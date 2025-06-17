@@ -1,6 +1,6 @@
 
-import React from 'react';
-import ReactDOM from 'react-dom/client';
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
@@ -21,19 +21,19 @@ const queryClient = new QueryClient({
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Failed to find the root element');
 
-const root = ReactDOM.createRoot(rootElement);
+const root = createRoot(rootElement);
 
 root.render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <QueryClientProvider client={queryClient}>
+  <StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AuthProvider>
             <App />
             <Toaster />
           </AuthProvider>
         </ThemeProvider>
-      </QueryClientProvider>
-    </BrowserRouter>
-  </React.StrictMode>
+      </BrowserRouter>
+    </QueryClientProvider>
+  </StrictMode>
 );
