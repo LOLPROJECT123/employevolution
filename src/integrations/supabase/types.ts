@@ -896,6 +896,42 @@ export type Database = {
         }
         Relationships: []
       }
+      extension_usage_logs: {
+        Row: {
+          action: string
+          error_message: string | null
+          id: string
+          job_url: string | null
+          metadata: Json | null
+          platform: string
+          success: boolean | null
+          timestamp: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          error_message?: string | null
+          id?: string
+          job_url?: string | null
+          metadata?: Json | null
+          platform: string
+          success?: boolean | null
+          timestamp?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          error_message?: string | null
+          id?: string
+          job_url?: string | null
+          metadata?: Json | null
+          platform?: string
+          success?: boolean | null
+          timestamp?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       follow_up_sequence_steps: {
         Row: {
           created_at: string | null
@@ -1225,6 +1261,77 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      job_applications_tracking: {
+        Row: {
+          application_date: string | null
+          application_url: string | null
+          company_name: string
+          cover_letter_used: string | null
+          created_at: string | null
+          external_job_id: string | null
+          follow_up_date: string | null
+          id: string
+          interview_scheduled: string | null
+          job_id: string | null
+          notes: string | null
+          platform: string | null
+          position_title: string
+          resume_used: string | null
+          salary_offered: number | null
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          application_date?: string | null
+          application_url?: string | null
+          company_name: string
+          cover_letter_used?: string | null
+          created_at?: string | null
+          external_job_id?: string | null
+          follow_up_date?: string | null
+          id?: string
+          interview_scheduled?: string | null
+          job_id?: string | null
+          notes?: string | null
+          platform?: string | null
+          position_title: string
+          resume_used?: string | null
+          salary_offered?: number | null
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          application_date?: string | null
+          application_url?: string | null
+          company_name?: string
+          cover_letter_used?: string | null
+          created_at?: string | null
+          external_job_id?: string | null
+          follow_up_date?: string | null
+          id?: string
+          interview_scheduled?: string | null
+          job_id?: string | null
+          notes?: string | null
+          platform?: string | null
+          position_title?: string
+          resume_used?: string | null
+          salary_offered?: number | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_applications_tracking_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "scraped_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       job_preferences: {
         Row: {
@@ -2014,6 +2121,69 @@ export type Database = {
         }
         Relationships: []
       }
+      scraped_jobs: {
+        Row: {
+          apply_url: string | null
+          company: string
+          created_at: string | null
+          description: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          job_type: string | null
+          location: string | null
+          remote: boolean | null
+          requirements: string[] | null
+          salary_max: number | null
+          salary_min: number | null
+          scraped_at: string | null
+          skills: string[] | null
+          source_platform: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          apply_url?: string | null
+          company: string
+          created_at?: string | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          job_type?: string | null
+          location?: string | null
+          remote?: boolean | null
+          requirements?: string[] | null
+          salary_max?: number | null
+          salary_min?: number | null
+          scraped_at?: string | null
+          skills?: string[] | null
+          source_platform?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          apply_url?: string | null
+          company?: string
+          created_at?: string | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          job_type?: string | null
+          location?: string | null
+          remote?: boolean | null
+          requirements?: string[] | null
+          salary_max?: number | null
+          salary_min?: number | null
+          scraped_at?: string | null
+          skills?: string[] | null
+          source_platform?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       security_events: {
         Row: {
           created_at: string | null
@@ -2158,6 +2328,51 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           version?: number | null
+        }
+        Relationships: []
+      }
+      user_job_preferences: {
+        Row: {
+          created_at: string | null
+          excluded_companies: string[] | null
+          id: string
+          job_types: string[] | null
+          keywords: string[] | null
+          preferred_locations: string[] | null
+          preferred_roles: string[] | null
+          remote_only: boolean | null
+          salary_max: number | null
+          salary_min: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          excluded_companies?: string[] | null
+          id?: string
+          job_types?: string[] | null
+          keywords?: string[] | null
+          preferred_locations?: string[] | null
+          preferred_roles?: string[] | null
+          remote_only?: boolean | null
+          salary_max?: number | null
+          salary_min?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          excluded_companies?: string[] | null
+          id?: string
+          job_types?: string[] | null
+          keywords?: string[] | null
+          preferred_locations?: string[] | null
+          preferred_roles?: string[] | null
+          remote_only?: boolean | null
+          salary_max?: number | null
+          salary_min?: number | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -2430,6 +2645,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_job_match_score: {
+        Args: { job_id: string; user_skills: string[]; user_preferences: Json }
+        Returns: number
+      }
       check_and_fix_onboarding_consistency: {
         Args: { p_user_id: string }
         Returns: {
