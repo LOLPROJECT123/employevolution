@@ -70,6 +70,19 @@ export class ChromeExtensionService {
         return null;
       }
 
+      // Parse the resume data if it exists
+      let parsedResumeData: ParsedResume | null = null;
+      if (resumeFile?.parsed_data) {
+        try {
+          // Handle the Json type from Supabase
+          parsedResumeData = typeof resumeFile.parsed_data === 'string' 
+            ? JSON.parse(resumeFile.parsed_data) 
+            : resumeFile.parsed_data as ParsedResume;
+        } catch (error) {
+          console.error('Error parsing resume data:', error);
+        }
+      }
+
       // Format data for Chrome extension
       const chromeData: ChromeExtensionData = {
         personalInfo: {
@@ -95,9 +108,9 @@ export class ChromeExtensionService {
           endDate: edu.end_date || ''
         })),
         skills: (skills || []).map(s => s.skill),
-        resumeUrl: resumeFile?.file_url || '',
-        resumeText: resumeFile?.parsed_data?.personalInfo?.name ? 
-          this.formatResumeText(resumeFile.parsed_data) : 
+        resumeUrl: resumeFile?.file_name || '', // Use file_name instead of file_url
+        resumeText: parsedResumeData?.personalInfo?.name ? 
+          this.formatResumeText(parsedResumeData) : 
           resumeFile?.file_content || ''
       };
 

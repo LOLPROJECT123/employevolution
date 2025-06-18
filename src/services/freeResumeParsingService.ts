@@ -22,7 +22,9 @@ export class FreeResumeParsingService {
       if (file.type === 'application/pdf') {
         method = 'pdf-parse';
         const arrayBuffer = await file.arrayBuffer();
-        const pdfData = await pdfParse(new Uint8Array(arrayBuffer));
+        // Convert Uint8Array to Buffer for pdf-parse
+        const buffer = Buffer.from(arrayBuffer);
+        const pdfData = await pdfParse(buffer);
         extractedText = pdfData.text;
       }
       // Handle DOCX files with mammoth
