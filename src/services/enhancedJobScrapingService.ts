@@ -33,6 +33,14 @@ export interface JobScrapingTarget {
   };
 }
 
+export interface PlatformScrapingResult {
+  platform: string;
+  jobs: ScrapedJobData[];
+  totalFound: number;
+  success: boolean;
+  error?: string;
+}
+
 class EnhancedJobScrapingService {
   private scrapingTargets: JobScrapingTarget[] = [
     {
@@ -108,6 +116,48 @@ class EnhancedJobScrapingService {
     return uniqueJobs;
   }
 
+  async scrapeAllPlatforms(
+    query: string = 'software engineer',
+    location: string = 'remote'
+  ): Promise<PlatformScrapingResult[]> {
+    const platforms = ['linkedin', 'indeed', 'glassdoor', 'ziprecruiter', 'dice'];
+    const results: PlatformScrapingResult[] = [];
+
+    for (const platform of platforms) {
+      try {
+        console.log(`Scraping ${platform}...`);
+        const jobs = await this.scrapePlatform(platform, query, location);
+        
+        results.push({
+          platform,
+          jobs,
+          totalFound: jobs.length,
+          success: true
+        });
+        
+        // Add delay between platforms
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      } catch (error) {
+        console.error(`Error scraping ${platform}:`, error);
+        results.push({
+          platform,
+          jobs: [],
+          totalFound: 0,
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+    }
+
+    // Save all successful jobs to database
+    const allJobs = results.flatMap(result => result.success ? result.jobs : []);
+    if (allJobs.length > 0) {
+      await this.saveJobsToDatabase(allJobs);
+    }
+
+    return results;
+  }
+
   private async scrapePlatform(
     platform: string,
     query: string,
@@ -139,6 +189,9 @@ class EnhancedJobScrapingService {
       'React', 'TypeScript', 'Node.js', 'Python', 'Java', 'C++', 
       'AWS', 'Docker', 'Kubernetes', 'PostgreSQL', 'MongoDB', 'GraphQL'
     ];
+
+    const jobTypes: ('full-time' | 'part-time' | 'contract' | 'internship')[] = 
+      ['full-time', 'part-time', 'contract', 'internship'];
 
     return Array.from({ length: count }, (_, i) => {
       const company = companies[Math.floor(Math.random() * companies.length)];
