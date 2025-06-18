@@ -1,18 +1,14 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Job, JobFilters } from "@/types/job";
 import { MobileJobCard } from "@/components/MobileJobCard";
 import { MobileJobDetail } from "@/components/MobileJobDetail";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MobileJobFilters } from "@/components/MobileJobFilters";
-import { SavedAndAppliedJobs } from "@/components/SavedAndAppliedJobs";
+import { NoJobsFound } from "@/components/NoJobsFound";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import MobileHeader from "@/components/MobileHeader";
-import { 
-  Drawer,
-  DrawerContent,
-  DrawerTrigger
-} from "@/components/ui/drawer";
+import { JobFilteringService } from "@/services/jobFilteringService";
 import { 
   Search,
   X,
@@ -27,8 +23,6 @@ export default function MobileJobs() {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showDetailView, setShowDetailView] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
-  const [toastShown, setToastShown] = useState(false);
   const [activeFilters, setActiveFilters] = useState<JobFilters>({
     search: "",
     location: "",
@@ -182,54 +176,28 @@ export default function MobileJobs() {
     fetchJobs();
   }, []);
 
-  const applyFiltersToJobs = (jobs: Job[], filters: JobFilters) => {
+  // Memoized filtered jobs using the filtering service
+  const filteredJobs = useMemo(() => {
     let filtered = [...jobs];
     
+    // Apply search term first
     if (searchTerm) {
-      filtered = filtered.filter(job => 
-        job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.location.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    
-    if (filters.location) {
-      filtered = filtered.filter(job => 
-        job.location.toLowerCase().includes(filters.location.toLowerCase())
-      );
-    }
-    
-    if (filters.remote) {
-      filtered = filtered.filter(job => job.remote === true);
-    }
-    
-    if (filters.jobType && filters.jobType.length > 0) {
-      filtered = filtered.filter(job => 
-        filters.jobType.includes(job.type)
-      );
-    }
-    
-    if (filters.experienceLevels && filters.experienceLevels.length > 0) {
-      filtered = filtered.filter(job => 
-        filters.experienceLevels.includes(job.level)
-      );
-    }
-    
-    if (filters.salaryRange && (filters.salaryRange[0] !== 0 || filters.salaryRange[1] !== 300000)) {
-      filtered = filtered.filter(job => 
-        job.salary.min >= filters.salaryRange[0] && job.salary.max <= filters.salaryRange[1]
-      );
+      const searchFilters = { ...activeFilters, search: searchTerm };
+      filtered = JobFilteringService.filterJobs(filtered, searchFilters, appliedJobIds);
+    } else {
+      filtered = JobFilteringService.filterJobs(filtered, activeFilters, appliedJobIds);
     }
     
     return filtered;
-  };
-  
-  const filteredJobs = applyFiltersToJobs(jobs, activeFilters);
+  }, [jobs, activeFilters, searchTerm, appliedJobIds]);
 
-  // Handle filter changes and show toast only once
+  // Update selected job when filtered jobs change
   useEffect(() => {
-    // Removed the toast notification logic
     if (filteredJobs.length > 0 && !selectedJob) {
+      setSelectedJob(filteredJobs[0]);
+    } else if (filteredJobs.length === 0) {
+      setSelectedJob(null);
+    } else if (selectedJob && !filteredJobs.find(job => job.id === selectedJob.id)) {
       setSelectedJob(filteredJobs[0]);
     }
   }, [filteredJobs, selectedJob]);
@@ -276,36 +244,15 @@ export default function MobileJobs() {
   
   const handleApplyFilters = (filters: JobFilters) => {
     setActiveFilters(filters);
-    setShowFilters(false);
     
-    // Toast is now handled by the useEffect
+    toast({
+      title: "Filters applied",
+      description: `${JobFilteringService.getActiveFilterCount(filters)} filter(s) applied. Found ${JobFilteringService.filterJobs(jobs, filters, appliedJobIds).length} matching jobs.`,
+    });
   };
-  
-  const handleCloseFilters = () => {
-    setShowFilters(false);
-  };
-  
-  const getActiveFilterCount = () => {
-    let count = 0;
-    
-    if (activeFilters.location) count++;
-    if (activeFilters.remote) count++;
-    if (activeFilters.jobType?.length) count += activeFilters.jobType.length;
-    if (activeFilters.experienceLevels?.length) count += activeFilters.experienceLevels.length;
-    if (activeFilters.skills?.length) count += activeFilters.skills.length;
-    
-    if (activeFilters.salaryRange && 
-        (activeFilters.salaryRange[0] !== 0 || activeFilters.salaryRange[1] !== 300000)) {
-      count++;
-    }
-    
-    return count;
-  };
-  
-  const activeFilterCount = getActiveFilterCount();
   
   const handleClearFilters = () => {
-    setActiveFilters({
+    const clearedFilters: JobFilters = {
       search: "",
       location: "",
       jobType: [],
@@ -323,10 +270,18 @@ export default function MobileJobs() {
       sponsorH1B: false,
       simpleApplications: false,
       hideAppliedJobs: false
-    });
+    };
     
-    // Toast is now handled by the useEffect
+    setActiveFilters(clearedFilters);
+    setSearchTerm("");
+    
+    toast({
+      title: "Filters cleared",
+      description: `All filters have been cleared. Showing all ${jobs.length} jobs.`,
+    });
   };
+  
+  const activeFilterCount = JobFilteringService.getActiveFilterCount(activeFilters);
   
   return (
     <div className="h-screen flex flex-col bg-white dark:bg-gray-900 overflow-hidden">
@@ -355,35 +310,36 @@ export default function MobileJobs() {
                 )}
               </div>
             </div>
+            
+            <MobileJobFilters
+              onApply={handleApplyFilters}
+              onClose={handleClearFilters}
+              activeFilterCount={activeFilterCount}
+            />
           </div>
           
           <ScrollArea className="h-[calc(100vh-112px)]">
-            <div className="divide-y divide-gray-100 dark:divide-gray-800">
-              {filteredJobs.map(job => (
-                <MobileJobCard
-                  key={job.id}
-                  job={job}
-                  isSaved={savedJobIds.includes(job.id)}
-                  onSave={() => handleSaveJob(job)}
-                  onClick={() => handleSelectJob(job)}
+            {filteredJobs.length > 0 ? (
+              <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                {filteredJobs.map(job => (
+                  <MobileJobCard
+                    key={job.id}
+                    job={job}
+                    isSaved={savedJobIds.includes(job.id)}
+                    onSave={() => handleSaveJob(job)}
+                    onClick={() => handleSelectJob(job)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="p-6">
+                <NoJobsFound
+                  filters={{ ...activeFilters, search: searchTerm }}
+                  onClearFilters={handleClearFilters}
+                  totalJobsWithoutFilters={jobs.length}
                 />
-              ))}
-              
-              {filteredJobs.length === 0 && (
-                <div className="p-6 text-center">
-                  <p className="text-gray-500 dark:text-gray-400">
-                    No jobs match your search criteria. Try adjusting your filters.
-                  </p>
-                  <Button 
-                    variant="outline" 
-                    className="mt-3"
-                    onClick={handleClearFilters}
-                  >
-                    Clear Filters
-                  </Button>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
           </ScrollArea>
         </div>
       ) : (
