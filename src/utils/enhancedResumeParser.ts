@@ -3,6 +3,7 @@ import { parseResumeContent } from "./resume/enhancedResumeParser";
 import { ocrService, OCRProgress } from "@/services/ocrService";
 import { enhancedPdfService } from "@/services/enhancedPdfService";
 import { toast } from "sonner";
+import { freeResumeParsingService } from "@/services/freeResumeParsingService";
 
 export interface EnhancedParsingOptions {
   showToast?: boolean;
@@ -41,31 +42,63 @@ export const parseResumeEnhanced = async (
   try {
     console.log('🚀 Starting enhanced resume parsing for file:', file.name, 'Type:', file.type);
     
+    onProgress?.({
+      status: 'initializing',
+      progress: 10,
+      message: 'Starting resume processing...'
+    });
+
+    // First, try the free parsing service for PDF and DOCX files
+    if (file.type === 'application/pdf' || 
+        file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+        file.type === 'text/plain') {
+      
+      console.log('📄 Using free parsing service for:', file.type);
+      
+      onProgress?.({
+        status: 'parsing-content',
+        progress: 50,
+        message: 'Parsing resume with optimized library...'
+      });
+
+      const freeParsingResult = await freeResumeParsingService.parseResume(file);
+      
+      if (freeParsingResult.success && freeParsingResult.text.length > 100) {
+        console.log('✅ Free parsing successful:', freeParsingResult.method);
+        
+        onProgress?.({
+          status: 'complete',
+          progress: 100,
+          message: 'Resume parsing completed!'
+        });
+
+        const validatedData = validateAndEnhanceData(freeParsingResult.parsedData);
+
+        if (showToast) {
+          const foundItems = [];
+          if (validatedData.personalInfo?.name) foundItems.push('personal info');
+          if (validatedData.workExperiences?.length) foundItems.push(`${validatedData.workExperiences.length} work experiences`);
+          if (validatedData.education?.length) foundItems.push(`${validatedData.education.length} education entries`);
+          if (validatedData.projects?.length) foundItems.push(`${validatedData.projects.length} projects`);
+          if (validatedData.skills?.length) foundItems.push(`${validatedData.skills.length} skills`);
+          
+          if (foundItems.length > 0) {
+            toast.success(`Resume parsed successfully using ${freeParsingResult.method}! Found: ${foundItems.join(', ')}`);
+          } else {
+            toast.warning("Resume uploaded but limited data was extracted. Please review and complete your profile manually.");
+          }
+        }
+
+        return validatedData;
+      }
+    }
+
+    // Fallback to existing OCR and image processing methods
+    
     let extractedText = '';
     let processingMethod = 'unknown';
     
-    // Determine processing strategy based on file type
-    if (PDF_TYPE === file.type) {
-      console.log('📄 Processing PDF file...');
-      processingMethod = 'pdf';
-      
-      const pdfResult = await enhancedPdfService.processPDF(file, {
-        onProgress,
-        useOCRFallback: useOCR,
-        minTextThreshold: 100
-      });
-      
-      extractedText = pdfResult.text;
-      
-      if (showToast) {
-        if (pdfResult.success) {
-          toast.success(`PDF processed using ${pdfResult.method}. Confidence: ${pdfResult.confidence}%`);
-        } else {
-          toast.warning('PDF processing had issues, but continuing with available text.');
-        }
-      }
-      
-    } else if (IMAGE_TYPES.includes(file.type) && useOCR) {
+    if (IMAGE_TYPES.includes(file.type) && useOCR) {
       console.log('🖼️ Processing image file with OCR...');
       processingMethod = 'ocr';
       
@@ -90,41 +123,11 @@ export const parseResumeEnhanced = async (
         throw new Error(ocrResult.error || 'OCR processing failed');
       }
       
-    } else if (TEXT_BASED_TYPES.includes(file.type)) {
-      console.log('📝 Processing text-based file...');
-      processingMethod = 'text';
-      
-      onProgress?.({
-        status: 'reading-file',
-        progress: 50,
-        message: 'Reading text file...'
-      });
-      
-      extractedText = await readFileAsText(file);
-      
     } else {
-      console.log('❓ Unsupported file type, attempting OCR fallback...');
-      
-      if (useOCR) {
-        processingMethod = 'ocr-fallback';
-        
-        const ocrResult = await ocrService.processImage(file, {
-          preprocessImage: true,
-          onProgress
-        });
-        
-        if (ocrResult.success) {
-          extractedText = ocrResult.text;
-        } else {
-          throw new Error('Unsupported file type and OCR fallback failed');
-        }
-      } else {
-        throw new Error(`Unsupported file type: ${file.type}`);
-      }
+      throw new Error(`Unsupported file type: ${file.type}`);
     }
 
     console.log(`✅ Text extraction complete. Method: ${processingMethod}, Length: ${extractedText.length}`);
-    console.log('📄 Sample extracted text:', extractedText.substring(0, 500));
 
     // Progress update for parsing phase
     onProgress?.({
