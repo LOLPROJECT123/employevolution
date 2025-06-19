@@ -9,7 +9,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { supabaseNotificationService, Notification } from '@/services/supabaseNotificationService';
 import { formatDistanceToNow } from 'date-fns';
 

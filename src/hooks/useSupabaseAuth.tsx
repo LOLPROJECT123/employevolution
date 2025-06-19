@@ -1,5 +1,5 @@
 
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { supabaseApplicationService } from '@/services/supabaseApplicationService';
 import { supabaseSavedJobsService } from '@/services/supabaseSavedJobsService';
 import { supabaseNotificationService } from '@/services/supabaseNotificationService';
