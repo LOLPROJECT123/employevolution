@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ParsedResume } from '@/types/resume';
 import { Job } from '@/types/job';
@@ -30,8 +29,8 @@ export interface UserJobPreferences {
   salary_max?: number;
   excluded_companies: string[];
   keywords: string[];
-  experience_level: string;
-  industries: string[];
+  experience_level?: string;
+  industries?: string[];
 }
 
 export interface UserInteraction {
@@ -584,14 +583,15 @@ export class EnhancedJobMatchingV2Service {
       skills: job.skills || [],
       salary: {
         min: job.salary_min,
-        max: job.salary_max
+        max: job.salary_max,
+        currency: 'USD'
       },
       type: job.job_type,
       remote: job.remote,
       postedAt: job.scraped_at,
       applyUrl: job.apply_url,
-      level: this.extractJobLevel(job),
-      workModel: job.remote ? 'remote' : 'on-site'
+      level: this.extractJobLevel(job) as 'entry' | 'mid' | 'senior' | 'intern' | 'executive',
+      workModel: job.remote ? 'remote' : 'onsite' as 'remote' | 'onsite' | 'hybrid'
     };
   }
 
@@ -603,7 +603,20 @@ export class EnhancedJobMatchingV2Service {
       .eq('user_id', userId)
       .single();
 
-    return data;
+    if (!data) return null;
+
+    return {
+      preferred_roles: data.preferred_roles || [],
+      preferred_locations: data.preferred_locations || [],
+      remote_only: data.remote_only || false,
+      job_types: data.job_types || [],
+      salary_min: data.salary_min,
+      salary_max: data.salary_max,
+      excluded_companies: data.excluded_companies || [],
+      keywords: data.keywords || [],
+      experience_level: 'mid', // Default value
+      industries: [] // Default value
+    };
   }
 
   private async getUserInteractions(userId: string): Promise<UserInteraction[]> {
@@ -680,9 +693,11 @@ export class EnhancedJobMatchingV2Service {
       throw new Error('No resume found for user');
     }
 
+    const resumeData = resumeFile.parsed_data as ParsedResume;
+
     const recommendations = await this.getPersonalizedJobRecommendations(
       userId,
-      resumeFile.parsed_data,
+      resumeData,
       limit
     );
 

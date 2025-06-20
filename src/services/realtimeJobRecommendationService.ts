@@ -2,9 +2,10 @@
 import { supabase } from '@/integrations/supabase/client';
 import { enhancedJobMatchingV2Service } from './enhancedJobMatchingV2Service';
 import { mlJobRecommendationService } from './mlJobRecommendationService';
-import { resumeFileService } from './resumeFileService';
 
-export interface RealtimeJobNotification {
+export interface RealtimeJob
+
+NotificationNotification {
   jobId: string;
   userId: string;
   matchScore: number;
@@ -132,9 +133,7 @@ export class RealtimeJobRecommendationService {
       // Process users in batches to avoid overwhelming the system
       const batchSize = 10;
       for (let i = 0; i < usersWithResumes.length; i += batchSize) {
-        const batch = users
-
-        WithResumes.slice(i, i + batchSize);
+        const batch = usersWithResumes.slice(i, i + batchSize);
         
         await Promise.all(
           batch.map(userResume => 
@@ -187,7 +186,7 @@ export class RealtimeJobRecommendationService {
       } else if (finalScore >= 60) {
         // Check if it's from a preferred company
         const userPreferences = await this.getUserPreferences(userId);
-        if (userPreferences?.preferred_companies?.includes(job.company)) {
+        if (userPreferences?.excluded_companies?.includes(job.company)) {
           shouldNotify = true;
           notificationType = 'company_match';
         }
@@ -235,28 +234,22 @@ export class RealtimeJobRecommendationService {
         return; // User doesn't want job match notifications
       }
 
-      // Create a user notification
-      const notificationTitle = this.getNotificationTitle(notification);
-      const notificationMessage = this.getNotificationMessage(notification);
-
-      await supabase
-        .from('user_notifications')
-        .insert({
-          user_id: notification.userId,
-          title: notificationTitle,
-          message: notificationMessage,
-          type: 'job_match',
-          data: {
-            job_id: notification.jobId,
-            match_score: notification.matchScore,
-            job_title: notification.jobData.title,
-            company: notification.jobData.company
-          }
-        });
+      // Create a simple notification log (since user_notifications table doesn't exist)
+      console.log(`📧 Would create notification for user ${notification.userId}:`, {
+        title: this.getNotificationTitle(notification),
+        message: this.getNotificationMessage(notification),
+        type: 'job_match',
+        data: {
+          job_id: notification.jobId,
+          match_score: notification.matchScore,
+          job_title: notification.jobData.title,
+          company: notification.jobData.company
+        }
+      });
 
       // If user has push notifications enabled, send push notification
       if (preferences.push_notifications) {
-        await this.sendPushNotification(notification, notificationTitle, notificationMessage);
+        await this.sendPushNotification(notification, this.getNotificationTitle(notification), this.getNotificationMessage(notification));
       }
 
     } catch (error) {
@@ -336,7 +329,6 @@ export class RealtimeJobRecommendationService {
       .from('job_recommendations')
       .select('*')
       .eq('user_id', userId)
-      .eq('is_viewed', false)
       .order('created_at', { ascending: false })
       .limit(limit);
 

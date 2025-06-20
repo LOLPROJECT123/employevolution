@@ -71,13 +71,20 @@ export const useRealtimeJobRecommendations = () => {
       loadRecommendations();
       
       // Subscribe to realtime updates
-      const subscription = realtimeJobRecommendationService.subscribeToUserJobAlerts(
-        user.id,
-        handleNewRecommendation
-      );
+      const subscribeToAlerts = async () => {
+        const subscription = await realtimeJobRecommendationService.subscribeToUserJobAlerts(
+          user.id,
+          handleNewRecommendation
+        );
 
+        return () => {
+          subscription.unsubscribe();
+        };
+      };
+
+      const cleanup = subscribeToAlerts();
       return () => {
-        subscription.unsubscribe();
+        cleanup.then(unsubscribe => unsubscribe());
       };
     }
   }, [user, loadRecommendations, handleNewRecommendation]);

@@ -7,7 +7,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { appInitializationService } from "@/services/appInitializationService";
-import Layout from "@/components/Layout";
 import Index from "@/pages/Index";
 
 const queryClient = new QueryClient();
@@ -26,9 +25,7 @@ function App() {
           <Sonner />
           <BrowserRouter>
             <Routes>
-              <Route path="/*" element={<Layout />}>
-                <Route index element={<Index />} />
-              </Route>
+              <Route index element={<Index />} />
             </Routes>
           </BrowserRouter>
         </TooltipProvider>
