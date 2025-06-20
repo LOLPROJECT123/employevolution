@@ -591,7 +591,8 @@ export class EnhancedJobMatchingV2Service {
       postedAt: job.scraped_at,
       applyUrl: job.apply_url,
       level: this.extractJobLevel(job) as 'entry' | 'mid' | 'senior' | 'intern' | 'executive',
-      workModel: job.remote ? 'remote' : 'onsite' as 'remote' | 'onsite' | 'hybrid'
+      workModel: job.remote ? 'remote' : 'onsite' as 'remote' | 'onsite' | 'hybrid',
+      source: job.source_platform || 'unknown'
     };
   }
 
