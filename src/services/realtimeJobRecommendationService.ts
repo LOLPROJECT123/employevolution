@@ -1,11 +1,8 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { enhancedJobMatchingV2Service } from './enhancedJobMatchingV2Service';
 import { mlJobRecommendationService } from './mlJobRecommendationService';
 
-export interface RealtimeJob
-
-NotificationNotification {
+export interface RealtimeJobNotification {
   jobId: string;
   userId: string;
   matchScore: number;
