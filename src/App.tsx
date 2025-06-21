@@ -17,9 +17,12 @@ function App() {
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <Routes>
-        <Route index element={<Index />} />
-      </Routes>
+      <div className="min-h-screen">
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route index element={<Index />} />
+        </Routes>
+      </div>
     </TooltipProvider>
   );
 }
